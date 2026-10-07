@@ -135,3 +135,32 @@ async def self_assessment_reminders_cron(
 
     background.add_task(_run)
     return {"ok": True, "run_id": run_id, "enqueued": "self-assessment-reminders"}
+
+
+@router.post("/release-check")
+async def release_check_cron(
+    background: BackgroundTasks,
+    request: Request,
+    authorization: Optional[str] = Header(default=None),
+    db=Depends(get_db),
+) -> Dict[str, Any]:
+    """Daily smoke check of key pages + PDFs on the live app; emails admins on failure.
+
+    # Cron endpoints must ack 2xx immediately; enqueue/background the actual work.
+    """
+    _verify_cron_auth(authorization)
+    run_id = request.headers.get("X-Webhook-Id") or "manual"
+
+    from release_check import origin_from_request, remember_origin, run_release_check
+
+    origin = origin_from_request(request)
+    await remember_origin(db, origin)
+
+    async def _run() -> None:
+        try:
+            await run_release_check(db, base_url=origin, trigger="daily")
+        except Exception as exc:  # noqa: BLE001
+            logger.exception("release-check cron run_id=%s failed: %s", run_id, exc)
+
+    background.add_task(_run)
+    return {"ok": True, "run_id": run_id, "enqueued": "release-check"}

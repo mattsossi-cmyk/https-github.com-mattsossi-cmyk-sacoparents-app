@@ -4244,3 +4244,40 @@ def send_foundation_statement_pdf_to_me(
         ),
     )
 
+
+
+def send_release_check_alert(
+    *,
+    to_email: str,
+    base_url: str,
+    trigger: str,
+    failures: List[dict],
+    total: int,
+) -> None:
+    """Admin-only alert when the automatic release check finds a problem."""
+    when = {"release": "right after a new release", "daily": "during the daily check"}.get(trigger, "during a manual check")
+    count = len(failures)
+    rows_text = "\n".join(f"- {f['name']}: {f['detail']}" for f in failures)
+    rows_html = "".join(
+        f'<li style="margin:0 0 6px 0;"><strong>{_html.escape(f["name"])}</strong> '
+        f'<span style="color:#857E9C;">{_html.escape(f["detail"])}</span></li>'
+        for f in failures
+    )
+    lead = f"{count} of {total} checks failed on {base_url} {when}."
+    plain = f"{lead}\n\n{rows_text}\n\nSee all results on the admin dashboard: {base_url}/admin\n"
+    body_html = (
+        f'<p style="font-size:15px;line-height:1.55;color:#4B4567;margin:0 0 14px 0;">{_html.escape(lead)}</p>'
+        f'<ul style="font-size:14px;line-height:1.5;color:#1A1330;margin:0 0 22px 18px;padding:0;">{rows_html}</ul>'
+    )
+    _send(
+        to_email=to_email,
+        subject=f"SA CoParents release check: {count} problem{'s' if count != 1 else ''} found",
+        html=_branded_html(
+            headline="Something needs a look",
+            body_html=body_html,
+            cta_label="Open admin dashboard",
+            cta_url=f"{base_url}/admin",
+        ),
+        text=plain,
+        failure_message="Could not send the release check alert.",
+    )

@@ -347,3 +347,25 @@ h1, h2, h3, h4, .font-serif {
     height: auto;
     display: block;
 }
+
+/* Welcome artwork hotspots: soft purple glow on hover/tap + one gentle pulse on load. */
+.sa-hotspot {
+    transition: box-shadow 250ms ease, background-color 250ms ease;
+}
+.sa-hotspot:hover,
+.sa-hotspot:active,
+.sa-hotspot:focus-visible {
+    background-color: rgba(255, 255, 255, 0.08);
+    box-shadow: 0 0 0 3px rgba(147, 51, 234, 0.6), 0 0 26px 6px rgba(147, 51, 234, 0.35);
+}
+@keyframes sa-hotspot-pulse {
+    0%, 100% { box-shadow: 0 0 0 0 rgba(147, 51, 234, 0); }
+    50% { box-shadow: 0 0 0 3px rgba(147, 51, 234, 0.55), 0 0 24px 6px rgba(147, 51, 234, 0.3); }
+}
+.sa-hotspot-pulse {
+    animation: sa-hotspot-pulse 1.4s ease-in-out 1 backwards;
+}
+@media (prefers-reduced-motion: reduce) {
+    .sa-hotspot-pulse { animation: none; }
+}
+

@@ -90,7 +90,7 @@ function BuilderDialog({ open, onOpenChange, fb, parentName }) {
   );
 }
 
-export function FoundationStatementView({ onBack = () => {}, parentName = null, QuickExit = null, SafetyStrip = null, fb }) {
+export function FoundationStatementView({ onBack = () => {}, parentName = null, QuickExit = null, fb }) {
   const [builderOpen, setBuilderOpen] = useState(false);
   return (
     <div data-testid="journey-shell" className="space-y-4">
@@ -102,7 +102,6 @@ export function FoundationStatementView({ onBack = () => {}, parentName = null, 
           </button>
           {QuickExit}
         </div>
-        {SafetyStrip}
         <section data-testid="foundation-brand" className="text-center bg-white border border-slate-200 rounded-2xl py-4 px-4 shadow-sm">
           <div className="text-[22px] font-extrabold text-purple-800 leading-none">SA CoParents</div>
           <div className="text-[9px] font-bold tracking-[0.18em] uppercase text-purple-700 mt-1">Start With Alignment, End With Agreement</div>

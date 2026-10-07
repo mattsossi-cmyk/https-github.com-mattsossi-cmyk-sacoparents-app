@@ -46,7 +46,7 @@ function NeedsCard({ category, completed, onOpen }) {
   );
 }
 
-export function ChildNeedsView({ onBack = () => {}, QuickExit = null, SafetyStrip = null, userId, parentName }) {
+export function ChildNeedsView({ onBack = () => {}, QuickExit = null, userId, parentName }) {
   const { state, saveCategory, downloadReport } = useChildNeeds(userId);
   const [openKey, setOpenKey] = useState(null);
   const category = CONTENT.categories.find((c) => c.key === openKey);
@@ -71,7 +71,6 @@ export function ChildNeedsView({ onBack = () => {}, QuickExit = null, SafetyStri
         </button>
         {QuickExit}
       </div>
-      {SafetyStrip}
 
       <header className="text-center pt-1">
         <div className="text-[1.8rem] font-extrabold text-[#4c2889] tracking-tight">SA CoParents</div>

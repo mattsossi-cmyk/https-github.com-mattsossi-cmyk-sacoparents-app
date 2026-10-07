@@ -81,6 +81,7 @@ from self_assessment_routes import router as self_assessment_router  # noqa: E40
 from child_needs_routes import router as child_needs_router  # noqa: E402
 from foundation_builder_routes import router as foundation_builder_router  # noqa: E402
 from cron_routes import router as cron_router  # noqa: E402
+from release_check_routes import router as release_check_router  # noqa: E402
 
 logging.basicConfig(
     level=logging.INFO,
@@ -232,6 +233,7 @@ api_router.include_router(self_assessment_router)
 api_router.include_router(child_needs_router)
 api_router.include_router(foundation_builder_router)
 api_router.include_router(cron_router)
+api_router.include_router(release_check_router)
 app.include_router(api_router)
 
 # CORS — allow credentials for cookie-based auth.
@@ -325,6 +327,8 @@ async def startup_log():
     asyncio.create_task(alignment_reflection_reminder_loop(app))
     from case_completion_nudge import case_completion_nudge_loop
     asyncio.create_task(case_completion_nudge_loop(app))
+    from release_check import post_boot_release_check
+    asyncio.create_task(post_boot_release_check(app))
 
     # Seed the two demo court keys for SacoparentsPortal (Door 2 flow).
     # Idempotent — only inserts on first boot; subsequent boots are no-ops.

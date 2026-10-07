@@ -2,7 +2,6 @@ import React, { useEffect, useRef, useState } from "react";
 import confetti from "canvas-confetti";
 import { toast } from "sonner";
 
-import { GreyRockToggleChip } from "./AlignmentHub";
 import InviteCoparentCard from "../../components/InviteCoparentCard";
 import { SelfAssessmentModal } from "./SelfAssessmentModal";
 import { useSelfAssessmentHistory } from "./selfAssessment/useSelfAssessmentHistory";
@@ -964,91 +963,8 @@ export function JourneyShell({
     </div>
   );
 
-  // iter264 — "Your co-parenting journey" roadmap shown beneath the
-  // two primary doors on the landing. Each step maps to the closest
-  // existing handler so the roadmap is live, not decorative. Status
-  // tick appears when the corresponding topic is marked completed.
-  const JOURNEY_STEPS = [
-    {
-      key: "assess",
-      title: "Assess Your Situation",
-      body: "Understand where you are today.",
-      icon: "fa-file-magnifying-glass",
-      badgeBg: "bg-purple-500",
-      iconBg: "bg-purple-100 text-purple-700",
-      action: onOpenSafety,
-      completedWhen: progressByTopic?.safety === "completed",
-    },
-    {
-      key: "relationship",
-      title: "Understand Your Relationship",
-      body: "Explore your co-parenting dynamic.",
-      icon: "fa-users",
-      badgeBg: "bg-purple-500",
-      iconBg: "bg-purple-100 text-purple-700",
-      action: () => {
-        openDoor("self");
-        setCpAssessOpen(true);
-      },
-      completedWhen: progressByTopic?.coparenting === "completed",
-    },
-    {
-      key: "child",
-      title: "Identify Your Child's Needs",
-      body: "Focus on what matters most — your child.",
-      icon: "fa-child-reaching",
-      badgeBg: "bg-emerald-500",
-      iconBg: "bg-emerald-100 text-emerald-700",
-      action: () => onOpenGuidedJourney("educational"),
-      completedWhen:
-        progressByTopic?.educational === "completed" ||
-        progressByTopic?.medical === "completed" ||
-        progressByTopic?.psychological === "completed",
-    },
-    {
-      key: "foundation",
-      title: "Create Your Foundation Statement",
-      body: "Define your shared goals and values.",
-      icon: "fa-file-pen",
-      badgeBg: "bg-orange-500",
-      iconBg: "bg-orange-100 text-orange-700",
-      action: () => onOpenGuidedJourney("foundation"),
-      completedWhen: progressByTopic?.foundation === "completed",
-    },
-    {
-      key: "mediation",
-      title: "Prepare for Mediation",
-      body: "Build options and plan for productive discussions.",
-      icon: "fa-handshake",
-      badgeBg: "bg-purple-500",
-      iconBg: "bg-purple-100 text-purple-700",
-      action: () => openDoor("court"),
-      completedWhen: !!courtKey,
-    },
-    {
-      key: "communicate",
-      title: "Strengthen Communication",
-      body: "Put agreements into action and keep progress going.",
-      icon: "fa-comments",
-      badgeBg: "bg-blue-500",
-      iconBg: "bg-blue-100 text-blue-700",
-      action: onOpenBiffCoach,
-      completedWhen: biffAuthoredCount > 0,
-    },
-  ];
-
-  // iter265 — journey roadmap progress: how many of the six steps
-  // the parent has finished. Powers the thin bar at the top of the
-  // roadmap section.
-  const roadmapCompleted = JOURNEY_STEPS.filter(
-    (s) => s.completedWhen
-  ).length;
-  const roadmapPct = Math.round(
-    (roadmapCompleted / JOURNEY_STEPS.length) * 100
-  );
-
   // -----------------------------------------------------------------
-  // LANDING — hero banner + two doors + co-parenting journey roadmap.
+  // LANDING — welcome artwork + two doors + goal card.
   // -----------------------------------------------------------------
   if (view === "door") {
     return (
@@ -1131,80 +1047,6 @@ export function JourneyShell({
             openAssess(saHistory.dueDays > 0);
           }}
         />
-
-        {/* iter264 — "Your co-parenting journey" roadmap. */}
-        <section
-          data-testid="door-journey-roadmap"
-          className="rounded-2xl bg-white border border-slate-200 p-4 shadow-sm space-y-3"
-        >
-          <div className="flex items-center gap-2">
-            <div className="flex-1 h-px bg-slate-200" />
-            <h3 className="text-[10px] uppercase font-bold tracking-wider text-purple-700 shrink-0">
-              Your Co-Parenting Journey
-            </h3>
-            <div className="flex-1 h-px bg-slate-200" />
-          </div>
-          {/* iter265 — thin progress bar at the top of the roadmap. */}
-          <div data-testid="door-roadmap-progress" className="space-y-1">
-            <div className="flex justify-between text-[10px] font-semibold text-slate-600">
-              <span>
-                {roadmapCompleted}/{JOURNEY_STEPS.length} steps complete
-              </span>
-              <span
-                data-testid="door-roadmap-progress-pct"
-                className="text-purple-700"
-              >
-                {roadmapPct}%
-              </span>
-            </div>
-            <div className="w-full bg-slate-100 rounded-full h-1.5">
-              <div
-                className="bg-purple-500 h-1.5 rounded-full transition-all duration-300"
-                style={{ width: `${roadmapPct}%` }}
-              />
-            </div>
-          </div>
-          <div className="space-y-2">
-            {JOURNEY_STEPS.map((s, idx) => (
-              <button
-                key={s.key}
-                type="button"
-                data-testid={`door-roadmap-${s.key}`}
-                data-completed={s.completedWhen ? "true" : "false"}
-                onClick={s.action}
-                className="w-full text-left bg-white hover:bg-slate-50 border border-slate-200 rounded-xl p-3 transition flex items-center gap-3"
-              >
-                <div
-                  className={`shrink-0 w-7 h-7 rounded-full ${s.badgeBg} text-white font-bold text-xs flex items-center justify-center`}
-                >
-                  {idx + 1}
-                </div>
-                <div
-                  className={`shrink-0 w-10 h-10 rounded-lg ${s.iconBg} flex items-center justify-center`}
-                >
-                  <i className={`fa-solid ${s.icon} text-lg`}></i>
-                </div>
-                <div className="min-w-0 flex-1">
-                  <div className="flex items-center gap-1.5">
-                    <div className="text-sm font-bold text-slate-900 leading-tight">
-                      {s.title}
-                    </div>
-                    {s.completedWhen && (
-                      <i
-                        data-testid={`door-roadmap-${s.key}-check`}
-                        className="fa-solid fa-circle-check text-emerald-500 text-xs"
-                      ></i>
-                    )}
-                  </div>
-                  <p className="text-[11px] text-slate-600 mt-0.5 leading-snug">
-                    {s.body}
-                  </p>
-                </div>
-                <i className="fa-solid fa-chevron-right text-slate-300"></i>
-              </button>
-            ))}
-          </div>
-        </section>
       </div>
     );
   }
@@ -1221,6 +1063,18 @@ export function JourneyShell({
             subtitle="Finish your Safety-First check, pick where to start, and open the professional invite."
           />
 
+          <WelcomeArtwork
+            testid="door-court-welcome-image"
+            actions={{
+              self: () => openDoor("self"),
+              court: () =>
+                document
+                  .getElementById("door-court-abc")
+                  ?.scrollIntoView({ behavior: "smooth", block: "start" }),
+              comm: onOpenBiffCoach,
+            }}
+          />
+
           {courtKey && (
             <div
               data-testid="door-court-banner"
@@ -1234,7 +1088,7 @@ export function JourneyShell({
             </div>
           )}
 
-          <div data-testid="door-court-abc" className="space-y-2">
+          <div id="door-court-abc" data-testid="door-court-abc" className="space-y-2 scroll-mt-4">
             <SectionLabel testid="door-court-abc-label">
               Choose where to start
             </SectionLabel>
@@ -1298,33 +1152,10 @@ export function JourneyShell({
         Quick Exit
       </button>
     );
-    const safetyStrip = (
-      <div className="space-y-2">
-        <button
-          type="button"
-          data-testid="door-safety-first"
-          onClick={onOpenSafety}
-          className="w-full p-2.5 rounded-xl bg-rose-600 hover:bg-rose-700 text-white text-left transition flex items-center gap-2"
-        >
-          <i className="fa-solid fa-shield-heart"></i>
-          <span className="text-sm font-bold">Safety First</span>
-          <span className="ml-auto text-[11px] opacity-90">
-            Private · DV &amp; IPV check
-          </span>
-        </button>
-        {safetyFlag && (
-          <GreyRockToggleChip
-            onClear={onClearGreyRock}
-            onRetake={onOpenSafetyRetake}
-          />
-        )}
-      </div>
-    );
     return (
       <ChildNeedsView
         onBack={() => setView("self")}
         QuickExit={quickExitChip}
-        SafetyStrip={safetyStrip}
         userId={user?.user_id}
         parentName={greetingName}
       />
@@ -1350,34 +1181,11 @@ export function JourneyShell({
         Quick Exit
       </button>
     );
-    const safetyStrip = (
-      <div className="space-y-2">
-        <button
-          type="button"
-          data-testid="door-safety-first"
-          onClick={onOpenSafety}
-          className="w-full p-2.5 rounded-xl bg-rose-600 hover:bg-rose-700 text-white text-left transition flex items-center gap-2"
-        >
-          <i className="fa-solid fa-shield-heart"></i>
-          <span className="text-sm font-bold">Safety First</span>
-          <span className="ml-auto text-[11px] opacity-90">
-            Private · DV &amp; IPV check
-          </span>
-        </button>
-        {safetyFlag && (
-          <GreyRockToggleChip
-            onClear={onClearGreyRock}
-            onRetake={onOpenSafetyRetake}
-          />
-        )}
-      </div>
-    );
     return (
       <FoundationStatementView
         onBack={() => setView("self")}
         parentName={greetingName}
         QuickExit={quickExitChip}
-        SafetyStrip={safetyStrip}
         fb={foundationBuilder}
       />
     );
@@ -1459,7 +1267,7 @@ export function JourneyShell({
             </div>
           </button>
 
-          {/* Card 2 — Understand Your Relationship → coparenting 40-Q. */}
+          {/* Card 2 — Understand Your Co-Parenting Relationship → 67-Q assessment. */}
           <button
             type="button"
             data-testid="door-self-card-relationship"
@@ -1474,7 +1282,7 @@ export function JourneyShell({
             </div>
             <div className="min-w-0 flex-1">
               <div className="text-sm font-bold text-slate-900 leading-tight">
-                Understand Your Relationship
+                Understand Your Co-Parenting Relationship
               </div>
               <p className="text-[11px] text-slate-600 mt-0.5 leading-snug">
                 Explore your co-parenting dynamic. Look at communication

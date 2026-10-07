@@ -15,7 +15,7 @@ function Header({ schema, answers, mode, step, onQuickExit }) {
           <i className="fa-solid fa-users text-[13px]"></i>
         </div>
         <div className="min-w-0 flex-1">
-          <DialogTitle className="text-sm font-extrabold text-[#4c2889] leading-tight">Understand Your Relationship</DialogTitle>
+          <DialogTitle className="text-sm font-extrabold text-[#4c2889] leading-tight">Understand Your Co-Parenting Relationship</DialogTitle>
           <DialogDescription className="text-[11px] text-slate-500">
             Co-Parenting Assessment{total ? ` · ${total} questions` : ""}
           </DialogDescription>

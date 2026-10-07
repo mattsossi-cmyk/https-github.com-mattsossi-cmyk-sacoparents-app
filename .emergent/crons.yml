@@ -18,3 +18,10 @@ crons:
     endpoint: "{{BASE_URL}}/api/cron/self-assessment-reminders"
     method: POST
     enabled: true
+  - name: release-check
+    description: "Daily check that key pages and PDFs work on the live app; emails the admin only if something fails"
+    cron: "0 14 * * *"
+    # Cron endpoints must ack 2xx immediately; enqueue/background the actual work.
+    endpoint: "{{BASE_URL}}/api/cron/release-check"
+    method: POST
+    enabled: true

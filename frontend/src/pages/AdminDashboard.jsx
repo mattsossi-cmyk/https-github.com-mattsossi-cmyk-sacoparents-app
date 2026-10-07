@@ -22,6 +22,7 @@ import {
 } from "lucide-react";
 import { logError } from "../lib/logger";
 import { toast } from "sonner";
+import ReleaseCheckTile from "../components/ReleaseCheckTile";
 
 const FUNNEL_STEPS = [
   { key: "child_goals", label: "Child Goals" },
@@ -543,6 +544,8 @@ export default function AdminDashboard() {
             testid="admin-stat-emails"
           />
         </div>
+
+        <ReleaseCheckTile />
 
         <div className="grid lg:grid-cols-3 gap-6">
           {/* Signup chart */}
