@@ -1,0 +1,38 @@
+{
+  "summary": "End-to-end tested the new Court-Ordered Journey additions: (1) both-parent comparison in Alignment/Difference/Child-Focused Needs popups, (2) chat drafts 'Send to Step 4' + 'Split into Step 4 boxes'. Backend: 12/12 pytest cases in /app/backend/tests/test_iter_court_compare_drafts.py — covers 401 unauth, parent1 safety_off (both GET and POST /share), parent2 'waiting' with no leak of parent1's flag, parent3+parent4 full flow not_shared → waiting → ready → toggle off, mine/theirs symmetry from both sides (p3.alignment[area].mine == p4.alignment[area].theirs), child side-by-side rows with category+label+mine+theirs, 400 'Enter your case code first.' when sharing with no court_key, changing court_key invalidates old share, foundation-split 422 for <20 chars, foundation-split returns 4 string keys (core_goals/child_needs/co_values/commitments) each ≤600 chars, PUT /foundation-builder/me saves new 'statement' field, POST /foundation-builder/pdf PDF (FlateDecoded) contains 'Our Foundation Statement' section, court chat 'Draft a child-focused Foundation Statement.' returns plain-text draft (no markdown). Frontend (via UI login to avoid session_token cookie collision): parent1 pillar-alignment popup → court-compare[data-state='safety_off'] with message 'Side-by-side comparison is turned off to keep you safe. Your results stay private to you.' and NO share toggle. parent2 → 'waiting'. parent3 flow (clean state): 'not_shared' with toggle+message, click share → 'waiting'; after parent4 shares via API → 'ready' with court-compare-rows containing 'You' and 'Co-parent' labels; Difference popup also 'ready'; Child popup 'ready' with court-compare-child side-by-side; Resources popup has NO court-compare section; toggle off → 'not_shared'. Draft flow: open chat via court-ai-fab (JS click to bypass toast overlap), court-chat-new, click court-chat-prompt-0 → wait ~15s for AI reply → court-chat-send-step4-{i} + court-chat-split-step4-{i} appear. Send to Step 4 with empty statement: court-draft-panel opens, court-draft-preview shows 'Our Foundation Statement', only court-draft-add present (no replace) → click → court-draft-saved with court-draft-open-step4 + court-draft-back; open-step4 navigates to Foundation Statement page with builder dialog open, foundation-field-statement contains the draft (747 chars). Back link reads 'Back to Court Page'. Second send with non-empty statement shows BOTH court-draft-replace AND court-draft-add-below. Split: court-draft-panel shows 4 parts court-draft-part-{core_goals,child_needs,co_values,commitments}; Add fills all 4 Step 4 fields (verified via API after ~3s debounced PUT). Mobile 390x844 has no horizontal overflow.",
+  "backend_issues": {
+    "critical": [],
+    "minor": [
+      {"endpoint": "/api/court-path/ai/chat (draft prompt)", "issue": "When the parent's Foundation Statement is already filled, the AI sometimes asks a clarifying question with 'Let me know...' / 'feel free' outro instead of returning ONLY the draft as _TASK instructs. With an empty statement the AI correctly returns a plain draft. Edge-case drift from the 'draft-only' rule for the Foundation case."}
+    ]
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  "test_report_links": [
+    "/app/backend/tests/test_iter_court_compare_drafts.py",
+    "/app/test_reports/pytest/iter_court_compare_drafts.xml"
+  ],
+  "action_items": [
+    "(Minor) Tighten the Court chat draft rule so that when the parent asks for a Foundation Statement draft, the model never responds with a clarifying question ('Would you like a fresh draft...') — always emit just the draft (the existing 'ONLY the draft itself' instruction can be made unconditional, or add a pre-prompt example).",
+    "(Carry-over from iter_102) FAB vs sonner-toaster z-index stacking still forces JS clicks on court-ai-fab in automated tests — real users may perceive the FAB as unresponsive while a bottom-right toast is visible."
+  ],
+  "critical_code_review_comments": [
+    "CourtDraftPanel.apply() calls fb.update() for each filled part, which debounces PUT /foundation-builder/me by 1s. The 'Saved to Step 4' confirmation UI appears IMMEDIATELY (setSaved(true)) while persistence happens ~1s later. If the user clicks 'Open Step 4' and the page reads from the backend before the debounce fires, they may briefly see empty boxes (localStorage still has the fresh data so the UI itself is fine, but a direct backend read within the first second could race). Consider awaiting fb.push() inside apply() before showing the saved state, or at least surface the status.",
+    "court_compare.py _coparent() returns None when 2+ other parents share the same case code (ambiguous), silently keeping both in 'waiting' forever. This is correct for safety but may confuse users on a group-code case; worth logging/telemetry.",
+    "GET /api/court-path/compare on the 'ready' state loads both parents' full self-assessment + child-needs on every poll. If called frequently from the popup, consider caching per-user compare results."
+  ],
+  "updated_files": [
+    "/app/backend/tests/test_iter_court_compare_drafts.py"
+  ],
+  "success_rate": {"backend": "100% (12/12)", "frontend": "100% on tested flows"},
+  "test_credentials": "parent1@test.com / TestPass123! (safety-flagged → safety_off), parent2@test.com (ALIGN-SA-2026, sharing on → waiting), parent3@test.com + parent4@test.com (PAIR-DEMO-01, safety-cleared, seeded). All share states reset to off at end of pytest fixture via re-seed.",
+  "seed_data_creation": "Re-ran /app/backend/seed_court_compare_pair.py (resets parent3/parent4 shares to off and keeps seeded CP/SA/CN results). Left parent3/parent4 in 'ready' sharing state at end of frontend tests (both toggled on); other agents can re-seed to reset.",
+  "retest_needed": false,
+  "should_main_agent_self_test": true,
+  "main_agent_can_self_test": true,
+  "context_for_next_testing_agent": "Reusable backend test at /app/backend/tests/test_iter_court_compare_drafts.py. The frontend must be driven via UI LOGIN (page.goto('/login') → 'Sign in with email' → fill form), NOT token injection — /api/auth/login sets a session_token httpOnly cookie that the backend checks BEFORE the Bearer header in get_current_user (auth.py), so a stale cookie from an earlier login overrides any localStorage token swap and the UI will report state for the wrong user (observed as parent1 appearing to show 'not_shared' instead of 'safety_off'). Call page.context.clear_cookies() before each UI login. Court chat FAB still needs JS click due to sonner-toaster overlap. The Split flow persists via a 1-second-debounced PUT to /api/foundation-builder/me — wait ≥1.5s after court-draft-saved before asserting via GET. Compare share toggle UI reflects shared-state via GET /court-path/compare which has a brief 'loading' data-state; always wait for data-state != 'loading'.",
+  "rca of the issue": "Frontend test flake root cause #1: /api/auth/login sets an httpOnly session_token cookie AND returns a Bearer access_token. backend/auth.py checks cookie first → if a previous user's cookie is still present, token-injection into localStorage is ignored. Mitigation: page.context.clear_cookies() before any login. Root cause #2: CourtDraftPanel apply() uses fb.update() which schedules a 1000ms debounced PUT — asserts on GET /foundation-builder/me must wait ≥1.5s after court-draft-saved appears. Minor AI drift: when a Foundation Statement already exists, the Court assistant sometimes asks a clarifying question instead of returning the draft directly, slightly deviating from the 'ONLY the draft itself' instruction."
+}

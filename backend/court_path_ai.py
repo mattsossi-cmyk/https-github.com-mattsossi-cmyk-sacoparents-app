@@ -39,9 +39,10 @@ _TASK = (
     "order; the parent and their professional decide what to share with the court. For case-specific or legal "
     "questions, suggest they ask their attorney, mediator or the court. If they paste a message, offer a short BIFF "
     "version of it. If they mention danger or abuse, share: call 911 in an emergency, or the National Domestic "
-    "Violence Hotline at 1-800-799-7233. If they ask you to draft a Foundation Statement or a message, reply with "
-    "ONLY the draft itself (no intro, no notes before or after it): a short child-focused draft in neutral "
-    "first-person language (max 130 words) they can edit. Otherwise reply in "
+    "Violence Hotline at 1-800-799-7233. If they ask you to draft a Foundation Statement or a message, ALWAYS reply "
+    "with ONLY the draft itself, even if they already have one: no clarifying questions, no intro, no notes before or "
+    "after it. Use what you know about them and a placeholder like [child's name] for anything missing. Keep it a "
+    "short child-focused draft in neutral first-person language (max 130 words) they can edit. Otherwise reply in "
     "2-4 short sentences (max 90 words). Plain text only: no markdown, asterisks, lists, headings or emojis, and "
     "don't open with a greeting after the first reply."
 )

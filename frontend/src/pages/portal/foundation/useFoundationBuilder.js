@@ -92,6 +92,18 @@ export function useFoundationBuilder(userId, parentName) {
     [userId, push]
   );
 
+  // Several fields at once (e.g. an AI draft from the Court chat), saved to the account right away.
+  const updateMany = useCallback(
+    async (patch) => {
+      const next = { ...latest.current, fields: { ...latest.current.fields, ...patch }, updated_at: new Date().toISOString() };
+      latest.current = next;
+      setState(next);
+      write(userId, next);
+      return push();
+    },
+    [userId, push]
+  );
+
   const save = useCallback(async () => {
     const ok = await push();
     if (ok) toast.success("Saved ✓ — your Foundation Statement is safe.");
@@ -120,5 +132,5 @@ export function useFoundationBuilder(userId, parentName) {
     }
   }, [parentName]);
 
-  return { fields: state.fields || {}, savedAt: state.saved_at, status, busy, update, save, download };
+  return { fields: state.fields || {}, savedAt: state.saved_at, status, busy, update, updateMany, save, download };
 }

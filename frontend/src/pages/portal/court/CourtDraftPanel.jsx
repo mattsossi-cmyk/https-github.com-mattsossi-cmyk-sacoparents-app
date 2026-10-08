@@ -19,12 +19,14 @@ function Preview({ parts }) {
   );
 }
 
-function Saved({ onOpenStep4, onClose }) {
+function Saved({ ok, onOpenStep4, onClose }) {
   return (
     <div data-testid="court-draft-saved" className="text-center py-6">
       <i className="fa-solid fa-circle-check text-4xl text-[#2fa144]"></i>
       <p className="mt-3 text-base font-bold text-[#3b1566]">Saved to Step 4</p>
-      <p className="text-sm text-[#5f6368] mb-5">Your Foundation Statement is updated. You can edit it anytime.</p>
+      <p className="text-sm text-[#5f6368] mb-5">
+        {ok ? "Your Foundation Statement is updated. You can edit it anytime." : "Saved on this device. We couldn't reach your account, so open Step 4 and tap Save."}
+      </p>
       <div className="flex flex-col sm:flex-row gap-2 justify-center">
         <button type="button" data-testid="court-draft-open-step4" onClick={onOpenStep4} className="bg-[#2fa144] hover:bg-[#268537] text-white font-bold text-sm px-5 py-2.5 rounded-lg transition-colors">
           Open Step 4 <i className="fa-solid fa-arrow-right ml-1.5"></i>
@@ -41,7 +43,8 @@ function Saved({ onOpenStep4, onClose }) {
 export function CourtDraftPanel({ draft, fb, onClose, onOpenStep4 }) {
   const [parts, setParts] = useState(draft.mode === "statement" ? { statement: draft.text } : null);
   const [error, setError] = useState("");
-  const [saved, setSaved] = useState(false);
+  const [saved, setSaved] = useState(null);
+  const [saving, setSaving] = useState(false);
   useEffect(() => {
     if (draft.mode !== "split") return;
     api
@@ -55,14 +58,19 @@ export function CourtDraftPanel({ draft, fb, onClose, onOpenStep4 }) {
 
   const filled = parts ? Object.entries(parts).filter(([, v]) => (v || "").trim()) : [];
   const hasExisting = filled.some(([k]) => (fb.fields[k] || "").trim());
-  const apply = (how) => {
-    filled.forEach(([k, v]) => {
-      const old = (fb.fields[k] || "").trim();
-      fb.update(k, (how === "add" && old ? `${old}\n\n${v.trim()}` : v.trim()).slice(0, 3000));
-    });
-    setSaved(true);
+  const apply = async (how) => {
+    const patch = Object.fromEntries(
+      filled.map(([k, v]) => {
+        const old = (fb.fields[k] || "").trim();
+        return [k, (how === "add" && old ? `${old}\n\n${v.trim()}` : v.trim()).slice(0, 3000)];
+      })
+    );
+    setSaving(true);
+    const ok = await fb.updateMany(patch);
+    setSaving(false);
+    setSaved({ ok });
   };
-  const btn = "flex-1 font-bold text-sm py-2.5 px-4 rounded-lg transition-colors";
+  const btn = "flex-1 font-bold text-sm py-2.5 px-4 rounded-lg transition-colors disabled:opacity-60";
 
   return (
     <div data-testid="court-draft-panel" className="absolute inset-0 z-10 bg-white flex flex-col">
@@ -74,7 +82,7 @@ export function CourtDraftPanel({ draft, fb, onClose, onOpenStep4 }) {
       </div>
       <div className="pp-scroll flex-1 overflow-y-auto p-5">
         {saved ? (
-          <Saved onOpenStep4={onOpenStep4} onClose={onClose} />
+          <Saved ok={saved.ok} onOpenStep4={onOpenStep4} onClose={onClose} />
         ) : error ? (
           <p data-testid="court-draft-error" className="text-sm text-rose-700">{error}</p>
         ) : !parts ? (
@@ -92,16 +100,16 @@ export function CourtDraftPanel({ draft, fb, onClose, onOpenStep4 }) {
         <div className="p-4 border-t border-[#eee] flex flex-col sm:flex-row gap-2">
           {hasExisting ? (
             <>
-              <button type="button" data-testid="court-draft-replace" onClick={() => apply("replace")} className={`${btn} bg-[#f2ebfc] hover:bg-[#e7dbf8] text-[#3b1566]`}>
+              <button type="button" data-testid="court-draft-replace" disabled={saving} onClick={() => apply("replace")} className={`${btn} bg-[#f2ebfc] hover:bg-[#e7dbf8] text-[#3b1566]`}>
                 Replace
               </button>
-              <button type="button" data-testid="court-draft-add-below" onClick={() => apply("add")} className={`${btn} bg-[#2fa144] hover:bg-[#268537] text-white`}>
+              <button type="button" data-testid="court-draft-add-below" disabled={saving} onClick={() => apply("add")} className={`${btn} bg-[#2fa144] hover:bg-[#268537] text-white`}>
                 Add below
               </button>
             </>
           ) : (
-            <button type="button" data-testid="court-draft-add" onClick={() => apply("add")} className={`${btn} bg-[#2fa144] hover:bg-[#268537] text-white`}>
-              Add to Step 4
+            <button type="button" data-testid="court-draft-add" disabled={saving} onClick={() => apply("add")} className={`${btn} bg-[#2fa144] hover:bg-[#268537] text-white`}>
+              {saving && <i className="fa-solid fa-spinner fa-spin mr-2"></i>}Add to Step 4
             </button>
           )}
         </div>
