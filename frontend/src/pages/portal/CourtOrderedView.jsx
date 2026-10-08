@@ -1,129 +1,109 @@
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import { createPortal } from "react-dom";
 import { toast } from "sonner";
 
-import { api } from "../../lib/api";
-import { CourtAiPanel } from "./court/CourtAiPanel";
+import { CourtAcceptDialog } from "./court/CourtAcceptDialog";
+import { CourtChatPanel } from "./court/CourtChatPanel";
 import { CourtChecklistCard } from "./court/CourtChecklistCard";
-import { CourtCodeCard } from "./court/CourtCodeCard";
-import { CourtHero } from "./court/CourtHero";
-import { CourtPathCards } from "./court/CourtPathCards";
-import { PageHeader, SafetyBanner, useLockScroll } from "./selfAssessment/SaChrome";
+import { STEPS } from "./court/courtContent";
+import { CourtHeader } from "./court/CourtHeader";
+import { CourtJourneyArt } from "./court/CourtJourneyArt";
+import { CourtPillarDialog } from "./court/CourtPillarDialog";
+import { CourtStepDialog } from "./court/CourtStepDialog";
+import { CourtModulesCard, CourtTools } from "./court/CourtTools";
+import { useCourtCase } from "./court/useCourtCase";
+import { useCourtChecklist } from "./court/useCourtChecklist";
+import { useCourtSummary } from "./court/useCourtSummary";
+import { useGuideChat } from "./guide/useGuideChat";
+import { SafetyBanner, useLockScroll } from "./selfAssessment/SaChrome";
 
-const hostOf = (url) => {
-  try {
-    return new URL(url).host;
-  } catch {
-    return url;
-  }
-};
+const BIFF_BOOK_URL = process.env.REACT_APP_BIFF_BOOK_URL;
+const openTab = (url) => window.open(url, "_blank", "noopener,noreferrer");
 
-// Full-page Court Ordered path. Rendered in a portal; hides while another overlay is open.
-export function CourtOrderedView({ onBack, onQuickExit, courtKey, mediator, onVerify, modules, onOpenModule, onDownloadPdf, onOpenBiffHistory, onSupportChild, alignUrl, safetyFlag, signedIn, hidden = false }) {
-  const [code, setCode] = useState(courtKey || "");
-  const [verifiedCode, setVerifiedCode] = useState("");
-  const [status, setStatus] = useState(null);
-  const [busy, setBusy] = useState(null);
+// Full-page Court Ordered path (portal): interactive journey artwork, court tools, and a saved AI chat.
+export function CourtOrderedView({ onBack, onQuickExit, courtKey, mediator, onVerify, modules, onOpenModule, onOpenCard, onOpenParallel, onDownloadPdf, onOpenBiffHistory, alignUrl, safetyFlag, signedIn, hidden = false }) {
+  const [hints, setHints] = useState(true);
+  const [dialog, setDialog] = useState(null);
+  const [chatOpen, setChatOpen] = useState(false);
+  const [chatDraft, setChatDraft] = useState("");
+  const checklist = useCourtChecklist({ modules, courtKey, hidden });
+  const summary = useCourtSummary(!hidden);
+  const cc = useCourtCase({ courtKey, savedName: checklist.data?.parent_name, onVerify, signedIn, alignUrl, onDownloadPdf });
+  const chat = useGuideChat("/court-path/ai/chat", { modules: Object.fromEntries(modules.map((m) => [m.topic, m.status])), safety_flagged: !!safetyFlag });
   useLockScroll(!hidden);
-  useEffect(() => {
-    if (courtKey) setCode((c) => c || courtKey);
-  }, [courtKey]);
 
-  const alignHost = hostOf(alignUrl);
-  const doneCount = modules.filter((m) => m.status === "completed").length;
-  const typed = code.trim();
-  const verified = !!courtKey && (!typed || typed === verifiedCode || typed.toUpperCase() === courtKey.toUpperCase());
-
-  const ensureVerified = async (kind) => {
-    if (verified) return courtKey;
-    if (!typed) {
-      setStatus({ tone: "error", text: "Please enter your case number or invite code." });
-      return null;
-    }
-    setBusy(kind);
-    const res = await onVerify(typed);
-    setBusy(null);
-    if (res.error) {
-      setStatus({ tone: "error", text: res.error });
-      return null;
-    }
-    setVerifiedCode(typed);
-    setStatus({ tone: "ok", text: `Verified. Case ${res.caseId} is linked to your portal.` });
-    return res.caseId;
+  const items = Object.fromEntries((checklist.data?.items || []).map((i) => [i.key, i]));
+  const statusOf = (card) => items[card]?.status || "loading";
+  const close = () => setDialog(null);
+  const openStep = (n) => {
+    close();
+    onOpenCard(STEPS[n - 1].card);
+  };
+  const askAi = (prompt) => {
+    close();
+    setChatDraft(prompt);
+    setChatOpen(true);
   };
 
-  const verify = () =>
-    verified ? setStatus({ tone: "ok", text: `Case ${courtKey} is verified and linked to your portal.` }) : ensureVerified("verify");
-
-  const accept = async () => {
-    const caseId = await ensureVerified("accept");
+  const confirmAccept = async () => {
+    const caseId = await cc.accept();
     if (!caseId) return;
-    const next = modules.find((m) => m.status !== "completed");
+    checklist.load();
+    close();
+    const nextStep = STEPS.find((s) => statusOf(s.card) !== "done");
+    const nextModule = modules.find((m) => m.status !== "completed");
     toast.success(`Court invite accepted for Case ${caseId}`, {
-      description: next ? `Next step: ${next.letter}. ${next.title}` : "All three modules are complete. Your court-ready PDF is ready.",
+      description: nextStep ? `Next: ${nextStep.title}` : nextModule ? `Next: Module ${nextModule.letter}. ${nextModule.title}` : "Everything is complete. Your court-ready PDF is ready.",
     });
-    if (next) onOpenModule(next);
+    if (nextStep) onOpenCard(nextStep.card);
+    else if (nextModule) onOpenModule(nextModule);
   };
 
-  const sync = async () => {
-    const caseId = await ensureVerified("sync");
-    if (!caseId) return;
-    if (signedIn) {
-      setBusy("sync");
-      await api.put("/portal/state", { court_key: caseId }).catch(() => {});
-      setBusy(null);
-    }
-    toast.success(`Case ${caseId} saved. Opening ${alignHost}…`);
-    window.open(alignUrl, "_blank", "noopener,noreferrer");
-  };
-
-  const pdf = async () => {
-    setBusy("pdf");
-    await onDownloadPdf();
-    setBusy(null);
-  };
+  const resources = [
+    { key: "biff", icon: "fa-wand-magic-sparkles", title: "BIFF Communication Builder", sub: "Rewrite messages to be brief, informative, friendly, firm", onClick: () => { close(); onOpenBiffHistory(); } },
+    { key: "parallel", icon: "fa-people-arrows", title: "Parallel Parenting Option Builder", sub: "Plan exchanges and communication with less contact", onClick: () => { close(); onOpenParallel(); } },
+    { key: "pdf", icon: "fa-file-pdf", title: "Court-Ready Summary PDF", sub: "Download your summary report", onClick: () => { close(); cc.pdf(); } },
+    { key: "checklist", icon: "fa-list-check", title: "Court Checklist PDF", sub: "What's done and what's left", onClick: () => { close(); checklist.download(); } },
+    { key: "professional", icon: "fa-user-tie", title: "Your Professional's Site", sub: cc.alignHost, onClick: () => openTab(alignUrl) },
+    { key: "book", icon: "fa-book-open", title: "BIFF for CoParent Communication", sub: "Book by Bill Eddy", onClick: () => openTab(BIFF_BOOK_URL) },
+    { key: "hotline", icon: "fa-phone", title: "National DV Hotline: 1-800-799-7233", sub: "Free, confidential, 24/7. In danger? Call 911.", onClick: () => (window.location.href = "tel:18007997233") },
+  ];
 
   return createPortal(
-    <div id="court-page" data-testid="court-page" className={`fixed inset-0 z-50 overflow-y-auto ${hidden ? "hidden" : ""} bg-gradient-to-b from-[#F3EFFE] to-[#EBE5FA] text-slate-800 pb-12`}>
+    <div id="court-page" data-testid="court-page" className={`fixed inset-0 z-50 overflow-y-auto ${hidden ? "hidden" : ""} bg-[#f3eff9] text-[#202124] pb-28`}>
       <SafetyBanner tp="court" icon="fa-scale-balanced" label="Court Ordered Portal" />
-      <div className="max-w-6xl mx-auto px-4 pt-6">
-        <PageHeader tp="court" onBack={onBack} onQuickExit={onQuickExit} backLabel="Back to dashboard" tagline="Start with Alignment • End with Agreement" badgeLabel="Court Pathway Guide" tm />
-        <CourtHero courtKey={courtKey} mediator={mediator} alignHost={alignHost} />
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
-          <div className="lg:col-span-7 space-y-4">
-            <CourtPathCards modules={modules} doneCount={doneCount} onOpenModule={onOpenModule} onReports={pdf} onSupportChild={onSupportChild} pdfBusy={busy === "pdf"} />
-            <CourtCodeCard
-              code={code}
-              onChange={(v) => {
-                setCode(v);
-                setStatus(null);
-              }}
-              onVerify={verify}
-              onAccept={accept}
-              status={status}
-              busy={busy}
-              verified={verified}
-            />
-            <CourtChecklistCard modules={modules} courtKey={courtKey} hidden={hidden} />
-          </div>
-          <div className="lg:col-span-5">
-            <CourtAiPanel
-              safetyFlag={safetyFlag}
-              verified={!!courtKey}
-              doneCount={doneCount}
-              total={modules.length}
-              busy={busy}
-              onPdf={pdf}
-              onBiff={onOpenBiffHistory}
-              onSync={sync}
-              alignHost={alignHost}
-            />
-          </div>
+      <div className="max-w-[900px] mx-auto px-[15px] pt-4">
+        <CourtHeader onBack={onBack} onQuickExit={onQuickExit} hints={hints} onToggleHints={() => setHints((h) => !h)} />
+        <CourtJourneyArt
+          hints={hints}
+          statusOf={statusOf}
+          onAccept={() => setDialog({ type: "accept" })}
+          onStep={(step) => setDialog({ type: "step", step })}
+          onPillar={(pillar) => setDialog({ type: "pillar", pillar })}
+        />
+        <CourtTools cc={cc} courtKey={courtKey} onCase={() => setDialog({ type: "accept" })} onBiff={onOpenBiffHistory} />
+        <div className="grid md:grid-cols-2 gap-6 items-start">
+          <CourtModulesCard modules={modules} onOpenModule={onOpenModule} />
+          <CourtChecklistCard checklist={checklist} />
         </div>
-        <p data-testid="court-footer" className="mt-12 text-center text-xs text-slate-500 font-medium">
-          &copy; SA CoParents &bull; Court Ordered Pathway &bull; Powered by Emergent AI
+        <p data-testid="court-footer" className="mt-12 text-center text-xs text-[#5f6368] font-medium">
+          &copy; SA CoParents &bull; Court Ordered Pathway &bull; Powered by Emergent AI &bull; General guidance, not legal advice
         </p>
       </div>
+      {!hidden && (
+        <>
+          <CourtAcceptDialog open={dialog?.type === "accept"} onClose={close} cc={cc} mediator={mediator} courtKey={courtKey} onConfirm={confirmAccept} />
+          <CourtStepDialog
+            step={dialog?.type === "step" ? dialog.step : null}
+            item={dialog?.step && items[dialog.step.card]}
+            onClose={close}
+            onOpen={() => openStep(dialog.step.n)}
+            onAskAi={() => askAi(`Help me get started with ${dialog.step.title}.`)}
+          />
+          <CourtPillarDialog pillar={dialog?.type === "pillar" ? dialog.pillar : null} summary={summary} resources={resources} onClose={close} onOpenStep={openStep} />
+          <CourtChatPanel chat={chat} open={chatOpen} onOpenChange={setChatOpen} draft={chatDraft} />
+        </>
+      )}
     </div>,
     document.body
   );

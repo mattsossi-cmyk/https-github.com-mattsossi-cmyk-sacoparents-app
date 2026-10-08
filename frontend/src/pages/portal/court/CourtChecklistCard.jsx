@@ -1,7 +1,5 @@
 import React from "react";
 
-import { useCourtChecklist } from "./useCourtChecklist";
-
 const ICON = {
   done: "fa-solid fa-circle-check text-emerald-600",
   in_progress: "fa-solid fa-circle-half-stroke text-amber-500",
@@ -14,7 +12,7 @@ function Row({ item }) {
     <li data-testid={`court-checklist-item-${item.key}`} data-status={item.status} className="flex items-start gap-3 py-2.5">
       <i className={`${ICON[item.status]} text-base mt-0.5 shrink-0`} aria-hidden="true"></i>
       <div className="min-w-0 flex-1">
-        <p className={`text-sm font-semibold ${done ? "text-slate-800" : "text-slate-700"}`}>{item.label}</p>
+        <p className="text-sm font-semibold text-slate-800">{item.label}</p>
         <p className={`text-[11px] leading-snug ${done ? "text-emerald-700" : item.status === "in_progress" ? "text-amber-700" : "text-slate-500"}`}>
           {done ? item.detail : item.detail ? `${item.detail}. ${item.hint}` : item.hint}
         </p>
@@ -23,15 +21,15 @@ function Row({ item }) {
   );
 }
 
-export function CourtChecklistCard({ modules, courtKey, hidden }) {
-  const { data, error, load, download, downloading } = useCourtChecklist({ modules, courtKey, hidden });
+export function CourtChecklistCard({ checklist }) {
+  const { data, error, load, download, downloading } = checklist;
   const pct = data ? Math.round((data.done / data.total) * 100) : 0;
   return (
-    <div data-testid="court-checklist-card" className="bg-white rounded-2xl p-6 border border-purple-100 shadow-md mt-6">
+    <div data-testid="court-checklist-card" className="bg-white rounded-2xl p-6 border border-[#e0d5ed] shadow-md">
       <div className="flex items-start justify-between gap-3 flex-wrap">
         <div>
-          <h4 className="text-sm font-extrabold text-[#3B1C6B] uppercase tracking-wider flex items-center gap-2">
-            <i className="fa-solid fa-list-check text-purple-600"></i> Your Court Checklist
+          <h4 className="text-sm font-extrabold text-[#3b1566] uppercase tracking-wider flex items-center gap-2">
+            <i className="fa-solid fa-list-check text-[#5c2c8e]"></i> Your Court Checklist
           </h4>
           <p className="text-[11px] text-slate-500 mt-0.5">What's done and what's left. Bring it to your mediator.</p>
         </div>
@@ -57,7 +55,7 @@ export function CourtChecklistCard({ modules, courtKey, hidden }) {
       ) : (
         <>
           <div className="mt-4 w-full bg-purple-100 rounded-full h-2">
-            <div data-testid="court-checklist-bar" className="bg-purple-600 h-2 rounded-full transition-[width] duration-500" style={{ width: `${pct}%` }} />
+            <div data-testid="court-checklist-bar" className="bg-[#5c2c8e] h-2 rounded-full transition-[width] duration-500" style={{ width: `${pct}%` }} />
           </div>
           <ul data-testid="court-checklist-list" className="mt-2 divide-y divide-purple-50">
             {data.items.map((it) => (
@@ -71,7 +69,7 @@ export function CourtChecklistCard({ modules, courtKey, hidden }) {
         data-testid="court-checklist-download"
         onClick={download}
         disabled={downloading || !data}
-        className="mt-4 w-full py-3 px-4 bg-purple-900 hover:bg-purple-950 disabled:opacity-60 text-white text-xs font-bold rounded-xl shadow transition-colors flex items-center justify-center gap-2"
+        className="mt-4 w-full py-3 px-4 bg-[#3b1566] hover:bg-[#2a0f4a] disabled:opacity-60 text-white text-xs font-bold rounded-xl shadow transition-colors flex items-center justify-center gap-2"
       >
         <i className={`fa-solid ${downloading ? "fa-spinner fa-spin" : "fa-file-arrow-down"}`}></i>
         <span>Download Checklist PDF</span>

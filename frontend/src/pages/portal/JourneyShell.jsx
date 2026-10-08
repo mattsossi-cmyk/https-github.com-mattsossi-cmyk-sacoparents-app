@@ -851,6 +851,17 @@ export function JourneyShell({
     setAssessStartNew(startNew);
     setAssessOpen(true);
   };
+  const openFoundation = (from) => {
+    setSubFrom(from);
+    setView("foundation");
+  };
+  // Court page journey steps open the same real pages as the Self Journey cards.
+  const openCourtCard = (key) => {
+    if (key === "card1") openAssess(false);
+    else if (key === "card2") setCpAssessOpen(true);
+    else if (key === "card3") openChildNeeds("court");
+    else if (key === "card4") openFoundation("court");
+  };
 
   // Communication Builder's START SELF-ASSESSMENT button.
   useEffect(() => {
@@ -1037,6 +1048,42 @@ export function JourneyShell({
     );
   }
 
+  // Full-page overlays shared by Self Journey and the Court page.
+  const journeyOverlays = (
+    <>
+      {/* Card 1 — full-page Self-Assessment. */}
+      {assessOpen && (
+        <SelfAssessmentView
+          onClose={() => setAssessOpen(false)}
+          parentName={greetingName}
+          userId={user?.user_id}
+          history={saHistory.history}
+          startNew={assessStartNew}
+          onCompleted={saHistory.addEntry}
+          onEntryUpdate={saHistory.updateEntry}
+          onQuickExit={quickExitAction}
+          onOpenBiffCoach={onOpenBiffCoach}
+          safetyFlag={safetyFlag}
+          hidden={biffCoachOpen}
+        />
+      )}
+      {ppOpen && (
+        <ParallelParentingView
+          onClose={() => setPpOpen(false)}
+          onQuickExit={quickExitAction}
+          safetyFlag={safetyFlag}
+          hidden={overlayOpen || biffCoachOpen}
+        />
+      )}
+      <CoparentingAssessmentModal
+        open={cpAssessOpen}
+        onOpenChange={setCpAssessOpen}
+        userId={user?.user_id}
+        onQuickExit={quickExitAction}
+      />
+    </>
+  );
+
   // -----------------------------------------------------------------
   // COURT ORDERED SUB-VIEW
   // -----------------------------------------------------------------
@@ -1054,14 +1101,16 @@ export function JourneyShell({
             return { ...m, status, ...STATUS_META[status] };
           })}
           onOpenModule={moduleCta}
+          onOpenCard={openCourtCard}
+          onOpenParallel={() => setPpOpen(true)}
           onDownloadPdf={onDownloadCourtPdf}
           onOpenBiffHistory={() => onOpenCommBuilder("history")}
-          onSupportChild={() => openChildNeeds("court")}
           alignUrl={ALIGN_SITE_URL}
           safetyFlag={safetyFlag}
           signedIn={!!user}
-          hidden={overlayOpen}
+          hidden={overlayOpen || assessOpen || ppOpen || cpAssessOpen}
         />
+        {journeyOverlays}
       </div>
     );
   }
@@ -1114,7 +1163,7 @@ export function JourneyShell({
     );
     return (
       <FoundationStatementView
-        onBack={() => setView("self")}
+        onBack={() => setView(subFrom)}
         parentName={greetingName}
         QuickExit={quickExitChip}
         fb={foundationBuilder}
@@ -1257,7 +1306,7 @@ export function JourneyShell({
           <button
             type="button"
             data-testid="door-self-card-foundation"
-            onClick={() => setView("foundation")}
+            onClick={() => openFoundation("self")}
             className="w-full bg-white border border-slate-200 shadow-sm hover:shadow-md hover:border-orange-300 rounded-2xl p-4 transition flex items-center gap-3 text-left"
           >
             <div className="shrink-0 w-9 h-9 rounded-full bg-orange-500 text-white font-extrabold flex items-center justify-center">
@@ -1479,36 +1528,7 @@ export function JourneyShell({
         </DialogContent>
       </Dialog>
 
-      {/* Card 1 — full-page Self-Assessment. */}
-      {assessOpen && (
-        <SelfAssessmentView
-          onClose={() => setAssessOpen(false)}
-          parentName={greetingName}
-          userId={user?.user_id}
-          history={saHistory.history}
-          startNew={assessStartNew}
-          onCompleted={saHistory.addEntry}
-          onEntryUpdate={saHistory.updateEntry}
-          onQuickExit={quickExitAction}
-          onOpenBiffCoach={onOpenBiffCoach}
-          safetyFlag={safetyFlag}
-          hidden={biffCoachOpen}
-        />
-      )}
-      {ppOpen && (
-        <ParallelParentingView
-          onClose={() => setPpOpen(false)}
-          onQuickExit={quickExitAction}
-          safetyFlag={safetyFlag}
-          hidden={overlayOpen || biffCoachOpen}
-        />
-      )}
-      <CoparentingAssessmentModal
-        open={cpAssessOpen}
-        onOpenChange={setCpAssessOpen}
-        userId={user?.user_id}
-        onQuickExit={quickExitAction}
-      />
+      {journeyOverlays}
     </div>
   );
 }

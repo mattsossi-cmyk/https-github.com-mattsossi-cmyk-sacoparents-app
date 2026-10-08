@@ -2,16 +2,19 @@ import React, { useState } from "react";
 import { createPortal } from "react-dom";
 import { toast } from "sonner";
 
-import { PpChat } from "./parallel/PpChat";
+import { GuideChat } from "./guide/GuideChat";
+import { useGuideChat } from "./guide/useGuideChat";
 import { PpHeader } from "./parallel/PpHeader";
 import { PpStep } from "./parallel/PpStep";
 import { PpSummary } from "./parallel/PpSummary";
 import { PpWelcome } from "./parallel/PpWelcome";
 import content from "./parallel/ppContent.json";
-import { downloadPdf, usePpChat, usePpPlan } from "./parallel/usePp";
+import { downloadPdf, usePpPlan } from "./parallel/usePp";
 import { SafetyBanner, useLockScroll } from "./selfAssessment/SaChrome";
 
 const STEPS = content.steps;
+const SUGGESTIONS = ["What is parallel parenting?", "How do I keep exchanges calm?", "What if the other parent ignores the plan?"];
+const GREETING = "Hi, I'm your Guide. Ask me anything about parallel parenting or the choices on this page.";
 
 // Full-page Parallel Parenting Option Builder (Self Journey). Screens: welcome, steps 0-5, summary.
 export function ParallelParentingView({ onClose, onQuickExit, safetyFlag, hidden = false }) {
@@ -20,7 +23,7 @@ export function ParallelParentingView({ onClose, onQuickExit, safetyFlag, hidden
   const [downloading, setDownloading] = useState(false);
   const [historyTick, setHistoryTick] = useState(0);
   const stepIndex = typeof screen === "number" ? screen : null;
-  const chat = usePpChat({ step: stepIndex != null ? STEPS[stepIndex].key : null, safetyFlag });
+  const chat = useGuideChat("/parallel-parenting/ai/chat", { step: stepIndex != null ? STEPS[stepIndex].key : null, safety_flagged: !!safetyFlag });
   useLockScroll(!hidden);
   const refreshHistory = () => setHistoryTick((t) => t + 1);
 
@@ -62,7 +65,7 @@ export function ParallelParentingView({ onClose, onQuickExit, safetyFlag, hidden
     <div className="max-w-5xl mx-auto space-y-6">
       <PpWelcome content={content} plan={pp.plan} onStart={start} onOpenStep={openStep} onSummary={openSummary} />
       <div className="max-w-3xl mx-auto">
-        <PpChat chat={chat} />
+        <GuideChat chat={chat} tp="pp" title="Parallel Parenting Guide" greeting={GREETING} suggestions={SUGGESTIONS} />
       </div>
     </div>
   ) : (
@@ -87,7 +90,7 @@ export function ParallelParentingView({ onClose, onQuickExit, safetyFlag, hidden
         )}
       </div>
       <aside className="lg:col-span-4 lg:sticky lg:top-24">
-        <PpChat chat={chat} />
+        <GuideChat chat={chat} tp="pp" title="Parallel Parenting Guide" greeting={GREETING} suggestions={SUGGESTIONS} />
       </aside>
     </div>
   );

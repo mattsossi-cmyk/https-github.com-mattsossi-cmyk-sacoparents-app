@@ -6,7 +6,6 @@ Copy lives in `parallel_parenting_content.json`, mirrored at
 from __future__ import annotations
 
 import json
-import re
 import uuid
 from datetime import datetime, timezone
 from io import BytesIO
@@ -19,6 +18,7 @@ from motor.motor_asyncio import AsyncIOMotorDatabase
 from pydantic import BaseModel, Field, field_validator
 
 from auth import UserPublic, get_current_user, get_db
+from guide_chat import chat_turn, latest_chat, new_chat, plain as _plain
 from self_assessment_ai import _GREY_ROCK, _ask, _grey_rock, _guard
 import parallel_parenting_pdf
 
@@ -60,12 +60,6 @@ _CHAT_TASK = (
 
 def _now() -> str:
     return datetime.now(timezone.utc).isoformat()
-
-
-def _plain(text: str, limit: int) -> str:
-    """Strip markdown the model sometimes adds (bold, headings, code ticks) and collapse whitespace."""
-    text = re.sub(r"^\s*#+\s*", "", text, flags=re.M)
-    return " ".join(re.sub(r"[*`\"]", "", text).split())[:limit]
 
 
 class PlanBody(BaseModel):
@@ -226,41 +220,28 @@ async def ai_tip(
 
 @router.get("/ai/chat")
 async def get_chat(user: UserPublic = Depends(get_current_user), db: AsyncIOMotorDatabase = Depends(get_db)) -> Dict[str, Any]:
-    doc = await db[CHATS].find_one(
-        {"user_id": user.user_id}, {"_id": 0, "session_id": 1, "messages": 1}, sort=[("updated_at", -1)]
-    )
-    return doc or {"session_id": None, "messages": []}
+    return await latest_chat(db, CHATS, user.user_id)
+
+
+@router.post("/ai/chat/new")
+async def start_new_chat(user: UserPublic = Depends(get_current_user), db: AsyncIOMotorDatabase = Depends(get_db)) -> Dict[str, Any]:
+    return await new_chat(db, CHATS, user.user_id)
 
 
 @router.post("/ai/chat")
 async def chat(
     body: ChatBody, request: Request, user: UserPublic = Depends(get_current_user), db: AsyncIOMotorDatabase = Depends(get_db)
 ) -> Dict[str, str]:
-    await _guard(request)
-    sid = body.session_id or uuid.uuid4().hex
-    doc = await db[CHATS].find_one({"user_id": user.user_id, "session_id": sid}, {"_id": 0, "messages": 1}) or {}
-    transcript = "\n".join(
-        f"{'Parent' if m['role'] == 'user' else 'Guide'}: {m['text']}" for m in (doc.get("messages") or [])[-12:]
-    )
     summary = _plan_summary(await _plan(db, user.user_id))
     step = STEPS.get(body.step or "")
-    message = body.message.strip()
-    prompt = "".join([
-        f"The parent's plan choices so far:\n{summary}\n\n" if summary else "",
-        f"They are on the step: {step['title']}.\n\n" if step else "",
-        f"Conversation so far:\n{transcript}\n\n" if transcript else "",
-        f"Parent's new message: {message}",
-    ])
-    grey = await _grey_rock(request, user, body.safety_flagged)
-    reply = _plain(await _ask(_VOICE + (_GREY_ROCK if grey else "") + _CHAT_TASK, prompt), 1200)
-    now = _now()
-    turn = [{"role": "user", "text": message, "at": now}, {"role": "guide", "text": reply, "at": now}]
-    await db[CHATS].update_one(
-        {"user_id": user.user_id, "session_id": sid},
-        {"$push": {"messages": {"$each": turn, "$slice": -60}}, "$set": {"updated_at": now}, "$setOnInsert": {"created_at": now}},
-        upsert=True,
+    context = "\n\n".join(filter(None, [
+        f"The parent's plan choices so far:\n{summary}" if summary else "",
+        f"They are on the step: {step['title']}." if step else "",
+    ]))
+    return await chat_turn(
+        db, CHATS, request, user, session_id=body.session_id, message=body.message,
+        voice=_VOICE, task=_CHAT_TASK, context=context, safety_flagged=body.safety_flagged,
     )
-    return {"session_id": sid, "reply": reply}
 
 
 @router.post("/pdf")

@@ -144,6 +144,7 @@ def _empty_portal_state() -> Dict[str, Any]:
         "legal_report": {"sigA": "", "sigB": "", "sigMed": ""},
         "health_index": {"s1": 7, "s2": 6, "s3": 5},
         "court_key": "",
+        "court_legal_name": "",
         "reassessments": [],
         "safety_ack": None,
         "safety_plan": None,
@@ -161,6 +162,7 @@ class PortalStatePayload(BaseModel):
     legal_report: Dict[str, str] = Field(default_factory=dict)
     health_index: Dict[str, int] = Field(default_factory=dict)
     court_key: str = ""
+    court_legal_name: str = ""
     reassessments: List[Dict[str, Any]] = Field(default_factory=list)
     # Safety-first sync (iter212). Both are opaque JSON blobs the client
     # owns — the server only enforces size + shape at write time so we
@@ -405,6 +407,8 @@ async def put_state(
         updates["foundation_text"] = (updates["foundation_text"] or "")[:5000]
     if "court_key" in updates:
         updates["court_key"] = (updates["court_key"] or "")[:80]
+    if "court_legal_name" in updates:
+        updates["court_legal_name"] = " ".join((updates["court_legal_name"] or "").split())[:120]
     if "legal_report" in updates:
         lr = updates["legal_report"] or {}
         updates["legal_report"] = {

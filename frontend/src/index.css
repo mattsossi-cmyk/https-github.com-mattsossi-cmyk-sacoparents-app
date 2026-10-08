@@ -395,3 +395,38 @@ h1, h2, h3, h4, .font-serif {
   background: #cbd5e1;
   border-radius: 4px;
 }
+
+/* Court Ordered artwork hotspots: hints = dashed green outline; the main action pulses. */
+.court-spot {
+    border: 2px solid transparent;
+    transition: background-color 250ms ease, border-color 250ms ease, box-shadow 250ms ease;
+}
+.court-spot:hover,
+.court-spot:focus-visible {
+    background-color: rgba(123, 44, 191, 0.15);
+}
+.court-spot.hint {
+    border: 2px dashed rgba(47, 161, 68, 0.7);
+    background-color: rgba(47, 161, 68, 0.08);
+}
+.court-spot.hint:hover {
+    background-color: rgba(123, 44, 191, 0.15);
+}
+.court-spot-main.hint {
+    border: 3px solid #2fa144;
+    animation: court-pulse 1.8s infinite;
+}
+@keyframes court-pulse {
+    0% { box-shadow: 0 0 0 0 rgba(47, 161, 68, 0.7); }
+    70% { box-shadow: 0 0 0 14px rgba(47, 161, 68, 0); }
+    100% { box-shadow: 0 0 0 0 rgba(47, 161, 68, 0); }
+}
+.court-fab {
+    transition: transform 250ms ease, box-shadow 250ms ease;
+}
+.court-fab:hover {
+    transform: scale(1.05);
+}
+@media (prefers-reduced-motion: reduce) {
+    .court-spot-main.hint { animation: none; }
+}

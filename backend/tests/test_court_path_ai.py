@@ -1,4 +1,4 @@
-"""Tests for /api/court-path/ai/guide + regression /api/portal/court-keys/verify."""
+"""Regression tests for /api/portal/court-keys/verify and the Self-Assessment framing AI."""
 import os
 import pytest
 import requests
@@ -21,42 +21,6 @@ BASE_URL = _base_url()
 API = f"{BASE_URL}/api"
 
 
-# ---------- /court-path/ai/guide ----------
-
-class TestCourtAiGuide:
-    def test_question_too_short_returns_422(self):
-        r = requests.post(f"{API}/court-path/ai/guide", json={"question": "hi"}, timeout=20)
-        assert r.status_code == 422, r.text
-
-    def test_missing_question_returns_422(self):
-        r = requests.post(f"{API}/court-path/ai/guide", json={}, timeout=20)
-        assert r.status_code == 422, r.text
-
-    def test_valid_question_no_auth_returns_answer(self):
-        r = requests.post(
-            f"{API}/court-path/ai/guide",
-            json={"question": "What should I bring to my first mediation session?"},
-            timeout=60,
-        )
-        assert r.status_code == 200, r.text
-        data = r.json()
-        assert "answer" in data
-        assert isinstance(data["answer"], str)
-        assert len(data["answer"]) > 20
-        # Length guard applied
-        assert len(data["answer"]) <= 900
-
-    def test_safety_flagged_returns_answer(self):
-        r = requests.post(
-            f"{API}/court-path/ai/guide",
-            json={"question": "How do I keep my child safe when exchanging?", "safety_flagged": True},
-            timeout=60,
-        )
-        assert r.status_code == 200, r.text
-        assert isinstance(r.json().get("answer"), str)
-
-
-# ---------- /portal/court-keys/verify regression ----------
 
 class TestCourtKeyVerify:
     def test_valid_court_8842(self):

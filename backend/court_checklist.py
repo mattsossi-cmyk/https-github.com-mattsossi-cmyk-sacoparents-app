@@ -12,6 +12,7 @@ from motor.motor_asyncio import AsyncIOMotorDatabase
 from pydantic import BaseModel, Field
 
 from auth import UserPublic, get_current_user, get_db
+from court_summary import build_summary
 from pdf_base import _safe, render_pdf_copyright
 
 router = APIRouter(prefix="/court-path", tags=["court-path"])
@@ -48,7 +49,9 @@ def _item(key: str, label: str, status: str, detail: str, hint: str) -> Dict[str
 
 async def build_checklist(db: AsyncIOMotorDatabase, user: UserPublic, modules: Dict[str, str]) -> Dict[str, Any]:
     uid = user.user_id
-    ps = await db.portal_state.find_one({"user_id": uid}, {"_id": 0, "court_key": 1, "safety_ack": 1, "biff_logs": 1}) or {}
+    ps = await db.portal_state.find_one(
+        {"user_id": uid}, {"_id": 0, "court_key": 1, "court_legal_name": 1, "safety_ack": 1, "biff_logs": 1}
+    ) or {}
     sa = await db.self_assessment_history.find({"user_id": uid}, {"_id": 0, "completed_at": 1}).sort("completed_at", -1).to_list(100)
     cp = await db.cp_report_history.find_one({"_id": uid}, {"snapshots.submitted_at": 1}) or {}
     cn = await db.child_needs_assessments.find_one({"user_id": uid}, {"_id": 0, "completed_at": 1}) or {}
@@ -94,7 +97,8 @@ async def build_checklist(db: AsyncIOMotorDatabase, user: UserPublic, modules: D
         "done": sum(i["status"] == "done" for i in items),
         "total": len(items),
         "case_ref": case or None,
-        "parent_name": user.name,
+        "legal_name": (ps.get("court_legal_name") or "").strip() or None,
+        "parent_name": (ps.get("court_legal_name") or "").strip() or user.name,
         "generated_at": datetime.now(timezone.utc).isoformat(),
     }
 
@@ -205,6 +209,11 @@ def build_checklist_pdf(data: Dict[str, Any]) -> bytes:
         pdf.line(pdf.l_margin, y, pdf.w - pdf.r_margin, y)
         y += 8
     return bytes(pdf.output())
+
+
+@router.get("/summary")
+async def get_summary(user: UserPublic = Depends(get_current_user), db: AsyncIOMotorDatabase = Depends(get_db)) -> Dict[str, Any]:
+    return await build_summary(db, user.user_id)
 
 
 @router.post("/checklist")
