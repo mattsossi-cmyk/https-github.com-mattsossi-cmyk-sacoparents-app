@@ -8676,3 +8676,20 @@ dashboard for sharing SELECTED completed reports with any professional.
   - The PDF has a "What's left" list, mediator note lines, and a "not a legal document or proof of compliance" footer.
   - Frontend: `court/CourtChecklistCard.jsx` + `court/useCourtChecklist.js`, placed below the Accept button on the Court page. It refreshes when module statuses or the case code change, or when the page is shown again.
 - Tests: `/app/backend/tests/test_tip_history_and_court_checklist.py`.
+
+
+## 2026-06 — Parallel Parenting Option Builder (iteration_100: all passed)
+- Self Journey: a wide banner `door-self-card-parallel` (`parallel/PpBanner.jsx`) sits below the 4 cards and opens the full-page portal `ParallelParentingView.jsx` (`pp-page`, hidden while overlays are open).
+- Built from the user's partial HTML mockup (it was cut off; the user OK'd building the rest).
+  - Screens: welcome (hero, banner, 6 feature cards, Start/Continue CTA) → 6 steps → summary.
+  - Steps: Communication Boundaries, Parenting Time & Exchanges, Decision-Making, Information Sharing, Household Routines, Changes & Disagreements. Each has 2-3 single-choice questions and optional notes.
+  - Header with brand, Step N of 6 progress, Back and Quick Exit; the crisis banner stays.
+- Copy: `backend/parallel_parenting_content.json`, mirrored at `frontend/src/pages/portal/parallel/ppContent.json` (keep them identical).
+- Backend `parallel_parenting_routes.py` (all endpoints require auth):
+  - GET/PUT `/api/parallel-parenting/me`: collection `parallel_parenting_plans` {answers, notes, tips, step 0-6, completed_at}. Invalid ids are dropped.
+  - POST `/ai/tip`: a 2-sentence tip after each step, saved to tips.{step}; grey-rock voice for flagged parents.
+  - GET/POST `/ai/chat`: Guide chat with session_id, multi-turn via the stored transcript (last 12 turns) plus the plan's choices as context. Stored in `parallel_parenting_chats` (60-message cap). `_plain()` strips markdown.
+  - POST `/pdf`: branded plan PDF (`parallel_parenting_pdf.py`) with choices, notes, Guide tips, a closing "Before you rely on this plan" box, and a "Planning tool only" footer.
+- Frontend: `parallel/usePp.js` (usePpPlan with a 700ms debounced autosave; usePpChat), PpHeader, PpWelcome, PpStep, PpSummary, PpChat.
+- Tests: `/app/backend/tests/test_parallel_parenting.py`.
+- Dashboard image: the user saw an image at the end of the live dashboard. The preview no longer has it (the artwork was moved to the top earlier); the pending deploy fixes production. No code change.
