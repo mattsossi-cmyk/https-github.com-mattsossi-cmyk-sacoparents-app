@@ -4,6 +4,7 @@ import { toast } from "sonner";
 
 import { api } from "../../lib/api";
 import { CourtAiPanel } from "./court/CourtAiPanel";
+import { CourtChecklistCard } from "./court/CourtChecklistCard";
 import { CourtCodeCard } from "./court/CourtCodeCard";
 import { CourtHero } from "./court/CourtHero";
 import { CourtPathCards } from "./court/CourtPathCards";
@@ -103,6 +104,7 @@ export function CourtOrderedView({ onBack, onQuickExit, courtKey, mediator, onVe
               busy={busy}
               verified={verified}
             />
+            <CourtChecklistCard modules={modules} courtKey={courtKey} hidden={hidden} />
           </div>
           <div className="lg:col-span-5">
             <CourtAiPanel

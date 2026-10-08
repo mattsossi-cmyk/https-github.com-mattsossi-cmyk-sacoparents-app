@@ -8,16 +8,15 @@ Safety-flagged parents (server-side flag or client hint) get the grey-rock voice
 from __future__ import annotations
 
 import logging
+from datetime import datetime, timezone
 from typing import Dict, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Request
-from fastapi.security import HTTPAuthorizationCredentials
 from pydantic import BaseModel, Field
 
 from ai_service import _extract_json, _make_chat
-from auth import bearer, get_current_user
 from self_assessment_reminders import is_safety_flagged
-from self_assessment_routes import CONTENT
+from self_assessment_routes import CONTENT, FRAMING_LOG, _optional_user
 from emergentintegrations.llm.chat import UserMessage
 
 logger = logging.getLogger(__name__)
@@ -68,13 +67,6 @@ class TipBody(BaseModel):
 class FramingBody(BaseModel):
     text: str = Field(..., min_length=3, max_length=1000)
     safety_flagged: bool = False
-
-
-async def _optional_user(request: Request, creds: Optional[HTTPAuthorizationCredentials] = Depends(bearer)):
-    try:
-        return await get_current_user(request, creds)
-    except HTTPException:
-        return None
 
 
 async def _grey_rock(request: Request, user, hint: bool) -> bool:
@@ -136,7 +128,12 @@ async def ai_framing(body: FramingBody, request: Request, user=Depends(_optional
         data = _extract_json(raw)
     except ValueError:
         data = {"advice": raw, "suggested": ""}
-    return {
+    out = {
         "advice": str(data.get("advice") or "").strip()[:600],
         "suggested": str(data.get("suggested") or "").strip()[:600],
     }
+    if user and out["advice"]:
+        await request.app.state.db[FRAMING_LOG].insert_one(
+            {**out, "user_id": user.user_id, "created_at": datetime.now(timezone.utc).isoformat()}
+        )
+    return out

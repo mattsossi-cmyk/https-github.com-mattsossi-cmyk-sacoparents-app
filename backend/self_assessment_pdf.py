@@ -273,17 +273,51 @@ def _responses(pdf: _SAPDF, content: Dict[str, Any], entry: Dict[str, Any]) -> N
         pdf.ln(2)
 
 
-def _tips(pdf: _SAPDF, content: Dict[str, Any], tips: Dict[str, str]) -> None:
-    labelled = [
-        (content["tips"]["step_label"].format(number=s["number"], title=s["title"]), tips.get(s["key"]))
-        for s in content["sections"]
-    ] + [(content["tips"]["overall_label"], tips.get("overall"))]
-    labelled = [(label, text) for label, text in labelled if (text or "").strip()]
-    if not labelled:
+def _when(iso: Optional[str]) -> datetime:
+    try:
+        d = datetime.fromisoformat((iso or "").replace("Z", "+00:00"))
+    except ValueError:
+        return datetime.min.replace(tzinfo=timezone.utc)
+    return d if d.tzinfo else d.replace(tzinfo=timezone.utc)
+
+
+def tip_history(content: Dict[str, Any], entries: List[Dict[str, Any]], framing: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+    """Every AI tip (assessment section/overall tips + saved framing replies), newest first."""
+    labels = [("overall", content["tips"]["overall_label"])] + [
+        (s["key"], content["tips"]["step_label"].format(number=s["number"], title=s["title"]))
+        for s in reversed(content["sections"])
+    ]
+    rows = []
+    for e in entries:
+        tips = e.get("tips") or {}
+        for rank, (key, label) in enumerate(labels):
+            text = (tips.get(key) or "").strip()
+            if text:
+                rows.append({"at": _when(e.get("completed_at")), "rank": rank, "source": f"Self-Assessment · {label}",
+                             "text": text, "suggested": ""})
+    for f in framing:
+        advice = (f.get("advice") or "").strip()
+        if advice:
+            rows.append({"at": _when(f.get("created_at")), "rank": 0, "source": "Ask AI for framing",
+                         "text": advice, "suggested": (f.get("suggested") or "").strip()})
+    rows.sort(key=lambda r: (r["at"], -r["rank"]), reverse=True)
+    return rows
+
+
+def _tip_history(pdf: _SAPDF, rows: List[Dict[str, Any]]) -> None:
+    if not rows:
         return
-    _heading(pdf, content["tips"]["title"])
-    for label, text in labelled:
-        _boxed(pdf, label, text.strip())
+    _heading(pdf, "Your AI Tip History")
+    pdf.set_font("Helvetica", "I", 8.5)
+    pdf.set_text_color(*MUTED)
+    pdf.multi_cell(pdf.epw, 4.5, "Every tip your AI Guide has shared with you, newest first.", new_x="LMARGIN", new_y="NEXT")
+    pdf.ln(1.5)
+    for r in rows:
+        if pdf.get_y() > 240:
+            pdf.add_page()
+        day = f"{r['at'].strftime('%b')} {r['at'].day}, {r['at'].year}" if r["at"].year > 1 else "Undated"
+        body = r["text"] + (f"\nSuggested wording: {r['suggested']}" if r["suggested"] else "")
+        _boxed(pdf, f"{day}  ·  {r['source']}", body)
     pdf.ln(1)
 
 
@@ -293,6 +327,7 @@ def build_self_assessment_pdf(
     entry: Dict[str, Any],
     history: List[Dict[str, Any]],
     band_for: Callable[[int], Optional[Dict[str, Any]]],
+    framing: Optional[List[Dict[str, Any]]] = None,
 ) -> bytes:
     pdf = _SAPDF(content["title"], content["disclaimer"])
     pdf.add_page()
@@ -326,7 +361,7 @@ def build_self_assessment_pdf(
     pdf.multi_cell(pdf.epw, 5, _safe("  →  ".join(content["cycle"])), align="C", new_x="LMARGIN", new_y="NEXT")
 
     pdf.add_page()
-    _tips(pdf, content, entry.get("tips") or {})
+    _tip_history(pdf, tip_history(content, history or [entry], framing or []))
     _heading(pdf, "Your responses")
     _responses(pdf, content, entry)
 

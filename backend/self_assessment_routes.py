@@ -15,12 +15,13 @@ from io import BytesIO
 from pathlib import Path
 from typing import Any, Dict, List, Optional
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Request
 from fastapi.responses import HTMLResponse, StreamingResponse
+from fastapi.security import HTTPAuthorizationCredentials
 from motor.motor_asyncio import AsyncIOMotorDatabase
 from pydantic import BaseModel, Field, field_validator
 
-from auth import UserPublic, get_current_user, get_db
+from auth import UserPublic, bearer, get_current_user, get_db
 import self_assessment_pdf
 from self_assessment_reminders import read_unsubscribe_token
 
@@ -36,6 +37,17 @@ REFLECTION_KEYS = [q["key"] for q in CONTENT["reflection"]["questions"]]
 TIP_KEYS = [s["key"] for s in CONTENT["sections"]] + ["overall"]
 
 router = APIRouter(prefix="/self-assessment", tags=["self-assessment"])
+# Saved "Ask AI for framing" replies (advice + suggested wording only, never the parent's text).
+FRAMING_LOG = "self_assessment_framing_tips"
+
+
+async def _optional_user(
+    request: Request, creds: Optional[HTTPAuthorizationCredentials] = Depends(bearer)
+) -> Optional[UserPublic]:
+    try:
+        return await get_current_user(request, creds)
+    except HTTPException:
+        return None
 
 
 def _clean_answers(v: Dict[str, int]) -> Dict[str, int]:
@@ -269,9 +281,14 @@ def _safe_filename(name: str) -> str:
 
 
 @router.post("/pdf")
-async def download_pdf(body: SAPdfRequest):
+async def download_pdf(
+    body: SAPdfRequest,
+    user: Optional[UserPublic] = Depends(_optional_user),
+    db: AsyncIOMotorDatabase = Depends(get_db),
+):
     """Public on purpose: the portal is localStorage-first, so a parent
-    without an account can still export their reflection."""
+    without an account can still export their reflection. Signed-in
+    parents also get their saved framing tips in the Tip History."""
     entry = body.entry.model_dump()
     entry["scores"] = compute_scores(body.entry.answers)
     history = []
@@ -279,8 +296,13 @@ async def download_pdf(body: SAPdfRequest):
         item = h.model_dump()
         item["scores"] = compute_scores(h.answers)
         history.append(item)
+    framing = []
+    if user:
+        framing = await db[FRAMING_LOG].find(
+            {"user_id": user.user_id}, {"_id": 0, "user_id": 0}
+        ).sort("created_at", -1).to_list(100)
     pdf_bytes = self_assessment_pdf.build_self_assessment_pdf(
-        content=CONTENT, entry=entry, history=history, band_for=band_for
+        content=CONTENT, entry=entry, history=history, band_for=band_for, framing=framing
     )
     filename = f"SA_CoParents_Self_Assessment_{_safe_filename(body.entry.parent_name)}.pdf"
     return StreamingResponse(
