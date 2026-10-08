@@ -1,0 +1,58 @@
+{
+  "summary": "Verified new Court Ordered full page + Communication Builder Before & After card end-to-end as parent1@test.com. Added /app/backend/tests/test_court_path_ai.py (9 tests incl. live Claude calls to /api/court-path/ai/guide and /api/self-assessment/ai/framing, and /api/portal/court-keys/verify regression) — all 9 pass. Frontend desktop 1920x1080 + mobile 390 overflow checks pass. Backend court_key for parent1 reset to '' at end.",
+  "backend_issues": {"critical": [], "minor": []},
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": [
+      {"screen": "Communication Builder — Before & After example card", "issues": ["Example 'AI Transformed (BIFF)' text displayed is 'Please confirm your ETA for pickup today.' — the review spec explicitly states it should read 'Hi, please let me know your ETA for pickup today so I can ensure Sam is ready. Thanks!'. The 'Original Text (High Friction)' side matches ('You're late again and you never tell me!'). Treat as a copy mismatch to align with the user-chosen example wording."]}
+    ]
+  },
+  "verified_court_page": [
+    "door-court AND door-welcome-hotspot-court both open [data-testid=court-page].",
+    "All expected testids present: court-safety-banner, court-safety-911 (tel:911), court-safety-dv (tel:18007997233), court-back, court-quick-exit-desktop, court-emergent-badge ('COURT PATHWAY GUIDE / Powered by Emergent AI'), court-tagline ('START WITH ALIGNMENT • END WITH AGREEMENT'), court-hero, court-hero-note (contains sacoparentsalign.online), court-hero-status, court-hero-case, court-footer, court-card-assessments, court-modules-done ('3 of 3 complete' for parent1), court-module-foundation|coparenting|safety, court-card-reports, court-card-child, court-code-input, court-code-verify, court-accept, court-ai-panel, court-ai-query, court-ai-ask, court-ai-pdf, court-ai-biff, court-ai-sync, court-ai-readiness-text.",
+    "No banned/dishonest claims found: court-admissible, 'Certified for Court Filing', 'legal record network', 'directly exported', 'Section 154', 'Official Intake Active', 'continuously verifies' — none present on the page.",
+    "Code verify flow: empty → 'Please enter your case number or invite code.'; invalid 'NOPE-123' → \"We don't recognise that code. Double-check it or ask your mediator.\"; valid 'COURT-8842' → 'Verified. Case COURT-8842 is linked to your portal.', button label switches to 'Verified', court-hero-case shows 'Case COURT-8842 verified', court-hero-mediator shows 'Professional: Matt Sossi, Licensed Mediator (San Antonio, TX)', court-ai-readiness-text shows 'Case code verified • 3 of 3 modules complete.'. After full page reload the verified state persists via portal state.",
+    "AI panel: court-ai-ask disabled for <3 chars; valid question shows court-ai-loading then court-ai-answer-text with a real Claude answer (~546 chars) and the 'not legal advice' / 'general guidance' note is present in the panel.",
+    "court-ai-pdf and court-card-reports both download 'sacoparents-legal-report.pdf' via POST /api/portal/legal-report-pdf.",
+    "court-ai-biff opens [data-testid=comm-builder-page] with [data-testid=cb-history] present; cb-back returns to court-page.",
+    "court-ai-sync opens a new tab (preview-env cannot resolve external DNS so the tab shows chrome-error, but the window.open call succeeds — Playwright page.context.expect_page triggered).",
+    "court-card-child opens Child Needs view (child-needs-title + three cards) and child-needs-back returns to court-page.",
+    "court-accept label with already-verified case reads 'Continue Your Court Ordered Path' (per spec).",
+    "court-module-foundation click opens guided journey modal [data-testid=modal-guided-foundation] and the court portal picks up the 'hidden' class (overlayOpen prop). Closing with [data-testid=close-guided-foundation] removes the 'hidden' class. court-module-safety opens [data-testid=modal-safety-screen] (SafetyScreen). Note: Escape key does not close either modal — users must use the explicit close/submit buttons (not a regression; existing behaviour)."
+  ],
+  "verified_comm_builder_before_after": [
+    "Opened via door-welcome-hotspot-comm. [data-testid=cb-before-after] data-mode='example' initially; [data-testid=cb-ba-yours] disabled before Transform.",
+    "cb-ba-before-text = \"You're late again and you never tell me!\" (matches spec).",
+    "Labels present (uppercased via CSS text-transform): 'ORIGINAL TEXT (HIGH FRICTION)' and 'AI TRANSFORMED (BIFF)'.",
+    "Position before Transform: cb-before-after is ABOVE cb-draft-card (top 853 vs 1068).",
+    "After typing a draft and clicking cb-transform: cb-ba-after-loading flashes, data-mode flips to 'yours', cb-ba-before-text = user's draft, cb-ba-after-text = AI rewrite (live Claude). The card now sits BELOW cb-response-card (top 878 vs 553).",
+    "Chip switches: cb-ba-example → data-mode='example'; cb-ba-yours → 'yours'. Clicking a template preset chip (cb-chip-schedule_change) also switches data-mode to 'yours' per spec.",
+    "Mobile 390x844: both comm-builder-page and court-page have 0px horizontal overflow (document.body.scrollWidth − body width = 0).",
+    "cb-draft testid in spec is actually [data-testid=cb-draft-input]; cb-response is [data-testid=cb-response-card]. Flagging only for test authors — not a product bug."
+  ],
+  "backend_tests_executed": [
+    "/api/court-path/ai/guide: question<3 → 422; missing question → 422; valid question no-auth → 200 with non-empty answer <=900 chars; safety_flagged=true → 200 with answer (grey-rock voice path).",
+    "/api/portal/court-keys/verify: COURT-8842 → verified true + case_id + mediator_name; ALIGN-SA-2026 → verified true; NOPE-123 → verified false, reason='unknown_key'.",
+    "/api/self-assessment/ai/framing regression: text<3 → 422; valid text → 200 with {advice, suggested} strings."
+  ],
+  "test_report_links": [
+    "/app/backend/tests/test_court_path_ai.py",
+    "/app/test_reports/pytest/court_path_ai.xml"
+  ],
+  "action_items": [
+    "(design/copy) Update Before & After example 'AI Transformed (BIFF)' text to match the user-approved wording: 'Hi, please let me know your ETA for pickup today so I can ensure Sam is ready. Thanks!' (currently 'Please confirm your ETA for pickup today.'). All other spec items pass."
+  ],
+  "critical_code_review_comments": [
+    "court_path_ai.py cleanly reuses self_assessment_ai._ask / _grey_rock / _guard / _optional_user — good DRY and consistent safety behaviour across AI endpoints. Answer trimmed/compacted to 900 chars which keeps the sidebar bounded.",
+    "CourtOrderedView correctly hides itself (class 'hidden') while overlayOpen (GuidedJourneyModal / SafetyScreen) and reappears on close — verified both ways in-browser.",
+    "verify_court_key returns 200 with verified=false on unknown/revoked/expired so UI can render inline friendly errors; rate-limited via _rate_guard — appropriate."
+  ],
+  "updated_files": ["/app/backend/tests/test_court_path_ai.py"],
+  "success_rate": {"backend": "100% (9/9 new)", "frontend": "~95% (one copy mismatch on BIFF example after-text)"},
+  "test_credentials": "parent1@test.com / TestPass123! (safety-flagged). Court codes: COURT-8842, ALIGN-SA-2026.",
+  "seed_data_creation": "None. Parent1's court_key was reset to '' at end of run (PUT /api/portal/state) as requested.",
+  "retest_needed": false,
+  "should_main_agent_self_test": true,
+  "context_for_next_testing_agent": "test_court_path_ai.py covers /court-path/ai/guide + /portal/court-keys/verify + /self-assessment/ai/framing regression. parent1 has 3/3 modules complete so court-accept shows 'Continue Your Court Ordered Path' (there's no 'next module to open' to assert; use a fresh account to exercise the open-first-incomplete-module path if needed). Dashboard remembers last door in localStorage 'sacoparents_last_door'; remove it to land on landing. The CommunicationBuilder uses testids [data-testid=cb-draft-input] (not cb-draft) and [data-testid=cb-response-card] (not cb-response) — update any future scripts accordingly. Escape key does not close GuidedJourneyModal or SafetyScreen — use close-guided-foundation / close-safety-screen explicitly."
+}

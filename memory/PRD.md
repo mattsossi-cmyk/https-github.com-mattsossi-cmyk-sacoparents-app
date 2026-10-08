@@ -8651,3 +8651,18 @@ dashboard for sharing SELECTED completed reports with any professional.
 - Tests: `/app/backend/tests/test_self_assessment_ai.py`.
 - Still pending from earlier: user check of the Card 4 Foundation Statement PDF (one signature/date line).
 
+
+
+## 2026-06 — Court Ordered full page + BIFF Before & After (iteration_98: all passed)
+- The Court Ordered door (dashboard button, artwork Court hotspot, Guide chat / follow-up nudge via `courtRequest`) now opens `CourtOrderedView.jsx`, a full-page portal (`court-page`) built from the user's HTML mockup. The old court sub-view, the `court-key` screen and `CourtKeyScreen.jsx` were removed.
+  - Parts: `court/CourtHero.jsx`, `court/CourtPathCards.jsx` (A/B/C module rows with real progress, Generate Reports = Legal Report PDF, Support Your Child = Card 3 with Back to court), `court/CourtCodeCard.jsx` (verify via `POST /api/portal/court-keys/verify`; green Accept button verifies, then opens the first incomplete module), `court/CourtAiPanel.jsx`.
+  - Sidebar actions: Court-Ready PDF = `downloadLegalPdf`; BIFF check = Communication Builder scrolled to `cb-history` (`onOpenCommBuilder("history")`); Save Case & Open sacoparentsalign.online = PUT `/portal/state {court_key}` + new tab.
+  - The legal claims in the mockup were replaced with honest wording (user choice): no "court-admissible", "certified", "legal network" or "direct export".
+  - The page hides itself while inline overlays are open (`overlayOpen` prop from SacoparentsPortal: Safety screen, Guided Journey, drawers, comm builder, intro, share modals).
+  - SaChrome: `SafetyBanner` takes icon/label props, `PageHeader` takes tagline/badgeLabel/tm props, and there's a new `useLockScroll` export.
+- AI: `POST /api/court-path/ai/guide` in `court_path_ai.py` (Claude via the shared `_ask`, plus the grey-rock voice for flagged parents; rate-limited; general info only, never legal advice or claims of court certification). Tests: `/app/backend/tests/test_court_path_ai.py`.
+- Communication Builder: `commBuilder/BeforeAfterCard.jsx` is a split view, "Original Text (High Friction)" next to "AI Transformed (BIFF)".
+  - It shows the user's example first: "You're late again and you never tell me!" → "Hi, please let me know your ETA for pickup today so I can ensure Sam is ready. Thanks!". Safety-flagged parents see a grey-rock example instead.
+  - After Transform (or a preset chip) it switches to the parent's own draft and AI rewrite, with Example / Your message chips.
+  - It sits above the draft box before the first Transform and moves below the response card after (the user picked both spots).
+- Still pending: weekly-note sample preview button, AI tip history in the Self-Assessment PDF, the live-address CORS allowlist (needs the URL), custom domain steps, and the user's check of the Card 4 PDF.
