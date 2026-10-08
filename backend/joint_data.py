@@ -373,3 +373,8 @@ def new_case_code(subject: str, kind: str = "joint_report") -> str:
     yy = datetime.now(timezone.utc).strftime("%y")
     rand = "".join(secrets.choice(CASE_ID_ALPHABET) for _ in range(6))
     return f"SA-{yy}-{prefix}-{rand}"
+
+LEGAL_NOTICE_HEADING = "LEGAL NOTICE & DISCLAIMER:"
+DISCLAIMER = ("This Co-Parenting Assessment / Agreement generated through SA CoParents is intended solely as an informal framework to assist parents in alignment and good-faith communication. "
+              "It is not a legally binding court order or enforceable contract. However, this document may be presented in legal proceedings, mediation, or court hearings as admissible evidence of the parties' mutual intent, "
+              "good-faith efforts, and negotiated understanding regarding the best interests of the child. To make any agreement legally enforceable, it must be formally submitted to and approved by a court of competent jurisdiction.")

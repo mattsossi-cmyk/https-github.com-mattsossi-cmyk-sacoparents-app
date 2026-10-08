@@ -165,5 +165,21 @@ def build_agreement_pdf(r: dict, doc: dict | None = None, is_sample: bool = Fals
     _heading(pdf, 15, "Our Shared Commitment")
     _panel(pdf, "\n".join(m["shared_commitment"]), PURPLE_LIGHT, sub="Alignment Before Agreement")
     _signatures(pdf, m)
-    _footer_block(pdf, {"disclaimer": m["disclaimer"]}, signature=False)
+    _footer_block(pdf, {"disclaimer": False}, signature=False)
+    _legal_notice(pdf, m)
     return bytes(pdf.output())
+
+
+def _legal_notice(pdf: FPDF, m: dict) -> None:
+    """Single legal notice — always the last block of the agreement."""
+    if pdf.get_y() > pdf.h - 45:
+        pdf.add_page()
+    pdf.ln(6)
+    pdf.set_x(18)
+    pdf.set_font(FONT, "B", 9.5)
+    pdf.set_text_color(*BODY)
+    pdf.cell(_W, 5.5, _s(m["legal_notice_heading"]), new_x="LMARGIN", new_y="NEXT")
+    pdf.set_x(18)
+    pdf.set_font(FONT, "", 8.5)
+    pdf.set_text_color(*GRAY)
+    pdf.multi_cell(_W, 4.2, _s(m["disclaimer"]))

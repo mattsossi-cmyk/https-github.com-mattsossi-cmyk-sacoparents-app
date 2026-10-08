@@ -1,3 +1,5 @@
+from joint_data import DISCLAIMER, LEGAL_NOTICE_HEADING
+
 """Maps a ready Co-Parenting Agreement case into the 15-section 'Child-Focused Co-Parenting Agreement' model (PDF + court card)."""
 from joint_engine import generate_agreement
 
@@ -5,7 +7,6 @@ TBD = "To be discussed by the parents."
 CONFLICT_STEPS = [("Step 1", "Parent-to-parent discussion"), ("Step 2", "Structured written communication"), ("Step 3", "Communication or co-parenting tool"), ("Step 4", "Professional consultation"), ("Step 5", "Child-focused mediation"), ("Step 6", "Legal process if necessary")]
 OPTIONS = ["BIFF communication principles.", "SA CoParents Communication Coach.", "Structured co-parenting applications.", "Parent education programs.", "Child-focused mediation.", "Parenting facilitator or other professional assistance when appropriate."]
 SHARED_COMMITMENT = ["We recognize that successful co-parenting does not require us to agree on every issue.", "Our goal is to understand our child's needs, identify areas where we can align, establish clear expectations, and use constructive methods to address future disagreements."]
-DISCLAIMER = "This Co-Parenting Agreement is intended to help parents identify child-focused goals, practices and areas of agreement. It does not modify a court order or create a substitute for legal advice. Parents should consult an attorney concerning the legal effect of any parenting agreement."
 _INFO_WORDS = ("share", "record", "portal", "inform", "notice", "update", "report card", "appointment")
 
 
@@ -71,7 +72,7 @@ def _identity(doc: dict, rep: dict) -> dict:
     return {"title": "Child-Focused Co-Parenting Agreement", "subtitle": "Turning shared priorities, child needs and parent commitments into practical co-parenting agreements.",
             "parent_a_name": rep["parent_a_name"], "parent_b_name": rep["parent_b_name"], "child_name": rep["child_name"], "date": rep["date"], "case_code": doc.get("case_code") or "",
             "purpose": "This agreement builds from the parents' Foundation Statements and identifies practical ways the parents intend to support their child's emotional, educational, medical and developmental needs.",
-            "shared_commitment": SHARED_COMMITMENT, "disclaimer": DISCLAIMER}
+            "shared_commitment": SHARED_COMMITMENT, "disclaimer": DISCLAIMER, "legal_notice_heading": LEGAL_NOTICE_HEADING}
 
 
 def _needs(rep: dict, sm: dict) -> dict:

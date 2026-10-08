@@ -94,6 +94,11 @@ export function AgreementDocument({ report }) {
         <h3 className="font-display text-4xl sm:text-5xl font-bold text-align-purple" data-testid="agreement-philosophy">{report.philosophy_heading}</h3>
         <p className="mt-6 text-sm italic text-muted-foreground max-w-xl mx-auto">"{report.philosophy}"</p>
       </div>
+
+      <div className="border-t border-border pt-6" data-testid="agreement-legal-notice">
+        <p className="text-sm font-bold" data-testid="agreement-legal-notice-heading">{report.legal_notice_heading || "LEGAL NOTICE & DISCLAIMER:"}</p>
+        <p className="mt-2 text-xs leading-relaxed text-muted-foreground" data-testid="agreement-legal-notice-text">{report.disclaimer}</p>
+      </div>
     </div>
   );
 }

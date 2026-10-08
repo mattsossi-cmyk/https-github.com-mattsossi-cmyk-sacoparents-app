@@ -1,14 +1,22 @@
 import re
 from datetime import datetime, timezone
 
-from joint_data import QUESTIONS, NEXT_STEPS, merged_subject_config, SAFETY_CONFIDENTIALITY, SAFETY_PURPOSE, AGREEMENT_AREAS, AGREEMENT_SECTIONS, AGREEMENT_PURPOSE, AGREEMENT_CONFIDENTIALITY
+from joint_data import (
+    AGREEMENT_AREAS,
+    AGREEMENT_CONFIDENTIALITY,
+    AGREEMENT_PURPOSE,
+    AGREEMENT_SECTIONS,
+    DISCLAIMER,
+    LEGAL_NOTICE_HEADING,
+    NEXT_STEPS,
+    QUESTIONS,
+    SAFETY_CONFIDENTIALITY,
+    SAFETY_PURPOSE,
+    merged_subject_config,
+)
 
 STOPWORDS = set(
-    "the a an and or of to in for with on at is are was were be been being this that these those "
-    "it its as by from your you their our we i my me he she his her they them him his hers do does "
-    "did have has had will would should could can may might must just really very more most right "
-    "now about when how what which who whom not no yes but if then than so such own same also "
-    "child child's children kid kids parent parents need needs".split()
+    ["the", "a", "an", "and", "or", "of", "to", "in", "for", "with", "on", "at", "is", "are", "was", "were", "be", "been", "being", "this", "that", "these", "those", "it", "its", "as", "by", "from", "your", "you", "their", "our", "we", "i", "my", "me", "he", "she", "his", "her", "they", "them", "him", "his", "hers", "do", "does", "did", "have", "has", "had", "will", "would", "should", "could", "can", "may", "might", "must", "just", "really", "very", "more", "most", "right", "now", "about", "when", "how", "what", "which", "who", "whom", "not", "no", "yes", "but", "if", "then", "than", "so", "such", "own", "same", "also", "child", "child's", "children", "kid", "kids", "parent", "parents", "need", "needs"]
 )
 
 PURPOSE_TEXT = (
@@ -272,6 +280,7 @@ def generate_agreement(doc: dict) -> dict:
         "method_note": "Reflection → Alignment → Specific Action → Agreement",
         "philosophy_heading": "Alignment Before Agreement",
         "philosophy": "We value the parenting system by how well it supports the child, not by how friendly the adults appear.",
+        "legal_notice_heading": LEGAL_NOTICE_HEADING, "disclaimer": DISCLAIMER,
     }
 
 

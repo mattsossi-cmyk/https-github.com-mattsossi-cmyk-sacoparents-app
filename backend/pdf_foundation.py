@@ -244,4 +244,5 @@ def _footer_contact(pdf: FPDF, d: dict) -> None:
         pdf.cell(70, 3.8, _s(line), new_x="LMARGIN", new_y="NEXT")
     pdf.set_xy(95, y + 4)
     pdf.set_font(FONT, "I", 7.5)
-    pdf.multi_cell(pdf.w - 18 - 95, 3.8, _s(d.get("disclaimer") or _DISCLAIMER))
+    if d.get("disclaimer") is not False:
+        pdf.multi_cell(pdf.w - 18 - 95, 3.8, _s(d.get("disclaimer") or _DISCLAIMER))

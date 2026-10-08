@@ -925,3 +925,8 @@ Probed 2026-09-02: /api/link-codes, /api/integrations/* on sacoparentsapp.online
 - Resend rotation still BLOCKED (secret absent).
 
 ## 2026-10-06 ~12:05 CDT Release dispatched (job 84013524). Readiness check passed. Contents: six-questions framing, A/B/C screenings + choice screen, pro-only responses, Tier 3 alert, spec endpoint, 7-day reminders, reminder status. Production RESEND_API_KEY rotated by user in Secrets tab; preview rotation pending `SA_COPARENTS_ALIGN_RESEND_KEY` appearing in env (option c).
+
+## 2026-10-08 Agreement LEGAL NOTICE & DISCLAIMER (agent-tested, NOT deployed — ships with Safety v2 / Resend republish)
+- Verbatim notice constants `LEGAL_NOTICE_HEADING` / `DISCLAIMER` live in `joint_data.py` (imported by agreement_model.py & joint_engine.py). Old agreement disclaimer removed — single notice only.
+- PDF (`pdf_agreement._legal_notice`) = last content block after signatures/contact footer; `_footer_contact` skips its side disclaimer when `disclaimer=False`. On-screen `AgreementDocument.jsx` renders it last (testid agreement-legal-notice). Not applicable to Legal Lens/Professional Report (no agreement section there); no Word export exists.
+- Tests: tests/test_iter90_agreement_legal_notice.py (3) + test_agreement_v2 (3) pass.
