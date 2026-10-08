@@ -71,7 +71,7 @@ export function AgreeControls({ row, i, compare }) {
         <button
           type="button"
           data-testid={`court-agree-note-save-${i}`}
-          disabled={busy || note.trim() === row.note}
+          disabled={busy || note.trim().replace(/\s+/g, " ") === row.note}
           onClick={() => compare.saveNote(row.key, note)}
           className={`${small} bg-emerald-700 hover:bg-emerald-800 text-white`}
         >

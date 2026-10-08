@@ -8730,3 +8730,10 @@ dashboard for sharing SELECTED completed reports with any professional.
 - Sharing alerts (court_compare_alerts.py, email_service.send_compare_share_alert / send_compare_ready_alert): on turning sharing on → co-parent gets "turned on sharing" email if not sharing yet; once both share → "ready to view" email to both. Max once a week per type per parent; never to safety-flagged parents; neutral wording, no results/names; failures logged in *_error and never break sharing; timestamps only on success.
 - Seed resets shares, alert history and talking points for PAIR-DEMO-01.
 - STILL PENDING: real Court-Ordered Journey picture (temporary stand-in in place).
+
+## 2026-06 — Agreement tracker + celebration (iteration_105: backend 11/11, frontend passed)
+- court_agreements.py (collections court_agreements per case+area, court_celebrations per parent+case). Either parent's "Mark as agreed" agrees a differing area for both; each parent can only undo their own mark ("I agree too" adds the other mark); optional shared "What we agreed" note (300 chars, kept after undo).
+- Routes: POST /api/court-path/compare/agree {area key "<source>|<area>", agreed}, PUT /api/court-path/compare/agree/note, POST /api/court-path/compare/celebrated. Compare payload adds per-row key/agreed/by_me/by_them/note/agreed_at, progress {agreed,total,all_agreed,celebrated}, intent_notice.
+- Required wording (user): "By marking an area as agreed, the parties have evidenced their intent to make an agreement. This document does not reflect a binding agreement on the parties." Shown in the Difference popup progress, the celebration, and the Comparison PDF (with "X of Y differing areas marked agreed", "Marked agreed by <names> on <date>", "What we agreed:").
+- UI: court-agree-card progress bar under the picture (opens Difference), per-row controls, "Agreed after talking" list in Alignment, confetti "You did this together" dialog once per parent (canvas-confetti, reduced-motion safe).
+- STILL PENDING: real Court-Ordered Journey picture (temporary stand-in in place).
