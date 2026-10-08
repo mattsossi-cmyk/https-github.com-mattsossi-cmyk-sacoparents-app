@@ -8666,3 +8666,13 @@ dashboard for sharing SELECTED completed reports with any professional.
   - After Transform (or a preset chip) it switches to the parent's own draft and AI rewrite, with Example / Your message chips.
   - It sits above the draft box before the first Transform and moves below the response card after (the user picked both spots).
 - Still pending: weekly-note sample preview button, AI tip history in the Self-Assessment PDF, the live-address CORS allowlist (needs the URL), custom domain steps, and the user's check of the Card 4 PDF.
+
+
+## 2026-06 — AI Tip History + Court Checklist (iteration_99: all passed)
+- AI Tip History: "Ask AI for framing" replies are now saved for signed-in parents in `self_assessment_framing_tips` ({advice, suggested, user_id, created_at}). The parent's own typed text is never stored (user choice).
+  - The Self-Assessment PDF (`POST /api/self-assessment/pdf`, optional auth via `_optional_user`, which now lives in `self_assessment_routes.py`) has a "Your AI Tip History" section, built by `self_assessment_pdf.tip_history()`. It covers every section and overall tip from all history entries plus the saved framing replies, newest first, each with a date and source label. It replaces the old per-entry "Tips from your AI Guide" section.
+- Court Checklist: `court_checklist.py` adds `POST /api/court-path/checklist` (JSON) and `POST /api/court-path/checklist/pdf` (a one-page PDF). Both need auth, and the body is {modules: {foundation|coparenting|safety: completed|in_progress|not_yet}}.
+  - 10 items: case code, safety check (never shows flagged), modules A/B/C (statuses sent by the page), Cards 1-4 from their collections, and BIFF logs (not counting seed id 1).
+  - The PDF has a "What's left" list, mediator note lines, and a "not a legal document or proof of compliance" footer.
+  - Frontend: `court/CourtChecklistCard.jsx` + `court/useCourtChecklist.js`, placed below the Accept button on the Court page. It refreshes when module statuses or the case code change, or when the page is shown again.
+- Tests: `/app/backend/tests/test_tip_history_and_court_checklist.py`.

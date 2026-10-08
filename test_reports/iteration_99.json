@@ -1,0 +1,32 @@
+{
+  "summary": "Iteration 99: Backend + frontend testing for AI Tip History (Self-Assessment PDF) and Court Checklist card/PDF. 12/12 new backend tests pass; 25/25 regression tests (test_self_assessment.py, test_self_assessment_ai.py, test_court_path_ai.py) still green. Frontend Court Ordered page shows the court-checklist-card with all 10 rows, correct statuses, data-testids present, progress bar, and the download button produces a valid PDF with a success toast.",
+  "backend_issues": {"critical": [], "minor": []},
+  "frontend_issues": {"ui_bugs": [], "integration_issues": [], "design_issues": []},
+  "test_report_links": [
+    "/app/backend/tests/test_tip_history_and_court_checklist.py",
+    "/app/test_reports/pytest/iter99.xml"
+  ],
+  "action_items": [],
+  "critical_code_review_comments": [
+    "self_assessment_pdf.tip_history(): when `history` is empty the caller passes [entry] (see build_self_assessment_pdf line 364). This correctly supports anonymous callers (public /pdf endpoint) and matches the spec: section/overall tips from EVERY completed Self-Assessment appear; the current `entry` is included if history is empty.",
+    "court_checklist.build_checklist: safety row never leaks flagged status - detail is 'Completed' or empty - matches spec.",
+    "Minor: _box's partial-fill rect for 'in_progress' uses `s/2 - 0.9` for width which renders a thin bar; purely cosmetic, no fix needed."
+  ],
+  "updated_files": ["/app/backend/tests/test_tip_history_and_court_checklist.py"],
+  "success_rate": {"backend": "100%", "frontend": "100%"},
+  "test_credentials": "parent1@test.com / TestPass123! (safety-flagged); parent2@test.com / TestPass123! (COURT-8842 preseeded)",
+  "seed_data_creation": "Framing docs created during tests for parent2@test.com in self_assessment_framing_tips; cleanup fixture best-effort deletes same-day docs. The AI framing call during 'test_framing_endpoint_returns_shape' may leave 1-2 framing docs; non-sensitive (only advice/suggested, no user text).",
+  "retest_needed": false,
+  "should_main_agent_self_test": false,
+  "context_for_next_testing_agent": "Backend tests live at /app/backend/tests/test_tip_history_and_court_checklist.py (12 tests). Run with REACT_APP_BACKEND_URL + MONGO_URL + DB_NAME env. Frontend Court Ordered page already has solid data-testids for the checklist. parent2 currently sees 6 of 10 done with (foundation=completed, coparenting=not_yet, safety=not_yet) module defaults from stored portal state.",
+  "verified_flows": [
+    "POST /api/self-assessment/ai/framing stores {advice, suggested} only; user's input text never appears in PDF",
+    "Anonymous framing call is not stored; anonymous PDF has no framing rows",
+    "POST /api/self-assessment/pdf renders 'Your AI Tip History' newest-first with 'Mon D, YYYY' date prefix; overall tip precedes section tips within an assessment",
+    "PDF omits Tip History section when no tips exist; old 'Tips from your AI Guide' section is gone",
+    "POST /api/court-path/checklist requires auth (401), rejects invalid status (422), returns 10 ordered items with required keys",
+    "Safety row detail never reveals flagged status",
+    "POST /api/court-path/checklist/pdf returns single-page application/pdf with filename SA_CoParents_Court_Checklist.pdf; contains header, N of 10 done, all 10 labels, What's left, Notes for mediator, disclaimer",
+    "Frontend court-checklist-card renders rows + bar + count '6 of 10 done'; module rows match court-module-* data-status; download button triggers PDF download and success toast"
+  ]
+}
