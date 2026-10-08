@@ -60,19 +60,26 @@ export function CourtOrderedView({ onBack, onQuickExit, courtKey, mediator, onVe
   const step4 = {
     has: (r) => (fb.fields.co_values || "").includes(lineOf(r)),
     add: async (rows) => {
-      const existing = (fb.fields.co_values || "").trim();
-      const lines = rows.filter((r) => r.note && !existing.includes(lineOf(r))).map(lineOf);
-      if (!lines.length) {
+      const current = (fb.fields.co_values || "").trim();
+      const todo = rows.filter((r) => r.note && !current.includes(lineOf(r)));
+      if (!todo.length) {
         toast.message("These agreements are already in Step 4.");
         return;
       }
-      const merged = [existing, ...lines].filter(Boolean).join("\n");
+      // An edited note replaces that area's earlier line instead of adding a second one.
+      let lines = current ? current.split("\n") : [];
+      todo.forEach((r) => {
+        const at = lines.findIndex((l) => l.startsWith(`${r.area}${AGREED_MARK}`));
+        if (at >= 0) lines[at] = lineOf(r);
+        else lines = [...lines, lineOf(r)];
+      });
+      const merged = lines.join("\n");
       if (merged.length > 3000) {
         toast.error("Step 4's principles & values box is full. Shorten it in Step 4, then try again.");
         return;
       }
       const ok = await fb.updateMany({ co_values: merged });
-      toast.success(`Added ${lines.length} agreement${lines.length > 1 ? "s" : ""} to Step 4`, {
+      toast.success(`Added ${todo.length} agreement${todo.length > 1 ? "s" : ""} to Step 4`, {
         description: ok ? "In 'Agreed co-parenting principles & values'." : "Saved on this device. Open Step 4 and tap Save.",
         action: { label: "Open Step 4", onClick: () => onOpenCard("card4", { builder: true }) },
       });
