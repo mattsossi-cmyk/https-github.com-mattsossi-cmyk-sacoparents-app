@@ -31,7 +31,7 @@ export function CourtHeader({ onBack, onQuickExit, hints, onToggleHints }) {
           className="bg-[#f2ebfc] hover:bg-[#e7dbf8] text-[#3b1566] border border-[#e7dbf8] px-3.5 py-2 rounded-full text-[0.85rem] font-semibold flex items-center gap-1.5 transition-colors"
         >
           <i className={`fa-solid ${hints ? "fa-eye" : "fa-eye-slash"}`}></i>
-          <span>{hints ? "Hide Hints" : "Show Hints"}</span>
+          <span>{hints ? "Hide Action Buttons" : "Show Action Buttons"}</span>
         </button>
         <span
           data-testid="court-ai-badge"
