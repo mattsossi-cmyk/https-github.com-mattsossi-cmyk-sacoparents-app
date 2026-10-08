@@ -5,6 +5,8 @@ import { toast } from "sonner";
 import InviteCoparentCard from "../../components/InviteCoparentCard";
 import { SelfAssessmentView } from "./SelfAssessmentView";
 import { CourtOrderedView } from "./CourtOrderedView";
+import { ParallelParentingView } from "./ParallelParentingView";
+import { PpBanner } from "./parallel/PpBanner";
 import { useSelfAssessmentHistory } from "./selfAssessment/useSelfAssessmentHistory";
 import { GoalBanner } from "./selfAssessment/GoalBanner";
 import { WelcomeArtwork } from "./WelcomeArtwork";
@@ -837,6 +839,7 @@ export function JourneyShell({
 
   // iter268 — new Self Journey "Assess Your Situation" modal state.
   const [assessOpen, setAssessOpen] = useState(false);
+  const [ppOpen, setPpOpen] = useState(false);
   const saHistory = useSelfAssessmentHistory(user?.user_id);
   const [assessStartNew, setAssessStartNew] = useState(false);
   const [cpAssessOpen, setCpAssessOpen] = useState(false);
@@ -1287,6 +1290,8 @@ export function JourneyShell({
           </button>
         </div>
 
+        <PpBanner onOpen={() => setPpOpen(true)} />
+
         {/* Communication Builder — the big purple hero card. */}
         <button
           type="button"
@@ -1488,6 +1493,14 @@ export function JourneyShell({
           onOpenBiffCoach={onOpenBiffCoach}
           safetyFlag={safetyFlag}
           hidden={biffCoachOpen}
+        />
+      )}
+      {ppOpen && (
+        <ParallelParentingView
+          onClose={() => setPpOpen(false)}
+          onQuickExit={quickExitAction}
+          safetyFlag={safetyFlag}
+          hidden={overlayOpen || biffCoachOpen}
         />
       )}
       <CoparentingAssessmentModal
