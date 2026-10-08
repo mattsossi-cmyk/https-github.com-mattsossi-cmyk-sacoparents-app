@@ -254,6 +254,11 @@ async def import_external_assessment(rid: str, user=Depends(get_current_user)):
     if screening:
         updates[f"safety_screenings.{role}"] = screening
         updates[f"safety_flags.{role}"] = updates[f"responses.{role}"]["safety_route"]
+    comm = payload.get("communication_readiness") if isinstance(payload, dict) else None
+    if isinstance(comm, dict) and isinstance(comm.get("responses"), dict):
+        from safety_import import _date
+        from safety_screening import comm_record
+        updates[f"communication_readiness.{role}"] = comm_record(comm["responses"], source="sacoparentsapp.online", completed_at=_date(comm.get("completed_at")) or None)
     other = "b" if role == "a" else "a"
     if doc.get("responses", {}).get(other):
         updates["status"] = "ready"

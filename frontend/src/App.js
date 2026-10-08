@@ -10,6 +10,8 @@ import JointNew from "@/pages/JointNew";
 import Join from "@/pages/Join";
 import JointAssessment from "@/pages/JointAssessment";
 import SafetyScreening from "@/pages/SafetyScreening";
+import SafetyHub from "@/pages/SafetyHub";
+import CommunicationReadiness from "@/pages/CommunicationReadiness";
 import SafetyResponses from "@/pages/SafetyResponses";
 import JointReport from "@/pages/JointReport";
 import Hub from "@/pages/Hub";
@@ -70,6 +72,8 @@ function App() {
             <Route path="/join/:token" element={<Join />} />
             <Route path="/joint/new" element={<Protected><JointNew /></Protected>} />
             <Route path="/joint/:id/assess" element={<Protected><JointAssessment /></Protected>} />
+            <Route path="/joint/:id/safety" element={<Protected><SafetyHub /></Protected>} />
+            <Route path="/joint/:id/communication-readiness" element={<Protected><CommunicationReadiness /></Protected>} />
             <Route path="/joint/:id/safety-screening" element={<Protected><SafetyScreening /></Protected>} />
             <Route path="/joint/:id/safety-screening/:role" element={<Protected><SafetyResponses /></Protected>} />
             <Route path="/joint/:id/legal-report" element={<Protected><LegalLensRedirect /></Protected>} />

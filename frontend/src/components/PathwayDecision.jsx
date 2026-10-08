@@ -13,7 +13,7 @@ export function PathwayDecision({ rid, role, pathway, onChange }) {
     try { const { data } = await api.put(`/joint/reports/${rid}/safety-pathway/${role}`, { action, pathway: action === "change" ? choice : undefined }); onChange(data); toast.success(action === "dismiss" ? "Suggestion dismissed" : `Pathway confirmed: ${data.label}`); } catch (e) { toast.error(formatApiError(e)); } finally { setBusy(false); }
   };
   return (
-    <div className="rounded-lg border border-[#3D1A78]/25 bg-white p-4 space-y-3" style={{ fontFamily: "'Plus Jakarta Sans', sans-serif" }} data-testid="pathway-decision">
+    <div className="rounded-lg border border-[#3D1A78]/25 bg-white p-4 space-y-3 font-jakarta" data-testid="pathway-decision">
       <p className="flex items-center gap-1.5 text-xs font-bold uppercase tracking-widest text-[#3D1A78]"><Route className="h-3.5 w-3.5" /> Safety pathway — suggested flag, you decide</p>
       <p className="text-sm"><span className="font-semibold" data-testid="pathway-suggested-label">{pathway.suggested.label}</span>
         {pathway.suggested.triggered_labels?.length > 0 && <span className="text-xs text-muted-foreground" data-testid="pathway-triggered"> · triggered by: {pathway.suggested.triggered_labels.join(", ")}</span>}</p>

@@ -51,7 +51,7 @@ export default function SafetyScreening() {
   return (
     <div className="min-h-screen bg-background" data-testid="screening-page">
       <QuickExitBar notice={spec?.safe_device_notice} />
-      <header className="bg-white border-b border-border"><div className="max-w-3xl mx-auto px-4 sm:px-6 py-4 flex items-center justify-between"><Link to={`/joint/${id}`} className="flex items-center gap-1.5 text-sm text-muted-foreground" data-testid="screening-back"><ArrowLeft className="h-4 w-4" /> Back to case</Link><BrandLogo size="text-xl" /></div></header>
+      <header className="bg-white border-b border-border"><div className="max-w-3xl mx-auto px-4 sm:px-6 py-4 flex items-center justify-between"><Link to={`/joint/${id}/safety`} className="flex items-center gap-1.5 text-sm text-muted-foreground" data-testid="screening-back"><ArrowLeft className="h-4 w-4" /> Back to safety hub</Link><BrandLogo size="text-xl" /></div></header>
       <main className="max-w-3xl mx-auto px-4 sm:px-6 py-8 space-y-4">
         {data.choice && (
           <div className="rounded-lg border border-border bg-white p-5 space-y-3" data-testid="screening-choice">

@@ -7,6 +7,7 @@ module.exports = {
   ],
   theme: {
     extend: {
+      fontFamily: { jakarta: ["'Plus Jakarta Sans'", "ui-sans-serif", "system-ui", "sans-serif"] },
       fontFamily: {
         display: ['Montserrat', 'sans-serif'],
         sans: ['Montserrat', 'sans-serif'],

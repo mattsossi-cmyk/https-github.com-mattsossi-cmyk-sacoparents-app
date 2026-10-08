@@ -170,7 +170,7 @@ def _status(doc: dict) -> dict:
                   "choice_needed": not confirmed and not scr, "default_version": ver if ver in ("A", "B") else None, "chosen_by_parent": confirmed,
                   "tier": scr.get("tier") if scr else None, "tier_label": TIER_LABEL.get(scr.get("tier")) if scr else None, "version_label": VERSION_LABEL.get(ver or ""),
                   "completed_at": (scr or {}).get("completed_at"), "source": (scr or {}).get("source"), "receipt": receipt(scr, p.get("name") or f"Parent {r.upper()}"),
-                  "reminded_at": (doc.get("safety_reminded_at") or {}).get(r)}
+                  "reminded_at": (doc.get("safety_reminded_at") or {}).get(r), "communication_received": bool((doc.get("communication_readiness") or {}).get(r))}
     return out
 
 
@@ -187,6 +187,7 @@ def spec_export() -> dict:
             "additional_items": __import__("safety_pathway").EXTRA_ITEMS, "scales_extra": {"yn3": __import__("safety_pathway").YN3},
             "safety_pathway": {"flags": __import__("safety_pathway").FLAGS, "flag_map": __import__("safety_pathway").FLAG_MAP, "rules": {"protected_review": list(__import__("safety_pathway").P1), "structured": list(__import__("safety_pathway").P2)}, "labels": __import__("safety_pathway").LABEL,
                                "export_fields": {"safety_flags": "dict of the 9 booleans (optional)", "safety_pathway": "standard|structured|protected_review (optional)"}, "note": "Suggested flag only; the assigned professional confirms. Highest restriction wins across parents."},
+            "communication_readiness": {"items": COMM_ITEMS, "export_field": "communication_readiness", "shape": {"completed_at": "ISO-8601", "responses": {"cr_conflict": "Low|Moderate|High|Safety concerns", "cr_direct": "Yes|Only in writing|Not comfortable", "cr_channel": "one of the listed channels", "cr_child": "free text (optional)"}}},
             "assignment": {"choice_screen": "Which questions fit your situation best?", "default_by_gender": {"woman": "A", "man": "B"}, "no_gender_or_non_binary": ["A", "B", "C"], "always_offer": "C",
                            "store_only": "version letter (A|B|C) — never infer or store orientation"},
             "export_contract": {"path": "GET /api/integrations/export-assessments?email=<parent email>", "field": "safety_screening",
@@ -286,9 +287,14 @@ def build_router(db, get_current_user, get_joint_report_doc, report_role, log_ac
         if not _is_pro(doc, user):
             raise HTTPException(status_code=403, detail="Item-level screening responses are visible only to the assigned professional")
         scr = (doc.get("safety_screenings") or {}).get(role) if role in ("a", "b") else None
-        if not scr:
+        if not scr and not (doc.get("communication_readiness") or {}).get(role):
             raise HTTPException(status_code=404, detail="No safety screening on file for this parent")
         await log_access(doc, user, f"Viewed Parent {role.upper()} safety screening responses (professional-only)", "safety_screening")
+        if not scr:
+            comm = (doc.get("communication_readiness") or {}).get(role)
+            return {"status": {**_status(doc)[role], "version_label": None}, "items": [], "pathway": None, "scale_note": SCALE_NOTE, "source_credit": "",
+                    "communication": {"received": True, "completed_at": comm.get("completed_at"), "source": comm.get("source"), "flag_for_professional": comm.get("flag_for_professional"), "items": comm_items_view(comm), "note": "Parent's private communication readiness answers — a flag input for you, not a decision."},
+                    "notice": "Parent-reported answers, shown to the assigned professional only. Not findings. Never shared with the co-parent, the court, or any report."}
         st = _status(doc)[role]
         st["version_label"] = VERSION_LABEL_PRO.get(scr.get("version") or "", "legacy format")
         st["title"] = scr.get("title")
@@ -296,7 +302,10 @@ def build_router(db, get_current_user, get_joint_report_doc, report_role, log_ac
         decision = (doc.get("safety_pathway") or {}).get(role) or {}
         pathway = {"suggested": scr.get("pathway_suggested") or {"pathway": "standard", "label": "Standard", "triggered": [], "triggered_labels": []}, "decision": decision or None,
                    "options": [{"key": k, "label": _PL[k]} for k in _PW], "note": "Suggested flag only — nothing is restricted automatically. Confirm, change, or dismiss; only your confirmed pathway reaches the report."}
-        return {"status": st, "items": item_view(scr), "pathway": pathway, "scale_note": SCALE_NOTE, "source_credit": SOURCES.get(scr.get("version") or "", ""),
+        comm = (doc.get("communication_readiness") or {}).get(role)
+        communication = {"received": True, "completed_at": comm.get("completed_at"), "source": comm.get("source"), "flag_for_professional": comm.get("flag_for_professional"), "items": comm_items_view(comm),
+                         "note": "Parent's private communication readiness answers — a flag input for you, not a decision."} if comm else {"received": False}
+        return {"status": st, "items": item_view(scr), "pathway": pathway, "communication": communication, "scale_note": SCALE_NOTE, "source_credit": SOURCES.get(scr.get("version") or "", ""),
                 "notice": "Parent-reported screening responses, shown to the assigned professional only. Not findings. Never shared with the co-parent, the court, or any report."}
 
     return r
@@ -342,3 +351,61 @@ async def run_screening_reminders(db, send_email, app_url, from_name: str, logge
             await db.joint_reports.update_one({"id": doc["id"]}, {"$set": {f"safety_reminded_at.{role}": now.isoformat()}})
             sent += 1
     return sent
+
+
+# ---- Communication Readiness (private flag input for the professional; never a decision, never shown to the co-parent) ----
+COMM_ITEMS = [
+    {"id": "cr_conflict", "text": "Right now, how does conflict with your co-parent feel?", "kind": "choice", "options": ["Low", "Moderate", "High", "Safety concerns"]},
+    {"id": "cr_direct", "text": "Do you feel safe communicating with your co-parent directly?", "kind": "choice", "options": ["Yes", "Only in writing", "Not comfortable"]},
+    {"id": "cr_channel", "text": "Which communication channel feels safest for your family?", "kind": "choice", "options": ["Direct messaging", "Written-only through a logged platform", "Structured third-party communication", "Prefer not to say"]},
+    {"id": "cr_child", "text": "Is there anything about communication you are concerned about for your child? (optional)", "kind": "text", "options": None},
+]
+COMM_NOTE = "A private flag input for your professional — not a decision. Your co-parent will never see these answers."
+
+
+def comm_record(responses: dict, source: str = "sacoparentsalign.com", completed_at: str | None = None) -> dict:
+    clean = {}
+    for it in COMM_ITEMS:
+        v = (responses or {}).get(it["id"])
+        if v in (None, ""):
+            continue
+        v = str(v)[:1000].strip()
+        if it["kind"] == "choice" and v not in it["options"]:
+            continue
+        clean[it["id"]] = v
+    flag = clean.get("cr_conflict") in ("High", "Safety concerns") or clean.get("cr_direct") == "Not comfortable" or clean.get("cr_channel") == "Structured third-party communication"
+    return {"source": source, "completed_at": completed_at or datetime.now(timezone.utc).isoformat(), "responses": clean, "answered_count": len(clean), "flag_for_professional": flag}
+
+
+def comm_items_view(rec: dict) -> list[dict]:
+    r = rec.get("responses") or {}
+    return [{"id": it["id"], "question": it["text"], "answer": r.get(it["id"]) or "Skipped", "kind": it["kind"]} for it in COMM_ITEMS]
+
+
+class CommIn(BaseModel):
+    responses: dict
+
+
+def comm_router(db, get_current_user, get_joint_report_doc, report_role) -> APIRouter:
+    r = APIRouter()
+
+    @r.get("/joint/reports/{rid}/communication-readiness")
+    async def comm_get(rid: str, user=Depends(get_current_user)):
+        doc = await get_joint_report_doc(rid, user)
+        role = report_role(doc, user["_id"])
+        if role is None:
+            raise HTTPException(status_code=403, detail="Only invited parents complete the communication readiness check")
+        rec = (doc.get("communication_readiness") or {}).get(role)
+        return {"items": COMM_ITEMS, "note": COMM_NOTE, "received": bool(rec), "completed_at": (rec or {}).get("completed_at")}
+
+    @r.put("/joint/reports/{rid}/communication-readiness")
+    async def comm_put(rid: str, body: CommIn, user=Depends(get_current_user)):
+        doc = await get_joint_report_doc(rid, user)
+        role = report_role(doc, user["_id"])
+        if role is None:
+            raise HTTPException(status_code=403, detail="Only invited parents complete the communication readiness check")
+        rec = comm_record(body.responses or {})
+        await db.joint_reports.update_one({"id": rid}, {"$set": {f"communication_readiness.{role}": rec}})
+        return {"received": True, "answered_count": rec["answered_count"], "note": COMM_NOTE}
+
+    return r

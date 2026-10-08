@@ -12,7 +12,7 @@ export function quickExit() {
   window.location.replace(EXIT_URL);
 }
 
-export function QuickExitBar({ notice }) {
+export function QuickExitBar({ notice, variant = "purple", label }) {
   const presses = useRef(0);
   useEffect(() => {
     const onKey = (e) => {
@@ -25,10 +25,13 @@ export function QuickExitBar({ notice }) {
     return () => window.removeEventListener("keydown", onKey);
   }, []);
   return (
-    <div className="sticky top-0 z-50 border-b border-[#3D1A78]/20 bg-[#3D1A78] text-white" style={{ fontFamily: "'Plus Jakarta Sans', sans-serif" }} data-testid="quick-exit-bar">
-      <div className="mx-auto flex max-w-3xl items-center justify-between gap-3 px-4 py-2 sm:px-6">
-        <p className="flex items-center gap-2 text-xs text-white/90" data-testid="safe-device-notice"><ShieldAlert className="h-4 w-4 shrink-0" />{notice || "Use a device your co-parent cannot see. Quick Exit (or Escape twice) leaves this page immediately."}</p>
-        <button type="button" onClick={quickExit} className="inline-flex shrink-0 items-center gap-1.5 rounded-full bg-white px-4 py-1.5 text-xs font-bold text-[#3D1A78] shadow hover:bg-white/90" data-testid="quick-exit-btn"><LogOut className="h-3.5 w-3.5" /> Quick Exit</button>
+    <div className={`sticky top-0 z-50 border-b font-jakarta text-white ${variant === "red" ? "border-red-800 bg-red-700" : "border-[#3D1A78]/20 bg-[#3D1A78]"}`} data-testid="quick-exit-bar" role="region" aria-label="Quick exit">
+      <div className="mx-auto flex max-w-5xl items-center justify-between gap-3 px-4 py-2 sm:px-6">
+        <div className="min-w-0">
+          {label && <p className="text-xs font-bold uppercase tracking-widest" data-testid="quick-exit-label">{label}</p>}
+          <p className="flex items-center gap-2 text-xs text-white/90" data-testid="safe-device-notice"><ShieldAlert className="h-4 w-4 shrink-0" aria-hidden="true" />{notice || "Use a device your co-parent cannot see. Quick Exit (or Escape twice) leaves this page immediately."}</p>
+        </div>
+        <button type="button" onClick={quickExit} className={`inline-flex shrink-0 items-center gap-1.5 rounded-full bg-white px-4 py-1.5 text-xs font-bold shadow hover:bg-white/90 focus-visible:outline focus-visible:outline-2 focus-visible:outline-white ${variant === "red" ? "text-red-700" : "text-[#3D1A78]"}`} data-testid="quick-exit-btn" aria-label="Quick Exit — leave this page immediately"><LogOut className="h-3.5 w-3.5" aria-hidden="true" /> Quick Exit</button>
       </div>
     </div>
   );
