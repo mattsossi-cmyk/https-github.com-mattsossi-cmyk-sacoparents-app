@@ -3,6 +3,7 @@ import { CalendarHeart, Send } from "lucide-react";
 import { toast } from "sonner";
 import { api } from "../lib/api";
 import { logError } from "../lib/logger";
+import { WeeklyNotePreview } from "./WeeklyNotePreview";
 
 const pct = (n, d) => (d ? Math.round((n / d) * 100) : 0);
 const weekLabel = (iso) =>
@@ -86,7 +87,10 @@ export default function WeeklyNoteStatsTile() {
           </div>
           <div className="font-serif text-xl text-[#1A1330] mt-1">Do parents come back after their note?</div>
         </div>
-        <SampleButton />
+        <div className="flex items-center gap-2 flex-wrap">
+          <WeeklyNotePreview />
+          <SampleButton />
+        </div>
       </div>
       <p className="text-xs text-[#857E9C] mt-1 mb-4">
         "Made progress" means any Self Journey step within 7 days of the note. "Clicked" means they tapped

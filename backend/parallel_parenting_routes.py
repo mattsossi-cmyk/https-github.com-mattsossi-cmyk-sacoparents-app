@@ -29,6 +29,9 @@ STEPS = {s["key"]: s for s in CONTENT["steps"]}
 OPTIONS = {q["id"]: {o["id"]: o for o in q["options"]} for s in CONTENT["steps"] for q in s["questions"]}
 PLANS = "parallel_parenting_plans"
 CHATS = "parallel_parenting_chats"
+VERSIONS = "parallel_parenting_versions"
+MAX_VERSIONS = 20
+REASONS = {"finished": "Finished plan", "pdf": "PDF download"}
 
 router = APIRouter(prefix="/parallel-parenting", tags=["parallel-parenting"])
 
@@ -120,6 +123,69 @@ def _plan_summary(plan: PlanState) -> str:
     return "\n".join(blocks)
 
 
+def _label(q: Dict[str, Any], option_id: Optional[str]) -> str:
+    opt = OPTIONS[q["id"]].get(option_id or "")
+    return opt["label"] if opt else "Not chosen"
+
+
+def diff_versions(old: Optional[Dict[str, Any]], new: Dict[str, Any]) -> List[str]:
+    """What changed from `old` to `new`, e.g. 'Exchanges: A neutral public place → At school or daycare'."""
+    if old is None:
+        return []
+    out = []
+    for s in CONTENT["steps"]:
+        for q in s["questions"]:
+            a, b = old["answers"].get(q["id"]), new["answers"].get(q["id"])
+            if a != b:
+                out.append(f"{q['short']}: {_label(q, a)} → {_label(q, b)}")
+        na, nb = old["notes"].get(s["key"], ""), new["notes"].get(s["key"], "")
+        if na != nb:
+            out.append(f"{s['title']} notes {'updated' if nb else 'removed'}")
+    return out
+
+
+async def _snapshot(db: AsyncIOMotorDatabase, uid: str, reason: str) -> None:
+    """Save a new plan version if answers/notes changed since the last one; keep the latest 20."""
+    plan = await _plan(db, uid)
+    notes = {k: v.strip() for k, v in plan.notes.items() if v.strip()}
+    if not plan.answers and not notes:
+        return
+    last = await db[VERSIONS].find_one({"user_id": uid}, {"_id": 0, "answers": 1, "notes": 1}, sort=[("created_at", -1)])
+    if last and last["answers"] == plan.answers and last["notes"] == notes:
+        return
+    await db[VERSIONS].insert_one({
+        "id": uuid.uuid4().hex, "user_id": uid, "created_at": _now(), "reason": reason,
+        "answers": plan.answers, "notes": notes, "tips": plan.tips,
+    })
+    stale = await db[VERSIONS].find({"user_id": uid}, {"_id": 0, "id": 1}).sort("created_at", -1).skip(MAX_VERSIONS).to_list(200)
+    if stale:
+        await db[VERSIONS].delete_many({"user_id": uid, "id": {"$in": [v["id"] for v in stale]}})
+
+
+async def _version_pair(db: AsyncIOMotorDatabase, uid: str, version_id: Optional[str] = None):
+    """(version, the one before it); latest version when no id is given."""
+    query = {"user_id": uid, **({"id": version_id} if version_id else {})}
+    version = await db[VERSIONS].find_one(query, {"_id": 0, "user_id": 0}, sort=[("created_at", -1)])
+    if not version:
+        return None, None
+    prev = await db[VERSIONS].find_one(
+        {"user_id": uid, "created_at": {"$lt": version["created_at"]}}, {"_id": 0, "user_id": 0}, sort=[("created_at", -1)]
+    )
+    return version, prev
+
+
+def _change_note(version: Optional[Dict[str, Any]], prev: Optional[Dict[str, Any]]) -> Optional[Dict[str, Any]]:
+    if not version:
+        return None
+    return {"since": prev["created_at"] if prev else None, "changes": diff_versions(prev, version)}
+
+
+def _pdf_response(content: bytes, filename: str) -> StreamingResponse:
+    return StreamingResponse(
+        BytesIO(content), media_type="application/pdf", headers={"Content-Disposition": f'attachment; filename="{filename}"'}
+    )
+
+
 @router.get("/me", response_model=PlanState)
 async def get_plan(user: UserPublic = Depends(get_current_user), db: AsyncIOMotorDatabase = Depends(get_db)) -> PlanState:
     return await _plan(db, user.user_id)
@@ -133,6 +199,8 @@ async def save_plan(
     if body.completed and not (await _plan(db, user.user_id)).completed_at:
         fields["completed_at"] = fields["updated_at"]
     await db[PLANS].update_one({"user_id": user.user_id}, {"$set": fields}, upsert=True)
+    if body.completed:
+        await _snapshot(db, user.user_id, "finished")
     return await _plan(db, user.user_id)
 
 
@@ -200,9 +268,33 @@ async def download_plan_pdf(user: UserPublic = Depends(get_current_user), db: As
     plan = await _plan(db, user.user_id)
     if not plan.answers and not any(v.strip() for v in plan.notes.values()):
         raise HTTPException(status_code=400, detail="Choose at least one option first.")
-    pdf_bytes = parallel_parenting_pdf.build_pp_pdf(CONTENT, plan.model_dump(), user.name)
-    return StreamingResponse(
-        BytesIO(pdf_bytes),
-        media_type="application/pdf",
-        headers={"Content-Disposition": 'attachment; filename="SA_CoParents_Parallel_Parenting_Plan.pdf"'},
+    await _snapshot(db, user.user_id, "pdf")
+    note = _change_note(*await _version_pair(db, user.user_id))
+    pdf_bytes = parallel_parenting_pdf.build_pp_pdf(CONTENT, plan.model_dump(), user.name, change_note=note)
+    return _pdf_response(pdf_bytes, "SA_CoParents_Parallel_Parenting_Plan.pdf")
+
+
+@router.get("/versions")
+async def list_versions(user: UserPublic = Depends(get_current_user), db: AsyncIOMotorDatabase = Depends(get_db)) -> Dict[str, Any]:
+    docs = await db[VERSIONS].find({"user_id": user.user_id}, {"_id": 0, "user_id": 0, "tips": 0}).sort(
+        "created_at", -1
+    ).to_list(MAX_VERSIONS)
+    versions = []
+    for i, d in enumerate(docs):
+        prev = docs[i + 1] if i + 1 < len(docs) else None
+        versions.append({
+            "id": d["id"], "created_at": d["created_at"], "reason": REASONS.get(d.get("reason"), "Saved"),
+            "choices": len(d["answers"]), "first": prev is None, "changes": diff_versions(prev, d),
+        })
+    return {"versions": versions, "max": MAX_VERSIONS}
+
+
+@router.get("/versions/{version_id}/pdf")
+async def version_pdf(version_id: str, user: UserPublic = Depends(get_current_user), db: AsyncIOMotorDatabase = Depends(get_db)):
+    version, prev = await _version_pair(db, user.user_id, version_id)
+    if not version:
+        raise HTTPException(status_code=404, detail="That version wasn't found.")
+    pdf_bytes = parallel_parenting_pdf.build_pp_pdf(
+        CONTENT, version, user.name, change_note=_change_note(version, prev), saved_on=version["created_at"]
     )
+    return _pdf_response(pdf_bytes, f"SA_CoParents_Parallel_Parenting_Plan_{version['created_at'][:10]}.pdf")

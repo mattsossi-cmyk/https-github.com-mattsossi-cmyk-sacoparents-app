@@ -8,6 +8,7 @@ import { AiInsightPanel, TipBox } from "./selfAssessment/AiInsightPanel";
 import { JourneySteps } from "./selfAssessment/JourneySteps";
 import { OverviewPanel } from "./selfAssessment/OverviewPanel";
 import { QuestionPanel } from "./selfAssessment/QuestionPanel";
+import { SaArtwork } from "./selfAssessment/SaArtwork";
 import { BottomBanner, Hero, PageHeader, SafetyBanner } from "./selfAssessment/SaChrome";
 import { useSaInsight } from "./selfAssessment/useSaInsight";
 import { useSelfAssessmentDraft } from "./selfAssessment/useSelfAssessmentDraft";
@@ -94,9 +95,11 @@ export function SelfAssessmentView({ onClose, onQuickExit, onOpenBiffCoach, pare
       <SafetyBanner />
       <div className="max-w-6xl mx-auto px-4 pt-6">
         <PageHeader onBack={close} onQuickExit={onQuickExit} />
+        <SaArtwork testid="sa-artwork-mobile" className="lg:hidden max-w-md mx-auto mb-6" />
         <Hero
           title="Self Assessment"
           subtitle="Take a moment to reflect, understand yourself better, and track your progress as a co-parent."
+          textClassName="hidden lg:block"
           pill={finished ? "Complete" : <>Step <span data-testid="sa-step-num">{stepNum}</span> of {PAGE_STEP_COUNT}</>}
           pct={finished ? 100 : Math.round((stepNum / PAGE_STEP_COUNT) * 100)}
         />
@@ -144,7 +147,8 @@ export function SelfAssessmentView({ onClose, onQuickExit, onOpenBiffCoach, pare
               </div>
             )}
           </div>
-          <div className="lg:col-span-5">
+          <div className="lg:col-span-5 space-y-6">
+            <SaArtwork testid="sa-artwork-desktop" className="hidden lg:block" />
             <AiInsightPanel tip={tip} loading={loading} safetyFlag={safetyFlag} onOpenBiffCoach={onOpenBiffCoach} />
           </div>
         </div>

@@ -2,38 +2,27 @@ import React, { useState } from "react";
 import { createPortal } from "react-dom";
 import { toast } from "sonner";
 
-import { api } from "../../lib/api";
 import { PpChat } from "./parallel/PpChat";
 import { PpHeader } from "./parallel/PpHeader";
 import { PpStep } from "./parallel/PpStep";
 import { PpSummary } from "./parallel/PpSummary";
 import { PpWelcome } from "./parallel/PpWelcome";
 import content from "./parallel/ppContent.json";
-import { usePpChat, usePpPlan } from "./parallel/usePp";
+import { downloadPdf, usePpChat, usePpPlan } from "./parallel/usePp";
 import { SafetyBanner, useLockScroll } from "./selfAssessment/SaChrome";
 
 const STEPS = content.steps;
-
-async function downloadPlan() {
-  const res = await api.post("/parallel-parenting/pdf", {}, { responseType: "blob" });
-  const url = URL.createObjectURL(new Blob([res.data], { type: "application/pdf" }));
-  const a = document.createElement("a");
-  a.href = url;
-  a.download = "SA_CoParents_Parallel_Parenting_Plan.pdf";
-  document.body.appendChild(a);
-  a.click();
-  a.remove();
-  setTimeout(() => URL.revokeObjectURL(url), 4000);
-}
 
 // Full-page Parallel Parenting Option Builder (Self Journey). Screens: welcome, steps 0-5, summary.
 export function ParallelParentingView({ onClose, onQuickExit, safetyFlag, hidden = false }) {
   const pp = usePpPlan();
   const [screen, setScreen] = useState("welcome");
   const [downloading, setDownloading] = useState(false);
+  const [historyTick, setHistoryTick] = useState(0);
   const stepIndex = typeof screen === "number" ? screen : null;
   const chat = usePpChat({ step: stepIndex != null ? STEPS[stepIndex].key : null, safetyFlag });
   useLockScroll(!hidden);
+  const refreshHistory = () => setHistoryTick((t) => t + 1);
 
   const show = (next) => {
     setScreen(next);
@@ -45,7 +34,7 @@ export function ParallelParentingView({ onClose, onQuickExit, safetyFlag, hidden
   };
   const openSummary = () => {
     show("summary");
-    pp.goStep(STEPS.length, { completed: true });
+    pp.goStep(STEPS.length, { completed: true }).then(refreshHistory);
   };
   const next = (i) => {
     pp.requestTip(STEPS[i], safetyFlag);
@@ -57,7 +46,8 @@ export function ParallelParentingView({ onClose, onQuickExit, safetyFlag, hidden
     setDownloading(true);
     try {
       await pp.save();
-      await downloadPlan();
+      await downloadPdf("/parallel-parenting/pdf", "SA_CoParents_Parallel_Parenting_Plan.pdf");
+      refreshHistory();
       toast.success("Your Parallel Parenting Plan PDF is ready.");
     } catch {
       toast.error("Couldn't build your plan PDF right now. Please try again.");
@@ -79,7 +69,7 @@ export function ParallelParentingView({ onClose, onQuickExit, safetyFlag, hidden
     <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
       <div className="lg:col-span-8">
         {screen === "summary" ? (
-          <PpSummary content={content} plan={pp.plan} tipBusy={pp.tipBusy} onEdit={openStep} onDownload={download} downloading={downloading} />
+          <PpSummary content={content} plan={pp.plan} tipBusy={pp.tipBusy} onEdit={openStep} onDownload={download} downloading={downloading} historyTick={historyTick} />
         ) : (
           <PpStep
             step={STEPS[stepIndex]}

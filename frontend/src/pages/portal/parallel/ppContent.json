@@ -18,29 +18,68 @@
       "questions": [
         {
           "id": "communication_channel",
+          "short": "How you communicate",
           "text": "How will you and the other parent communicate?",
           "options": [
-            { "id": "app", "label": "A co-parenting app only", "desc": "Written, time-stamped messages that are easy to review." },
-            { "id": "email", "label": "Email only", "desc": "Slower-paced and easy to keep as a record." },
-            { "id": "text", "label": "Text messages for logistics only", "desc": "Short, scheduling-only messages." },
-            { "id": "third_party", "label": "Through a third party", "desc": "A mediator, attorney or trusted person passes on information." }
+            {
+              "id": "app",
+              "label": "A co-parenting app only",
+              "desc": "Written, time-stamped messages that are easy to review."
+            },
+            {
+              "id": "email",
+              "label": "Email only",
+              "desc": "Slower-paced and easy to keep as a record."
+            },
+            {
+              "id": "text",
+              "label": "Text messages for logistics only",
+              "desc": "Short, scheduling-only messages."
+            },
+            {
+              "id": "third_party",
+              "label": "Through a third party",
+              "desc": "A mediator, attorney or trusted person passes on information."
+            }
           ]
         },
         {
           "id": "communication_timing",
+          "short": "Message timing",
           "text": "When will non-urgent messages be sent?",
           "options": [
-            { "id": "weekly", "label": "One weekly update", "desc": "A single summary message each week." },
-            { "id": "as_needed", "label": "Only when something changes", "desc": "No routine messages, just updates when needed." },
-            { "id": "set_hours", "label": "Within set hours", "desc": "For example weekdays 9am-6pm, with replies within 48 hours." }
+            {
+              "id": "weekly",
+              "label": "One weekly update",
+              "desc": "A single summary message each week."
+            },
+            {
+              "id": "as_needed",
+              "label": "Only when something changes",
+              "desc": "No routine messages, just updates when needed."
+            },
+            {
+              "id": "set_hours",
+              "label": "Within set hours",
+              "desc": "For example weekdays 9am-6pm, with replies within 48 hours."
+            }
           ]
         },
         {
           "id": "communication_topics",
+          "short": "Message topics",
           "text": "What topics will messages be limited to?",
           "options": [
-            { "id": "child_only", "label": "Child logistics only", "desc": "Schedules, health, school and activities. Nothing personal." },
-            { "id": "child_plus_emergencies", "label": "Child logistics and emergencies", "desc": "Plus urgent safety or medical matters." }
+            {
+              "id": "child_only",
+              "label": "Child logistics only",
+              "desc": "Schedules, health, school and activities. Nothing personal."
+            },
+            {
+              "id": "child_plus_emergencies",
+              "label": "Child logistics and emergencies",
+              "desc": "Plus urgent safety or medical matters."
+            }
           ]
         }
       ]
@@ -55,31 +94,78 @@
       "questions": [
         {
           "id": "time_schedule",
+          "short": "Schedule",
           "text": "What parenting-time pattern fits your family?",
           "options": [
-            { "id": "court_order", "label": "Follow our court order exactly", "desc": "No changes without a written agreement or court approval." },
-            { "id": "alternating_weeks", "label": "Alternating weeks", "desc": "Fewer exchanges and longer stretches in each home." },
-            { "id": "two_two_three", "label": "2-2-3 rotation", "desc": "Frequent contact with both homes, often best for younger children." },
-            { "id": "weekdays_weekends", "label": "Weekdays in one home, alternate weekends in the other", "desc": "A steady school-week base." }
+            {
+              "id": "court_order",
+              "label": "Follow our court order exactly",
+              "desc": "No changes without a written agreement or court approval."
+            },
+            {
+              "id": "alternating_weeks",
+              "label": "Alternating weeks",
+              "desc": "Fewer exchanges and longer stretches in each home."
+            },
+            {
+              "id": "two_two_three",
+              "label": "2-2-3 rotation",
+              "desc": "Frequent contact with both homes, often best for younger children."
+            },
+            {
+              "id": "weekdays_weekends",
+              "label": "Weekdays in one home, alternate weekends in the other",
+              "desc": "A steady school-week base."
+            }
           ]
         },
         {
           "id": "time_exchange",
+          "short": "Exchanges",
           "text": "Where will exchanges happen?",
           "options": [
-            { "id": "school", "label": "At school or daycare", "desc": "One parent drops off and the other picks up, with no face-to-face contact." },
-            { "id": "public_place", "label": "A neutral public place", "desc": "Busy and well lit, such as a store parking lot." },
-            { "id": "supervised", "label": "A supervised exchange center", "desc": "Staff manage the hand-off for extra safety." },
-            { "id": "curbside", "label": "Curbside at a home", "desc": "The parent stays in the car while the child walks to the door." }
+            {
+              "id": "school",
+              "label": "At school or daycare",
+              "desc": "One parent drops off and the other picks up, with no face-to-face contact."
+            },
+            {
+              "id": "public_place",
+              "label": "A neutral public place",
+              "desc": "Busy and well lit, such as a store parking lot."
+            },
+            {
+              "id": "supervised",
+              "label": "A supervised exchange center",
+              "desc": "Staff manage the hand-off for extra safety."
+            },
+            {
+              "id": "curbside",
+              "label": "Curbside at a home",
+              "desc": "The parent stays in the car while the child walks to the door."
+            }
           ]
         },
         {
           "id": "time_late",
+          "short": "Running late",
           "text": "What happens if someone is running late?",
           "options": [
-            { "id": "notice", "label": "Send a message at least 15 minutes ahead", "desc": "A short heads-up with a new arrival time." },
-            { "id": "grace", "label": "30-minute grace period, then reschedule", "desc": "After 30 minutes the exchange moves to the next agreed time." },
-            { "id": "court_order", "label": "Follow the court order's rules", "desc": "Use whatever your order already says." }
+            {
+              "id": "notice",
+              "label": "Send a message at least 15 minutes ahead",
+              "desc": "A short heads-up with a new arrival time."
+            },
+            {
+              "id": "grace",
+              "label": "30-minute grace period, then reschedule",
+              "desc": "After 30 minutes the exchange moves to the next agreed time."
+            },
+            {
+              "id": "court_order",
+              "label": "Follow the court order's rules",
+              "desc": "Use whatever your order already says."
+            }
           ]
         }
       ]
@@ -94,29 +180,68 @@
       "questions": [
         {
           "id": "decisions_major",
+          "short": "Major decisions",
           "text": "How will major decisions (education, health, religion) be made?",
           "options": [
-            { "id": "split_areas", "label": "Split by area", "desc": "Each parent leads specific areas, such as one for school and one for medical." },
-            { "id": "written_then_decide", "label": "Share in writing, then the lead parent decides", "desc": "Information is shared first and the designated parent makes the final call." },
-            { "id": "court_order", "label": "As set out in our court order", "desc": "Follow the decision-making terms already ordered." },
-            { "id": "professional", "label": "With a parenting coordinator or mediator", "desc": "A neutral professional helps when you can't agree." }
+            {
+              "id": "split_areas",
+              "label": "Split by area",
+              "desc": "Each parent leads specific areas, such as one for school and one for medical."
+            },
+            {
+              "id": "written_then_decide",
+              "label": "Share in writing, then the lead parent decides",
+              "desc": "Information is shared first and the designated parent makes the final call."
+            },
+            {
+              "id": "court_order",
+              "label": "As set out in our court order",
+              "desc": "Follow the decision-making terms already ordered."
+            },
+            {
+              "id": "professional",
+              "label": "With a parenting coordinator or mediator",
+              "desc": "A neutral professional helps when you can't agree."
+            }
           ]
         },
         {
           "id": "decisions_daily",
+          "short": "Daily decisions",
           "text": "Who makes day-to-day decisions?",
           "options": [
-            { "id": "each_home", "label": "Each parent during their own time", "desc": "Meals, bedtime and screen time are up to the parent on duty." },
-            { "id": "shared_basics", "label": "Each parent, with a few shared basics", "desc": "For example the same bedtime and homework routine in both homes." }
+            {
+              "id": "each_home",
+              "label": "Each parent during their own time",
+              "desc": "Meals, bedtime and screen time are up to the parent on duty."
+            },
+            {
+              "id": "shared_basics",
+              "label": "Each parent, with a few shared basics",
+              "desc": "For example the same bedtime and homework routine in both homes."
+            }
           ]
         },
         {
           "id": "decisions_activities",
+          "short": "Activities",
           "text": "How will activities be chosen?",
           "options": [
-            { "id": "own_time", "label": "Each parent arranges activities on their own time", "desc": "No coordination needed." },
-            { "id": "agreed_in_writing", "label": "Only activities agreed in writing in advance", "desc": "Especially ones that fall on both parents' time." },
-            { "id": "child_choice", "label": "The child picks one activity per season", "desc": "Both parents support it during their own time." }
+            {
+              "id": "own_time",
+              "label": "Each parent arranges activities on their own time",
+              "desc": "No coordination needed."
+            },
+            {
+              "id": "agreed_in_writing",
+              "label": "Only activities agreed in writing in advance",
+              "desc": "Especially ones that fall on both parents' time."
+            },
+            {
+              "id": "child_choice",
+              "label": "The child picks one activity per season",
+              "desc": "Both parents support it during their own time."
+            }
           ]
         }
       ]
@@ -131,29 +256,68 @@
       "questions": [
         {
           "id": "info_school",
+          "short": "School info",
           "text": "How will you each get school information?",
           "options": [
-            { "id": "portal", "label": "Each parent uses the school portal", "desc": "Grades, events and notices go straight to both of you." },
-            { "id": "both_listed", "label": "Both parents listed with the school", "desc": "The school contacts each parent directly." },
-            { "id": "forward", "label": "One parent forwards updates within 24 hours", "desc": "A short written forward, with no added comments." }
+            {
+              "id": "portal",
+              "label": "Each parent uses the school portal",
+              "desc": "Grades, events and notices go straight to both of you."
+            },
+            {
+              "id": "both_listed",
+              "label": "Both parents listed with the school",
+              "desc": "The school contacts each parent directly."
+            },
+            {
+              "id": "forward",
+              "label": "One parent forwards updates within 24 hours",
+              "desc": "A short written forward, with no added comments."
+            }
           ]
         },
         {
           "id": "info_medical",
+          "short": "Medical info",
           "text": "How will medical information be shared?",
           "options": [
-            { "id": "providers_direct", "label": "Each parent contacts providers directly", "desc": "Both parents are listed with the child's doctors." },
-            { "id": "written_summary", "label": "Written summary after each appointment", "desc": "Facts only: what happened and any next steps." },
-            { "id": "shared_calendar", "label": "A shared calendar for appointments", "desc": "Both parents can see what's booked." }
+            {
+              "id": "providers_direct",
+              "label": "Each parent contacts providers directly",
+              "desc": "Both parents are listed with the child's doctors."
+            },
+            {
+              "id": "written_summary",
+              "label": "Written summary after each appointment",
+              "desc": "Facts only: what happened and any next steps."
+            },
+            {
+              "id": "shared_calendar",
+              "label": "A shared calendar for appointments",
+              "desc": "Both parents can see what's booked."
+            }
           ]
         },
         {
           "id": "info_emergency",
+          "short": "Emergencies",
           "text": "How will emergencies be communicated?",
           "options": [
-            { "id": "call_then_write", "label": "Phone call right away, then a written follow-up", "desc": "Speed first, then a clear record." },
-            { "id": "text_now", "label": "Text right away with location and status", "desc": "Short and factual." },
-            { "id": "third_party", "label": "Through the agreed third party", "desc": "When direct contact isn't safe." }
+            {
+              "id": "call_then_write",
+              "label": "Phone call right away, then a written follow-up",
+              "desc": "Speed first, then a clear record."
+            },
+            {
+              "id": "text_now",
+              "label": "Text right away with location and status",
+              "desc": "Short and factual."
+            },
+            {
+              "id": "third_party",
+              "label": "Through the agreed third party",
+              "desc": "When direct contact isn't safe."
+            }
           ]
         }
       ]
@@ -168,28 +332,63 @@
       "questions": [
         {
           "id": "households_rules",
+          "short": "House rules",
           "text": "How will house rules work?",
           "options": [
-            { "id": "separate", "label": "Each home sets its own rules", "desc": "Children can adapt when each home is consistent." },
-            { "id": "core_shared", "label": "A few core rules in both homes", "desc": "For example bedtime, homework and screen limits." }
+            {
+              "id": "separate",
+              "label": "Each home sets its own rules",
+              "desc": "Children can adapt when each home is consistent."
+            },
+            {
+              "id": "core_shared",
+              "label": "A few core rules in both homes",
+              "desc": "For example bedtime, homework and screen limits."
+            }
           ]
         },
         {
           "id": "households_belongings",
+          "short": "Belongings",
           "text": "How will clothes and belongings move between homes?",
           "options": [
-            { "id": "two_sets", "label": "Two sets of essentials", "desc": "Fewer items travel and exchanges are quicker." },
-            { "id": "travel_bag", "label": "One travel bag that goes with the child", "desc": "Favorite items stay with your child." },
-            { "id": "checklist", "label": "A packing checklist shared before each exchange", "desc": "Fewer forgotten items and fewer messages." }
+            {
+              "id": "two_sets",
+              "label": "Two sets of essentials",
+              "desc": "Fewer items travel and exchanges are quicker."
+            },
+            {
+              "id": "travel_bag",
+              "label": "One travel bag that goes with the child",
+              "desc": "Favorite items stay with your child."
+            },
+            {
+              "id": "checklist",
+              "label": "A packing checklist shared before each exchange",
+              "desc": "Fewer forgotten items and fewer messages."
+            }
           ]
         },
         {
           "id": "households_contact",
+          "short": "Child's contact",
           "text": "How will your child stay in touch with the other parent?",
           "options": [
-            { "id": "scheduled_calls", "label": "Scheduled calls at set times", "desc": "Predictable for everyone." },
-            { "id": "child_led", "label": "Child-initiated calls and messages", "desc": "Your child reaches out when they want to." },
-            { "id": "court_order", "label": "As set out in our court order", "desc": "Follow the contact terms already ordered." }
+            {
+              "id": "scheduled_calls",
+              "label": "Scheduled calls at set times",
+              "desc": "Predictable for everyone."
+            },
+            {
+              "id": "child_led",
+              "label": "Child-initiated calls and messages",
+              "desc": "Your child reaches out when they want to."
+            },
+            {
+              "id": "court_order",
+              "label": "As set out in our court order",
+              "desc": "Follow the contact terms already ordered."
+            }
           ]
         }
       ]
@@ -204,30 +403,73 @@
       "questions": [
         {
           "id": "changes_requests",
+          "short": "Schedule changes",
           "text": "How will schedule changes be requested?",
           "options": [
-            { "id": "seven_days", "label": "In writing, at least 7 days ahead", "desc": "Plenty of time to plan." },
-            { "id": "two_days", "label": "In writing, at least 48 hours ahead", "desc": "For smaller, one-off changes." },
-            { "id": "no_changes", "label": "No changes unless agreed in writing or ordered", "desc": "The schedule stays fixed." }
+            {
+              "id": "seven_days",
+              "label": "In writing, at least 7 days ahead",
+              "desc": "Plenty of time to plan."
+            },
+            {
+              "id": "two_days",
+              "label": "In writing, at least 48 hours ahead",
+              "desc": "For smaller, one-off changes."
+            },
+            {
+              "id": "no_changes",
+              "label": "No changes unless agreed in writing or ordered",
+              "desc": "The schedule stays fixed."
+            }
           ]
         },
         {
           "id": "changes_holidays",
+          "short": "Holidays",
           "text": "How will holidays and special days work?",
           "options": [
-            { "id": "alternate_years", "label": "Alternate holidays each year", "desc": "Each parent has the holiday every other year." },
-            { "id": "split_day", "label": "Split each holiday in two", "desc": "Your child spends part of the day in each home." },
-            { "id": "court_order", "label": "Follow the court order's holiday schedule", "desc": "Use the holiday terms already ordered." }
+            {
+              "id": "alternate_years",
+              "label": "Alternate holidays each year",
+              "desc": "Each parent has the holiday every other year."
+            },
+            {
+              "id": "split_day",
+              "label": "Split each holiday in two",
+              "desc": "Your child spends part of the day in each home."
+            },
+            {
+              "id": "court_order",
+              "label": "Follow the court order's holiday schedule",
+              "desc": "Use the holiday terms already ordered."
+            }
           ]
         },
         {
           "id": "changes_disputes",
+          "short": "Disagreements",
           "text": "What happens when you disagree?",
           "options": [
-            { "id": "mediator", "label": "Go to a mediator before court", "desc": "A neutral professional helps you both reach a decision." },
-            { "id": "coordinator", "label": "Ask a parenting coordinator", "desc": "Where one has been appointed." },
-            { "id": "cooling_off", "label": "48-hour cooling-off, then a written proposal", "desc": "No same-day replies to disagreements." },
-            { "id": "attorney", "label": "Talk with my attorney", "desc": "Get advice before responding." }
+            {
+              "id": "mediator",
+              "label": "Go to a mediator before court",
+              "desc": "A neutral professional helps you both reach a decision."
+            },
+            {
+              "id": "coordinator",
+              "label": "Ask a parenting coordinator",
+              "desc": "Where one has been appointed."
+            },
+            {
+              "id": "cooling_off",
+              "label": "48-hour cooling-off, then a written proposal",
+              "desc": "No same-day replies to disagreements."
+            },
+            {
+              "id": "attorney",
+              "label": "Talk with my attorney",
+              "desc": "Get advice before responding."
+            }
           ]
         }
       ]

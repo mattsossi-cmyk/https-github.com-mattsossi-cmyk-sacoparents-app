@@ -8,6 +8,18 @@ const detailOf = (e, fallback) => {
   return typeof d === "string" ? d : fallback;
 };
 
+export async function downloadPdf(path, filename, method = "post") {
+  const res = method === "get" ? await api.get(path, { responseType: "blob" }) : await api.post(path, {}, { responseType: "blob" });
+  const url = URL.createObjectURL(new Blob([res.data], { type: "application/pdf" }));
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 4000);
+}
+
 // Saved Parallel Parenting plan: autosaves answers/notes, asks the AI for a tip after each step.
 export function usePpPlan() {
   const [plan, setPlan] = useState(null);

@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 from datetime import datetime, timezone
-from typing import Any, Dict
+from typing import Any, Dict, Optional
 
 from fpdf import FPDF
 
@@ -52,22 +52,36 @@ def _box(pdf: _PPPDF, label: str, body: str, rgb=LAVENDER) -> None:
     pdf.ln(2)
 
 
-def _intro(pdf: _PPPDF, content: Dict[str, Any], parent_name: str, made: int, total: int) -> None:
+def _day(iso: str) -> str:
+    d = datetime.fromisoformat(iso.replace("Z", "+00:00"))
+    return f"{d.strftime('%b')} {d.day}, {d.year}"
+
+
+def _intro(pdf: _PPPDF, content: Dict[str, Any], parent_name: str, made: int, total: int, saved_on: Optional[str]) -> None:
     pdf.set_font("Helvetica", "B", 20)
     pdf.set_text_color(*PURPLE)
     pdf.cell(0, 10, "Your Parallel Parenting Plan", new_x="LMARGIN", new_y="NEXT")
     pdf.set_font("Helvetica", "I", 10)
     pdf.set_text_color(*MUTED)
     pdf.cell(0, 6, _safe(content["banner_title"]), new_x="LMARGIN", new_y="NEXT")
-    now = datetime.now(timezone.utc)
+    when = f"Version saved {_day(saved_on)}" if saved_on else _day(datetime.now(timezone.utc).isoformat())
     pdf.set_font("Helvetica", "", 9)
     pdf.set_text_color(*INK)
-    meta = f"Prepared for {parent_name or 'you'}  ·  {now.strftime('%b')} {now.day}, {now.year}  ·  {made} of {total} choices made"
+    meta = f"Prepared for {parent_name or 'you'}  ·  {when}  ·  {made} of {total} choices made"
     pdf.cell(0, 6, _safe(meta), new_x="LMARGIN", new_y="NEXT")
     pdf.ln(2)
     pdf.set_font("Helvetica", "", 9.5)
     pdf.multi_cell(pdf.epw, 5, _safe(content["pdf_intro"]), new_x="LMARGIN", new_y="NEXT")
     pdf.ln(4)
+
+
+def _changes(pdf: _PPPDF, note: Dict[str, Any]) -> None:
+    if not note["since"]:
+        _box(pdf, "Changes since your last version", "This is the first saved version of your plan.", (238, 242, 255))
+        return
+    lines = [c.replace("→", "->") for c in note["changes"]] or ["No changes since your last version."]
+    body = "\n".join(f"-  {c}" for c in lines)
+    _box(pdf, f"Changes since your last version ({_day(note['since'])})", body, (238, 242, 255))
 
 
 def _step(pdf: _PPPDF, step: Dict[str, Any], plan: Dict[str, Any]) -> None:
@@ -105,11 +119,20 @@ def _step(pdf: _PPPDF, step: Dict[str, Any], plan: Dict[str, Any]) -> None:
     pdf.ln(2)
 
 
-def build_pp_pdf(content: Dict[str, Any], plan: Dict[str, Any], parent_name: str) -> bytes:
+def build_pp_pdf(
+    content: Dict[str, Any],
+    plan: Dict[str, Any],
+    parent_name: str,
+    change_note: Optional[Dict[str, Any]] = None,
+    saved_on: Optional[str] = None,
+) -> bytes:
     total = sum(len(s["questions"]) for s in content["steps"])
     pdf = _PPPDF(content["disclaimer"])
     pdf.add_page()
-    _intro(pdf, content, parent_name, len(plan.get("answers") or {}), total)
+    _intro(pdf, content, parent_name, len(plan.get("answers") or {}), total, saved_on)
+    if change_note:
+        _changes(pdf, change_note)
+        pdf.ln(2)
     for step in content["steps"]:
         _step(pdf, step, plan)
     if pdf.get_y() > 240:

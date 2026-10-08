@@ -84,11 +84,11 @@ export function PageHeader({ onBack, onQuickExit, tp = "sa", backLabel = "Back t
   );
 }
 
-export function Hero({ title, subtitle, pill, pct, tp = "sa" }) {
+export function Hero({ title, subtitle, pill, pct, tp = "sa", textClassName = "" }) {
   return (
     <div className="text-center max-w-2xl mx-auto mb-10">
-      <h2 className="text-4xl md:text-5xl font-extrabold text-[#3B1C6B] tracking-tight mb-3">{title}</h2>
-      <p className="text-slate-600 text-base md:text-lg leading-relaxed">{subtitle}</p>
+      <h2 className={`text-4xl md:text-5xl font-extrabold text-[#3B1C6B] tracking-tight mb-3 ${textClassName}`}>{title}</h2>
+      <p className={`text-slate-600 text-base md:text-lg leading-relaxed ${textClassName}`}>{subtitle}</p>
       <div data-testid={`${tp}-step-pill`} className="mt-6 inline-flex items-center gap-3 bg-white/90 px-5 py-2 rounded-full shadow-sm border border-purple-100">
         <span className="text-xs font-bold text-purple-800 uppercase tracking-wider">{pill}</span>
         <div className="w-32 bg-purple-100 rounded-full h-2">

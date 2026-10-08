@@ -4283,15 +4283,14 @@ def send_release_check_alert(
     )
 
 
-def send_self_journey_weekly_note(
+def render_self_journey_weekly_note(
     *,
-    to_email: str,
     highlights: List[str],
     cta_url: str,
     unsubscribe_url: str,
     first_name: Optional[str] = None,
-) -> None:
-    """Gentle Sunday note celebrating the Self Journey steps a parent took this week."""
+) -> Dict[str, str]:
+    """Pure renderer for the Sunday weekly note (used by the send path and the admin preview)."""
     hello = f"Hi {_html.escape(first_name)}," if first_name else "Hi,"
     lead = "Here's a quick look back at what you made time for this week:"
     note = "Every small step is a step for your child. You're only ever measured against yourself."
@@ -4319,10 +4318,25 @@ def send_self_journey_weekly_note(
         f"Don't want weekly notes? "
         f'<a href="{unsubscribe_url}" style="color:#857E9C;">Unsubscribe</a></p>'
     )
+    return {"subject": "Your weekly note", "html": html, "text": plain}
+
+
+def send_self_journey_weekly_note(
+    *,
+    to_email: str,
+    highlights: List[str],
+    cta_url: str,
+    unsubscribe_url: str,
+    first_name: Optional[str] = None,
+) -> None:
+    """Gentle Sunday note celebrating the Self Journey steps a parent took this week."""
+    note = render_self_journey_weekly_note(
+        highlights=highlights, cta_url=cta_url, unsubscribe_url=unsubscribe_url, first_name=first_name
+    )
     _send(
         to_email=to_email,
-        subject="Your weekly note",
-        html=html,
-        text=plain,
+        subject=note["subject"],
+        html=note["html"],
+        text=note["text"],
         failure_message="Could not send the weekly note right now.",
     )

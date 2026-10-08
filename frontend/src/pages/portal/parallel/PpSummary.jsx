@@ -1,5 +1,6 @@
 import React from "react";
 
+import { PpHistory } from "./PpHistory";
 function StepSummary({ step, plan, tipBusy, onEdit }) {
   const note = (plan.notes[step.key] || "").trim();
   const tip = plan.tips[step.key];
@@ -41,7 +42,7 @@ function StepSummary({ step, plan, tipBusy, onEdit }) {
   );
 }
 
-export function PpSummary({ content, plan, tipBusy, onEdit, onDownload, downloading }) {
+export function PpSummary({ content, plan, tipBusy, onEdit, onDownload, downloading, historyTick }) {
   const total = content.steps.reduce((n, s) => n + s.questions.length, 0);
   const made = Object.keys(plan.answers).length;
   return (
@@ -70,6 +71,7 @@ export function PpSummary({ content, plan, tipBusy, onEdit, onDownload, download
           <StepSummary key={s.key} step={s} plan={plan} tipBusy={tipBusy} onEdit={() => onEdit(i)} />
         ))}
       </div>
+      <PpHistory tick={historyTick} />
       <p data-testid="pp-summary-closing" className="text-xs text-amber-900 bg-amber-50 border border-amber-200 rounded-xl p-3">
         <i className="fa-solid fa-circle-info mr-1.5"></i>
         {content.pdf_closing}
