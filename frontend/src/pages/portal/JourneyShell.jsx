@@ -851,16 +851,18 @@ export function JourneyShell({
     setAssessStartNew(startNew);
     setAssessOpen(true);
   };
-  const openFoundation = (from) => {
+  const [fbStartOpen, setFbStartOpen] = useState(false);
+  const openFoundation = (from, startOpen = false) => {
     setSubFrom(from);
+    setFbStartOpen(startOpen);
     setView("foundation");
   };
   // Court page journey steps open the same real pages as the Self Journey cards.
-  const openCourtCard = (key) => {
+  const openCourtCard = (key, { builder = false } = {}) => {
     if (key === "card1") openAssess(false);
     else if (key === "card2") setCpAssessOpen(true);
     else if (key === "card3") openChildNeeds("court");
-    else if (key === "card4") openFoundation("court");
+    else if (key === "card4") openFoundation("court", builder);
   };
 
   // Communication Builder's START SELF-ASSESSMENT button.
@@ -1102,6 +1104,7 @@ export function JourneyShell({
           })}
           onOpenModule={moduleCta}
           onOpenCard={openCourtCard}
+          fb={foundationBuilder}
           onOpenParallel={() => setPpOpen(true)}
           onDownloadPdf={onDownloadCourtPdf}
           onOpenBiffHistory={() => onOpenCommBuilder("history")}
@@ -1164,6 +1167,8 @@ export function JourneyShell({
     return (
       <FoundationStatementView
         onBack={() => setView(subFrom)}
+        backLabel={subFrom === "court" ? "Back to Court Page" : "Back to Self Journey"}
+        startOpen={fbStartOpen}
         parentName={greetingName}
         QuickExit={quickExitChip}
         fb={foundationBuilder}

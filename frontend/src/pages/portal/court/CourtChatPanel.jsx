@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState } from "react";
 
 import { CourtDialog } from "./CourtDialog";
+import { CourtDraftPanel } from "./CourtDraftPanel";
 import { AI_GRADIENT } from "./CourtHeader";
 
 const GREETING =
@@ -11,17 +12,33 @@ const PROMPTS = [
   ["fa-list-check", "What's next?", "What should I do next on my court path?"],
 ];
 
-function Msg({ m }) {
+const DRAFT_MIN_WORDS = 40;
+const draftBtn = "text-[11px] font-bold px-2.5 py-1 rounded-full bg-white border border-[#e7dbf8] hover:border-[#7b2cbf] text-[#3b1566] transition-colors";
+
+function Msg({ m, i, onDraft }) {
   const mine = m.role === "user";
+  const long = !mine && m.text.split(/\s+/).length >= DRAFT_MIN_WORDS;
   return (
-    <p
-      data-testid={mine ? "court-chat-msg-user" : "court-chat-msg-guide"}
-      className={`max-w-[82%] px-4 py-3 rounded-[14px] text-[0.92rem] leading-relaxed whitespace-pre-wrap break-words ${
-        mine ? "self-end bg-[#3b1566] text-white" : "self-start bg-[#f2ebfc] text-[#3b1566] border border-[#e7dbf8]"
-      }`}
-    >
-      {m.text}
-    </p>
+    <div className={`max-w-[82%] ${mine ? "self-end" : "self-start"}`}>
+      <p
+        data-testid={mine ? "court-chat-msg-user" : "court-chat-msg-guide"}
+        className={`px-4 py-3 rounded-[14px] text-[0.92rem] leading-relaxed whitespace-pre-wrap break-words ${
+          mine ? "bg-[#3b1566] text-white" : "bg-[#f2ebfc] text-[#3b1566] border border-[#e7dbf8]"
+        }`}
+      >
+        {m.text}
+      </p>
+      {long && (
+        <div className="flex flex-wrap gap-1.5 mt-1.5">
+          <button type="button" data-testid={`court-chat-send-step4-${i}`} onClick={() => onDraft({ text: m.text, mode: "statement" })} className={draftBtn}>
+            <i className="fa-solid fa-file-import mr-1"></i>Send to Step 4
+          </button>
+          <button type="button" data-testid={`court-chat-split-step4-${i}`} onClick={() => onDraft({ text: m.text, mode: "split" })} className={draftBtn}>
+            <i className="fa-solid fa-table-cells-large mr-1"></i>Split into Step 4 boxes
+          </button>
+        </div>
+      )}
+    </div>
   );
 }
 
@@ -46,8 +63,9 @@ function ChatHeader({ chat, onClose }) {
 }
 
 // Floating Emergent AI button + remembered multi-turn chat (saved to the parent's account).
-export function CourtChatPanel({ chat, open, onOpenChange, draft }) {
+export function CourtChatPanel({ chat, open, onOpenChange, draft, fb, onOpenStep4 }) {
   const [text, setText] = useState("");
+  const [toStep4, setToStep4] = useState(null);
   const listRef = useRef(null);
   useEffect(() => {
     if (open && draft) setText(draft);
@@ -75,14 +93,27 @@ export function CourtChatPanel({ chat, open, onOpenChange, draft }) {
         <i className="fa-solid fa-wand-magic-sparkles"></i> Emergent AI Assistant
       </button>
       <CourtDialog open={open} onClose={() => onOpenChange(false)} testid="court-chat" title="Emergent Co-Parenting AI" desc="Your saved chat with Emergent AI" wide bare>
-        <div className="flex flex-col h-[80vh] max-h-[700px]">
+        <div className="relative flex flex-col h-[80vh] max-h-[700px]">
+          {toStep4 && (
+            <CourtDraftPanel
+              key={toStep4.text + toStep4.mode}
+              draft={toStep4}
+              fb={fb}
+              onClose={() => setToStep4(null)}
+              onOpenStep4={() => {
+                setToStep4(null);
+                onOpenChange(false);
+                onOpenStep4();
+              }}
+            />
+          )}
           <ChatHeader chat={chat} onClose={() => onOpenChange(false)} />
           <div ref={listRef} data-testid="court-chat-messages" className="pp-scroll flex-1 overflow-y-auto p-5 flex flex-col gap-[15px] bg-[#faf8fd]">
             <p data-testid="court-chat-greeting" className="max-w-[82%] self-start px-4 py-3 rounded-[14px] text-[0.92rem] bg-[#f2ebfc] text-[#3b1566] border border-[#e7dbf8]">
               {GREETING}
             </p>
             {chat.messages.map((m, i) => (
-              <Msg key={i} m={m} />
+              <Msg key={i} m={m} i={i} onDraft={setToStep4} />
             ))}
             {chat.busy && (
               <p data-testid="court-chat-typing" className="self-start px-4 py-3 rounded-[14px] text-[0.92rem] bg-[#f2ebfc] text-[#3b1566] border border-[#e7dbf8]">

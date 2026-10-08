@@ -13,6 +13,7 @@ import { CourtStepDialog } from "./court/CourtStepDialog";
 import { CourtModulesCard, CourtTools } from "./court/CourtTools";
 import { useCourtCase } from "./court/useCourtCase";
 import { useCourtChecklist } from "./court/useCourtChecklist";
+import { useCourtCompare } from "./court/useCourtCompare";
 import { useCourtSummary } from "./court/useCourtSummary";
 import { useGuideChat } from "./guide/useGuideChat";
 import { SafetyBanner, useLockScroll } from "./selfAssessment/SaChrome";
@@ -21,13 +22,14 @@ const BIFF_BOOK_URL = process.env.REACT_APP_BIFF_BOOK_URL;
 const openTab = (url) => window.open(url, "_blank", "noopener,noreferrer");
 
 // Full-page Court Ordered path (portal): interactive journey artwork, court tools, and a saved AI chat.
-export function CourtOrderedView({ onBack, onQuickExit, courtKey, mediator, onVerify, modules, onOpenModule, onOpenCard, onOpenParallel, onDownloadPdf, onOpenBiffHistory, alignUrl, safetyFlag, signedIn, hidden = false }) {
+export function CourtOrderedView({ onBack, onQuickExit, courtKey, mediator, onVerify, modules, onOpenModule, onOpenCard, fb, onOpenParallel, onDownloadPdf, onOpenBiffHistory, alignUrl, safetyFlag, signedIn, hidden = false }) {
   const [hints, setHints] = useState(true);
   const [dialog, setDialog] = useState(null);
   const [chatOpen, setChatOpen] = useState(false);
   const [chatDraft, setChatDraft] = useState("");
   const checklist = useCourtChecklist({ modules, courtKey, hidden });
   const summary = useCourtSummary(!hidden);
+  const compare = useCourtCompare(!hidden);
   const cc = useCourtCase({ courtKey, savedName: checklist.data?.parent_name, onVerify, signedIn, alignUrl, onDownloadPdf });
   const chat = useGuideChat("/court-path/ai/chat", { modules: Object.fromEntries(modules.map((m) => [m.topic, m.status])), safety_flagged: !!safetyFlag });
   useLockScroll(!hidden);
@@ -49,6 +51,7 @@ export function CourtOrderedView({ onBack, onQuickExit, courtKey, mediator, onVe
     const caseId = await cc.accept();
     if (!caseId) return;
     checklist.load();
+    compare.load();
     close();
     const nextStep = STEPS.find((s) => statusOf(s.card) !== "done");
     const nextModule = modules.find((m) => m.status !== "completed");
@@ -79,7 +82,10 @@ export function CourtOrderedView({ onBack, onQuickExit, courtKey, mediator, onVe
           statusOf={statusOf}
           onAccept={() => setDialog({ type: "accept" })}
           onStep={(step) => setDialog({ type: "step", step })}
-          onPillar={(pillar) => setDialog({ type: "pillar", pillar })}
+          onPillar={(pillar) => {
+            compare.load();
+            setDialog({ type: "pillar", pillar });
+          }}
         />
         <CourtTools cc={cc} courtKey={courtKey} onCase={() => setDialog({ type: "accept" })} onBiff={onOpenBiffHistory} />
         <div className="grid md:grid-cols-2 gap-6 items-start">
@@ -100,8 +106,16 @@ export function CourtOrderedView({ onBack, onQuickExit, courtKey, mediator, onVe
             onOpen={() => openStep(dialog.step.n)}
             onAskAi={() => askAi(`Help me get started with ${dialog.step.title}.`)}
           />
-          <CourtPillarDialog pillar={dialog?.type === "pillar" ? dialog.pillar : null} summary={summary} resources={resources} onClose={close} onOpenStep={openStep} />
-          <CourtChatPanel chat={chat} open={chatOpen} onOpenChange={setChatOpen} draft={chatDraft} />
+          <CourtPillarDialog
+            pillar={dialog?.type === "pillar" ? dialog.pillar : null}
+            summary={summary}
+            resources={resources}
+            compare={compare}
+            onClose={close}
+            onOpenStep={openStep}
+            onEnterCase={() => setDialog({ type: "accept" })}
+          />
+          <CourtChatPanel chat={chat} open={chatOpen} onOpenChange={setChatOpen} draft={chatDraft} fb={fb} onOpenStep4={() => onOpenCard("card4", { builder: true })} />
         </>
       )}
     </div>,

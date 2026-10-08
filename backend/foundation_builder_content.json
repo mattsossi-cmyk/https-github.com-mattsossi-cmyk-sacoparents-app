@@ -5,18 +5,70 @@
   "intro": "Your Foundation Statement helps you organize your thoughts, identify what matters most, and set the stage for productive co-parenting discussions.",
   "builder_title": "SA CoParents Foundation Statement",
   "pillars": [
-    { "key": "goals", "title": "Clarify Your Goals", "body": "Identify your shared hopes for your child's well-being, stability, and future." },
-    { "key": "child", "title": "Focus on Your Child", "body": "Put your child's needs, interests, and daily life at the center of your co-parenting plan." },
-    { "key": "values", "title": "Set Values and Priorities", "body": "Outline the core values and principles that will guide your co-parenting decisions." },
-    { "key": "path", "title": "Create a Stronger Path Forward", "body": "Use your Foundation Statement to prepare for productive conversations and agreements." }
+    {
+      "key": "goals",
+      "title": "Clarify Your Goals",
+      "body": "Identify your shared hopes for your child's well-being, stability, and future."
+    },
+    {
+      "key": "child",
+      "title": "Focus on Your Child",
+      "body": "Put your child's needs, interests, and daily life at the center of your co-parenting plan."
+    },
+    {
+      "key": "values",
+      "title": "Set Values and Priorities",
+      "body": "Outline the core values and principles that will guide your co-parenting decisions."
+    },
+    {
+      "key": "path",
+      "title": "Create a Stronger Path Forward",
+      "body": "Use your Foundation Statement to prepare for productive conversations and agreements."
+    }
   ],
   "fields": [
-    { "key": "parent_names", "label": "Parent name(s)", "type": "text", "placeholder": "e.g. Sarah & Mark" },
-    { "key": "child_info", "label": "Child(ren) name(s) & age(s)", "type": "text", "placeholder": "e.g. Emma (8), Lucas (5)" },
-    { "key": "core_goals", "label": "1. Core hopes & goals for our child", "type": "textarea", "placeholder": "What shared hopes do both parents have for your child's well-being and future?" },
-    { "key": "child_needs", "label": "2. Child needs & priorities", "type": "textarea", "placeholder": "What are the essential emotional, educational, and medical priorities right now?" },
-    { "key": "co_values", "label": "3. Agreed co-parenting principles & values", "type": "textarea", "placeholder": "What rules or guidelines will govern respectful communication and joint decisions?" },
-    { "key": "commitments", "label": "4. Personal commitments", "type": "textarea", "placeholder": "What positive change will you commit to regardless of the other parent's actions?" }
+    {
+      "key": "statement",
+      "label": "Our Foundation Statement",
+      "type": "textarea",
+      "placeholder": "In a few sentences: what do you want for your child, and how will you co-parent to get there?"
+    },
+    {
+      "key": "parent_names",
+      "label": "Parent name(s)",
+      "type": "text",
+      "placeholder": "e.g. Sarah & Mark"
+    },
+    {
+      "key": "child_info",
+      "label": "Child(ren) name(s) & age(s)",
+      "type": "text",
+      "placeholder": "e.g. Emma (8), Lucas (5)"
+    },
+    {
+      "key": "core_goals",
+      "label": "1. Core hopes & goals for our child",
+      "type": "textarea",
+      "placeholder": "What shared hopes do both parents have for your child's well-being and future?"
+    },
+    {
+      "key": "child_needs",
+      "label": "2. Child needs & priorities",
+      "type": "textarea",
+      "placeholder": "What are the essential emotional, educational, and medical priorities right now?"
+    },
+    {
+      "key": "co_values",
+      "label": "3. Agreed co-parenting principles & values",
+      "type": "textarea",
+      "placeholder": "What rules or guidelines will govern respectful communication and joint decisions?"
+    },
+    {
+      "key": "commitments",
+      "label": "4. Personal commitments",
+      "type": "textarea",
+      "placeholder": "What positive change will you commit to regardless of the other parent's actions?"
+    }
   ],
   "footer_title": "Same Goals. A Brighter Future.",
   "footer_tags": "Safer Children · Stronger Families · Healthier Tomorrows",

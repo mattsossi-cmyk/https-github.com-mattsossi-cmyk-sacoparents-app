@@ -90,15 +90,15 @@ function BuilderDialog({ open, onOpenChange, fb, parentName }) {
   );
 }
 
-export function FoundationStatementView({ onBack = () => {}, parentName = null, QuickExit = null, fb }) {
-  const [builderOpen, setBuilderOpen] = useState(false);
+export function FoundationStatementView({ onBack = () => {}, backLabel = "Back to Self Journey", startOpen = false, parentName = null, QuickExit = null, fb }) {
+  const [builderOpen, setBuilderOpen] = useState(startOpen);
   return (
     <div data-testid="journey-shell" className="space-y-4">
       <section data-testid="door-view-foundation" className="space-y-4">
         <div className="flex items-center justify-between gap-2 flex-wrap">
           <button type="button" data-testid="foundation-back" onClick={onBack} className="text-[12px] font-semibold text-purple-700 hover:text-purple-900">
             <i className="fa-solid fa-arrow-left mr-1"></i>
-            Back to Self Journey
+            {backLabel}
           </button>
           {QuickExit}
         </div>

@@ -24,17 +24,18 @@ def _cp_rows(cp: Dict[str, Any]) -> List[Dict[str, Any]]:
     return sorted(rows, key=lambda r: r["avg"], reverse=True)
 
 
-def _sa_rows(sa: Dict[str, Any]) -> List[tuple]:
-    sections = ((sa or {}).get("scores") or {}).get("sections") or {}
-    return sorted(((SA_NAMES.get(k, k), v) for k, v in sections.items() if k in SA_NAMES), key=lambda r: r[1], reverse=True)
-
-
-async def build_summary(db: AsyncIOMotorDatabase, uid: str) -> Dict[str, Any]:
+async def load_results(db: AsyncIOMotorDatabase, uid: str) -> tuple:
+    """(Co-Parenting rows by avg desc, Self-Assessment {key: pct}, Child Needs doc) for one parent."""
     sa = await db.self_assessment_history.find_one({"user_id": uid}, {"_id": 0, "scores": 1}, sort=[("completed_at", -1)])
     cp = await db.cp_report_history.find_one({"_id": uid}, {"snapshots": 1}) or {}
     cn = await db.child_needs_assessments.find_one({"user_id": uid}, {"_id": 0, "answers": 1, "completed_at": 1}) or {}
+    sections = ((sa or {}).get("scores") or {}).get("sections") or {}
+    return _cp_rows(cp), {k: v for k, v in sections.items() if k in SA_NAMES}, cn
 
-    cp_rows, sa_rows = _cp_rows(cp), _sa_rows(sa)
+
+async def build_summary(db: AsyncIOMotorDatabase, uid: str) -> Dict[str, Any]:
+    cp_rows, sa_sections, cn = await load_results(db, uid)
+    sa_rows = sorted(((SA_NAMES[k], v) for k, v in sa_sections.items()), key=lambda r: r[1], reverse=True)
     top_cp = cp_rows[:3]
     low_cp = [r for r in cp_rows[::-1] if r not in top_cp][:2]
     alignment = [_item(r["name"], r["rating"], CP_SOURCE) for r in top_cp]

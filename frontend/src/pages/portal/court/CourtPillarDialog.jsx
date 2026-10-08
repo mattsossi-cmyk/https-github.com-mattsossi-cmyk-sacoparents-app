@@ -1,13 +1,7 @@
 import React from "react";
 
+import { CourtCompare } from "./CourtCompare";
 import { CourtDialog } from "./CourtDialog";
-
-const COMING_SOON = {
-  alignment: "Once both parents finish their individual responses, this will show where your answers match.",
-  difference: "Once both parents finish their individual responses, this will show where your answers differ.",
-  child: "Once both parents finish their individual responses, this will bring both views of your child's needs together.",
-  resources: "Once both parents finish their individual responses, options that fit you both will be suggested here.",
-};
 
 function Results({ items }) {
   return (
@@ -47,7 +41,7 @@ function Resources({ resources }) {
   );
 }
 
-export function CourtPillarDialog({ pillar, summary, resources, onClose, onOpenStep }) {
+export function CourtPillarDialog({ pillar, summary, resources, compare, onClose, onOpenStep, onEnterCase }) {
   if (!pillar) return null;
   const items = pillar.key !== "resources" ? summary?.[pillar.key] || [] : [];
   const empty = pillar.key === "child" ? !summary?.has_child : !items.length;
@@ -67,12 +61,7 @@ export function CourtPillarDialog({ pillar, summary, resources, onClose, onOpenS
       ) : (
         <Results items={items} />
       )}
-      <p data-testid="court-pillar-coming-soon" className="flex gap-2.5 text-xs text-[#3b1566] bg-[#f2ebfc] rounded-xl px-4 py-3">
-        <i className="fa-solid fa-hourglass-half mt-0.5"></i>
-        <span>
-          <strong>Both-parent view coming soon.</strong> {COMING_SOON[pillar.key]}
-        </span>
-      </p>
+      {pillar.key !== "resources" && <CourtCompare pillar={pillar} compare={compare} onEnterCase={onEnterCase} />}
     </CourtDialog>
   );
 }
