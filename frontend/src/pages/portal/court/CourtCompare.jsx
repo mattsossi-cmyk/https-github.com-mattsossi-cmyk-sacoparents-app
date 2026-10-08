@@ -41,7 +41,7 @@ function Pair({ label, value, tone }) {
   );
 }
 
-function ScoreRows({ rows, aligned }) {
+function ScoreRows({ rows, aligned, points = {} }) {
   return (
     <ul data-testid="court-compare-rows" className="space-y-2">
       {rows.map((r, i) => (
@@ -52,6 +52,12 @@ function ScoreRows({ rows, aligned }) {
             <Pair label="You" value={r.mine} tone="bg-[#f2ebfc] text-[#3b1566]" />
             <Pair label="Co-parent" value={r.theirs} tone={aligned ? "bg-emerald-50 text-emerald-800" : "bg-amber-50 text-amber-900"} />
           </div>
+          {points[r.area] && (
+            <p data-testid={`court-talking-point-${i}`} className="mt-2 text-xs italic text-[#3b1566] bg-white border border-[#e7dbf8] rounded-lg px-3 py-2">
+              <i className="fa-solid fa-comment-dots mr-1.5 not-italic text-[#7b2cbf]"></i>
+              {points[r.area]}
+            </p>
+          )}
         </li>
       ))}
     </ul>
@@ -83,10 +89,55 @@ function ChildRows({ cats }) {
   );
 }
 
-function Ready({ pillar, data }) {
+function TalkingPoints({ compare }) {
+  const tp = compare.data.talking_points;
+  return (
+    <div data-testid="court-talking-points" className="mb-3 flex flex-wrap items-center gap-2">
+      <button
+        type="button"
+        data-testid={tp ? "court-talking-points-refresh" : "court-talking-points-generate"}
+        disabled={compare.pointsBusy}
+        onClick={compare.suggestPoints}
+        className="text-xs font-bold px-3.5 py-2 rounded-full bg-[#3b1566] hover:bg-[#5c2c8e] disabled:opacity-60 text-white transition-colors"
+      >
+        <i className={`fa-solid ${compare.pointsBusy ? "fa-spinner fa-spin" : tp ? "fa-rotate" : "fa-wand-magic-sparkles"} mr-1.5`}></i>
+        {tp ? "Refresh talking points" : "Suggest talking points"}
+      </button>
+      <span className="text-[11px] text-[#5f6368]">
+        {tp?.stale ? "Your answers changed since these were made. Refresh for updated ones." : tp ? "Shared with your co-parent. One calm opener per area." : "One calm opener per differing area, shared with your co-parent."}
+      </span>
+    </div>
+  );
+}
+
+function Ready({ pillar, compare }) {
+  const data = compare.data;
   const rows = pillar.key === "child" ? data.child : data[pillar.key];
   if (!rows?.length) return <p data-testid="court-compare-area-empty" className="text-xs text-[#5f6368]">{EMPTY[pillar.key]}</p>;
-  return pillar.key === "child" ? <ChildRows cats={rows} /> : <ScoreRows rows={rows} aligned={pillar.key === "alignment"} />;
+  if (pillar.key === "child") return <ChildRows cats={rows} />;
+  if (pillar.key === "alignment") return <ScoreRows rows={rows} aligned />;
+  const tp = data.talking_points;
+  const points = tp && !tp.stale ? Object.fromEntries(tp.items.map((p) => [p.area, p.text])) : {};
+  return (
+    <>
+      <TalkingPoints compare={compare} />
+      <ScoreRows rows={rows} aligned={false} points={points} />
+    </>
+  );
+}
+
+function PdfButton({ compare }) {
+  return (
+    <button
+      type="button"
+      data-testid="court-compare-pdf"
+      disabled={compare.pdfBusy}
+      onClick={compare.downloadPdf}
+      className="mt-3 ml-0 sm:ml-4 inline-flex items-center gap-1.5 text-xs font-bold text-[#2fa144] hover:underline disabled:opacity-60"
+    >
+      <i className={`fa-solid ${compare.pdfBusy ? "fa-spinner fa-spin" : "fa-file-pdf"}`}></i> Download Comparison PDF
+    </button>
+  );
 }
 
 // Side-by-side section inside the Alignment / Difference / Child-Focused Needs popups.
@@ -100,7 +151,7 @@ export function CourtCompare({ pillar, compare, onEnterCase }) {
       {!compare.data ? (
         <p className="text-xs text-[#5f6368]"><i className="fa-solid fa-spinner fa-spin mr-2"></i>Checking…</p>
       ) : state === "ready" ? (
-        <Ready pillar={pillar} data={compare.data} />
+        <Ready pillar={pillar} compare={compare} />
       ) : (
         <p data-testid="court-compare-message" className="text-xs text-[#5f6368] leading-relaxed">{COPY[state]}</p>
       )}
@@ -109,7 +160,10 @@ export function CourtCompare({ pillar, compare, onEnterCase }) {
           Enter case code <i className="fa-solid fa-arrow-right ml-1"></i>
         </button>
       )}
-      {["not_shared", "waiting", "ready"].includes(state) && <ShareSwitch compare={compare} />}
+      <div className="flex flex-wrap items-center">
+        {["not_shared", "waiting", "ready"].includes(state) && <ShareSwitch compare={compare} />}
+        {state === "ready" && <PdfButton compare={compare} />}
+      </div>
     </section>
   );
 }

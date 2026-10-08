@@ -4340,3 +4340,43 @@ def send_self_journey_weekly_note(
         text=note["text"],
         failure_message="Could not send the weekly note right now.",
     )
+
+
+# Court page comparison alerts. Neutral wording, no results or names; callers skip safety-flagged parents.
+def _compare_email(*, to_email: str, user_name: Optional[str], link_url: str, subject: str, headline: str, lines: List[str]) -> None:
+    hello = f"Hi {user_name.split()[0]}," if user_name else "Hi,"
+    p = '<p style="font-size:15px;line-height:1.55;color:#4B4567;margin:0 0 14px 0;">{}</p>'
+    body_html = p.format(hello) + "".join(p.format(line) for line in lines)
+    html = _branded_html(headline=headline, body_html=body_html, cta_label="Open my Court page", cta_url=link_url)
+    text = "\n\n".join([hello, *lines, f"Open your Court page: {link_url}", "— SA CoParents · sacoparentsapp.online"])
+    _send(to_email=to_email, subject=subject, html=html, text=text, failure_message="Could not send the comparison alert right now.")
+
+
+def send_compare_share_alert(*, to_email: str, user_name: Optional[str], link_url: str) -> None:
+    _compare_email(
+        to_email=to_email,
+        user_name=user_name,
+        link_url=link_url,
+        subject="Your co-parent is ready to compare results",
+        headline="Your co-parent turned on sharing",
+        lines=[
+            "Your co-parent on your court case chose to share their results so you can both see them side by side.",
+            "Nothing of yours is shared unless you turn on sharing too, and you can turn it off anytime. "
+            "Open the Areas of Alignment, Difference or Child-Focused Needs spots on your Court page to choose.",
+        ],
+    )
+
+
+def send_compare_ready_alert(*, to_email: str, user_name: Optional[str], link_url: str) -> None:
+    _compare_email(
+        to_email=to_email,
+        user_name=user_name,
+        link_url=link_url,
+        subject="Your side-by-side comparison is ready",
+        headline="Your comparison is ready to view",
+        lines=[
+            "You and your co-parent are both sharing, so your side-by-side comparison is ready on your Court page: "
+            "areas of alignment, areas of difference and your child's needs.",
+            "You can download it as a PDF to bring to mediation. Either of you can stop sharing anytime.",
+        ],
+    )

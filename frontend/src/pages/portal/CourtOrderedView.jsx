@@ -87,7 +87,7 @@ export function CourtOrderedView({ onBack, onQuickExit, courtKey, mediator, onVe
             setDialog({ type: "pillar", pillar });
           }}
         />
-        <CourtTools cc={cc} courtKey={courtKey} onCase={() => setDialog({ type: "accept" })} onBiff={onOpenBiffHistory} />
+        <CourtTools cc={cc} courtKey={courtKey} compare={compare} onCase={() => setDialog({ type: "accept" })} onBiff={onOpenBiffHistory} />
         <div className="grid md:grid-cols-2 gap-6 items-start">
           <CourtModulesCard modules={modules} onOpenModule={onOpenModule} />
           <CourtChecklistCard checklist={checklist} />

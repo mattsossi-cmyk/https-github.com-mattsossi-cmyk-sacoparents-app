@@ -3,9 +3,9 @@ import React from "react";
 const btn =
   "rounded-2xl bg-white border border-[#e0d5ed] hover:border-[#5c2c8e] hover:bg-[#f2ebfc] px-4 py-3.5 text-left flex items-center gap-3 transition-colors disabled:opacity-60";
 
-function Tool({ testid, icon, title, sub, onClick, busy, tone = "bg-[#f2ebfc] text-[#5c2c8e]" }) {
+function Tool({ testid, icon, title, sub, onClick, busy, tone = "bg-[#f2ebfc] text-[#5c2c8e]", className = "" }) {
   return (
-    <button type="button" data-testid={testid} onClick={onClick} disabled={busy} className={btn}>
+    <button type="button" data-testid={testid} onClick={onClick} disabled={busy} className={`${btn} ${className}`}>
       <span className={`shrink-0 w-10 h-10 rounded-xl flex items-center justify-center ${tone}`}>
         <i className={`fa-solid ${busy ? "fa-spinner fa-spin" : icon}`}></i>
       </span>
@@ -18,12 +18,13 @@ function Tool({ testid, icon, title, sub, onClick, busy, tone = "bg-[#f2ebfc] te
 }
 
 // Court tools under the artwork: case details, court-ready PDF, BIFF check, save case & open the professional site.
-export function CourtTools({ cc, courtKey, onCase, onBiff }) {
+export function CourtTools({ cc, courtKey, compare, onCase, onBiff }) {
+  const ready = compare.data?.state === "ready";
   return (
     <section data-testid="court-tools" className="mt-8 mb-6">
       <h2 className="text-xl sm:text-2xl font-extrabold text-[#3b1566] mb-1">Your Court Tools</h2>
       <p className="text-sm text-[#5f6368] mb-4">Everything you need for your court-ordered path, in one place.</p>
-      <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-3">
+      <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
         <Tool
           testid="court-tool-case"
           icon={cc.verified ? "fa-circle-check" : "fa-key"}
@@ -33,8 +34,16 @@ export function CourtTools({ cc, courtKey, onCase, onBiff }) {
           onClick={onCase}
         />
         <Tool testid="court-tool-pdf" icon="fa-file-pdf" title="Court-Ready PDF" sub="Download your summary report" onClick={cc.pdf} busy={cc.busy === "pdf"} />
+        <Tool
+          testid="court-tool-compare-pdf"
+          icon="fa-people-arrows"
+          title="Comparison PDF"
+          sub={ready ? "Side-by-side results for mediation" : "Available once both parents share"}
+          onClick={compare.downloadPdf}
+          busy={compare.pdfBusy}
+        />
         <Tool testid="court-tool-biff" icon="fa-wand-magic-sparkles" title="BIFF Communication Check" sub="Review your saved messages" onClick={onBiff} />
-        <Tool testid="court-tool-sync" icon="fa-rotate" title="Save Case & Open" sub={cc.alignHost} onClick={cc.sync} busy={cc.busy === "sync"} />
+        <Tool testid="court-tool-sync" icon="fa-rotate" title="Save Case & Open" sub={cc.alignHost} onClick={cc.sync} busy={cc.busy === "sync"} className="sm:col-span-2 lg:col-span-2" />
       </div>
     </section>
   );

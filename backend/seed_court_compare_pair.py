@@ -3,8 +3,8 @@
     cd /app/backend && python -c "from seed_court_compare_pair import run; import asyncio; print(asyncio.run(run()))"
 
 Creates parent3@test.com and parent4@test.com (TestPass123!), both on court key PAIR-DEMO-01, safety-cleared,
-with Co-Parenting, Self-Assessment and Child Needs results. Neither is opted in to sharing (testers do that in
-the UI). Idempotent; local dev DB only.
+with Co-Parenting, Self-Assessment and Child Needs results. Resets sharing, sharing-alert history and saved
+talking points. Idempotent; local dev DB only.
 """
 from __future__ import annotations
 
@@ -86,4 +86,6 @@ async def run() -> dict:
             upsert=True,
         )
         await db.court_compare_shares.delete_one({"user_id": uid})
+        await db.court_compare_alerts.delete_one({"user_id": uid})
+    await db.court_talking_points.delete_one({"court_key": KEY})
     return {"court_key": KEY, "users": out}
