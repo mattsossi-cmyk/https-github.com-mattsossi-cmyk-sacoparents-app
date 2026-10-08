@@ -1,5 +1,7 @@
 import React from "react";
 
+import { AgreeControls, AgreedList, AgreeProgress } from "./CourtAgreement";
+
 const COPY = {
   no_case: "Accept your court-ordered invite with your case code to compare side by side with your co-parent.",
   not_shared: "See your results side by side with your co-parent on the same case. Nothing is shared until you both turn this on, and you can turn it off anytime.",
@@ -41,11 +43,11 @@ function Pair({ label, value, tone }) {
   );
 }
 
-function ScoreRows({ rows, aligned, points = {} }) {
+function ScoreRows({ rows, aligned, points = {}, extra }) {
   return (
     <ul data-testid="court-compare-rows" className="space-y-2">
       {rows.map((r, i) => (
-        <li key={`${r.source}-${r.area}`} data-testid={`court-compare-row-${i}`} className="border border-[#e7dbf8] rounded-xl p-3">
+        <li key={`${r.source}-${r.area}`} data-testid={`court-compare-row-${i}`} className={`border rounded-xl p-3 ${r.agreed ? "border-emerald-200" : "border-[#e7dbf8]"}`}>
           <p className="text-sm font-semibold text-[#202124]">{r.area}</p>
           <p className="text-[10px] text-[#5f6368] mb-2">{r.source}</p>
           <div className="grid grid-cols-2 gap-2">
@@ -58,6 +60,7 @@ function ScoreRows({ rows, aligned, points = {} }) {
               {points[r.area]}
             </p>
           )}
+          {extra && extra(r, i)}
         </li>
       ))}
     </ul>
@@ -112,16 +115,25 @@ function TalkingPoints({ compare }) {
 
 function Ready({ pillar, compare }) {
   const data = compare.data;
+  const agreed = data.difference.filter((r) => r.agreed);
+  if (pillar.key === "alignment" && (data.alignment.length || agreed.length)) {
+    return (
+      <>
+        {data.alignment.length > 0 && <ScoreRows rows={data.alignment} aligned />}
+        {agreed.length > 0 && <AgreedList rows={agreed} />}
+      </>
+    );
+  }
   const rows = pillar.key === "child" ? data.child : data[pillar.key];
   if (!rows?.length) return <p data-testid="court-compare-area-empty" className="text-xs text-[#5f6368]">{EMPTY[pillar.key]}</p>;
   if (pillar.key === "child") return <ChildRows cats={rows} />;
-  if (pillar.key === "alignment") return <ScoreRows rows={rows} aligned />;
   const tp = data.talking_points;
   const points = tp && !tp.stale ? Object.fromEntries(tp.items.map((p) => [p.area, p.text])) : {};
   return (
     <>
+      <AgreeProgress progress={data.progress} notice={data.intent_notice} />
       <TalkingPoints compare={compare} />
-      <ScoreRows rows={rows} aligned={false} points={points} />
+      <ScoreRows rows={rows} aligned={false} points={points} extra={(r, i) => <AgreeControls row={r} i={i} compare={compare} />} />
     </>
   );
 }

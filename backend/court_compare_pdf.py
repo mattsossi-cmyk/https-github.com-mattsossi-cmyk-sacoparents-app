@@ -63,7 +63,31 @@ def _section(pdf: FPDF, title: str, note: str) -> None:
     pdf.ln(1)
 
 
-def _score_table(pdf: FPDF, rows: List[Dict[str, str]], names: tuple, tone: tuple, points: Dict[str, str]) -> None:
+def _agreed_line(pdf: FPDF, r: Dict[str, Any], names: tuple) -> None:
+    who = " and ".join(n for n, on in ((names[0], r["by_me"]), (names[1], r["by_them"])) if on)
+    when = f" on {datetime.fromisoformat(r['agreed_at']):%b %d, %Y}" if r.get("agreed_at") else ""
+    pdf.set_x(pdf.l_margin + 3)
+    pdf.set_font("Helvetica", "B", 8.5)
+    pdf.set_text_color(*EMERALD)
+    pdf.multi_cell(pdf.epw - 3, 4.3, _safe(f"Marked agreed by {who}{when}"), new_x="LMARGIN", new_y="NEXT")
+    if r.get("note"):
+        pdf.set_x(pdf.l_margin + 3)
+        pdf.set_font("Helvetica", "", 8.5)
+        pdf.set_text_color(*INK)
+        pdf.multi_cell(pdf.epw - 3, 4.3, _safe(f"What we agreed: {r['note']}"), new_x="LMARGIN", new_y="NEXT")
+
+
+def _notice(pdf: FPDF, text: str) -> None:
+    _room(pdf, 16)
+    pdf.set_fill_color(242, 235, 252)
+    pdf.set_draw_color(203, 196, 222)
+    pdf.set_font("Helvetica", "B", 8.5)
+    pdf.set_text_color(*PURPLE)
+    pdf.multi_cell(0, 4.4, _safe(text), border=1, fill=True, padding=2.2, new_x="LMARGIN", new_y="NEXT")
+    pdf.ln(2)
+
+
+def _score_table(pdf: FPDF, rows: List[Dict[str, Any]], names: tuple, tone: tuple, points: Dict[str, str]) -> None:
     w_area, w_val = pdf.epw - 2 * 46, 46
     pdf.set_font("Helvetica", "B", 8.5)
     pdf.set_text_color(*MUTED)
@@ -88,6 +112,8 @@ def _score_table(pdf: FPDF, rows: List[Dict[str, str]], names: tuple, tone: tupl
             pdf.set_font("Helvetica", "I", 8.5)
             pdf.set_text_color(*PURPLE)
             pdf.multi_cell(pdf.epw - 3, 4.3, _safe(f"Talking point: {tip}"), new_x="LMARGIN", new_y="NEXT")
+        if r.get("agreed"):
+            _agreed_line(pdf, r, names)
         pdf.set_draw_color(*LINE)
         pdf.line(pdf.l_margin, pdf.get_y() + 1, pdf.w - pdf.r_margin, pdf.get_y() + 1)
         pdf.set_y(max(pdf.get_y(), y) + 2.4)
@@ -132,6 +158,12 @@ def build_compare_pdf(data: Dict[str, Any]) -> bytes:
         pdf.cell(0, 5, "No matching areas yet.", new_x="LMARGIN", new_y="NEXT")
     _section(pdf, "Areas of Difference", "Where the two parents rated things differently, with a calm opener to start talking.")
     if data["difference"]:
+        prog = data["progress"]
+        if prog["agreed"]:
+            pdf.set_font("Helvetica", "B", 9.5)
+            pdf.set_text_color(*EMERALD)
+            pdf.cell(0, 5.5, _safe(f"{prog['agreed']} of {prog['total']} differing areas marked agreed"), new_x="LMARGIN", new_y="NEXT")
+            _notice(pdf, data["intent_notice"])
         _score_table(pdf, data["difference"], names, AMBER, points)
     else:
         pdf.set_font("Helvetica", "", 9)

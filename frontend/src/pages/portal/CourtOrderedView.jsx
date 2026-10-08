@@ -1,11 +1,13 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
 import { toast } from "sonner";
 
 import { CourtAcceptDialog } from "./court/CourtAcceptDialog";
+import { CourtAgreeCard } from "./court/CourtAgreement";
+import { CourtCelebration } from "./court/CourtCelebration";
 import { CourtChatPanel } from "./court/CourtChatPanel";
 import { CourtChecklistCard } from "./court/CourtChecklistCard";
-import { STEPS } from "./court/courtContent";
+import { PILLARS, STEPS } from "./court/courtContent";
 import { CourtHeader } from "./court/CourtHeader";
 import { CourtJourneyArt } from "./court/CourtJourneyArt";
 import { CourtPillarDialog } from "./court/CourtPillarDialog";
@@ -33,6 +35,11 @@ export function CourtOrderedView({ onBack, onQuickExit, courtKey, mediator, onVe
   const cc = useCourtCase({ courtKey, savedName: checklist.data?.parent_name, onVerify, signedIn, alignUrl, onDownloadPdf });
   const chat = useGuideChat("/court-path/ai/chat", { modules: Object.fromEntries(modules.map((m) => [m.topic, m.status])), safety_flagged: !!safetyFlag });
   useLockScroll(!hidden);
+  const progress = compare.data?.state === "ready" ? compare.data.progress : null;
+  const celebrate = !hidden && !!progress?.all_agreed && !progress.celebrated;
+  useEffect(() => {
+    if (celebrate) setDialog(null);
+  }, [celebrate]);
 
   const items = Object.fromEntries((checklist.data?.items || []).map((i) => [i.key, i]));
   const statusOf = (card) => items[card]?.status || "loading";
@@ -87,6 +94,13 @@ export function CourtOrderedView({ onBack, onQuickExit, courtKey, mediator, onVe
             setDialog({ type: "pillar", pillar });
           }}
         />
+        <CourtAgreeCard
+          compare={compare}
+          onOpen={() => {
+            compare.load();
+            setDialog({ type: "pillar", pillar: PILLARS[1] });
+          }}
+        />
         <CourtTools cc={cc} courtKey={courtKey} compare={compare} onCase={() => setDialog({ type: "accept" })} onBiff={onOpenBiffHistory} />
         <div className="grid md:grid-cols-2 gap-6 items-start">
           <CourtModulesCard modules={modules} onOpenModule={onOpenModule} />
@@ -115,6 +129,7 @@ export function CourtOrderedView({ onBack, onQuickExit, courtKey, mediator, onVe
             onOpenStep={openStep}
             onEnterCase={() => setDialog({ type: "accept" })}
           />
+          <CourtCelebration open={celebrate} notice={compare.data?.intent_notice} onClose={compare.markCelebrated} onPdf={compare.downloadPdf} />
           <CourtChatPanel chat={chat} open={chatOpen} onOpenChange={setChatOpen} draft={chatDraft} fb={fb} onOpenStep4={() => onOpenCard("card4", { builder: true })} />
         </>
       )}

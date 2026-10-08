@@ -9,6 +9,7 @@ export function useCourtCompare(active) {
   const [busy, setBusy] = useState(false);
   const [pdfBusy, setPdfBusy] = useState(false);
   const [pointsBusy, setPointsBusy] = useState(false);
+  const [agreeBusy, setAgreeBusy] = useState(null);
   const load = useCallback(() => {
     api
       .get("/court-path/compare")
@@ -71,5 +72,26 @@ export function useCourtCompare(active) {
     }
   };
 
-  return { data, busy, load, setShared, downloadPdf, pdfBusy, suggestPoints, pointsBusy };
+  const agreeCall = async (key, request, success) => {
+    setAgreeBusy(key);
+    try {
+      const { data: d } = await request();
+      setData(d);
+      if (success) toast.success(success);
+    } catch (e) {
+      const detail = e?.response?.data?.detail;
+      toast.error(typeof detail === "string" ? detail : "Couldn't save that right now. Please try again.");
+    } finally {
+      setAgreeBusy(null);
+    }
+  };
+  const setAgreed = (key, agreed) =>
+    agreeCall(key, () => api.post("/court-path/compare/agree", { area: key, agreed }), agreed ? "Marked as agreed for both of you." : "Your mark was removed.");
+  const saveNote = (key, note) => agreeCall(key, () => api.put("/court-path/compare/agree/note", { area: key, note }), "Note saved. Your co-parent can see it.");
+  const markCelebrated = () => {
+    setData((d) => (d?.progress ? { ...d, progress: { ...d.progress, celebrated: true } } : d));
+    api.post("/court-path/compare/celebrated").catch(() => {});
+  };
+
+  return { data, busy, load, setShared, downloadPdf, pdfBusy, suggestPoints, pointsBusy, agreeBusy, setAgreed, saveNote, markCelebrated };
 }

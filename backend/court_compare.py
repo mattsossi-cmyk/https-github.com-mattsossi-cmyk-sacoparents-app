@@ -16,9 +16,10 @@ from typing import Any, Dict, List, Optional, Tuple
 from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Request
 from fastapi.responses import StreamingResponse
 from motor.motor_asyncio import AsyncIOMotorDatabase
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 from auth import UserPublic, get_current_user, get_db
+from court_agreements import INTENT_NOTICE, annotate, is_celebrated, load_agreements, mark_celebrated, set_mark, set_note
 from court_compare_alerts import notify_share
 from court_compare_pdf import build_compare_pdf
 from court_summary import CN_CATS, CN_NAMES, CP_SOURCE, SA_NAMES, SA_SOURCE, load_results
@@ -41,6 +42,16 @@ _POINTS_TASK = (
 
 class ShareBody(BaseModel):
     shared: bool
+
+
+class AgreeBody(BaseModel):
+    area: str = Field(..., min_length=3, max_length=200)
+    agreed: bool
+
+
+class NoteBody(BaseModel):
+    area: str = Field(..., min_length=3, max_length=200)
+    note: str = Field("", max_length=600)
 
 
 async def _case_key(db: AsyncIOMotorDatabase, uid: str) -> str:
@@ -125,7 +136,10 @@ async def _ready_data(db: AsyncIOMotorDatabase, uid: str, key: str, other: str) 
     points = None
     if saved:
         points = {"items": saved["items"], "generated_at": saved["generated_at"], "stale": saved["basis"] != _basis(scores["difference"])}
-    return {**scores, "child": _compare_child(me[2], them[2]), "talking_points": points}
+    difference, progress = annotate(scores["difference"], await load_agreements(db, key), uid)
+    progress["celebrated"] = await is_celebrated(db, uid, key)
+    return {**scores, "difference": difference, "progress": progress, "intent_notice": INTENT_NOTICE,
+            "child": _compare_child(me[2], them[2]), "talking_points": points}
 
 
 async def build_compare(db: AsyncIOMotorDatabase, uid: str) -> Dict[str, Any]:
@@ -232,3 +246,33 @@ async def talking_points(request: Request, user: UserPublic = Depends(get_curren
         upsert=True,
     )
     return await build_compare(db, user.user_id)
+
+
+def _area_or_400(data: Dict[str, Any], area: str) -> None:
+    if area not in {r["key"] for r in data["difference"]}:
+        raise HTTPException(status_code=400, detail="That area isn't one where your answers differ.")
+
+
+@router.post("/agree")
+async def agree(body: AgreeBody, user: UserPublic = Depends(get_current_user), db: AsyncIOMotorDatabase = Depends(get_db)) -> Dict[str, Any]:
+    """Either parent's mark makes the area agreed for both; each parent can only undo their own mark."""
+    key, _other, data = await _ready_or_409(db, user.user_id)
+    _area_or_400(data, body.area)
+    await set_mark(db, key, body.area, user.user_id, body.agreed)
+    return await build_compare(db, user.user_id)
+
+
+@router.put("/agree/note")
+async def agree_note(body: NoteBody, user: UserPublic = Depends(get_current_user), db: AsyncIOMotorDatabase = Depends(get_db)) -> Dict[str, Any]:
+    key, _other, data = await _ready_or_409(db, user.user_id)
+    _area_or_400(data, body.area)
+    if not await set_note(db, key, body.area, user.user_id, body.note):
+        raise HTTPException(status_code=400, detail="Mark this area as agreed first.")
+    return await build_compare(db, user.user_id)
+
+
+@router.post("/celebrated")
+async def celebrated(user: UserPublic = Depends(get_current_user), db: AsyncIOMotorDatabase = Depends(get_db)) -> Dict[str, bool]:
+    key, _other, _data = await _ready_or_409(db, user.user_id)
+    await mark_celebrated(db, user.user_id, key)
+    return {"ok": True}
