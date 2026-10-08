@@ -4346,7 +4346,7 @@ def send_self_journey_weekly_note(
 def _compare_email(*, to_email: str, user_name: Optional[str], link_url: str, subject: str, headline: str, lines: List[str]) -> None:
     hello = f"Hi {user_name.split()[0]}," if user_name else "Hi,"
     p = '<p style="font-size:15px;line-height:1.55;color:#4B4567;margin:0 0 14px 0;">{}</p>'
-    body_html = p.format(hello) + "".join(p.format(line) for line in lines)
+    body_html = p.format(_html.escape(hello)) + "".join(p.format(_html.escape(line)) for line in lines)
     html = _branded_html(headline=headline, body_html=body_html, cta_label="Open my Court page", cta_url=link_url)
     text = "\n\n".join([hello, *lines, f"Open your Court page: {link_url}", "— SA CoParents · sacoparentsapp.online"])
     _send(to_email=to_email, subject=subject, html=html, text=text, failure_message="Could not send the comparison alert right now.")
@@ -4380,3 +4380,27 @@ def send_compare_ready_alert(*, to_email: str, user_name: Optional[str], link_ur
             "You can download it as a PDF to bring to mediation. Either of you can stop sharing anytime.",
         ],
     )
+
+
+def send_agreement_update_alert(*, to_email: str, user_name: Optional[str], link_url: str, items: List[Dict[str, Any]], notice: str) -> None:
+    """Bundled 'your co-parent updated your agreements' email (areas marked agreed + notes added)."""
+    lines = []
+    for it in items:
+        if it["kind"] == "note":
+            lines.append(f"{it['area']}: a note was added - \"{it.get('note') or ''}\"")
+        else:
+            lines.append(f"{it['area']}: marked as agreed")
+    hello = f"Hi {user_name.split()[0]}," if user_name else "Hi,"
+    p = '<p style="font-size:15px;line-height:1.55;color:#4B4567;margin:0 0 14px 0;">{}</p>'
+    li = "".join(f'<li style="margin:0 0 6px 0;">{_html.escape(line)}</li>' for line in lines)
+    body_html = (
+        p.format(_html.escape(hello))
+        + p.format("Your co-parent updated your agreements on your Court page:")
+        + f'<ul style="font-size:15px;line-height:1.5;color:#4B4567;margin:0 0 14px 18px;padding:0;">{li}</ul>'
+        + f'<p style="font-size:12px;line-height:1.5;color:#6B6585;margin:0 0 14px 0;">{_html.escape(notice)}</p>'
+    )
+    out_html = _branded_html(headline="Your agreements were updated", body_html=body_html, cta_label="Open my Court page", cta_url=link_url)
+    text = "\n\n".join([hello, "Your co-parent updated your agreements on your Court page:", "\n".join(f"- {line}" for line in lines),
+                        notice, f"Open your Court page: {link_url}", "— SA CoParents · sacoparentsapp.online"])
+    _send(to_email=to_email, subject="Your co-parent updated your agreements", html=out_html, text=text,
+          failure_message="Could not send the agreement update right now.")

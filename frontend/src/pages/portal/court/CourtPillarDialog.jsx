@@ -41,7 +41,7 @@ function Resources({ resources }) {
   );
 }
 
-export function CourtPillarDialog({ pillar, summary, resources, compare, onClose, onOpenStep, onEnterCase }) {
+export function CourtPillarDialog({ pillar, summary, resources, compare, step4, onClose, onOpenStep, onEnterCase }) {
   if (!pillar) return null;
   const items = pillar.key !== "resources" ? summary?.[pillar.key] || [] : [];
   const empty = pillar.key === "child" ? !summary?.has_child : !items.length;
@@ -61,7 +61,7 @@ export function CourtPillarDialog({ pillar, summary, resources, compare, onClose
       ) : (
         <Results items={items} />
       )}
-      {pillar.key !== "resources" && <CourtCompare pillar={pillar} compare={compare} onEnterCase={onEnterCase} />}
+      {pillar.key !== "resources" && <CourtCompare pillar={pillar} compare={compare} step4={step4} onEnterCase={onEnterCase} />}
     </CourtDialog>
   );
 }

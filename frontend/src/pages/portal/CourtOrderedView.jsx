@@ -21,6 +21,7 @@ import { useGuideChat } from "./guide/useGuideChat";
 import { SafetyBanner, useLockScroll } from "./selfAssessment/SaChrome";
 
 const BIFF_BOOK_URL = process.env.REACT_APP_BIFF_BOOK_URL;
+const AGREED_MARK = " (agreed): ";
 const openTab = (url) => window.open(url, "_blank", "noopener,noreferrer");
 
 // Full-page Court Ordered path (portal): interactive journey artwork, court tools, and a saved AI chat.
@@ -52,6 +53,30 @@ export function CourtOrderedView({ onBack, onQuickExit, courtKey, mediator, onVe
     close();
     setChatDraft(prompt);
     setChatOpen(true);
+  };
+
+  // "What we agreed" notes -> Step 4 "Agreed co-parenting principles & values"; lines already there are skipped.
+  const lineOf = (r) => `${r.area}${AGREED_MARK}${r.note}`;
+  const step4 = {
+    has: (r) => (fb.fields.co_values || "").includes(lineOf(r)),
+    add: async (rows) => {
+      const existing = (fb.fields.co_values || "").trim();
+      const lines = rows.filter((r) => r.note && !existing.includes(lineOf(r))).map(lineOf);
+      if (!lines.length) {
+        toast.message("These agreements are already in Step 4.");
+        return;
+      }
+      const merged = [existing, ...lines].filter(Boolean).join("\n");
+      if (merged.length > 3000) {
+        toast.error("Step 4's principles & values box is full. Shorten it in Step 4, then try again.");
+        return;
+      }
+      const ok = await fb.updateMany({ co_values: merged });
+      toast.success(`Added ${lines.length} agreement${lines.length > 1 ? "s" : ""} to Step 4`, {
+        description: ok ? "In 'Agreed co-parenting principles & values'." : "Saved on this device. Open Step 4 and tap Save.",
+        action: { label: "Open Step 4", onClick: () => onOpenCard("card4", { builder: true }) },
+      });
+    },
   };
 
   const confirmAccept = async () => {
@@ -125,6 +150,7 @@ export function CourtOrderedView({ onBack, onQuickExit, courtKey, mediator, onVe
             summary={summary}
             resources={resources}
             compare={compare}
+            step4={step4}
             onClose={close}
             onOpenStep={openStep}
             onEnterCase={() => setDialog({ type: "accept" })}

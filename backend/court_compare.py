@@ -20,6 +20,7 @@ from pydantic import BaseModel, Field
 
 from auth import UserPublic, get_current_user, get_db
 from court_agreements import INTENT_NOTICE, annotate, is_celebrated, load_agreements, mark_celebrated, set_mark, set_note
+from court_agreement_alerts import queue_alert
 from court_compare_alerts import notify_share
 from court_compare_pdf import build_compare_pdf
 from court_summary import CN_CATS, CN_NAMES, CP_SOURCE, SA_NAMES, SA_SOURCE, load_results
@@ -254,20 +255,29 @@ def _area_or_400(data: Dict[str, Any], area: str) -> None:
 
 
 @router.post("/agree")
-async def agree(body: AgreeBody, user: UserPublic = Depends(get_current_user), db: AsyncIOMotorDatabase = Depends(get_db)) -> Dict[str, Any]:
+async def agree(
+    body: AgreeBody, background: BackgroundTasks, user: UserPublic = Depends(get_current_user), db: AsyncIOMotorDatabase = Depends(get_db)
+) -> Dict[str, Any]:
     """Either parent's mark makes the area agreed for both; each parent can only undo their own mark."""
     key, _other, data = await _ready_or_409(db, user.user_id)
     _area_or_400(data, body.area)
     await set_mark(db, key, body.area, user.user_id, body.agreed)
+    if body.agreed:
+        background.add_task(queue_alert, db, user.user_id, body.area, "agreed")
     return await build_compare(db, user.user_id)
 
 
 @router.put("/agree/note")
-async def agree_note(body: NoteBody, user: UserPublic = Depends(get_current_user), db: AsyncIOMotorDatabase = Depends(get_db)) -> Dict[str, Any]:
+async def agree_note(
+    body: NoteBody, background: BackgroundTasks, user: UserPublic = Depends(get_current_user), db: AsyncIOMotorDatabase = Depends(get_db)
+) -> Dict[str, Any]:
     key, _other, data = await _ready_or_409(db, user.user_id)
     _area_or_400(data, body.area)
     if not await set_note(db, key, body.area, user.user_id, body.note):
         raise HTTPException(status_code=400, detail="Mark this area as agreed first.")
+    note = " ".join(body.note.split())[:300]
+    if note:
+        background.add_task(queue_alert, db, user.user_id, body.area, "note", note)
     return await build_compare(db, user.user_id)
 
 

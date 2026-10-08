@@ -6,7 +6,10 @@ from typing import Any, Dict
 
 from fpdf import FPDF
 
+from court_agreements import INTENT_NOTICE
 from self_assessment_pdf import _safe
+
+AGREED_MARK = " (agreed): "  # line format used when Court agreements are added to Step 4
 
 try:
     from pdf_copyright import render_pdf_copyright  # type: ignore
@@ -77,6 +80,10 @@ def _answers(pdf: _FBPDF, content: Dict[str, Any], fields: Dict[str, str]) -> No
         pdf.set_font("Helvetica", "" if body else "I", 9.5)
         pdf.multi_cell(pdf.epw, 5.2, _safe(body or "Not written yet."), fill=True, padding=(2.5, 3, 2.5, 3),
                        new_x="LMARGIN", new_y="NEXT")
+        if AGREED_MARK in body:
+            pdf.set_font("Helvetica", "I", 8)
+            pdf.set_text_color(*MUTED)
+            pdf.multi_cell(pdf.epw, 4, _safe(INTENT_NOTICE), new_x="LMARGIN", new_y="NEXT")
         pdf.ln(3)
 
 

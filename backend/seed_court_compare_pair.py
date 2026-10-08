@@ -87,6 +87,8 @@ async def run() -> dict:
         )
         await db.court_compare_shares.delete_one({"user_id": uid})
         await db.court_compare_alerts.delete_one({"user_id": uid})
+        await db.court_agreement_alerts.delete_one({"user_id": uid})
+        await db.foundation_builder.delete_many({"user_id": uid})
     await db.court_talking_points.delete_one({"court_key": KEY})
     await db.court_agreements.delete_many({"court_key": KEY})
     await db.court_celebrations.delete_many({"court_key": KEY})

@@ -124,6 +124,7 @@ async def self_assessment_reminders_cron(
     # Dedupe lives in `self_assessment_reminders` (one sent row per entry + kind).
     run_id = request.headers.get("X-Webhook-Id") or "manual"
 
+    from court_agreement_alerts import flush_all
     from self_assessment_reminders import send_reassess_reminders
 
     async def _run() -> None:
@@ -132,6 +133,11 @@ async def self_assessment_reminders_cron(
             logger.info("self-assessment-reminders cron run_id=%s stats=%s", run_id, stats)
         except Exception as exc:  # noqa: BLE001
             logger.exception("self-assessment-reminders cron run_id=%s failed: %s", run_id, exc)
+        # Daily backstop (app is at the 5-cron limit): send agreement alerts queued inside a 6-hour window.
+        try:
+            logger.info("agreement alerts flushed run_id=%s sent=%s", run_id, await flush_all(db))
+        except Exception as exc:  # noqa: BLE001
+            logger.exception("agreement alert flush run_id=%s failed: %s", run_id, exc)
 
     background.add_task(_run)
     return {"ok": True, "run_id": run_id, "enqueued": "self-assessment-reminders"}

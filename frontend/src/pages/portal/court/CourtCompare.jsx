@@ -113,7 +113,25 @@ function TalkingPoints({ compare }) {
   );
 }
 
-function Ready({ pillar, compare }) {
+function AddAllToStep4({ rows, step4 }) {
+  const withNotes = rows.filter((r) => r.agreed && r.note);
+  if (!withNotes.length) return null;
+  const left = withNotes.filter((r) => !step4.has(r)).length;
+  return (
+    <button
+      type="button"
+      data-testid="court-agree-all-to-step4"
+      disabled={!left}
+      onClick={() => step4.add(withNotes)}
+      className="mb-3 text-xs font-bold px-3.5 py-2 rounded-full bg-white border border-emerald-300 text-emerald-800 hover:bg-emerald-50 disabled:opacity-60 transition-colors"
+    >
+      <i className="fa-solid fa-file-import mr-1.5"></i>
+      {left ? `Add all agreements to Step 4 (${left})` : "All agreements are in Step 4"}
+    </button>
+  );
+}
+
+function Ready({ pillar, compare, step4 }) {
   const data = compare.data;
   const agreed = data.difference.filter((r) => r.agreed);
   if (pillar.key === "alignment" && (data.alignment.length || agreed.length)) {
@@ -132,8 +150,9 @@ function Ready({ pillar, compare }) {
   return (
     <>
       <AgreeProgress progress={data.progress} notice={data.intent_notice} />
+      <AddAllToStep4 rows={rows} step4={step4} />
       <TalkingPoints compare={compare} />
-      <ScoreRows rows={rows} aligned={false} points={points} extra={(r, i) => <AgreeControls row={r} i={i} compare={compare} />} />
+      <ScoreRows rows={rows} aligned={false} points={points} extra={(r, i) => <AgreeControls row={r} i={i} compare={compare} step4={step4} />} />
     </>
   );
 }
@@ -153,7 +172,7 @@ function PdfButton({ compare }) {
 }
 
 // Side-by-side section inside the Alignment / Difference / Child-Focused Needs popups.
-export function CourtCompare({ pillar, compare, onEnterCase }) {
+export function CourtCompare({ pillar, compare, step4, onEnterCase }) {
   const state = compare.data?.state;
   return (
     <section data-testid="court-compare" data-state={state || "loading"} className="mt-1 bg-[#faf8fd] border border-[#e7dbf8] rounded-xl p-4">
@@ -163,7 +182,7 @@ export function CourtCompare({ pillar, compare, onEnterCase }) {
       {!compare.data ? (
         <p className="text-xs text-[#5f6368]"><i className="fa-solid fa-spinner fa-spin mr-2"></i>Checking…</p>
       ) : state === "ready" ? (
-        <Ready pillar={pillar} compare={compare} />
+        <Ready pillar={pillar} compare={compare} step4={step4} />
       ) : (
         <p data-testid="court-compare-message" className="text-xs text-[#5f6368] leading-relaxed">{COPY[state]}</p>
       )}
