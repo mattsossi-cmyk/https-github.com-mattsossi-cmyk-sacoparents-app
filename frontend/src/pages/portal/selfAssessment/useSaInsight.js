@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 
 import { api } from "../../../lib/api";
-import { SECTIONS, readJson, sectionAnswers, sectionComplete, writeJson } from "./content";
+import { CONTENT, SECTIONS, readJson, sectionAnswers, sectionComplete, writeJson } from "./content";
 
 const WELCOME = {
   label: "Welcome",
@@ -11,16 +11,17 @@ const FALLBACK = "Notice one thing that's already working, and pick one small st
 const tipKey = (id) => `sacoparents_sa_ai_tip:${id}`;
 
 // Latest AI tip: after each completed rated section, or for the latest saved entry.
-export function useSaInsight({ draft, mode, latest, safetyFlag }) {
+// Section tips are kept on the draft (onSectionTip); the results tip is saved on the new entry.
+export function useSaInsight({ draft, mode, latest, safetyFlag, onSectionTip, onOverallTip }) {
   const [tip, setTip] = useState(WELCOME);
   const [loading, setLoading] = useState(false);
   const seen = useRef(new Set());
   const reqId = useRef(0);
 
-  const ask = async (seenKey, label, body, cacheKey) => {
+  const ask = async (seenKey, label, body, cacheKey, onSaved, stored) => {
     if (seen.current.has(seenKey)) return;
     seen.current.add(seenKey);
-    const cached = cacheKey && readJson(cacheKey, null);
+    const cached = stored || (cacheKey && readJson(cacheKey, null));
     if (cached) {
       setTip({ label, text: cached });
       return;
@@ -33,6 +34,7 @@ export function useSaInsight({ draft, mode, latest, safetyFlag }) {
       if (id !== reqId.current) return;
       setTip({ label, text: data.tip, ai: true });
       if (cacheKey) writeJson(cacheKey, data.tip);
+      if (onSaved) onSaved(data.tip);
     } catch {
       if (id === reqId.current) setTip({ label, text: FALLBACK });
     } finally {
@@ -47,9 +49,14 @@ export function useSaInsight({ draft, mode, latest, safetyFlag }) {
       const last = done[done.length - 1];
       if (!last) return;
       const answers = sectionAnswers(last.key, draft.answers);
-      ask(`s:${JSON.stringify(answers)}`, `After Step ${last.number} · ${last.title}`, { section: last.key, answers });
+      const label = CONTENT.tips.step_label.replace("{number}", last.number).replace("{title}", last.title);
+      ask(`s:${JSON.stringify(answers)}`, label, { section: last.key, answers }, null,
+        (text) => onSectionTip?.(last.key, text), draft.tips?.[last.key]);
     } else if (latest?.answers) {
-      ask(`e:${latest.id}`, "Your latest Self-Assessment", { section: "overall", answers: latest.answers }, tipKey(latest.id));
+      const fresh = mode === "results";
+      ask(`e:${latest.id}`, CONTENT.tips.overall_label,
+        { section: "overall", answers: latest.answers, entry_id: fresh ? latest.id : undefined },
+        tipKey(latest.id), fresh ? (text) => onOverallTip?.(latest, text) : null, latest.tips?.overall);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [mode, draft.answers, latest?.id]);

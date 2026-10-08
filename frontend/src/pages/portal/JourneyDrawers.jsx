@@ -94,27 +94,6 @@ export function BiffCoachDrawer({
   // BiffTab props (threaded through verbatim).
   ...biffProps
 }) {
-  const rawInput = biffProps.rawInput || "";
-  const biffOutput = biffProps.biffOutput || "";
-  const canSave = rawInput.trim().length > 0 && biffOutput.trim().length > 0;
-  const [savedId, setSavedId] = useState(0);
-
-  const handleSave = () => {
-    if (!canSave) return;
-    const ok = onSaveBiffSnapshot({
-      raw: rawInput,
-      biff: biffOutput,
-    });
-    if (ok) {
-      setSavedId((n) => n + 1);
-      toast.success("Filed to your Snapshot Library.", {
-        description:
-          "Your mediator will see the before and after when you share it next.",
-        duration: 3500,
-      });
-    }
-  };
-
   return (
     <DrawerShell
       open={open}
@@ -131,59 +110,83 @@ export function BiffCoachDrawer({
       )}
       <BiffTab safetyFlagged={safetyFlagged} {...biffProps} />
 
-      {/* iter250 — Draft-to-Snapshot. Rendered BELOW the BIFF
-          output so the parent sees the rewrite first, then the
-          save CTA. Disabled until both the raw draft and the
-          rewrite are non-empty. */}
-      <div
-        className="bg-white border border-purple-200 rounded-xl p-3 space-y-2"
-        data-testid="biff-draft-to-snapshot-card"
-      >
-        <div className="flex items-start gap-2">
-          <i className="fa-solid fa-camera-retro text-purple-700 mt-0.5"></i>
-          <div className="flex-1 min-w-0">
-            <div className="text-[10px] uppercase font-bold text-purple-800 tracking-wider">
-              Draft-to-Snapshot
-            </div>
-            <p className="text-[11px] text-slate-600 leading-snug">
-              File this rewrite into your Snapshot Library so your
-              mediator can see your tone progression — not just the
-              rewrite in isolation.
-            </p>
-          </div>
-        </div>
-        <button
-          type="button"
-          data-testid="biff-save-snapshot-btn"
-          onClick={handleSave}
-          disabled={!canSave}
-          className={
-            canSave
-              ? "w-full py-2 bg-purple-700 hover:bg-purple-800 text-white rounded-lg font-bold text-xs transition"
-              : "w-full py-2 bg-slate-100 text-slate-400 rounded-lg font-bold text-xs cursor-not-allowed"
-          }
-        >
-          <i className="fa-solid fa-floppy-disk mr-1.5"></i>
-          {canSave
-            ? "File this draft + rewrite as a Snapshot"
-            : "Rewrite a message to enable snapshot filing"}
-        </button>
-        {savedId > 0 && (
-          <p
-            data-testid="biff-save-snapshot-hint"
-            className="text-[10px] text-emerald-700 font-semibold text-center"
-          >
-            <i className="fa-solid fa-check mr-1"></i>Saved — view it
-            in your Snapshot Library.
-          </p>
-        )}
-      </div>
+      <BiffSnapshotCard
+        rawInput={biffProps.rawInput || ""}
+        biffOutput={biffProps.biffOutput || ""}
+        onSaveBiffSnapshot={onSaveBiffSnapshot}
+      />
 
       {/* iter253 — Deeper-learning link. Bill Eddy's own BIFF book
           for co-parents, direct from the publisher. Env-driven URL
           so an affiliate link can be swapped in without a redeploy. */}
       <BiffBookLink />
     </DrawerShell>
+  );
+}
+
+// iter250 Draft-to-Snapshot: files the raw draft + BIFF rewrite pair (feeds the Mediator PDF).
+export function BiffSnapshotCard({ rawInput, biffOutput, onSaveBiffSnapshot, onSaved = () => {} }) {
+  const canSave = rawInput.trim().length > 0 && biffOutput.trim().length > 0;
+  const [savedId, setSavedId] = useState(0);
+
+  const handleSave = () => {
+    if (!canSave) return;
+    const ok = onSaveBiffSnapshot({ raw: rawInput, biff: biffOutput });
+    if (ok) {
+      setSavedId((n) => n + 1);
+      onSaved();
+      toast.success("Filed to your Snapshot Library.", {
+        description:
+          "Your mediator will see the before and after when you share it next.",
+        duration: 3500,
+      });
+    }
+  };
+
+  return (
+    <div
+      className="bg-white border border-purple-200 rounded-xl p-3 space-y-2"
+      data-testid="biff-draft-to-snapshot-card"
+    >
+      <div className="flex items-start gap-2">
+        <i className="fa-solid fa-camera-retro text-purple-700 mt-0.5"></i>
+        <div className="flex-1 min-w-0">
+          <div className="text-[10px] uppercase font-bold text-purple-800 tracking-wider">
+            Draft-to-Snapshot
+          </div>
+          <p className="text-[11px] text-slate-600 leading-snug">
+            File this rewrite into your Snapshot Library so your
+            mediator can see your tone progression — not just the
+            rewrite in isolation.
+          </p>
+        </div>
+      </div>
+      <button
+        type="button"
+        data-testid="biff-save-snapshot-btn"
+        onClick={handleSave}
+        disabled={!canSave}
+        className={
+          canSave
+            ? "w-full py-2 bg-purple-700 hover:bg-purple-800 text-white rounded-lg font-bold text-xs transition"
+            : "w-full py-2 bg-slate-100 text-slate-400 rounded-lg font-bold text-xs cursor-not-allowed"
+        }
+      >
+        <i className="fa-solid fa-floppy-disk mr-1.5"></i>
+        {canSave
+          ? "File this draft + rewrite as a Snapshot"
+          : "Rewrite a message to enable snapshot filing"}
+      </button>
+      {savedId > 0 && (
+        <p
+          data-testid="biff-save-snapshot-hint"
+          className="text-[10px] text-emerald-700 font-semibold text-center"
+        >
+          <i className="fa-solid fa-check mr-1"></i>Saved — view it
+          in your Snapshot Library.
+        </p>
+      )}
+    </div>
   );
 }
 
@@ -194,7 +197,7 @@ export function BiffCoachDrawer({
  * REACT_APP_BIFF_BOOK_URL is not configured, so dev / staging stays
  * silent.
  */
-function BiffBookLink() {
+export function BiffBookLink() {
   const url = process.env.REACT_APP_BIFF_BOOK_URL || "";
   const title = process.env.REACT_APP_BIFF_BOOK_TITLE || "BIFF";
   const author = process.env.REACT_APP_BIFF_BOOK_AUTHOR || "";

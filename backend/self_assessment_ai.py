@@ -61,6 +61,8 @@ class TipBody(BaseModel):
     section: str = Field(..., max_length=40)
     answers: Dict[str, int] = Field(default_factory=dict)
     safety_flagged: bool = False
+    # Saves the results tip onto this freshly completed entry (signed-in only).
+    entry_id: Optional[str] = Field(default=None, max_length=64)
 
 
 class FramingBody(BaseModel):
@@ -117,8 +119,12 @@ async def ai_tip(body: TipBody, request: Request, user=Depends(_optional_user)) 
     prompt = _tip_prompt(body)
     await _guard(request)
     grey = await _grey_rock(request, user, body.safety_flagged)
-    tip = await _ask(_VOICE + (_GREY_ROCK if grey else "") + _TIP_TASK, prompt)
-    return {"tip": " ".join(tip.replace('"', "").split())[:600]}
+    tip = " ".join((await _ask(_VOICE + (_GREY_ROCK if grey else "") + _TIP_TASK, prompt)).replace('"', "").split())[:600]
+    if user and body.entry_id and body.section == "overall":
+        await request.app.state.db.self_assessment_history.update_one(
+            {"user_id": user.user_id, "id": body.entry_id}, {"$set": {"tips.overall": tip}}
+        )
+    return {"tip": tip}
 
 
 @router.post("/framing")

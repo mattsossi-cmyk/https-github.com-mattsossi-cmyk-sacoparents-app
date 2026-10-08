@@ -110,6 +110,7 @@ export const emptyDraft = (parentName) => ({
   parent_name: parentName || "",
   answers: {},
   reflections: {},
+  tips: {},
   goal: null,
 });
 
@@ -118,6 +119,7 @@ export const toDraftPayload = (d) => ({
   parent_name: d.parent_name || "",
   answers: d.answers || {},
   reflections: d.reflections || {},
+  tips: d.tips || {},
   goal: d.goal ?? null,
 });
 

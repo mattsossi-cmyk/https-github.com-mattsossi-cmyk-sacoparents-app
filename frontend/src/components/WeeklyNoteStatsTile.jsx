@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
-import { CalendarHeart } from "lucide-react";
+import { CalendarHeart, Send } from "lucide-react";
+import { toast } from "sonner";
 import { api } from "../lib/api";
 import { logError } from "../lib/logger";
 
@@ -35,6 +36,34 @@ const Row = ({ w }) => (
   </tr>
 );
 
+function SampleButton() {
+  const [busy, setBusy] = useState(false);
+  const send = async () => {
+    setBusy(true);
+    try {
+      const { data } = await api.post("/admin/self-journey-weekly/sample");
+      toast.success(`Sample weekly note sent to ${data.sent_to}`);
+    } catch (e) {
+      logError("weekly note sample failed", e);
+      toast.error(e?.response?.data?.detail || "Couldn't send the sample right now.");
+    } finally {
+      setBusy(false);
+    }
+  };
+  return (
+    <button
+      type="button"
+      onClick={send}
+      disabled={busy}
+      data-testid="admin-weekly-note-sample"
+      className="inline-flex items-center gap-1.5 px-3 py-2 rounded-full bg-[#3D1A78] hover:bg-[#2c1259] text-white text-xs font-semibold disabled:opacity-60 transition-colors"
+    >
+      <Send size={13} />
+      {busy ? "Sending…" : "Email me a sample"}
+    </button>
+  );
+}
+
 export default function WeeklyNoteStatsTile() {
   const [data, setData] = useState(null);
 
@@ -49,11 +78,16 @@ export default function WeeklyNoteStatsTile() {
   const t = data?.totals || { sent: 0, progressed: 0, clicked: 0 };
   return (
     <div className="card-soft p-6" data-testid="admin-weekly-note-tile">
-      <div className="eyebrow flex items-center gap-2">
-        <CalendarHeart size={12} className="text-[#3D1A78]" />
-        Weekly Self Journey note · Last 8 weeks
+      <div className="flex items-start justify-between gap-3 flex-wrap">
+        <div>
+          <div className="eyebrow flex items-center gap-2">
+            <CalendarHeart size={12} className="text-[#3D1A78]" />
+            Weekly Self Journey note · Last 8 weeks
+          </div>
+          <div className="font-serif text-xl text-[#1A1330] mt-1">Do parents come back after their note?</div>
+        </div>
+        <SampleButton />
       </div>
-      <div className="font-serif text-xl text-[#1A1330] mt-1">Do parents come back after their note?</div>
       <p className="text-xs text-[#857E9C] mt-1 mb-4">
         "Made progress" means any Self Journey step within 7 days of the note. "Clicked" means they tapped
         "Open my Self Journey" in the email.

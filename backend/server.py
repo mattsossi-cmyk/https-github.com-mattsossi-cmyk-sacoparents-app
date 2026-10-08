@@ -79,6 +79,7 @@ from portal_routes import router as portal_router  # noqa: E402
 from grey_rock_audit import router as grey_rock_audit_router  # noqa: E402
 from self_assessment_routes import router as self_assessment_router  # noqa: E402
 from self_assessment_ai import router as self_assessment_ai_router  # noqa: E402
+from court_path_ai import router as court_path_ai_router  # noqa: E402
 from child_needs_routes import router as child_needs_router  # noqa: E402
 from foundation_builder_routes import router as foundation_builder_router  # noqa: E402
 from cron_routes import router as cron_router  # noqa: E402
@@ -233,6 +234,7 @@ api_router.include_router(coach_demo_router)
 api_router.include_router(portal_router)
 api_router.include_router(grey_rock_audit_router)
 api_router.include_router(self_assessment_ai_router)
+api_router.include_router(court_path_ai_router)
 api_router.include_router(self_assessment_router)
 api_router.include_router(child_needs_router)
 api_router.include_router(foundation_builder_router)

@@ -33,6 +33,7 @@ QUESTION_KEYS = [
     f"{s['key']}_{i + 1}" for s in CONTENT["sections"] for i in range(len(s["questions"]))
 ]
 REFLECTION_KEYS = [q["key"] for q in CONTENT["reflection"]["questions"]]
+TIP_KEYS = [s["key"] for s in CONTENT["sections"]] + ["overall"]
 
 router = APIRouter(prefix="/self-assessment", tags=["self-assessment"])
 
@@ -45,9 +46,14 @@ def _clean_reflections(v: Dict[str, str]) -> Dict[str, str]:
     return {k: (val or "")[:2000] for k, val in v.items() if k in REFLECTION_KEYS}
 
 
+def _clean_tips(v: Dict[str, str]) -> Dict[str, str]:
+    return {k: (val or "").strip()[:600] for k, val in v.items() if k in TIP_KEYS and (val or "").strip()}
+
+
 class _Responses(BaseModel):
     answers: Dict[str, int] = Field(default_factory=dict)
     reflections: Dict[str, str] = Field(default_factory=dict)
+    tips: Dict[str, str] = Field(default_factory=dict)
 
     @field_validator("answers")
     @classmethod
@@ -58,6 +64,11 @@ class _Responses(BaseModel):
     @classmethod
     def clean_reflections(cls, v: Dict[str, str]) -> Dict[str, str]:
         return _clean_reflections(v)
+
+    @field_validator("tips")
+    @classmethod
+    def clean_tips(cls, v: Dict[str, str]) -> Dict[str, str]:
+        return _clean_tips(v)
 
 
 class SADraft(_Responses):
@@ -76,6 +87,7 @@ class SAEntry(BaseModel):
     parent_name: str = ""
     answers: Dict[str, int]
     reflections: Dict[str, str] = Field(default_factory=dict)
+    tips: Dict[str, str] = Field(default_factory=dict)
     goal: str = ""
     scores: Dict[str, Any]
 
@@ -165,6 +177,7 @@ async def complete_assessment(
         parent_name=body.parent_name,
         answers=body.answers,
         reflections=body.reflections,
+        tips={k: v for k, v in body.tips.items() if k != "overall"},
         goal=(body.goal or "").strip(),
         scores=compute_scores(body.answers),
     )

@@ -273,6 +273,20 @@ def _responses(pdf: _SAPDF, content: Dict[str, Any], entry: Dict[str, Any]) -> N
         pdf.ln(2)
 
 
+def _tips(pdf: _SAPDF, content: Dict[str, Any], tips: Dict[str, str]) -> None:
+    labelled = [
+        (content["tips"]["step_label"].format(number=s["number"], title=s["title"]), tips.get(s["key"]))
+        for s in content["sections"]
+    ] + [(content["tips"]["overall_label"], tips.get("overall"))]
+    labelled = [(label, text) for label, text in labelled if (text or "").strip()]
+    if not labelled:
+        return
+    _heading(pdf, content["tips"]["title"])
+    for label, text in labelled:
+        _boxed(pdf, label, text.strip())
+    pdf.ln(1)
+
+
 def build_self_assessment_pdf(
     *,
     content: Dict[str, Any],
@@ -312,6 +326,7 @@ def build_self_assessment_pdf(
     pdf.multi_cell(pdf.epw, 5, _safe("  →  ".join(content["cycle"])), align="C", new_x="LMARGIN", new_y="NEXT")
 
     pdf.add_page()
+    _tips(pdf, content, entry.get("tips") or {})
     _heading(pdf, "Your responses")
     _responses(pdf, content, entry)
 

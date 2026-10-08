@@ -37,9 +37,9 @@ import {
   writeJson,
   writeString,
 } from "./portal/portalStorage";
-import { CourtKeyScreen } from "./portal/CourtKeyScreen";
 import { GuidedJourneyModal } from "./portal/GuidedJourneyModal";
-import { JourneyShell } from "./portal/JourneyShell";
+import { JourneyShell, quickExitAction } from "./portal/JourneyShell";
+import { CommunicationBuilderView } from "./portal/CommunicationBuilderView";
 import {
   BiffCoachDrawer,
   FoundationDrawer,
@@ -78,12 +78,16 @@ export default function SacoparentsPortal() {
   // iter248 — the parent-journey screen (and its hub-tabs toggle)
   // has been deleted. The parent-facing surface is now exclusively
   // the five-step JourneyShell + three modal drawers (BIFF,
-  // Records, Foundation). Screen state: 'journey' | 'court-key'.
+  // Records, Foundation). The Court path is a full page inside the journey.
   // See NORTH_STAR.md.
   const [screen, setScreen] = useState("journey");
 
   // Modal drawer state (iter248).
   const [biffDrawerOpen, setBiffDrawerOpen] = useState(false);
+  const [commBuilderOpen, setCommBuilderOpen] = useState(false);
+  const [commBuilderFocus, setCommBuilderFocus] = useState(null);
+  const [saRequest, setSaRequest] = useState(0);
+  const [courtRequest, setCourtRequest] = useState(0);
   const [recordsDrawerOpen, setRecordsDrawerOpen] = useState(false);
   const [foundationDrawerOpen, setFoundationDrawerOpen] = useState(false);
 
@@ -106,9 +110,6 @@ export default function SacoparentsPortal() {
   const [safetyPlan, setSafetyPlan] = useState(null); // {safe_place, trusted_contact, ...}
   const [safetyOpen, setSafetyOpen] = useState(false);
   const pendingDoorRef = useRef(null); // 'parent' | 'court' — where to go after safety
-
-  // Court-key screen state
-  const [courtKeyInput, setCourtKeyInput] = useState("");
 
   // Alignment filter
   const [folderFilter, setFolderFilter] = useState("All");
@@ -249,9 +250,6 @@ export default function SacoparentsPortal() {
   const biffAbortRef = useRef(null);
   const biffDebounceRef = useRef(null);
 
-  // Court key verify state
-  const [courtKeyError, setCourtKeyError] = useState("");
-  const [courtKeyLoading, setCourtKeyLoading] = useState(false);
   const [verifiedMediator, setVerifiedMediator] = useState("");
 
   // Sync state
@@ -685,8 +683,8 @@ export default function SacoparentsPortal() {
         setSafetyOpen(true);
         return;
       }
-      if (door === "parent") setScreen("journey");
-      else setScreen("court-key");
+      setScreen("journey");
+      if (door === "court") setCourtRequest((n) => n + 1);
     },
     [safetyAck]
   );
@@ -726,8 +724,8 @@ export default function SacoparentsPortal() {
     setSafetyOpen(false);
     const pending = pendingDoorRef.current;
     pendingDoorRef.current = null;
-    if (pending === "parent") setScreen("journey");
-    else if (pending === "court") setScreen("court-key");
+    if (pending) setScreen("journey");
+    if (pending === "court") setCourtRequest((n) => n + 1);
   }, []);
 
   const onSafetyContinueFlagged = useCallback(() => {
@@ -751,8 +749,8 @@ export default function SacoparentsPortal() {
       .catch(() => {});
     const pending = pendingDoorRef.current;
     pendingDoorRef.current = null;
-    if (pending === "parent") setScreen("journey");
-    else if (pending === "court") setScreen("court-key");
+    if (pending) setScreen("journey");
+    if (pending === "court") setCourtRequest((n) => n + 1);
   }, []);
 
   const onOpenSafetyRetake = useCallback(() => {
@@ -818,55 +816,26 @@ export default function SacoparentsPortal() {
     [user]
   );
 
-  const verifyProfessionalKey = useCallback(async () => {
-    const key = courtKeyInput.trim();
-    if (!key) {
-      setCourtKeyError("Please enter a key code from sacoparentsalign.com");
-      return;
-    }
-    setCourtKeyLoading(true);
-    setCourtKeyError("");
+  // Court page: verify a case / invite code. Returns { caseId } or { error }.
+  const verifyCourtKey = useCallback(async (key) => {
+    const reasonMap = {
+      expired: "That code has expired. Please request a new one from your mediator.",
+      revoked: "That code has been revoked. Contact your mediator for a replacement.",
+      unknown_key: "We don't recognise that code. Double-check it or ask your mediator.",
+    };
     try {
       const { data } = await api.post("/portal/court-keys/verify", { key });
       if (!data?.verified) {
-        const reasonMap = {
-          expired:
-            "That key has expired — please request a new one from your mediator.",
-          revoked:
-            "That key has been revoked. Contact your mediator for a replacement.",
-          unknown_key:
-            "We don't recognise that key. Double-check the code or ask your mediator.",
-        };
-        setCourtKeyError(
-          reasonMap[data?.reason] ||
-            "We couldn't verify that key. Please check the code and try again."
-        );
-        setCourtKeyLoading(false);
-        return;
+        return { error: reasonMap[data?.reason] || "We couldn't verify that code. Please check it and try again." };
       }
       const caseId = data.case_id || key;
-      const mediator =
-        data.mediator_name || "Matt Sossi, Licensed Mediator (San Antonio, TX)";
       setCourtKey(caseId);
-      setVerifiedMediator(mediator);
+      setVerifiedMediator(data.mediator_name || "");
       writeString(COURT_KEY_KEY, caseId);
-      // iter246 Phase C — a verified court key means the parent was
-      // referred by a professional and we know their next step is in
-      // Step 3 (Focus on My Child). Route back to the Journey shell
-      // which auto-expands Step 3 when `courtKey` is set.
-      setScreen("journey");
+      return { caseId };
     } catch {
-      setCourtKeyError(
-        "Network issue while verifying. Please check your connection and try again."
-      );
-    } finally {
-      setCourtKeyLoading(false);
+      return { error: "Network issue while verifying. Please check your connection and try again." };
     }
-  }, [courtKeyInput]);
-
-  const handleCourtKeyInputChange = useCallback((val) => {
-    setCourtKeyInput(val);
-    setCourtKeyError("");
   }, []);
 
   const saveFoundationText = useCallback(() => {
@@ -912,7 +881,7 @@ export default function SacoparentsPortal() {
   );
 
   const runAiRefine = useCallback(
-    (val) => {
+    (val, delay = 900) => {
       if (biffDebounceRef.current) clearTimeout(biffDebounceRef.current);
       if (biffAbortRef.current) {
         try {
@@ -956,7 +925,7 @@ export default function SacoparentsPortal() {
         } finally {
           setBiffLoading(false);
         }
-      }, 900);
+      }, delay);
     },
     [safetyAck]
   );
@@ -971,7 +940,7 @@ export default function SacoparentsPortal() {
   );
 
   const applyPreset = useCallback(
-    (key) => {
+    (key, delay = 900) => {
       const p = PRESETS[key];
       if (!p) return;
       setRawInput(p.raw);
@@ -987,9 +956,18 @@ export default function SacoparentsPortal() {
       } else {
         setBiffOutput(p.biff);
       }
-      runAiRefine(p.raw);
+      runAiRefine(p.raw, delay);
     },
     [runAiRefine, safetyAck]
+  );
+
+  // Communication Builder page: rewrite only when the parent taps Transform.
+  const transformBiff = useCallback(
+    (val) => {
+      runLocalAnalysis(val);
+      runAiRefine(val, 0);
+    },
+    [runLocalAnalysis, runAiRefine]
   );
 
   const copyBiffOutput = useCallback(() => {
@@ -1544,7 +1522,7 @@ export default function SacoparentsPortal() {
   }, [foundationText, courtKey, user, downloadPdfFromApi]);
 
   const downloadLegalPdf = useCallback(() => {
-    downloadPdfFromApi(
+    return downloadPdfFromApi(
       "/portal/legal-report-pdf",
       "sacoparents-legal-report.pdf",
       {
@@ -1831,7 +1809,21 @@ export default function SacoparentsPortal() {
               snapshotHistory.filter((s) => s?.topic === "biff_pair").length
             }
             onEnterParent={enterParentJourney}
-            onEnterCourt={enterCourtPath}
+            onVerifyCourtKey={verifyCourtKey}
+            onDownloadCourtPdf={downloadLegalPdf}
+            courtRequest={courtRequest}
+            overlayOpen={
+              safetyOpen ||
+              !!guidedTopic ||
+              biffDrawerOpen ||
+              recordsDrawerOpen ||
+              foundationDrawerOpen ||
+              commBuilderOpen ||
+              introOpen ||
+              !!followupState ||
+              shareLegalOpen ||
+              shareCompleteOpen
+            }
             onOpenSafety={() => {
               pendingDoorRef.current = "parent";
               setSafetyOpen(true);
@@ -1841,56 +1833,17 @@ export default function SacoparentsPortal() {
             onOpenGuidedJourney={(topic) => openGuidedJourney(topic)}
             onOpenBiffCoach={() => setBiffDrawerOpen(true)}
             biffCoachOpen={biffDrawerOpen}
+            onOpenCommBuilder={(focus) => {
+              setCommBuilderFocus(focus === "history" ? "history" : null);
+              setCommBuilderOpen(true);
+            }}
+            saRequest={saRequest}
             onOpenIntroGuide={() => setIntroOpen(true)}
             onOpenReport={() => setFoundationDrawerOpen(true)}
             progressByTopic={progressByTopic}
             pairProgress={pairProgress}
             safetyFlagged={safetyFlagged}
           />
-        )}
-
-        {screen === "court-key" && (
-          <>
-            {/* iter242 — Safety-First at the top of the Court-Ordered
-                path. Same component as the Parent-Journey top row,
-                so a parent who entered via a court key still has a
-                one-tap route into the Quick Safety Check before
-                anything else. */}
-            <button
-              type="button"
-              data-testid="court-safety-first-btn"
-              onClick={() => {
-                // Court-path pending door so a flagged safety
-                // submission lands inside the Court-Ordered flow
-                // (not stranded back on the Gateway).
-                pendingDoorRef.current = "court";
-                setSafetyOpen(true);
-              }}
-              className="w-full mb-3 p-3 bg-gradient-to-r from-rose-600 to-rose-700 hover:from-rose-700 hover:to-rose-800 text-white rounded-xl text-left shadow-md border border-rose-800/30 flex items-start gap-3"
-            >
-              <div className="shrink-0 w-9 h-9 rounded-full bg-white/15 flex items-center justify-center">
-                <i className="fa-solid fa-shield-heart text-white text-base"></i>
-              </div>
-              <div className="min-w-0 flex-1">
-                <div className="text-sm font-bold leading-snug">
-                  Safety First
-                </div>
-                <div className="text-[10px] text-rose-100/90 leading-snug mt-0.5">
-                  Short, private safety check — crisis hotlines and a
-                  grey-rock path if family-violence or IPV concerns
-                  are present.
-                </div>
-              </div>
-              <i className="fa-solid fa-arrow-right text-white/80 text-xs mt-2.5"></i>
-            </button>
-            <CourtKeyScreen
-              courtKeyInput={courtKeyInput}
-              onChange={handleCourtKeyInputChange}
-              onVerify={verifyProfessionalKey}
-              courtKeyError={courtKeyError}
-              courtKeyLoading={courtKeyLoading}
-            />
-          </>
         )}
 
       </main>
@@ -2000,6 +1953,45 @@ export default function SacoparentsPortal() {
           Foundation Statement are invoked directly from the Step
           panels and bottom-nav. The grey-rock toggle is mirrored
           inside the BIFF drawer. */}
+      {commBuilderOpen && (
+        <CommunicationBuilderView
+          open
+          focus={commBuilderFocus}
+          onClose={() => setCommBuilderOpen(false)}
+          onQuickExit={quickExitAction}
+          onStartSelfAssessment={() => {
+            setCommBuilderOpen(false);
+            setSaRequest((n) => n + 1);
+          }}
+          userId={user?.user_id}
+          greyRock={safetyFlagged}
+          biff={{
+            rawInput,
+            setRawInput,
+            transform: transformBiff,
+            applyPreset,
+            riskLabel,
+            flagList,
+            biffOutput,
+            biffLoading,
+            biffError,
+            copyToneSafe,
+            logCommunication,
+            onSaveBiffSnapshot,
+          }}
+          extras={{
+            biffLogs,
+            milestones,
+            successCount,
+            frictionCount,
+            addMilestoneLog,
+            advocateReviewCount,
+            downloadWeeklyProgressPdf,
+            onShareWeekly,
+            shareStatus,
+          }}
+        />
+      )}
       <BiffCoachDrawer
         open={biffDrawerOpen}
         onClose={() => setBiffDrawerOpen(false)}

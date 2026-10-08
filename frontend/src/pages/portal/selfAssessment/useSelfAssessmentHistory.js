@@ -51,6 +51,16 @@ export function useSelfAssessmentHistory(userId) {
     [userId]
   );
 
+  const updateEntry = useCallback(
+    (id, patch) =>
+      setHistory((prev) => {
+        const next = prev.map((e) => (e.id === id ? { ...e, ...patch } : e));
+        writeJson(keyFor(userId), next);
+        return next;
+      }),
+    [userId]
+  );
+
   const latest = history.length ? history[history.length - 1] : null;
   const current = useMemo(
     () => (latest && practice?.entry_id === latest.id ? practice : { entry_id: latest?.id, count: 0, last_date: null }),
@@ -95,5 +105,6 @@ export function useSelfAssessmentHistory(userId) {
     practise,
     dueDays: latest && daysSince(latest.completed_at) >= REASSESS_AFTER_DAYS ? daysSince(latest.completed_at) : 0,
     addEntry,
+    updateEntry,
   };
 }

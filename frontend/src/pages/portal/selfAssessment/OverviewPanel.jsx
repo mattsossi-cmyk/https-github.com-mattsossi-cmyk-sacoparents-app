@@ -12,8 +12,31 @@ const pick = (e) => ({
   parent_name: e.parent_name || "",
   answers: e.answers,
   reflections: e.reflections || {},
+  tips: e.tips || {},
   goal: e.goal || "",
 });
+
+function TipHistory({ tips }) {
+  const items = [
+    ...SECTIONS.map((s) => [s.key, CONTENT.tips.step_label.replace("{number}", s.number).replace("{title}", s.title)]),
+    ["overall", CONTENT.tips.overall_label],
+  ].filter(([k]) => (tips?.[k] || "").trim());
+  if (!items.length) return null;
+  return (
+    <div data-testid="sa-tip-history" className="rounded-2xl border border-purple-100 bg-purple-50/60 px-4 py-3 space-y-2">
+      <div className="text-[10px] uppercase font-bold tracking-wider text-purple-800">
+        <i className="fa-solid fa-lightbulb mr-1.5"></i>
+        {CONTENT.tips.title}
+      </div>
+      {items.map(([k, label]) => (
+        <div key={k} data-testid={`sa-tip-history-${k}`}>
+          <div className="text-[11px] font-bold text-[#3B1C6B]">{label}</div>
+          <p className="text-xs text-slate-700 leading-relaxed">{tips[k]}</p>
+        </div>
+      ))}
+    </div>
+  );
+}
 
 function useDownloadPdf() {
   const [busy, setBusy] = useState(false);
@@ -97,6 +120,7 @@ export function OverviewPanel({ history, celebrate, onStartNew, onClose }) {
       {moves.length > 0 && <GrowthMoment moves={moves} />}
       <ScoreCards scores={latest.scores} />
       <ProgressHistory history={history} />
+      <TipHistory tips={latest.tips} />
       <CentralMessage />
       {latest.goal && (
         <div data-testid="sa-current-goal" className="rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3">

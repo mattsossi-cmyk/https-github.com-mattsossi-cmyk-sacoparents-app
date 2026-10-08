@@ -38,20 +38,32 @@ function ExampleCard({ ex, grey }) {
   );
 }
 
-function TemplateCard({ t, grey }) {
+function TemplateCard({ t, grey, onUse }) {
   const body = grey ? t.grey : t.body;
   return (
     <div data-testid={`sa-ai-template-${t.key}`} className="rounded-xl border border-purple-100 bg-white p-3">
       <div className="flex items-center justify-between gap-2">
         <div className="text-sm font-bold text-[#3B1C6B]">{t.title}</div>
-        <CopyBtn text={body} testid={`sa-ai-template-copy-${t.key}`} />
+        <div className="flex items-center gap-1.5">
+          {onUse && (
+            <button
+              type="button"
+              data-testid={`sa-ai-template-use-${t.key}`}
+              onClick={() => onUse(body)}
+              className="shrink-0 px-2.5 py-1 rounded-full bg-purple-700 hover:bg-purple-800 text-[11px] font-semibold text-white transition-colors"
+            >
+              Use in draft
+            </button>
+          )}
+          <CopyBtn text={body} testid={`sa-ai-template-copy-${t.key}`} />
+        </div>
       </div>
       <p className="text-xs text-slate-700 mt-1.5 leading-relaxed">{body}</p>
     </div>
   );
 }
 
-export function AiLibraryDialog({ tab, onClose, grey }) {
+export function AiLibraryDialog({ tab, onClose, grey, onUse }) {
   const examples = tab === "examples";
   return (
     <Dialog open={!!tab} onOpenChange={(o) => !o && onClose()}>
@@ -68,7 +80,7 @@ export function AiLibraryDialog({ tab, onClose, grey }) {
         <div className="space-y-3">
           {examples
             ? EXAMPLES.map((ex) => <ExampleCard key={ex.key} ex={ex} grey={grey} />)
-            : TEMPLATES.map((t) => <TemplateCard key={t.key} t={t} grey={grey} />)}
+            : TEMPLATES.map((t) => <TemplateCard key={t.key} t={t} grey={grey} onUse={onUse} />)}
         </div>
       </DialogContent>
     </Dialog>

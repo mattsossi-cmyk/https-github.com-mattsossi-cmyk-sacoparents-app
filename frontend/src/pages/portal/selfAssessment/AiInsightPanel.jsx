@@ -88,7 +88,7 @@ function FramingForm({ safetyFlag }) {
 const ghostBtn =
   "w-full py-2.5 px-4 bg-white hover:bg-purple-50 text-purple-900 border border-purple-200 text-xs font-semibold rounded-xl transition-colors flex items-center justify-center gap-2";
 
-export function AiInsightPanel({ tip, loading, safetyFlag, onOpenBiffCoach }) {
+export function AiInsightPanel({ tip, loading, safetyFlag, onOpenBiffCoach, onUseTemplate, biffBusy = false }) {
   const [library, setLibrary] = useState(null);
   return (
     <div data-testid="sa-ai-panel" className="glass-ai-panel rounded-2xl p-6 shadow-lg lg:sticky lg:top-6">
@@ -115,7 +115,8 @@ export function AiInsightPanel({ tip, loading, safetyFlag, onOpenBiffCoach }) {
           type="button"
           data-testid="sa-ai-biff"
           onClick={onOpenBiffCoach}
-          className="w-full py-3 px-4 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white text-xs font-bold rounded-xl shadow transition-colors flex items-center justify-center gap-2"
+          disabled={biffBusy}
+          className="w-full py-3 px-4 disabled:opacity-60 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white text-xs font-bold rounded-xl shadow transition-colors flex items-center justify-center gap-2"
         >
           <i className="fa-solid fa-wand-magic-sparkles"></i>
           <span>Generate Peaceful Response (AI BIFF Tool)</span>
@@ -132,7 +133,12 @@ export function AiInsightPanel({ tip, loading, safetyFlag, onOpenBiffCoach }) {
       <div className="mt-5 pt-3 border-t border-purple-100 text-center">
         <span className="text-[10px] text-slate-400 font-medium">Secure &amp; Private analysis by Emergent AI</span>
       </div>
-      <AiLibraryDialog tab={library} onClose={() => setLibrary(null)} grey={!!safetyFlag} />
+      <AiLibraryDialog
+        tab={library}
+        onClose={() => setLibrary(null)}
+        grey={!!safetyFlag}
+        onUse={onUseTemplate && ((text) => { setLibrary(null); onUseTemplate(text); })}
+      />
     </div>
   );
 }

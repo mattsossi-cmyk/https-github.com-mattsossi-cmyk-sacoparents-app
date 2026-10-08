@@ -4,6 +4,7 @@ import { toast } from "sonner";
 
 import InviteCoparentCard from "../../components/InviteCoparentCard";
 import { SelfAssessmentView } from "./SelfAssessmentView";
+import { CourtOrderedView } from "./CourtOrderedView";
 import { useSelfAssessmentHistory } from "./selfAssessment/useSelfAssessmentHistory";
 import { GoalBanner } from "./selfAssessment/GoalBanner";
 import { WelcomeArtwork } from "./WelcomeArtwork";
@@ -431,7 +432,7 @@ const renderJointCelebrationBadge = (myName, coparentName) => {
   });
 };
 
-const quickExitAction = () => {
+export const quickExitAction = () => {
   // Low-friction DV pattern: replace the tab with a neutral weather
   // page so a back button can't recover the app.
   try {
@@ -494,7 +495,10 @@ export function JourneyShell({
   courtKey = null,
   verifiedMediator = null,
   onEnterParent = () => {},
-  onEnterCourt = () => {},
+  onVerifyCourtKey,
+  onDownloadCourtPdf,
+  courtRequest = 0,
+  overlayOpen = false,
   onOpenSafety = () => {},
   onClearGreyRock = () => {},
   onOpenSafetyRetake = () => {},
@@ -502,6 +506,8 @@ export function JourneyShell({
   onOpenGuidedJourney = () => {},
   onOpenBiffCoach = () => {},
   biffCoachOpen = false,
+  onOpenCommBuilder = () => {},
+  saRequest = 0,
   onOpenIntroGuide = () => {},
   onOpenReport = () => {},
   biffAuthoredCount = 0,
@@ -516,7 +522,6 @@ export function JourneyShell({
   void onEnterParent;
   void onOpenSafetyRetake;
   void biffPairCount;
-  void verifiedMediator;
 
   const safetyFlag = safetyFlagged || !!(safetyAck && safetyAck.flagged);
 
@@ -535,6 +540,19 @@ export function JourneyShell({
     writeLastDoor(null);
     setView("door");
   };
+
+  // Card 3 can be opened from Self Journey or the Court page; Back returns there.
+  const [subFrom, setSubFrom] = useState("self");
+  const openChildNeeds = (from) => {
+    setSubFrom(from);
+    setView("child_needs");
+  };
+
+  // Court entry points outside the shell (Guide chat, follow-up nudge) open the Court page.
+  useEffect(() => {
+    if (courtRequest) openDoor("court");
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [courtRequest]);
 
   // iter261 — Progress celebrations. Fire a quiet confetti + toast
   // the first time each primary module transitions to "completed".
@@ -831,6 +849,14 @@ export function JourneyShell({
     setAssessOpen(true);
   };
 
+  // Communication Builder's START SELF-ASSESSMENT button.
+  useEffect(() => {
+    if (!saRequest) return;
+    openDoor("self");
+    openAssess(false);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [saRequest]);
+
   // Email reminder deep link: /dashboard?open=self-assessment
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
@@ -860,41 +886,6 @@ export function JourneyShell({
     } else {
       onOpenGuidedJourney(m.topic);
     }
-  };
-
-  const renderModuleRow = (m) => {
-    const status = progressByTopic?.[m.topic] || "not_yet";
-    const meta = STATUS_META[status];
-    return (
-      <button
-        key={m.key}
-        type="button"
-        data-testid={`door-module-${m.key}`}
-        data-status={status}
-        onClick={() => moduleCta(m)}
-        className="w-full text-left bg-white hover:bg-slate-50 border border-slate-200 rounded-xl p-3 transition flex items-start gap-3"
-      >
-        <div className="shrink-0 w-9 h-9 rounded-lg bg-purple-100 text-purple-800 font-bold flex items-center justify-center">
-          {m.letter}
-        </div>
-        <div className="min-w-0 flex-1">
-          <div className="flex items-center gap-2 flex-wrap">
-            <div className="text-sm font-bold text-slate-900 leading-tight">
-              {m.title}
-            </div>
-            <span
-              className={`text-[10px] font-semibold uppercase tracking-wider px-1.5 py-0.5 rounded-full border ${meta.chip}`}
-            >
-              {meta.label}
-            </span>
-          </div>
-          <p className="text-[11px] text-slate-600 mt-0.5 leading-snug">
-            {m.body}
-          </p>
-        </div>
-        <i className="fa-solid fa-arrow-right text-slate-400 mt-3"></i>
-      </button>
-    );
   };
 
   // Shared sub-view header (brand + back + switch-door + quick-exit).
@@ -955,15 +946,6 @@ export function JourneyShell({
     );
   };
 
-  const SectionLabel = ({ children, testid }) => (
-    <div
-      data-testid={testid}
-      className="text-[9px] uppercase font-bold tracking-wider text-slate-500 px-1 pt-1"
-    >
-      {children}
-    </div>
-  );
-
   // -----------------------------------------------------------------
   // LANDING — welcome artwork + two doors + goal card.
   // -----------------------------------------------------------------
@@ -975,7 +957,7 @@ export function JourneyShell({
           actions={{
             self: () => openDoor("self"),
             court: () => openDoor("court"),
-            comm: onOpenBiffCoach,
+            comm: onOpenCommBuilder,
           }}
         />
 
@@ -1057,81 +1039,26 @@ export function JourneyShell({
   // -----------------------------------------------------------------
   if (view === "court") {
     return (
-      <div data-testid="journey-shell" className="space-y-4">
-        <section data-testid="door-view-court" className="space-y-4">
-          <SubViewHeader
-            title="Court Ordered"
-            subtitle="Finish your Safety-First check, pick where to start, and open the professional invite."
-          />
-
-          <WelcomeArtwork
-            testid="door-court-welcome-image"
-            actions={{
-              self: () => openDoor("self"),
-              court: () =>
-                document
-                  .getElementById("door-court-abc")
-                  ?.scrollIntoView({ behavior: "smooth", block: "start" }),
-              comm: onOpenBiffCoach,
-            }}
-          />
-
-          {courtKey && (
-            <div
-              data-testid="door-court-banner"
-              className="rounded-xl border border-emerald-300 bg-emerald-50 px-3 py-2.5 text-[11px] text-emerald-900 leading-snug flex items-start gap-2"
-            >
-              <i className="fa-solid fa-gavel text-emerald-600 mt-0.5"></i>
-              <div>
-                <span className="font-semibold">Court access verified:</span>{" "}
-                Case {courtKey}.
-              </div>
-            </div>
-          )}
-
-          <div id="door-court-abc" data-testid="door-court-abc" className="space-y-2 scroll-mt-4">
-            <SectionLabel testid="door-court-abc-label">
-              Choose where to start
-            </SectionLabel>
-            {PRIMARY_MODULES.map((m) => renderModuleRow(m))}
-          </div>
-
-          <div
-            data-testid="door-court-pro-invite"
-            className="rounded-xl border border-slate-200 bg-slate-50 p-3 space-y-2"
-          >
-            <SectionLabel testid="door-court-pro-label">
-              Professional report
-            </SectionLabel>
-            <p className="text-[12px] text-slate-700 leading-snug">
-              Your mediator, attorney, or coordinator signs in here
-              to review and send the professional report tied to
-              your case.
-            </p>
-            <a
-              href={ALIGN_SITE_URL}
-              target="_blank"
-              rel="noopener noreferrer"
-              data-testid="door-court-pro-link"
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-slate-900 hover:bg-slate-800 text-white rounded-lg font-bold text-[11px] transition"
-            >
-              <i className="fa-solid fa-arrow-up-right-from-square"></i>
-              Open sacoparentsalign.online
-            </a>
-          </div>
-
-          {!courtKey && (
-            <button
-              type="button"
-              data-testid="door-court-enter-key"
-              onClick={onEnterCourt}
-              className="w-full p-2 rounded-xl bg-white hover:bg-indigo-50 border border-indigo-300 text-indigo-800 text-left transition text-xs font-semibold"
-            >
-              <i className="fa-solid fa-key mr-1.5"></i>
-              I have a court access key
-            </button>
-          )}
-        </section>
+      <div data-testid="journey-shell">
+        <CourtOrderedView
+          onBack={goBack}
+          onQuickExit={quickExitAction}
+          courtKey={courtKey}
+          mediator={verifiedMediator}
+          onVerify={onVerifyCourtKey}
+          modules={PRIMARY_MODULES.map((m) => {
+            const status = progressByTopic?.[m.topic] || "not_yet";
+            return { ...m, status, ...STATUS_META[status] };
+          })}
+          onOpenModule={moduleCta}
+          onDownloadPdf={onDownloadCourtPdf}
+          onOpenBiffHistory={() => onOpenCommBuilder("history")}
+          onSupportChild={() => openChildNeeds("court")}
+          alignUrl={ALIGN_SITE_URL}
+          safetyFlag={safetyFlag}
+          signedIn={!!user}
+          hidden={overlayOpen}
+        />
       </div>
     );
   }
@@ -1155,7 +1082,7 @@ export function JourneyShell({
     );
     return (
       <ChildNeedsView
-        onBack={() => setView("self")}
+        onBack={() => setView(subFrom)}
         QuickExit={quickExitChip}
         userId={user?.user_id}
         parentName={greetingName}
@@ -1226,7 +1153,7 @@ export function JourneyShell({
                 .getElementById("door-self-actions")
                 ?.scrollIntoView({ behavior: "smooth", block: "start" }),
             court: () => openDoor("court"),
-            comm: onOpenBiffCoach,
+            comm: onOpenCommBuilder,
           }}
         />
 
@@ -1300,7 +1227,7 @@ export function JourneyShell({
           <button
             type="button"
             data-testid="door-self-card-child-needs"
-            onClick={() => setView("child_needs")}
+            onClick={() => openChildNeeds("self")}
             className="w-full bg-white border border-slate-200 shadow-sm hover:shadow-md hover:border-emerald-300 rounded-2xl p-4 transition flex items-center gap-3 text-left"
           >
             <div className="shrink-0 w-9 h-9 rounded-full bg-emerald-500 text-white font-extrabold flex items-center justify-center">
@@ -1556,6 +1483,7 @@ export function JourneyShell({
           history={saHistory.history}
           startNew={assessStartNew}
           onCompleted={saHistory.addEntry}
+          onEntryUpdate={saHistory.updateEntry}
           onQuickExit={quickExitAction}
           onOpenBiffCoach={onOpenBiffCoach}
           safetyFlag={safetyFlag}

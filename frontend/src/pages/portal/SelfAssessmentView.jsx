@@ -31,7 +31,7 @@ function useLockScroll() {
 }
 
 // Full-page Self-Assessment (Card 1). Rendered in a portal over Self Journey.
-export function SelfAssessmentView({ onClose, onQuickExit, onOpenBiffCoach, parentName, userId, history = [], startNew = false, onCompleted, safetyFlag, hidden = false }) {
+export function SelfAssessmentView({ onClose, onQuickExit, onOpenBiffCoach, parentName, userId, history = [], startNew = false, onCompleted, onEntryUpdate, safetyFlag, hidden = false }) {
   const { draft, update, status, flush, complete, ready } = useSelfAssessmentDraft({ open: true, userId, parentName, onCompleted });
   const [view, setView] = useState(startNew ? "assess" : "auto");
   const [busy, setBusy] = useState(false);
@@ -40,7 +40,14 @@ export function SelfAssessmentView({ onClose, onQuickExit, onOpenBiffCoach, pare
   const mode = !ready ? "loading" : view !== "auto" ? view : draft.started || history.length === 0 ? "assess" : "overview";
   const step = STEPS[currentIdx];
   const latest = history[history.length - 1] || null;
-  const { tip, loading } = useSaInsight({ draft, mode, latest, safetyFlag });
+  const { tip, loading } = useSaInsight({
+    draft,
+    mode,
+    latest,
+    safetyFlag,
+    onSectionTip: (key, text) => update((d) => ({ ...d, tips: { ...(d.tips || {}), [key]: text } })),
+    onOverallTip: (entry, text) => onEntryUpdate?.(entry.id, { tips: { ...(entry.tips || {}), overall: text } }),
+  });
 
   useEffect(() => {
     document.getElementById("sa-page")?.scrollTo({ top: 0 });
@@ -80,13 +87,19 @@ export function SelfAssessmentView({ onClose, onQuickExit, onOpenBiffCoach, pare
 
   const assessing = mode === "assess";
   const finished = mode === "overview" || mode === "results";
+  const stepNum = assessing ? pageStepOf(step) : 1;
   const showStart = finished || (assessing && step?.type === "intro");
   return createPortal(
     <div id="sa-page" data-testid="self-assessment-page" data-mode={mode} className={`fixed inset-0 z-50 overflow-y-auto ${hidden ? "hidden" : ""} bg-gradient-to-b from-[#F3EFFE] to-[#EBE5FA] text-slate-800 pb-12`}>
       <SafetyBanner />
       <div className="max-w-6xl mx-auto px-4 pt-6">
         <PageHeader onBack={close} onQuickExit={onQuickExit} />
-        <Hero stepNum={assessing ? pageStepOf(step) : 1} total={PAGE_STEP_COUNT} done={finished} />
+        <Hero
+          title="Self Assessment"
+          subtitle="Take a moment to reflect, understand yourself better, and track your progress as a co-parent."
+          pill={finished ? "Complete" : <>Step <span data-testid="sa-step-num">{stepNum}</span> of {PAGE_STEP_COUNT}</>}
+          pct={finished ? 100 : Math.round((stepNum / PAGE_STEP_COUNT) * 100)}
+        />
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
           <div className="lg:col-span-7 space-y-4">
             <JourneySteps statuses={statusesFor(mode, step)} />

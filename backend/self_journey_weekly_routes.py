@@ -4,7 +4,7 @@ from __future__ import annotations
 from datetime import datetime, timezone
 from typing import Any, Dict
 
-from fastapi import APIRouter, Depends, Request
+from fastapi import APIRouter, Depends, HTTPException, Request
 from fastapi.responses import HTMLResponse, RedirectResponse
 from motor.motor_asyncio import AsyncIOMotorDatabase
 
@@ -12,7 +12,24 @@ from analytics_routes import require_admin
 from auth import UserPublic, get_db
 from release_check import origin_from_request
 from self_assessment_routes import _UNSUB_PAGE
-from self_journey_weekly import NOTES, PREFS, read_click_token, read_unsubscribe_token, weekly_stats
+from self_journey_weekly import (
+    NOTES,
+    PREFS,
+    build_highlights,
+    make_unsubscribe_token,
+    read_click_token,
+    read_unsubscribe_token,
+    weekly_stats,
+)
+
+SAMPLE_ACTIVITY = {
+    "sa": 1,
+    "days": {"d1", "d2", "d3"},
+    "streak": 3,
+    "cp": 1,
+    "cn": ["Medical", "Educational"],
+    "fb": True,
+}
 
 router = APIRouter(prefix="/self-journey", tags=["self-journey"])
 admin_router = APIRouter(prefix="/admin/self-journey-weekly", tags=["admin"])
@@ -55,3 +72,25 @@ async def weekly_note_stats(
     db: AsyncIOMotorDatabase = Depends(get_db),
 ) -> Dict[str, Any]:
     return await weekly_stats(db)
+
+
+@admin_router.post("/sample")
+async def send_weekly_note_sample(
+    request: Request,
+    admin: UserPublic = Depends(require_admin),
+) -> Dict[str, Any]:
+    """Emails the admin a sample weekly note showing all five kinds of progress."""
+    from email_service import EmailNotConfigured, EmailSendError, send_self_journey_weekly_note
+
+    origin = origin_from_request(request)
+    try:
+        send_self_journey_weekly_note(
+            to_email=admin.email,
+            first_name=(admin.name or "").split(" ")[0] or None,
+            highlights=build_highlights(SAMPLE_ACTIVITY),
+            cta_url=f"{origin}/dashboard",
+            unsubscribe_url=f"{origin}/api/self-journey/weekly-note/unsubscribe?token={make_unsubscribe_token(admin.user_id)}",
+        )
+    except (EmailNotConfigured, EmailSendError) as exc:
+        raise HTTPException(status_code=502, detail=f"Couldn't send the sample: {exc}")
+    return {"ok": True, "sent_to": admin.email}

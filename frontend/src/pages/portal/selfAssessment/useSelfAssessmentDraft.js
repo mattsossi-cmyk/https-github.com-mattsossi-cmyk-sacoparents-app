@@ -107,6 +107,7 @@ export function useSelfAssessmentDraft({ open, userId, parentName, onCompleted }
           parent_name: payload.parent_name,
           answers: payload.answers,
           reflections: payload.reflections,
+          tips: payload.tips,
           goal: (payload.goal || "").trim(),
           scores: scoreAnswers(payload.answers),
         };
