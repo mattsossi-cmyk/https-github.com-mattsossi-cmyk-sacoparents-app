@@ -8632,5 +8632,22 @@ dashboard for sharing SELECTED completed reports with any professional.
 - `GET /api/admin/self-journey-weekly/stats` (admin only) returns the last 8 ISO weeks: sent, progressed, clicked, and a `counting` flag while the 7-day window is still open, plus totals.
 - `WeeklyNoteStatsTile.jsx` on /admin, under the Release check tile: totals cards, a weekly table, and an empty state explaining that the first notes go out Sunday 5pm CT.
 - Still pending from the earlier ask (no answers yet): the live address allowlist (needs the URL), the weekly note sample button, and custom domain steps.
+
+## 2026-06 — Card 1 Self-Assessment redone as a full page (iteration_97: all passed + mobile self-test)
+- `SelfAssessmentView.jsx` replaces the chat modal (deleted `SelfAssessmentModal.jsx` and `ChatTranscript.jsx`; `ChatComposer.jsx` now has only `TextReply` and `BackLink`).
+  - Portal to body, `fixed inset-0 z-50`; it hides itself while the BIFF drawer is open (`biffCoachOpen` prop from SacoparentsPortal → JourneyShell).
+- Layout follows the user's HTML mockup:
+  - safety banner (911 + DV tel links), header with Emergent badge, back button and Quick Exit
+  - "Step X of 6" pill: steps 1-4 are the rated sections, 5 the reflection, 6 the goal
+  - 4 journey cards whose done/current/upcoming status follows progress, question panel, START CTA
+  - glass AI Insight sidebar and the Caveat bottom banner
+- Same 20 questions and 1-5 scale, one at a time with auto-advance; same draft/history/PDF/score labels/chart/goal/check-ins/streak/Growth Moments/reminders. `useSelfAssessmentDraft` gained a `ready` flag, so a skeleton shows until the account draft loads (no overview→question flip).
+- AI (`self_assessment_ai.py`, Claude via `ai_service._make_chat(..., "claude")` + SAFETY_GUARDRAIL; rate-limited; optional auth; grey-rock voice when flagged):
+  - `POST /api/self-assessment/ai/tip` (a section key or "overall")
+  - `POST /api/self-assessment/ai/framing` returns {advice, suggested}
+  - Frontend: `useSaInsight.js` (tip after each completed section; the overall tip is cached per entry in localStorage).
+- AI Examples / Quick Templates are curated static content (`aiLibrary.js`), with grey-rock variants for flagged parents. The BIFF button opens the existing Communication Builder.
+- Non-streaming (installed emergentintegrations 0.1.0 has no `stream_message`; upgrading would touch every AI feature).
+- Tests: `/app/backend/tests/test_self_assessment_ai.py`.
 - Still pending from earlier: user check of the Card 4 Foundation Statement PDF (one signature/date line).
 
