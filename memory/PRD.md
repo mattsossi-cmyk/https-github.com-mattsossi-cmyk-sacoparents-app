@@ -937,7 +937,7 @@ Probed 2026-09-02: /api/link-codes, /api/integrations/* on sacoparentsapp.online
 - UI: QuickExit.jsx (sticky bar, Escape×2, storage clear, location.replace weather.com, safe-device notice) on all screening screens; PathwayDecision.jsx on pro responses page; ImportedScreening shows confirmed pathway block; PDF card in §2. Plus Jakarta Sans + #3D1A78 for pathway/quick-exit UI.
 - Note: pre-existing 1–11 scale level "Restricted Parallel Parenting" in lens_data remains (approved report scale); pathway engine never emits that phrase.
 
-## 2026-10-08 Safety & Communication Assessment Hub (agent-built, testing in progress, NOT deployed)
+## 2026-10-08 Safety & Communication Assessment Hub (agent-tested: 10 backend + Playwright via testing agent iter_72; mobile overflow fixed, NOT deployed)
 - Pages: /joint/:id/safety (SafetyHub.jsx: red Quick Exit bar "Confidential Assessment Area", header, inclusive banner, title, 3 cards, Begin button + privacy line, emergency strip), /joint/:id/communication-readiness (CommunicationReadiness.jsx, 4 items). Card 1 & 3 & Begin → /safety-screening (A/B/C choice screen). No AI widget; no third-party requests.
 - Fonts bundled via @fontsource (plus-jakarta-sans, inter, montserrat, kaushan-script); Google Fonts link/import removed from index.html and index.css. Tailwind `font-jakarta`.
 - Backend: COMM_ITEMS / comm_record / comm_items_view in safety_screening.py; GET/PUT /api/joint/reports/{rid}/communication-readiness (parents only); stored `communication_readiness.{role}`; shown on pro-only logged responses endpoint (`communication` key; endpoint also works when only comm exists). Import: `communication_readiness` from parent app export. Spec export includes contract. Panel shows comm received state.
