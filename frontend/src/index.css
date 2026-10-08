@@ -430,3 +430,7 @@ h1, h2, h3, h4, .font-serif {
 @media (prefers-reduced-motion: reduce) {
     .court-spot-main.hint { animation: none; }
 }
+/* Court page: lift bottom toasts above the floating Emergent AI button so they never cover it. */
+body:has(#court-page:not(.hidden)) [data-sonner-toaster][data-y-position="bottom"] {
+    bottom: 96px !important;
+}
