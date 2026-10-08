@@ -9,10 +9,13 @@ import { DraftCard } from "./commBuilder/DraftCard";
 import { ResponseCard } from "./commBuilder/ResponseCard";
 import { AiInsightPanel } from "./selfAssessment/AiInsightPanel";
 import { JourneySteps } from "./selfAssessment/JourneySteps";
+import { SaArtwork } from "./selfAssessment/SaArtwork";
 import { BottomBanner, Hero, PageHeader, SafetyBanner } from "./selfAssessment/SaChrome";
 import { useSelfAssessmentHistory } from "./selfAssessment/useSelfAssessmentHistory";
 
 const STEP_LABELS = { 1: "Write", 2: "Transform", 3: "Copy or Save" };
+const CB_ALT =
+  "SA CoParents Communication Builder: child-focused templates, clear and respectful BIFF language, situations and solutions, plan and track. Less conflict. More clarity. A brighter future for your child.";
 
 // The 4 journey cards mirror the parent's real Self-Assessment progress.
 const saStatuses = (history) => {
@@ -102,10 +105,12 @@ export function CommunicationBuilderView({ open, focus, onClose, onQuickExit, on
       <SafetyBanner tp="cb" />
       <div className="max-w-6xl mx-auto px-4 pt-6">
         <PageHeader tp="cb" onBack={onClose} onQuickExit={onQuickExit} backLabel="Back" />
+        <SaArtwork testid="cb-artwork-mobile" name="comm-builder-art" alt={CB_ALT} className="lg:hidden max-w-md mx-auto mb-6" />
         <Hero
           tp="cb"
           title="Communication Builder"
           subtitle="Draft calm, child-centered messages with real-time AI BIFF framing (Brief, Informative, Friendly, Firm)."
+          textClassName="hidden lg:block"
           pill={pill}
           pct={stage === 4 ? 100 : Math.round((stage / 3) * 100)}
         />
@@ -160,7 +165,8 @@ export function CommunicationBuilderView({ open, focus, onClose, onQuickExit, on
               </button>
             </div>
           </div>
-          <div className="lg:col-span-5">
+          <div className="lg:col-span-5 space-y-6">
+            <SaArtwork testid="cb-artwork-desktop" name="comm-builder-art" alt={CB_ALT} className="hidden lg:block" />
             <AiInsightPanel
               tip={tip}
               loading={biffLoading}

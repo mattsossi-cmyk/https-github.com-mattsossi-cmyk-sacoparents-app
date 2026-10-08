@@ -8693,3 +8693,16 @@ dashboard for sharing SELECTED completed reports with any professional.
 - Frontend: `parallel/usePp.js` (usePpPlan with a 700ms debounced autosave; usePpChat), PpHeader, PpWelcome, PpStep, PpSummary, PpChat.
 - Tests: `/app/backend/tests/test_parallel_parenting.py`.
 - Dashboard image: the user saw an image at the end of the live dashboard. The preview no longer has it (the artwork was moved to the top earlier); the pending deploy fixes production. No code change.
+
+
+## 2026-06 — Weekly note preview, Plan change log, page artwork (iteration_101: all passed; CB artwork screenshot-verified)
+- Admin Weekly Note Preview: `components/WeeklyNotePreview.jsx` adds a "Preview note" button on the Weekly note tile.
+  - It opens a dialog with 5 switches (sa, checkins, cp, cn, fb) and an iframe of the exact email (sandboxed; the unsubscribe link is the inert `#unsubscribe-preview`), plus "Email me this version".
+  - Backend: `POST /api/admin/self-journey-weekly/preview {types?}` uses the new pure renderer `email_service.render_self_journey_weekly_note`. `/sample` now accepts an optional `{types}`; all-off returns 400. Both are admin-only.
+- Parallel Parenting plan change log: collection `parallel_parenting_versions`.
+  - A version is saved on PUT /me with completed:true (reaching "Your Plan") or on POST /pdf, only if answers/notes changed. The newest 20 are kept.
+  - `GET /api/parallel-parenting/versions` (newest first, with diff strings like "Exchanges: A neutral public place → At school or daycare", using each question's `short` label in the content JSON) and `GET /versions/{id}/pdf`.
+  - The plan PDF has a "Changes since your last version" box. Frontend: `parallel/PpHistory.jsx`, the "Plan history" section on the summary.
+- Page artwork (user images): `selfAssessment/SaArtwork.jsx` (props name/alt; files `/images/{name}.webp` + `-640.webp`).
+  - The user picked both placements, so it's responsive: on phones the image is at the top and the text title/subtitle are hidden (`Hero textClassName="hidden lg:block"`; the step pill stays); on desktop the text title stays and the image sits in the right column above the AI Insight panel.
+  - Used on the Self-Assessment page (`sa-self-assessment`, testids sa-artwork-mobile/desktop) and the Communication Builder (`comm-builder-art`, testids cb-artwork-mobile/desktop).

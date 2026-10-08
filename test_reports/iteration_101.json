@@ -1,0 +1,23 @@
+{
+  "summary": "Tested all three iter-101 features (admin weekly preview, Parallel Parenting plan change log + version PDF, Self-Assessment artwork) end-to-end. Backend: 13/13 pytest cases passed in /app/backend/tests/test_iter_weekly_preview_and_pp_versions.py covering preview auth gating (parent 403), default-all-types shape (subject 'Your weekly note', 5 highlights, inert '#unsubscribe-preview'), type filtering (cp+fb only), all-off empty render, sample endpoint 403 for parent + 400 all-false, PP /me snapshot-on-change dedupe, /pdf snapshot with 'pdf' reason, /versions newest-first with 'first' flag + diff strings + max=20, version PDF 200 (application/pdf) + 404 for unknown id. Frontend: Admin /admin shows admin-weekly-note-tile with 'Preview note' button opening the dialog; subject reads 'Your weekly note'; iframe renders email HTML; all 5 toggles work; turning all off shows admin-weekly-note-preview-empty and disables admin-weekly-note-preview-send; with only cp+fb on, iframe contains 'co-parenting' + 'foundation' and omits 'self assessment' / 'check-in'; iframe HTML has '#unsubscribe-preview'. Parent flow: Self Journey → Parallel banner → Your Plan shows pp-summary + pp-history with 4 version cards (ids pp-version-<hex>), newest card has 'CURRENT' chip, each has pp-version-pdf-<id>, 'PDF download' / 'Finished plan' reasons, change diffs render ('Exchanges: A neutral public place → At school or daycare', 'How you communicate: A co-parenting app only → Email only', 'Parenting Time & Exchanges notes updated'), oldest shows 'First saved version'. Self-Assessment artwork: at 1920×1080 sa-artwork-desktop visible in right column (bbox 1072,397 448×671), text title 'Self Assessment' visible, sa-artwork-mobile absent; at 390×844 sa-artwork-mobile visible (bbox 16,262 358×536, naturalWidth>0 ⇒ not broken), sa-artwork-desktop hidden, 'Self Assessment' h1 hidden, sa-step-pill still visible, no horizontal overflow. Regression: parent2 PP flow (banner → pp-view-plan → pp-summary) still works; admin-weekly-note-sample button + stats tile still present. Test data (plans/chats/versions for both parents) cleaned up at end.",
+  "backend_issues": {"critical": [], "minor": []},
+  "frontend_issues": {"ui_bugs": [], "integration_issues": [], "design_issues": []},
+  "test_report_links": [
+    "/app/backend/tests/test_iter_weekly_preview_and_pp_versions.py",
+    "/app/test_reports/pytest/iter_weekly_pp_versions.xml"
+  ],
+  "action_items": [],
+  "critical_code_review_comments": [
+    "parallel_parenting_routes.diff_versions assumes old['answers'] exists; current snapshot writer guarantees that, but a stray legacy doc without 'answers' would raise KeyError. Low priority (defensive .get would help).",
+    "VERSIONS cleanup uses .skip(MAX_VERSIONS).to_list(200) — fine today but any future bulk import >220 would leak older rows; consider deleting by created_at < threshold instead."
+  ],
+  "updated_files": ["/app/backend/tests/test_iter_weekly_preview_and_pp_versions.py"],
+  "success_rate": {"backend": "100%", "frontend": "100%"},
+  "test_credentials": "Admin mattsossi@bsossi.com / AdminPass123!; parents parent1/parent2@test.com / TestPass123!",
+  "seed_data_creation": "Test seeded 4 parallel_parenting_versions for parent2 to validate the history view and version PDF; all cleaned up at the end (deleted 1 plan + 4 versions for user_b27f8b7813cb).",
+  "retest_needed": false,
+  "should_main_agent_self_test": false,
+  "main_agent_can_self_test": false,
+  "context_for_next_testing_agent": "Reusable backend tests at /app/backend/tests/test_iter_weekly_preview_and_pp_versions.py. The /versions seeding fixture flips communication_channel and time_exchange on parent2 to drive diffs. Admin preview iframe is a srcDoc iframe — read via content_frame() rather than query_selector inside it. SA mobile viewport (<1024) requires full nav through door-self → door-self-card-assess, not reload (reload drops the SPA state back to dashboard home). 'CURRENT' chip in pp-history renders uppercase.",
+  "rca of the issue": "N/A — all requested behaviour verified working."
+}
