@@ -8,6 +8,7 @@ from pydantic import BaseModel
 
 from coparenting_tiers import joint_findings, suggested_score
 from joint_data import SAFETY_SUBJECT_KEYS
+from safety_pathway import public_pathway
 from safety_screening import public_record
 
 from lens_data import (  # noqa: F401  (re-exported for callers importing from legal_lens)
@@ -287,7 +288,7 @@ async def _lens_view(db, rep: dict, doc: dict) -> dict:
     rep = {**rep, "reassess_up": rep.get("reassess_up") or REASSESS_UP_DEFAULT, "reassess_down": rep.get("reassess_down") or REASSESS_DOWN_DEFAULT,
            "reassess_interval": rep.get("reassess_interval") or "Every 90 to 180 days"}
     return {"report": rep, "professional": await professional_contact(db, rep.get("professional_id"), rep), "readiness": readiness(doc),
-            "safety_screening": {r: public_record(_screening(doc, r)) for r in ("a", "b")}, "classification": {"parent_a": classify_individual(rep.get("parent_a_rating")), "parent_b": classify_individual(rep.get("parent_b_rating")),
+            "safety_screening": {r: public_record(_screening(doc, r)) for r in ("a", "b")}, "safety_pathway": public_pathway(doc, rep), "classification": {"parent_a": classify_individual(rep.get("parent_a_rating")), "parent_b": classify_individual(rep.get("parent_b_rating")),
             "joint": classify_joint(rep.get("joint_rating"))}, "library": {"individual_resources": ind, "joint_resources": joint, "providers": provs, "conflict_options": CONFLICT_OPTIONS,
             "joint_process_options": JOINT_OPTIONS, "receipt_options": RECEIPT, "statuses": STATUSES, "ai_models": AI_MODELS, "scale_table": SCALE_TABLE, "risk_categories": RISK_CATEGORIES,
             "risk_levels": RISK_LEVELS, "pathways": PATHWAYS, "conflict_guidance": CONFLICT_GUIDANCE, "child_focus_categories": CHILD_FOCUS_CATEGORIES, "resource_categories": RESOURCE_CATEGORIES, "reassess_intervals": REASSESS_INTERVALS}, "notes": {"safety": SAFETY_NOTE, "rating": RATING_NOTE, "tagline": TAGLINE, "alert": SAFETY_ALERT, "intro": INTRO_TEXT, "principle": REPORT_PRINCIPLE, "purpose": REPORT_PURPOSE, "safety_pathway": SAFETY_PATHWAY, "disclaimer": REPORT_DISCLAIMER},

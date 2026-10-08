@@ -78,7 +78,10 @@ GENDER_DEFAULT = {"woman": "A", "female": "A", "f": "A", "man": "B", "male": "B"
 
 def public_spec(version: str) -> dict:
     v = VERSIONS[version]
-    return {**v, "label": v.get("label", LABEL), "trigger_warning": TRIGGER_WARNING, "scale_note": SCALE_NOTE, "scales": {"freq": FREQ, "yn": YN, "safe": SAFE}, "resources": RESOURCES}
+    from safety_pathway import EXTRA_ITEMS, YN3
+    items = [i for i in v["items"] if i["id"] != "safe"] + EXTRA_ITEMS + [i for i in v["items"] if i["id"] == "safe"]
+    return {**v, "items": items, "label": v.get("label", LABEL), "trigger_warning": TRIGGER_WARNING, "scale_note": SCALE_NOTE, "scales": {"freq": FREQ, "yn": YN, "safe": SAFE, "yn3": YN3}, "resources": RESOURCES,
+            "safe_device_notice": "Use a device your co-parent cannot see. The Quick Exit button (or pressing Escape twice) leaves this page immediately and clears it from this browser."}
 
 
 def compute_tier(version: str, responses: dict) -> int:
@@ -100,15 +103,19 @@ def default_version(gender: str | None) -> str | None:
     return GENDER_DEFAULT.get((gender or "").strip().lower())
 
 
-def build_record(version: str, responses: dict, source: str = "sacoparentsalign.com", completed_at: str | None = None, tier: int | None = None, answered_count: int | None = None) -> dict:
-    items = VERSIONS[version]["items"]
+def build_record(version: str, responses: dict, source: str = "sacoparentsalign.com", completed_at: str | None = None, tier: int | None = None, answered_count: int | None = None,
+                 flags: dict | None = None, pathway: str | None = None) -> dict:
+    from safety_pathway import EXTRA_ITEMS, compute_flags, pathway_from_flags
+    items = VERSIONS[version]["items"] + EXTRA_ITEMS
     clean = {i["id"]: str(responses[i["id"]])[:1000].strip() for i in items if responses.get(i["id"]) not in (None, "")}
     skipped = [i["id"] for i in items if i["id"] not in clean or clean[i["id"]] == "Prefer not to say"]
     t = tier if tier in (1, 2, 3) else compute_tier(version, clean)
+    fl = flags if isinstance(flags, dict) else compute_flags(version, clean)
+    sugg = pathway_from_flags(fl) if not pathway else {"pathway": pathway, "label": __import__("safety_pathway").LABEL[pathway], "triggered": [k for k, v in fl.items() if v], "triggered_labels": [__import__("safety_pathway").FLAG_LABEL[k] for k, v in fl.items() if v]}
     concern = sum(1 for i in items if i["kind"] == "freq" and clean.get(i["id"]) in ("Sometimes", "Frequently")) + (1 if clean.get("safe") == "Not safe" else 0)
     return {"source": source, "version": version, "title": VERSIONS[version]["title"], "completed_at": completed_at or datetime.now(timezone.utc).isoformat(), "tier": t,
             "answered_count": answered_count if isinstance(answered_count, int) else len([k for k in clean if clean[k] != "Prefer not to say"]), "skipped_count": len(skipped),
-            "item_count": len(items), "concern_count": concern, "responses": clean}
+            "item_count": len(items), "concern_count": concern, "responses": clean, "flags": fl, "pathway_suggested": sugg}
 
 
 def public_record(scr: dict | None) -> dict | None:
@@ -135,7 +142,8 @@ def item_view(scr: dict) -> list[dict]:
         return [{"id": k, "question": k, "answer": v, "kind": "text"} for k, v in (scr.get("responses") or {}).items()] or [{"id": it.get("question"), "question": it.get("question"), "answer": it.get("answer"), "kind": "text"} for it in scr.get("items") or []]
     r = scr.get("responses") or {}
     return [{"id": i["id"], "question": (f"{i['stem']} {i['text']}" if i.get("stem") else i["text"]), "answer": r.get(i["id"]) or "Skipped", "kind": i["kind"], "part": i["part"],
-             "flag": i["kind"] == "freq" and r.get(i["id"]) in ("Sometimes", "Frequently") or (i["id"] == "safe" and r.get("safe") == "Not safe")} for i in VERSIONS[ver]["items"]]
+             "flag": i["kind"] == "freq" and r.get(i["id"]) in ("Sometimes", "Frequently") or (i["id"] == "safe" and r.get("safe") == "Not safe") or (i["kind"] == "yn3" and r.get(i["id"]) == "Yes")}
+            for i in VERSIONS[ver]["items"] + __import__("safety_pathway").EXTRA_ITEMS]
 
 
 class SubmitIn(BaseModel):
@@ -176,6 +184,9 @@ def spec_export() -> dict:
                       "2": "Any frequency item Sometimes/Frequently, OR closing Somewhat safe with any frequency item above Never.",
                       "3": "Any item flagged tier3 answered Sometimes/Frequently, OR closing Not safe.",
                       "tier3_items": {k: [i["id"] for i in v["items"] if i["tier3"]] for k, v in VERSIONS.items()}},
+            "additional_items": __import__("safety_pathway").EXTRA_ITEMS, "scales_extra": {"yn3": __import__("safety_pathway").YN3},
+            "safety_pathway": {"flags": __import__("safety_pathway").FLAGS, "flag_map": __import__("safety_pathway").FLAG_MAP, "rules": {"protected_review": list(__import__("safety_pathway").P1), "structured": list(__import__("safety_pathway").P2)}, "labels": __import__("safety_pathway").LABEL,
+                               "export_fields": {"safety_flags": "dict of the 9 booleans (optional)", "safety_pathway": "standard|structured|protected_review (optional)"}, "note": "Suggested flag only; the assigned professional confirms. Highest restriction wins across parents."},
             "assignment": {"choice_screen": "Which questions fit your situation best?", "default_by_gender": {"woman": "A", "man": "B"}, "no_gender_or_non_binary": ["A", "B", "C"], "always_offer": "C",
                            "store_only": "version letter (A|B|C) — never infer or store orientation"},
             "export_contract": {"path": "GET /api/integrations/export-assessments?email=<parent email>", "field": "safety_screening",
@@ -281,7 +292,11 @@ def build_router(db, get_current_user, get_joint_report_doc, report_role, log_ac
         st = _status(doc)[role]
         st["version_label"] = VERSION_LABEL_PRO.get(scr.get("version") or "", "legacy format")
         st["title"] = scr.get("title")
-        return {"status": st, "items": item_view(scr), "scale_note": SCALE_NOTE, "source_credit": SOURCES.get(scr.get("version") or "", ""),
+        from safety_pathway import LABEL as _PL, PATHWAYS as _PW
+        decision = (doc.get("safety_pathway") or {}).get(role) or {}
+        pathway = {"suggested": scr.get("pathway_suggested") or {"pathway": "standard", "label": "Standard", "triggered": [], "triggered_labels": []}, "decision": decision or None,
+                   "options": [{"key": k, "label": _PL[k]} for k in _PW], "note": "Suggested flag only — nothing is restricted automatically. Confirm, change, or dismiss; only your confirmed pathway reaches the report."}
+        return {"status": st, "items": item_view(scr), "pathway": pathway, "scale_note": SCALE_NOTE, "source_credit": SOURCES.get(scr.get("version") or "", ""),
                 "notice": "Parent-reported screening responses, shown to the assigned professional only. Not findings. Never shared with the co-parent, the court, or any report."}
 
     return r

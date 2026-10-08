@@ -157,7 +157,7 @@ export default function LegalLensReport() {
               <div className="rounded-md border border-amber-300 bg-white p-4 space-y-3" data-testid="lens-safety">
                 <h3 className="font-semibold text-align-green">Safety screening (IPV &amp; coercive control)</h3>
                 <p className="rounded-r-md border-l-4 border-amber-500 bg-amber-50 p-3 text-xs" data-testid="lens-safety-alert">{notes.alert}</p>
-                <ImportedScreening screening={v?.safety_screening} rep={rep} caseId={id} />
+                <ImportedScreening screening={v?.safety_screening} rep={rep} caseId={id} pathway={v?.safety_pathway} />
                 <div className="grid gap-3 sm:grid-cols-2"><Radio label="Parent A Family Violence Assessment" options={lib.receipt_options} value={rep.fv_a_received} onChange={(val) => set("fv_a_received", val)} id="fv-a" /><Radio label="Parent B Family Violence Assessment" options={lib.receipt_options} value={rep.fv_b_received} onChange={(val) => set("fv_b_received", val)} id="fv-b" /></div>
                 <p className="text-xs font-semibold" data-testid="lens-fv-both">{rep.fv_a_received === "Received" && rep.fv_b_received === "Received" ? "✓ Both Assessments Received" : "Both assessments not yet received"}</p>
                 <div className="space-y-2" data-testid="lens-risk-grid">{lib.risk_categories.map(([k, label, hint]) => (

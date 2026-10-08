@@ -6,6 +6,7 @@ import api, { formatApiError } from "@/lib/api";
 import { BrandLogo } from "@/components/Brand";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
+import { QuickExitBar } from "@/components/QuickExit";
 
 const Hotline = ({ resources }) => (
   <div className="rounded-md border border-red-200 bg-red-50 p-3 text-sm" data-testid="screening-hotline">
@@ -36,7 +37,7 @@ export default function SafetyScreening() {
   const [result, setResult] = useState(null);
   const [busy, setBusy] = useState(false);
   useEffect(() => { api.get(`/joint/reports/${id}/safety-screening`).then((r) => setData(r.data)).catch((e) => toast.error(formatApiError(e))); }, [id]);
-  if (!data) return <div className="min-h-screen bg-background" data-testid="screening-loading" />;
+  if (!data) return <div className="min-h-screen bg-background" data-testid="screening-loading"><QuickExitBar /></div>;
   const spec = data.spec;
   const choose = async (version) => {
     setBusy(true);
@@ -49,6 +50,7 @@ export default function SafetyScreening() {
   const parts = spec ? [...new Set(spec.items.map((i) => i.part))] : [];
   return (
     <div className="min-h-screen bg-background" data-testid="screening-page">
+      <QuickExitBar notice={spec?.safe_device_notice} />
       <header className="bg-white border-b border-border"><div className="max-w-3xl mx-auto px-4 sm:px-6 py-4 flex items-center justify-between"><Link to={`/joint/${id}`} className="flex items-center gap-1.5 text-sm text-muted-foreground" data-testid="screening-back"><ArrowLeft className="h-4 w-4" /> Back to case</Link><BrandLogo size="text-xl" /></div></header>
       <main className="max-w-3xl mx-auto px-4 sm:px-6 py-8 space-y-4">
         {data.choice && (

@@ -56,7 +56,9 @@ def _structured(s: dict) -> dict | None:
     except (TypeError, ValueError):
         tier = None
     ac = s.get("answered_count")
-    rec = build_record(ver, s["responses"], source=SOURCE, completed_at=_date(s.get("completed_at")) or None, tier=tier, answered_count=ac if isinstance(ac, int) else None)
+    from safety_pathway import normalize_import
+    fl, pw = normalize_import(s.get("safety_flags"), s.get("safety_pathway"))
+    rec = build_record(ver, s["responses"], source=SOURCE, completed_at=_date(s.get("completed_at")) or None, tier=tier, answered_count=ac if isinstance(ac, int) else None, flags=fl, pathway=pw)
     rec["items"] = []
     return rec
 
@@ -67,6 +69,8 @@ def extract_safety_screening(payload: dict) -> dict | None:
         return None
     structured = payload.get("safety_screening")
     if isinstance(structured, dict):
+        # bridge may place flags/pathway at top level or inside safety_screening
+        structured = {**structured, "safety_flags": structured.get("safety_flags", payload.get("safety_flags")), "safety_pathway": structured.get("safety_pathway", payload.get("safety_pathway"))}
         rec = _structured(structured)
         if rec:
             return rec

@@ -36,7 +36,7 @@ def test_skips_and_prefer_not_to_say_never_raise_tier():
     assert compute_tier("A", {}) == 1
     assert compute_tier("B", {"b8": "Prefer not to say", "safe": "Prefer not to say"}) == 1
     rec = build_record("A", {"a1": "Never", "a2": "Prefer not to say", "a9": ""})
-    assert rec["answered_count"] == 1 and rec["skipped_count"] == 9 and rec["tier"] == 1 and "a9" not in rec["responses"]
+    assert rec["answered_count"] == 1 and rec["skipped_count"] == 14 and rec["tier"] == 1 and "a9" not in rec["responses"]
 
 
 def test_default_version_by_gender():

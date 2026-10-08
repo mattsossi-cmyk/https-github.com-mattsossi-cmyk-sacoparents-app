@@ -436,9 +436,13 @@ def render_lens_body(pdf: FPDF, v: dict) -> None:
     risk = rep.get("risk_screening") or {}
     scr = v.get("safety_screening") or {}
     from safety_screening import SCALE_NOTE as _SCR_NOTE
+    from safety_pathway import pathway_lines
     imported = [screening_summary(scr.get(r), rep.get(f"parent_{r}_name") or f"Parent {r.upper()}") for r in ("a", "b")] + [_SCR_NOTE]
+    pw = pathway_lines(v.get("safety_pathway"))
     cards_row(pdf, [(f"Joint process: {rep.get('joint_process_appropriate') or 'Not yet determined'}" + _ai_tag(rep, "safety_takeaway"), [rep.get("safety_takeaway") or "—", "", f"Parent A FV assessment: {rep.get('fv_a_received') or '—'}", f"Parent B FV assessment: {rep.get('fv_b_received') or '—'}", *([""] + imported if imported else []), "", notes["safety"]], TEAL_FILL, TEAL),
                     ("Risk Screening Summary", [f"{lbl}: {risk.get(k, {}).get('level', 'Not assessed')}." + (f" {risk[k]['note']}" if risk.get(k, {}).get("note") else "") for k, lbl, _ in RISK_CATEGORIES] + ([f"Safeguards: {rep['safety_notes']}"] if rep.get("safety_notes") else []), ORANGE_FILL, ORANGE)], subhead="Safety Screening & Process Considerations")
+    if pw:
+        full_card(pdf, "Safety Pathway — professional's confirmed process consideration", pw, TEAL_FILL, TEAL)
     new_page(pdf)
     heading(pdf, 3, f"Parent A Perspective — {rep.get('parent_a_name') or 'Parent A'}")
     _body(pdf, "PARENT-REPORTED INFORMATION, summarized separately and neutrally by the professional; no determination is made about which account is correct.", italic=True)
