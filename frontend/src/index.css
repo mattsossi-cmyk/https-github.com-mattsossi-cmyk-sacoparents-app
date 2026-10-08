@@ -369,3 +369,18 @@ h1, h2, h3, h4, .font-serif {
     .sa-hotspot-pulse { animation: none; }
 }
 
+/* Self-Assessment page: AI Insight glass panel + journey step cards. */
+.glass-ai-panel {
+    background: rgba(255, 255, 255, 0.85);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid rgba(147, 51, 234, 0.2);
+}
+.step-card {
+    transition: transform 250ms cubic-bezier(0.4, 0, 0.2, 1), box-shadow 250ms ease;
+}
+.step-card:hover {
+    transform: translateY(-2px);
+}
+
+

@@ -61,6 +61,18 @@ export const todayLocal = () => new Date().toLocaleDateString("en-CA");
 
 export const bandFor = (score) => CONTENT.bands.find((b) => score >= b.min) || null;
 
+// Page progress "Step X of 6": four rated sections, the reflection, then the goal.
+export const PAGE_STEP_COUNT = 6;
+export const pageStepOf = (step) => {
+  if (!step || step.type === "intro") return 1;
+  if (step.type === "rate") return step.section.number;
+  return step.type === "reflect" ? 5 : 6;
+};
+export const sectionAnswers = (key, answers) =>
+  Object.fromEntries(Object.entries(answers).filter(([k]) => k.startsWith(`${key}_`)));
+export const sectionComplete = (section, answers) =>
+  section.questions.every((_q, i) => answers[`${section.key}_${i + 1}`] != null);
+
 // "May 2026", or "May 12, 2026" when two entries share a month (mirrors PDF).
 export const entryLabel = (entries, i) => {
   const d = new Date(entries[i].completed_at);

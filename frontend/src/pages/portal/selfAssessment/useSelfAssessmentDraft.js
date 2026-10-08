@@ -16,6 +16,7 @@ export function useSelfAssessmentDraft({ open, userId, parentName, onCompleted }
   const pendingRef = useRef(null);
   const [status, setStatus] = useState("idle");
   const [savedAt, setSavedAt] = useState(null);
+  const [ready, setReady] = useState(false);
 
   const flush = useCallback(async () => {
     const payload = pendingRef.current;
@@ -39,6 +40,7 @@ export function useSelfAssessmentDraft({ open, userId, parentName, onCompleted }
     revRef.current = 0;
     setRev(0);
     setStatus(userId ? "idle" : "local");
+    setReady(!userId);
     if (!userId) return undefined;
     api
       .get("/self-assessment/me")
@@ -55,7 +57,8 @@ export function useSelfAssessmentDraft({ open, userId, parentName, onCompleted }
           flush();
         }
       })
-      .catch(() => !cancelled && setStatus("local"));
+      .catch(() => !cancelled && setStatus("local"))
+      .finally(() => !cancelled && setReady(true));
     return () => {
       cancelled = true;
     };
@@ -115,5 +118,5 @@ export function useSelfAssessmentDraft({ open, userId, parentName, onCompleted }
     [userId, resetDraft, onCompleted]
   );
 
-  return { draft, update, status, savedAt, flush, complete };
+  return { draft, update, status, savedAt, flush, complete, ready };
 }

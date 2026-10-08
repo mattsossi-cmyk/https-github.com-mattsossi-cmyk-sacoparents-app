@@ -3,7 +3,7 @@ import confetti from "canvas-confetti";
 import { toast } from "sonner";
 
 import InviteCoparentCard from "../../components/InviteCoparentCard";
-import { SelfAssessmentModal } from "./SelfAssessmentModal";
+import { SelfAssessmentView } from "./SelfAssessmentView";
 import { useSelfAssessmentHistory } from "./selfAssessment/useSelfAssessmentHistory";
 import { GoalBanner } from "./selfAssessment/GoalBanner";
 import { WelcomeArtwork } from "./WelcomeArtwork";
@@ -501,6 +501,7 @@ export function JourneyShell({
   selfAssessmentUrl = "/coparenting-self-assessment-preview.html",
   onOpenGuidedJourney = () => {},
   onOpenBiffCoach = () => {},
+  biffCoachOpen = false,
   onOpenIntroGuide = () => {},
   onOpenReport = () => {},
   biffAuthoredCount = 0,
@@ -1546,17 +1547,21 @@ export function JourneyShell({
         </DialogContent>
       </Dialog>
 
-      {/* iter268 — Self-Assessment modal, triggered by Card 1. */}
-      <SelfAssessmentModal
-        open={assessOpen}
-        onOpenChange={setAssessOpen}
-        parentName={greetingName}
-        userId={user?.user_id}
-        history={saHistory.history}
-        startNew={assessStartNew}
-        onCompleted={saHistory.addEntry}
-        onQuickExit={quickExitAction}
-      />
+      {/* Card 1 — full-page Self-Assessment. */}
+      {assessOpen && (
+        <SelfAssessmentView
+          onClose={() => setAssessOpen(false)}
+          parentName={greetingName}
+          userId={user?.user_id}
+          history={saHistory.history}
+          startNew={assessStartNew}
+          onCompleted={saHistory.addEntry}
+          onQuickExit={quickExitAction}
+          onOpenBiffCoach={onOpenBiffCoach}
+          safetyFlag={safetyFlag}
+          hidden={biffCoachOpen}
+        />
+      )}
       <CoparentingAssessmentModal
         open={cpAssessOpen}
         onOpenChange={setCpAssessOpen}

@@ -1840,6 +1840,7 @@ export default function SacoparentsPortal() {
             onOpenSafetyRetake={onOpenSafetyRetake}
             onOpenGuidedJourney={(topic) => openGuidedJourney(topic)}
             onOpenBiffCoach={() => setBiffDrawerOpen(true)}
+            biffCoachOpen={biffDrawerOpen}
             onOpenIntroGuide={() => setIntroOpen(true)}
             onOpenReport={() => setFoundationDrawerOpen(true)}
             progressByTopic={progressByTopic}
