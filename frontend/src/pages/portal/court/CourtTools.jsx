@@ -41,6 +41,7 @@ export function CourtTools({ cc, courtKey, compare, onCase, onBiff }) {
           sub={ready ? "Side-by-side results for mediation" : "Available once both parents share"}
           onClick={compare.downloadPdf}
           busy={compare.pdfBusy}
+          className={ready ? "" : "opacity-70"}
         />
         <Tool testid="court-tool-biff" icon="fa-wand-magic-sparkles" title="BIFF Communication Check" sub="Review your saved messages" onClick={onBiff} />
         <Tool testid="court-tool-sync" icon="fa-rotate" title="Save Case & Open" sub={cc.alignHost} onClick={cc.sync} busy={cc.busy === "sync"} className="sm:col-span-2 lg:col-span-2" />

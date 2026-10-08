@@ -8723,3 +8723,10 @@ dashboard for sharing SELECTED completed reports with any professional.
 - Court AI asked for a draft now returns only the draft (no questions/intro/outro).
 - Demo pair: parent3/parent4 on PAIR-DEMO-01 (backend/seed_court_compare_pair.py).
 - STILL PENDING: real Court-Ordered Journey picture (temporary stand-in in place).
+
+## 2026-06 — Comparison PDF, shared talking points, sharing alert emails (iteration_104: backend 11/11 new + 12/12 regression, frontend passed)
+- GET /api/court-path/compare/pdf (court_compare_pdf.py): only when both parents share (else 409). Names = court_legal_name (fallback account name), caller first; case code; Alignment / Difference (with "Talking point:" lines unless stale) / Child-Focused Needs answers side by side. Buttons: court-compare-pdf in each side-by-side section + court-tool-compare-pdf under the picture (muted + info toast until ready).
+- POST /api/court-path/compare/talking-points: one calm AI opener per differing area (max 8), saved per case in court_talking_points (both parents see the same set), refresh button, `stale` when the difference set changes (perspective-free sha256 basis).
+- Sharing alerts (court_compare_alerts.py, email_service.send_compare_share_alert / send_compare_ready_alert): on turning sharing on → co-parent gets "turned on sharing" email if not sharing yet; once both share → "ready to view" email to both. Max once a week per type per parent; never to safety-flagged parents; neutral wording, no results/names; failures logged in *_error and never break sharing; timestamps only on success.
+- Seed resets shares, alert history and talking points for PAIR-DEMO-01.
+- STILL PENDING: real Court-Ordered Journey picture (temporary stand-in in place).
