@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { toast } from "sonner";
 
+import { GuideChat } from "../guide/GuideChat";
 import { AiLibraryDialog } from "./AiLibraryDialog";
 import { useFraming } from "./useSaInsight";
 
@@ -88,10 +89,11 @@ function FramingForm({ safetyFlag }) {
 const ghostBtn =
   "w-full py-2.5 px-4 bg-white hover:bg-purple-50 text-purple-900 border border-purple-200 text-xs font-semibold rounded-xl transition-colors flex items-center justify-center gap-2";
 
-export function AiInsightPanel({ tip, loading, safetyFlag, onOpenBiffCoach, onUseTemplate, biffBusy = false }) {
+// `chat` (optional): saved Guide chat shown in place of the one-off framing box.
+export function AiInsightPanel({ tip, loading, safetyFlag, onOpenBiffCoach, onUseTemplate, biffBusy = false, chat = null }) {
   const [library, setLibrary] = useState(null);
   return (
-    <div data-testid="sa-ai-panel" className="glass-ai-panel rounded-2xl p-6 shadow-lg lg:sticky lg:top-6">
+    <div data-testid="sa-ai-panel" className={`glass-ai-panel rounded-2xl p-6 shadow-lg ${chat ? "" : "lg:sticky lg:top-6"}`}>
       <div className="flex items-center justify-between pb-4 border-b border-purple-100 mb-4">
         <div className="flex items-center gap-2.5">
           <div className="w-8 h-8 rounded-lg bg-purple-600 text-white flex items-center justify-center text-sm shadow">
@@ -109,7 +111,19 @@ export function AiInsightPanel({ tip, loading, safetyFlag, onOpenBiffCoach, onUs
       <div className="mb-5">
         <TipBox tip={tip} loading={loading} />
       </div>
-      <FramingForm safetyFlag={safetyFlag} />
+      {chat ? (
+        <div className="mb-5">
+          <GuideChat
+            chat={chat}
+            tp="sa-guide"
+            title="Self-Assessment Guide"
+            greeting="Hi, I'm your Self-Assessment Guide. Ask me about any question, your results, or how to set a goal that fits you."
+            suggestions={["What do my results mean?", "How do I pick a good goal?", "How can I grow in communication?"]}
+          />
+        </div>
+      ) : (
+        <FramingForm safetyFlag={safetyFlag} />
+      )}
       <div className="space-y-2.5">
         <button
           type="button"

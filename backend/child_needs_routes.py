@@ -37,7 +37,7 @@ def clean_category(category: str, answers: Dict[str, str]) -> Dict[str, str]:
         value = (raw or "").strip()[:2000] if isinstance(raw, str) else ""
         if not f or not value:
             continue
-        if f["type"] == "select" and value not in f["options"]:
+        if f["type"] in ("select", "rating") and value not in f["options"]:
             continue
         out[fid] = value
     return out
@@ -49,11 +49,15 @@ def clean_all(answers: Dict[str, Dict[str, str]]) -> Dict[str, Dict[str, str]]:
 
 class CategoryIn(BaseModel):
     answers: Dict[str, str] = Field(default_factory=dict)
+    acknowledged: bool = False
+    draft: bool = False
 
 
 class ChildNeedsState(BaseModel):
     answers: Dict[str, Dict[str, str]] = Field(default_factory=dict)
     completed_at: Dict[str, str] = Field(default_factory=dict)
+    drafts: Dict[str, Dict[str, str]] = Field(default_factory=dict)
+    notice_ack_at: Optional[str] = None
 
 
 class ChildNeedsPdfIn(BaseModel):
@@ -82,12 +86,21 @@ async def save_category(
     answers = clean_category(category, body.answers)
     if not answers:
         raise HTTPException(422, "Fill in at least one question before saving.")
+    doc = await db.child_needs_assessments.find_one({"user_id": user.user_id}, {"_id": 0, "notice_ack_at": 1}) or {}
+    if not doc.get("notice_ack_at") and not body.acknowledged:
+        raise HTTPException(422, CONTENT["notices"]["ack_required"])
     now = datetime.now(timezone.utc).isoformat()
-    await db.child_needs_assessments.update_one(
-        {"user_id": user.user_id},
-        {"$set": {f"answers.{category}": answers, f"completed_at.{category}": now, "updated_at": now}},
-        upsert=True,
-    )
+    # Save Draft keeps a separate copy and never marks the assessment complete; Submit clears the draft.
+    if body.draft:
+        update: Dict[str, Any] = {"$set": {f"drafts.{category}": answers, "updated_at": now}}
+    else:
+        update = {
+            "$set": {f"answers.{category}": answers, f"completed_at.{category}": now, "updated_at": now},
+            "$unset": {f"drafts.{category}": ""},
+        }
+    if not doc.get("notice_ack_at"):
+        update["$set"]["notice_ack_at"] = now
+    await db.child_needs_assessments.update_one({"user_id": user.user_id}, update, upsert=True)
     return await get_my_child_needs(user, db)
 
 

@@ -177,8 +177,8 @@ async def mint_link_code(
     db: AsyncIOMotorDatabase = Depends(get_db),
 ):
     """
-    Parent-authenticated. Called from the "Create Joint Alignment
-    Report" / "Ready to Compare Perspectives?" CTA at the end of an
+    Parent-authenticated. Called from the "Create Co-Parenting
+    Agreement" / "Ready to Compare Perspectives?" CTA at the end of an
     eligible assessment (or from the account-settings link entry).
     Returns a human-readable `SA-482731`-shaped code plus a canonical
     `join_url` the parent can paste into their invite message.

@@ -109,6 +109,31 @@ function GrowthMoment({ moves }) {
   );
 }
 
+function StrengthsGrowth({ scores }) {
+  const ranked = [...SECTIONS].sort((a, b) => scores.sections[b.key] - scores.sections[a.key]);
+  const half = Math.ceil(ranked.length / 2);
+  const block = (testid, title, icon, tone, list) => (
+    <div data-testid={testid} className={`rounded-2xl border px-4 py-3 ${tone}`}>
+      <div className="text-[10px] uppercase font-bold tracking-wider mb-1.5">
+        <i className={`fa-solid ${icon} mr-1.5`}></i>
+        {title}
+      </div>
+      {list.map((s) => (
+        <div key={s.key} className="flex justify-between text-[13px] text-slate-800">
+          <span>{s.score_label}</span>
+          <span className="font-bold">{scores.sections[s.key]}/100</span>
+        </div>
+      ))}
+    </div>
+  );
+  return (
+    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+      {block("sa-strengths", "Your strengths", "fa-star", "border-emerald-200 bg-emerald-50 text-emerald-800", ranked.slice(0, half))}
+      {block("sa-growth-areas", "Growth areas", "fa-seedling", "border-amber-200 bg-amber-50 text-amber-800", ranked.slice(half))}
+    </div>
+  );
+}
+
 export function OverviewPanel({ history, celebrate, onStartNew, onClose }) {
   const { busy, download } = useDownloadPdf();
   const latest = history[history.length - 1];
@@ -119,6 +144,7 @@ export function OverviewPanel({ history, celebrate, onStartNew, onClose }) {
       {celebrate && <CoachBubble testid="sa-completion-message">{CONTENT.completion_message}</CoachBubble>}
       {moves.length > 0 && <GrowthMoment moves={moves} />}
       <ScoreCards scores={latest.scores} />
+      <StrengthsGrowth scores={latest.scores} />
       <ProgressHistory history={history} />
       <TipHistory tips={latest.tips} />
       <CentralMessage />

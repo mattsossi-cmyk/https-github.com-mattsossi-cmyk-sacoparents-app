@@ -47,7 +47,7 @@ _JOINT_AGREEMENT_EMAILS = "joint_agreement_emails"
 
 _ARTEFACT_LABELS = {
     "joint_report":     "Joint Co-Parenting Summary for Professional Review",
-    "joint_agreement":  "Joint Co-Parenting Agreement Draft",
+    "joint_agreement":  "Co-Parenting Agreement",
 }
 _EMAIL_COLLECTIONS = {
     "joint_report":    _JOINT_REPORT_EMAILS,

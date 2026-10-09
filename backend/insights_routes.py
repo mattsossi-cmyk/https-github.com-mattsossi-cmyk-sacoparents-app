@@ -425,7 +425,7 @@ async def download_coparenting_alignment_sample_pdf(
     firm: str | None = None,
     primary_color: str | None = None,
 ):
-    """Public sample of the full Joint Alignment Report (Step One -
+    """Public sample of the full Co-Parenting Agreement (Step One -
     Alignment Before Agreement) using the co-parenting subject.
 
     Iter194 · optional `?firm=Acme+Legal+LLP&primary_color=%233d1a78`

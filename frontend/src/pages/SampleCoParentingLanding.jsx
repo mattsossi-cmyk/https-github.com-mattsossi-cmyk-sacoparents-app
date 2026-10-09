@@ -107,7 +107,7 @@ export default function SampleCoParentingLanding() {
         <div className="max-w-3xl">
           <div className="text-[10px] uppercase tracking-[0.22em] font-bold text-[#3D1A78] flex items-center gap-2">
             <FileText size={12} />
-            Sample · Joint Alignment Report
+            Sample · Co-Parenting Agreement
           </div>
           <h1 className="font-serif text-4xl sm:text-5xl lg:text-6xl text-[#1A1330] leading-[1.05] mt-3">
             Step One — <span className="text-[#3D1A78]">Alignment
@@ -293,7 +293,7 @@ export default function SampleCoParentingLanding() {
           </div>
           <iframe
             src={previewUrl}
-            title="SA CoParents · Joint Alignment Report sample"
+            title="SA CoParents · Co-Parenting Agreement sample"
             className="w-full"
             style={{ height: "820px" }}
             data-testid="sample-coparenting-pdf-iframe"

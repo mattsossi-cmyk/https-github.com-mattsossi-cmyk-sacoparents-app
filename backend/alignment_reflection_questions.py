@@ -1,7 +1,7 @@
 """Alignment reflection prompts — Iter191.
 
-Six free-text prompts modelled on sacoparentsalign.com's Joint Alignment
-Report. Each parent answers these privately; the analysis engine
+Six free-text prompts modelled on sacoparentsalign.com's Co-Parenting
+Agreement. Each parent answers these privately; the analysis engine
 (`alignment_reflection_analysis.py`) then produces the "Both parents
 mentioned 'consistent' when describing desired improvements..." style
 verbatim quotes that populate SS2 (What Both Agree) and SS3 (Where

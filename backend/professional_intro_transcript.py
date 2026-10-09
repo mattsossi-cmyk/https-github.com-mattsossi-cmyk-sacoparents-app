@@ -95,7 +95,7 @@ PARAGRAPHS: List = [
         "agreement, areas where perceptions differ, and topics that "
         "may benefit from professional discussion. Every row is "
         "phrased in neutral language."
-        "\n\nThird, the Joint Co-Parenting Agreement Draft — a "
+        "\n\nThird, the Co-Parenting Agreement — a "
         "deterministic merger of both parents' individual agreement "
         "drafts. Clause by clause it shows what both parents already "
         "proposed and what only one parent proposed. Their exact "

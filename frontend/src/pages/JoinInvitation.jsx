@@ -236,7 +236,7 @@ export default function JoinInvitation() {
                 className="font-serif text-3xl sm:text-4xl text-[#1A1330] leading-tight mt-2"
                 data-testid="join-invitation-title"
               >
-                You&rsquo;ve been invited to a Joint Alignment Report.
+                You&rsquo;ve been invited to a Co-Parenting Agreement.
               </h1>
 
               <div className="mt-6 grid grid-cols-1 sm:grid-cols-2 gap-3">

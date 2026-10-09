@@ -3,7 +3,7 @@ either a single parent (individual variant) or a case with two
 parents (joint variant).
 
 The 10-section skeleton is IDENTICAL to sacoparentsalign.com's
-universal Joint Alignment Report — same brand family, same neutral
+universal Co-Parenting Agreement — same brand family, same neutral
 guardrails, so a professional trained on Align opens either variant
 and knows exactly where to look.
 

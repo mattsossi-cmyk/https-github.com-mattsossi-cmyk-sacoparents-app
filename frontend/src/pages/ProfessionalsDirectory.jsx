@@ -129,7 +129,7 @@ export default function ProfessionalsDirectory() {
           className="font-serif text-3xl sm:text-4xl text-[#1A1330] leading-tight"
           data-testid="professionals-directory-title"
         >
-          Pick a professional to prepare your Joint Alignment Report
+          Pick a professional to prepare your Co-Parenting Agreement
         </h1>
         <p className="text-[#4B4567] mt-3 max-w-2xl leading-relaxed">
           We&rsquo;ll email them a fresh Alignment Code. Individual

@@ -28,7 +28,7 @@ import {
  *      big "Invite Co-Parent" input inline. Uses the existing
  *      `/invites/coparent` endpoint so we don't fork the invite flow.
  *   2. Ready: co-parent finished and a Compare share exists. Shows two
- *      solid CTAs — View Joint Alignment Report / View Joint Alignment
+ *      solid CTAs — View Co-Parenting Agreement / View Joint Alignment
  *      Agreement — both routed with `?mint=1` so the parent can send it
  *      to their mediator in one tap.
  *
@@ -127,10 +127,10 @@ export default function JointAlignmentPromoCard({
           </div>
           <div className="flex-1 min-w-0">
             <div className="eyebrow text-[#3D1A78] mb-1">
-              Joint Alignment Report
+              Co-Parenting Agreement
             </div>
             <h2 className="font-serif text-2xl sm:text-3xl text-[#1A1330] leading-tight">
-              Your Joint Alignment Report is ready
+              Your Co-Parenting Agreement is ready
             </h2>
             <p className="text-sm text-[#4B4567] mt-2 max-w-xl">
               {partnerName ? (
@@ -157,7 +157,7 @@ export default function JointAlignmentPromoCard({
                 data-testid={`${testidPrefix}-view-report`}
               >
                 <FileText size={16} />
-                View Joint Alignment Report
+                View Co-Parenting Agreement
                 <ArrowRight size={14} className="opacity-80" />
               </Link>
               <Link
@@ -189,7 +189,7 @@ export default function JointAlignmentPromoCard({
         <div className="flex-1 min-w-0">
           <div className="eyebrow text-[#3D1A78] mb-1">Next step</div>
           <h2 className="font-serif text-2xl sm:text-3xl text-[#1A1330] leading-tight">
-            Create a Joint Alignment Report
+            Create a Co-Parenting Agreement
           </h2>
           <p className="text-sm text-[#4B4567] mt-2 max-w-xl">
             {contextLine ||

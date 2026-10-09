@@ -111,11 +111,11 @@ export function useFoundationBuilder(userId, parentName) {
     return ok;
   }, [push]);
 
-  const download = useCallback(async () => {
+  const download = useCallback(async (esignName = null) => {
     setBusy(true);
     try {
       const fields = { parent_names: parentName || "", ...latest.current.fields };
-      const res = await api.post("/foundation-builder/pdf", { fields }, { responseType: "blob" });
+      const res = await api.post("/foundation-builder/pdf", { fields, esign_name: esignName || null }, { responseType: "blob" });
       const url = URL.createObjectURL(new Blob([res.data], { type: "application/pdf" }));
       const a = document.createElement("a");
       a.href = url;

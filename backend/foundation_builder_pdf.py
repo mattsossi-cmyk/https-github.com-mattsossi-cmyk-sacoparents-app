@@ -2,11 +2,12 @@
 from __future__ import annotations
 
 from datetime import datetime, timezone
-from typing import Any, Dict
+from typing import Any, Dict, Optional
 
 from fpdf import FPDF
 
 from court_agreements import INTENT_NOTICE
+from pdf_sign_notary import render_sign_and_notary
 from self_assessment_pdf import _safe
 
 AGREED_MARK = " (agreed): "  # line format used when Court agreements are added to Step 4
@@ -87,24 +88,7 @@ def _answers(pdf: _FBPDF, content: Dict[str, Any], fields: Dict[str, str]) -> No
         pdf.ln(3)
 
 
-def _signatures(pdf: _FBPDF, content: Dict[str, Any]) -> None:
-    if pdf.get_y() > 225:
-        pdf.add_page()
-    pdf.ln(4)
-    pdf.set_draw_color(*MUTED)
-    pdf.set_font("Helvetica", "", 8.5)
-    pdf.set_text_color(*MUTED)
-    y = pdf.get_y() + 10
-    pdf.line(pdf.l_margin, y, pdf.l_margin + 110, y)
-    pdf.line(pdf.l_margin + 125, y, pdf.w - pdf.r_margin, y)
-    pdf.set_xy(pdf.l_margin, y + 1)
-    pdf.cell(110, 4, _safe(content["signature_label"]))
-    pdf.set_x(pdf.l_margin + 125)
-    pdf.cell(0, 4, _safe(content["date_label"]), new_x="LMARGIN", new_y="NEXT")
-    pdf.ln(6)
-
-
-def build_foundation_builder_pdf(*, content: Dict[str, Any], fields: Dict[str, str]) -> bytes:
+def build_foundation_builder_pdf(*, content: Dict[str, Any], fields: Dict[str, str], esign: Optional[Dict[str, str]] = None) -> bytes:
     pdf = _FBPDF(content["disclaimer"])
     pdf.add_page()
     pdf.set_font("Times", "BI", 12)
@@ -131,7 +115,6 @@ def build_foundation_builder_pdf(*, content: Dict[str, Any], fields: Dict[str, s
 
     _pillars(pdf, content)
     _answers(pdf, content, fields)
-    _signatures(pdf, content)
 
     pdf.set_fill_color(243, 239, 254)
     pdf.set_text_color(*PURPLE)
@@ -140,4 +123,5 @@ def build_foundation_builder_pdf(*, content: Dict[str, Any], fields: Dict[str, s
     pdf.set_font("Helvetica", "B", 7.5)
     pdf.set_text_color(*MUTED)
     pdf.cell(0, 6, _safe(content["footer_tags"].upper()), align="C", fill=True, new_x="LMARGIN", new_y="NEXT")
+    render_sign_and_notary(pdf, [{"role": "Parent 1", "esign": esign}, {"role": "Parent 2"}])
     return bytes(pdf.output())

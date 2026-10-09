@@ -1,5 +1,5 @@
 {
-  "version": 1,
+  "version": 2,
   "brand_tagline": "ALIGN • SUPPORT • EMPOWER",
   "title": "Your Child's Specific Needs",
   "subtitle": "Explore assessments to better understand your child's needs and create a supportive plan.",
@@ -10,44 +10,245 @@
     {
       "key": "medical",
       "card_title": "Medical Assessment",
-      "card_desc": "Explore your child's medical needs, healthcare providers, medications, and care coordination.",
+      "card_desc": "Record health history, current medications, allergies, and physical health needs.",
       "button": "TAKE MEDICAL ASSESSMENT",
-      "form_title": "Child Medical Needs Assessment",
+      "form_title": "Medical Assessment Form",
       "fields": [
-        { "id": "med_provider", "label": "Pediatrician / Primary Healthcare Provider", "type": "text", "placeholder": "Doctor or clinic name..." },
-        { "id": "med_prescriptions", "label": "Active Medications & Prescription Schedule", "type": "textarea", "placeholder": "List medications and administration details..." },
-        { "id": "med_allergies", "label": "Allergies, Dietary Restrictions, or Special Care Needs", "type": "textarea", "placeholder": "Specify any health conditions or food allergies..." },
-        { "id": "med_insurance", "label": "Medical Insurance & Expense Coordination", "type": "select", "options": ["Both parents agree & share costs", "Needs clarification/discussion", "Currently disputed"] },
-        { "id": "med_goal", "label": "Primary Medical Goal for Both Parents", "type": "textarea", "placeholder": "What is one medical priority both parents need to coordinate?" }
-      ]
+        {
+          "id": "med_provider",
+          "label": "Primary Pediatrician / Doctor Name",
+          "type": "text",
+          "placeholder": "Dr. Name & Clinic",
+          "help": false
+        },
+        {
+          "id": "med_conditions",
+          "label": "Known Chronic Conditions or History",
+          "type": "textarea",
+          "placeholder": "List any chronic illnesses, surgeries, or birth history notes..."
+        },
+        {
+          "id": "med_prescriptions",
+          "label": "Current Medications & Dosages",
+          "type": "textarea",
+          "placeholder": "Name, dosage, and frequency of current prescriptions or supplements..."
+        },
+        {
+          "id": "med_allergies",
+          "label": "Known Allergies (Food / Environmental / Drug)",
+          "type": "textarea",
+          "placeholder": "e.g., Penicillin, Peanuts, Latex"
+        },
+        {
+          "id": "med_insurance",
+          "label": "Medical Insurance & Expense Coordination",
+          "type": "select",
+          "options": [
+            "Both parents agree & share costs",
+            "Needs clarification/discussion",
+            "Currently disputed"
+          ],
+          "group": "home"
+        },
+        {
+          "id": "med_goal",
+          "label": "Primary Medical Goal for Both Parents",
+          "type": "textarea",
+          "placeholder": "What is one medical priority both parents need to coordinate?",
+          "group": "home"
+        }
+      ],
+      "submit_label": "Submit Medical Form"
     },
     {
       "key": "educational",
       "card_title": "Educational Assessment",
-      "card_desc": "Explore your child's learning needs, IEP/ARD support, school communication, and academic progress.",
+      "card_desc": "Evaluate academic performance, learning styles, and classroom behavior.",
       "button": "TAKE EDUCATIONAL ASSESSMENT",
-      "form_title": "Child Educational Needs Assessment",
+      "form_title": "Educational Assessment Form",
       "fields": [
-        { "id": "edu_school", "label": "Current School Name & Grade Level", "type": "text", "placeholder": "School name and grade..." },
-        { "id": "edu_iep", "label": "IEP, 504 Plan, or Learning Accommodation Status", "type": "select", "options": ["No special accommodations needed", "Active IEP or 504 plan in place", "Formal evaluation requested/needed"] },
-        { "id": "edu_academic", "label": "Academic Progress & Areas Needing Support", "type": "textarea", "placeholder": "Subjects or areas where child thrives or struggles..." },
-        { "id": "edu_communication", "label": "School Portal & Teacher Communication Sharing", "type": "select", "options": ["Both parents have active portal accounts", "One parent forwards school updates", "Need equal portal access established"] },
-        { "id": "edu_goal", "label": "Homework & Tutoring Goal Across Households", "type": "textarea", "placeholder": "What study routine can both parents agree to maintain?" }
-      ]
+        {
+          "id": "edu_student",
+          "label": "Student Full Name",
+          "type": "text",
+          "placeholder": "Enter student name",
+          "help": false
+        },
+        {
+          "id": "edu_grade",
+          "label": "Current Grade Level",
+          "type": "select",
+          "options": [
+            "Kindergarten / Early Years",
+            "Elementary (1st - 5th)",
+            "Middle School (6th - 8th)",
+            "High School (9th - 12th)"
+          ]
+        },
+        {
+          "id": "edu_school",
+          "label": "Current School Name",
+          "type": "text",
+          "placeholder": "e.g., Lakeview Elementary",
+          "help": false
+        },
+        {
+          "id": "edu_attention",
+          "label": "Maintains attention on structured tasks",
+          "type": "rating",
+          "options": [
+            "Rarely",
+            "Sometimes",
+            "Often",
+            "Consistently"
+          ],
+          "matrix": "Academic & Behavioral Observations"
+        },
+        {
+          "id": "edu_independent",
+          "label": "Completes assignments independently",
+          "type": "rating",
+          "options": [
+            "Rarely",
+            "Sometimes",
+            "Often",
+            "Consistently"
+          ],
+          "matrix": "Academic & Behavioral Observations"
+        },
+        {
+          "id": "edu_strengths",
+          "label": "Primary Academic Strengths & Pain Points",
+          "type": "textarea",
+          "placeholder": "Describe specific learning preferences, focus hurdles, or past accommodations..."
+        },
+        {
+          "id": "edu_iep",
+          "label": "IEP, 504 Plan, or Learning Accommodation Status",
+          "type": "select",
+          "options": [
+            "No special accommodations needed",
+            "Active IEP or 504 plan in place",
+            "Formal evaluation requested/needed"
+          ],
+          "group": "home"
+        },
+        {
+          "id": "edu_academic",
+          "label": "Academic Progress & Areas Needing Support",
+          "type": "textarea",
+          "placeholder": "Subjects or areas where child thrives or struggles...",
+          "group": "home"
+        },
+        {
+          "id": "edu_communication",
+          "label": "School Portal & Teacher Communication Sharing",
+          "type": "select",
+          "options": [
+            "Both parents have active portal accounts",
+            "One parent forwards school updates",
+            "Need equal portal access established"
+          ],
+          "group": "home"
+        },
+        {
+          "id": "edu_goal",
+          "label": "Homework & Tutoring Goal Across Households",
+          "type": "textarea",
+          "placeholder": "What study routine can both parents agree to maintain?",
+          "group": "home"
+        }
+      ],
+      "submit_label": "Submit Educational Form"
     },
     {
       "key": "psychological",
       "card_title": "Psychological Assessment",
-      "card_desc": "Explore your child's emotional and behavioral needs, mental health support, and strategies for well-being (including ADHD).",
+      "card_desc": "Map emotional regulation, family dynamics, coping strategies, and behavioral patterns.",
       "button": "TAKE PSYCHOLOGICAL ASSESSMENT",
-      "form_title": "Child Psychological & Emotional Assessment",
+      "form_title": "Psychological Assessment Form",
       "fields": [
-        { "id": "psych_needs", "label": "Emotional & Behavioral Needs (including ADHD / Anxiety)", "type": "textarea", "placeholder": "Describe behavioral patterns, emotional triggers, or ADHD support..." },
-        { "id": "psych_therapy", "label": "Counseling or Child Therapy Status", "type": "select", "options": ["Currently attending therapy", "Therapy recommended / evaluating providers", "Not currently needed"] },
-        { "id": "psych_transitions", "label": "Emotional Well-Being During House Transitions", "type": "select", "options": ["Transitions are smooth and low-stress", "Child reports anxiety or mood shifts", "High tension during transitions"] },
-        { "id": "psych_goal", "label": "Co-Parenting Action Goal for Emotional Safety", "type": "textarea", "placeholder": "What change can be made to improve emotional stability in both homes?" }
-      ]
+        {
+          "id": "psy_goal",
+          "label": "Primary Referral Concern & Goals",
+          "type": "textarea",
+          "placeholder": "What are the main emotional or behavioral goals you hope to address through this assessment?"
+        },
+        {
+          "id": "psy_triggers",
+          "label": "Known Emotional Triggers & Coping Strategies",
+          "type": "textarea",
+          "placeholder": "What triggers frustration or overwhelm, and what strategies help calm or ground the child?"
+        },
+        {
+          "id": "psy_household",
+          "label": "Co-Parenting / Household Dynamic Context",
+          "type": "text",
+          "placeholder": "Briefly note current shared custody, dual households, or communication flow"
+        },
+        {
+          "id": "psych_needs",
+          "label": "Emotional & Behavioral Needs (including ADHD / Anxiety)",
+          "type": "textarea",
+          "placeholder": "Describe behavioral patterns, emotional triggers, or ADHD support...",
+          "group": "home"
+        },
+        {
+          "id": "psych_therapy",
+          "label": "Counseling or Child Therapy Status",
+          "type": "select",
+          "options": [
+            "Currently attending therapy",
+            "Therapy recommended / evaluating providers",
+            "Not currently needed"
+          ],
+          "group": "home"
+        },
+        {
+          "id": "psych_transitions",
+          "label": "Emotional Well-Being During House Transitions",
+          "type": "select",
+          "options": [
+            "Transitions are smooth and low-stress",
+            "Child reports anxiety or mood shifts",
+            "High tension during transitions"
+          ],
+          "group": "home"
+        },
+        {
+          "id": "psych_goal",
+          "label": "Co-Parenting Action Goal for Emotional Safety",
+          "type": "textarea",
+          "placeholder": "What change can be made to improve emotional stability in both homes?",
+          "group": "home"
+        }
+      ],
+      "submit_label": "Submit Psychological Form"
     }
   ],
-  "disclaimer": "A planning aid for parents — not a medical, educational, or psychological evaluation."
+  "disclaimer": "A planning aid for parents — not a medical, educational, or psychological evaluation.",
+  "notices": {
+    "confidentiality": {
+      "title": "Notice of Confidentiality",
+      "body": "The information you enter here is confidential and private to your account. It is intended only for you and the people you choose to share it with, such as your co-parent, mediator, attorney or your child's providers."
+    },
+    "privacy": {
+      "title": "Health Information Privacy Notice",
+      "body": "SA CoParents is not a healthcare provider, health plan or healthcare clearinghouse, so the federal HIPAA law generally does not apply to this app. We still protect what you enter: it is private to your account, encrypted while it travels between your device and our servers, and never shared with your co-parent, a court or anyone else unless you choose to share it. Please do not enter Social Security numbers, insurance member ID numbers or other account numbers."
+    },
+    "ack_label": "I have read the Notice of Confidentiality and the Health Information Privacy Notice.",
+    "ack_required": "Please tick the box to confirm you've read the notices before saving.",
+    "ack_done": "You confirmed these notices on {date}."
+  },
+  "portal_title": "SA CoParents Assessment Portal",
+  "portal_badge": "Private to your account",
+  "home_group_title": "Across both homes",
+  "home_group_desc": "How both households will support this need together.",
+  "draft_label": "Save Draft",
+  "rating_scale": [
+    "Rarely",
+    "Sometimes",
+    "Often",
+    "Consistently"
+  ]
 }

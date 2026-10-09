@@ -36,12 +36,12 @@ from typing import Any, Dict, List, Optional, Tuple
 # ---------------------------------------------------------------------------
 
 DISCLAIMER = (
-    "This Joint Alignment Report is a NEUTRAL MAP compiled from both "
-    "parents' individual agreement drafts. It is not a signed "
-    "agreement, a court order, a legal document, or a custody "
-    "recommendation. Both parents remain responsible for reviewing "
-    "each clause with their own professionals before adopting "
-    "anything. The purpose of this document is to make it easy to "
+    "This Co-Parenting Agreement is a NEUTRAL MAP compiled from both "
+    "parents' individual agreement drafts. It is not a court order or "
+    "a custody recommendation, and it is not a legally binding "
+    "agreement unless a court approves it. Both parents remain "
+    "responsible for reviewing each clause with their own "
+    "professionals before signing or adopting anything. The purpose of this document is to make it easy to "
     "see where the parents already converge, and where a mediator or "
     "attorney could help bridge the remaining gaps. Use of SA "
     "CoParents does not by itself create an attorney-client, "
@@ -844,8 +844,8 @@ def build_joint_agreement(
 
     return {
         "report_type":         "joint_alignment_report",
-        "report_title":        "Step One - Alignment Before Agreement",
-        "report_subtitle":     "Joint Alignment Report",
+        "report_title":        "Co-Parenting Agreement",
+        "report_subtitle":     "Step One - Alignment Before Agreement",
         "report_tagline":      (
             "A neutral map of where you already agree, where you still "
             "differ, and what your child needs next."

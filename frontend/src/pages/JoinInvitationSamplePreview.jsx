@@ -84,7 +84,7 @@ export default function JoinInvitationSamplePreview() {
           className="font-serif text-3xl sm:text-4xl text-[#1A1330] leading-tight mt-2"
           data-testid="join-sample-title"
         >
-          You&rsquo;ve been invited to a Joint Alignment Report.
+          You&rsquo;ve been invited to a Co-Parenting Agreement.
         </h1>
         <p
           className="text-[#4B4567] mt-3 leading-relaxed"
@@ -99,7 +99,7 @@ export default function JoinInvitationSamplePreview() {
 
         <div className="mt-6 rounded-2xl border border-[#D6CFE8] bg-[#F5F1FB] p-4 text-[12.5px] text-[#3D1A78] leading-relaxed">
           <div className="font-semibold mb-1">What your professional receives</div>
-          Only the completed Joint Alignment Report — never your raw
+          Only the completed Co-Parenting Agreement — never your raw
           answers, journal entries, or AI-coach conversations. You
           record a separate consent when you&rsquo;re ready to release.
         </div>

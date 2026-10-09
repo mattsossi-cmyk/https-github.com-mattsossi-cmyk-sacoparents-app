@@ -1,8 +1,8 @@
 /**
  * AlignmentReflection.jsx — Iter191 · free-text reflection form.
  *
- * Six prompts modelled on sacoparentsalign.com's Joint Alignment
- * Report: Primary Need / What's Working / Concerns / Desired
+ * Six prompts modelled on sacoparentsalign.com's Co-Parenting
+ * Agreement: Primary Need / What's Working / Concerns / Desired
  * Improvements / Options / Other Parent's Likely Concerns.
  *
  * Data flow:
@@ -205,7 +205,7 @@ export default function AlignmentReflection() {
             <p className="mt-2 text-sm text-[#4B4567] max-w-2xl leading-relaxed">
               Reflect in your own words. Your answers stay private until
               both you and your co-parent have finished — then a neutral
-              Joint Alignment Report highlights where you already agree,
+              Co-Parenting Agreement highlights where you already agree,
               where you differ, and what your child needs next.
             </p>
             <div

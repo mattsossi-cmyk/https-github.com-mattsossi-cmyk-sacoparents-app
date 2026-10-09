@@ -338,8 +338,8 @@ export default function JointAlignmentSamplePreview() {
             <ShieldCheck size={14} /> Your real preview is never shared publicly
           </div>
           In the live product, this exact layout is generated only for
-          the two parents on a case. Releasing the full Joint Alignment
-          Report to a named professional is a <em>separate</em> action
+          the two parents on a case. Releasing the full Co-Parenting
+          Agreement to a named professional is a <em>separate</em> action
           that requires both of you to record release consent.
         </div>
 

@@ -1,5 +1,5 @@
 /**
- * Joint Alignment Report / Agreement URL builders.
+ * Co-Parenting Agreement / Agreement URL builders.
  *
  * Every dashboard entry point (share pills, promo card, history rows)
  * routes into the report pages with the same `?share=<id>&mint=1` shape.

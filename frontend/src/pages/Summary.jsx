@@ -1299,7 +1299,7 @@ export default function Summary() {
         <DemoModeBanner />
 
         {/* Unmistakable next-action card — pulled above the video so
-            parents see the Joint Alignment Report CTA the moment the
+            parents see the Co-Parenting Agreement CTA the moment the
             Summary loads, whether their co-parent has finished or not. */}
         <div className="mb-8">
           <JointAlignmentPromoCard testidPrefix="summary-joint-promo" />

@@ -8,12 +8,17 @@ import { AiInsightPanel, TipBox } from "./selfAssessment/AiInsightPanel";
 import { JourneySteps } from "./selfAssessment/JourneySteps";
 import { OverviewPanel } from "./selfAssessment/OverviewPanel";
 import { QuestionPanel } from "./selfAssessment/QuestionPanel";
-import { SaArtwork } from "./selfAssessment/SaArtwork";
+import { useGuideChat } from "./guide/useGuideChat";
+import { ArtPicture } from "./selfJourney/ArtPicture";
+import { SA_ART } from "./selfJourney/selfJourneyArt";
 import { BottomBanner, Hero, PageHeader, SafetyBanner } from "./selfAssessment/SaChrome";
 import { useSaInsight } from "./selfAssessment/useSaInsight";
 import { useSelfAssessmentDraft } from "./selfAssessment/useSelfAssessmentDraft";
 
 const STAGE = { intro: 0, rate: 0, reflect: 1, goal: 2 };
+const JUMP = { strengths: "sa-strengths", growth: "sa-growth-areas", goals: "sa-current-goal", progress: "sa-progress" };
+const chatSection = (mode, step) =>
+  mode !== "assess" || !step ? "their Self-Assessment results" : step.type === "rate" ? step.section.title : step.type === "reflect" ? "the reflection questions" : step.type === "goal" ? "setting a personal goal" : null;
 const ORDER = ["reflect", "identify", "goals", "track"];
 
 const statusesFor = (mode, step) => {
@@ -50,9 +55,25 @@ export function SelfAssessmentView({ onClose, onQuickExit, onOpenBiffCoach, pare
     onOverallTip: (entry, text) => onEntryUpdate?.(entry.id, { tips: { ...(entry.tips || {}), overall: text } }),
   });
 
+  const chat = useGuideChat("/journey-guide/self-assessment/chat", { section: chatSection(mode, step), safety_flagged: !!safetyFlag });
+  const [jump, setJump] = useState(null);
+
   useEffect(() => {
     document.getElementById("sa-page")?.scrollTo({ top: 0 });
   }, [mode]);
+
+  // Picture taps scroll to that part of the latest results (after any mode switch has rendered).
+  useEffect(() => {
+    if (!jump) return undefined;
+    const t = setTimeout(() => {
+      const el = document.querySelector(`[data-testid="${jump}"]`) || document.querySelector('[data-testid="sa-overview"]');
+      el?.scrollIntoView({ behavior: "smooth", block: "start" });
+      el?.classList.add("journey-jump-flash");
+      setTimeout(() => el?.classList.remove("journey-jump-flash"), 1600);
+      setJump(null);
+    }, 150);
+    return () => clearTimeout(t);
+  }, [jump, mode]);
 
   const close = () => {
     flush();
@@ -86,6 +107,16 @@ export function SelfAssessmentView({ onClose, onQuickExit, onOpenBiffCoach, pare
     }
   };
 
+  const onArt = (k) => {
+    if (!history.length) {
+      if (!draft.started) start();
+      setJump("sa-work");
+      return;
+    }
+    if (mode === "assess") setView("overview");
+    setJump(JUMP[k]);
+  };
+
   const assessing = mode === "assess";
   const finished = mode === "overview" || mode === "results";
   const stepNum = assessing ? pageStepOf(step) : 1;
@@ -95,7 +126,9 @@ export function SelfAssessmentView({ onClose, onQuickExit, onOpenBiffCoach, pare
       <SafetyBanner />
       <div className="max-w-6xl mx-auto px-4 pt-6">
         <PageHeader onBack={close} onQuickExit={onQuickExit} />
-        <SaArtwork testid="sa-artwork-mobile" className="lg:hidden max-w-md mx-auto mb-6" />
+        <div data-testid="sa-artwork-mobile" className="lg:hidden max-w-md mx-auto mb-6">
+          <ArtPicture tp="sa-art-mobile" art={SA_ART} onAction={onArt} />
+        </div>
         <Hero
           title="Self Assessment"
           subtitle="Take a moment to reflect, understand yourself better, and track your progress as a co-parent."
@@ -104,7 +137,7 @@ export function SelfAssessmentView({ onClose, onQuickExit, onOpenBiffCoach, pare
           pct={finished ? 100 : Math.round((stepNum / PAGE_STEP_COUNT) * 100)}
         />
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
-          <div className="lg:col-span-7 space-y-4">
+          <div id="sa-work" data-testid="sa-work" className="lg:col-span-7 space-y-4 scroll-mt-4">
             <JourneySteps statuses={statusesFor(mode, step)} />
             {mode === "loading" ? (
               <div data-testid="sa-loading" className="bg-white rounded-2xl p-6 shadow-md border border-purple-100 mt-6 animate-pulse space-y-3">
@@ -148,8 +181,10 @@ export function SelfAssessmentView({ onClose, onQuickExit, onOpenBiffCoach, pare
             )}
           </div>
           <div className="lg:col-span-5 space-y-6">
-            <SaArtwork testid="sa-artwork-desktop" className="hidden lg:block" />
-            <AiInsightPanel tip={tip} loading={loading} safetyFlag={safetyFlag} onOpenBiffCoach={onOpenBiffCoach} />
+            <div data-testid="sa-artwork-desktop" className="hidden lg:block">
+              <ArtPicture tp="sa-art" art={SA_ART} onAction={onArt} />
+            </div>
+            <AiInsightPanel tip={tip} loading={loading} safetyFlag={safetyFlag} onOpenBiffCoach={onOpenBiffCoach} chat={chat} />
           </div>
         </div>
         <BottomBanner />

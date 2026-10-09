@@ -67,7 +67,7 @@ export default function ShareReportQuickAction({ sncHighlights }) {
         data-testid="dashboard-share-report-quick-action"
       >
         <FileText size={14} />
-        <span>Joint Alignment Report</span>
+        <span>Co-Parenting Agreement</span>
         <ArrowRight size={14} className="opacity-80" />
       </Link>
       <Link

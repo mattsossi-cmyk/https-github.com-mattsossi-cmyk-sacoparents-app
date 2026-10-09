@@ -122,7 +122,7 @@ export default function AlignmentReflectionsCard() {
           <p className="text-[13px] text-[#4B4567] mt-2 leading-relaxed max-w-2xl">
             Pick a subject and answer six short prompts in your own words.
             Once both you and your co-parent finish a subject, a neutral
-            Joint Alignment Report highlights where you already agree,
+            Co-Parenting Agreement highlights where you already agree,
             where you differ, and what your child needs next.
           </p>
         </div>

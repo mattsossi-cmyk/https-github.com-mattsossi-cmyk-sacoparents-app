@@ -32,6 +32,7 @@ export function ParallelParentingView({ onClose, onQuickExit, safetyFlag, hidden
   const [screen, setScreen] = useState(initialScreen);
   const [downloading, setDownloading] = useState(false);
   const [historyTick, setHistoryTick] = useState(0);
+  const [notesBusy, setNotesBusy] = useState(false);
   const stepIndex = typeof screen === "number" ? screen : null;
   const checkIndex = CHECKS.findIndex((c) => `check:${c.key}` === screen);
   const chat = useGuideChat("/parallel-parenting/ai/chat", { step: stepIndex != null ? STEPS[stepIndex].key : null, safety_flagged: !!safetyFlag });
@@ -75,6 +76,19 @@ export function ParallelParentingView({ onClose, onQuickExit, safetyFlag, hidden
     }
   };
 
+  const courtNotes = async () => {
+    setNotesBusy(true);
+    try {
+      await pp.save();
+      await downloadPdf("/parallel-parenting/court-notes/pdf", "SA_CoParents_Court_Order_Notes.pdf");
+      toast.success("Your Court-Order Notes are downloading.");
+    } catch {
+      toast.error("Couldn't build your Court-Order Notes right now. Please try again.");
+    } finally {
+      setNotesBusy(false);
+    }
+  };
+
   const made = pp.plan ? Object.keys(pp.plan.answers).length : 0;
   let body;
   if (!pp.plan) body = <div data-testid="pp-loading" className="h-64 rounded-3xl bg-white border border-purple-100 animate-pulse" />;
@@ -90,6 +104,8 @@ export function ParallelParentingView({ onClose, onQuickExit, safetyFlag, hidden
         onDownload={download}
         downloading={downloading}
         historyTick={historyTick}
+        onCourtNotes={courtNotes}
+        notesBusy={notesBusy}
       />
     );
   else if (checkIndex >= 0)
@@ -103,6 +119,8 @@ export function ParallelParentingView({ onClose, onQuickExit, safetyFlag, hidden
         onNote={pp.setNote}
         onBack={() => (checkIndex === 0 ? show("welcome") : openCheck(checkIndex - 1))}
         onNext={() => (checkIndex + 1 < CHECKS.length ? openCheck(checkIndex + 1) : openSummary())}
+        onCourtNotes={courtNotes}
+        notesBusy={notesBusy}
       />
     );
   else

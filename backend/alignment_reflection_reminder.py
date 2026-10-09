@@ -86,7 +86,7 @@ def _reflection_reminder_email_html(
     <p>
       A short heads-up from SA CoParents: your co-parent finished the
       <strong>{subject_label}</strong> reflection a few days ago. The
-      Joint Alignment Report is waiting on your answers to the same
+      Co-Parenting Agreement is waiting on your answers to the same
       six child-focused prompts before it can be generated.
     </p>
     <p>

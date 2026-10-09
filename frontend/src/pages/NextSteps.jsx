@@ -246,9 +246,9 @@ export default function NextSteps() {
           </button>
         </div>
 
-        {/* Unmistakable next-action card — Joint Alignment Report promo.
+        {/* Unmistakable next-action card — Co-Parenting Agreement promo.
             Flips between "Invite Co-Parent" (waiting) and
-            "Your Joint Alignment Report is ready" (ready) automatically. */}
+            "Your Co-Parenting Agreement is ready" (ready) automatically. */}
         <div className="mt-8">
           <JointAlignmentPromoCard testidPrefix="next-steps-joint-promo" />
         </div>

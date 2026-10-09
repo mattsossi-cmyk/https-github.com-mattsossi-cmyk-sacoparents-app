@@ -458,7 +458,7 @@ export default function JointProfessionalReport() {
               onClick={openShareLink}
               data-testid="joint-report-share-link-open"
               className="inline-flex items-center gap-1.5 rounded-full bg-white border border-[#3D1A78] text-[#3D1A78] px-4 py-2 text-sm font-semibold hover:bg-[#F5F1FB] transition-colors"
-              title="Create a link a mediator or attorney can open in-browser to view this Joint Alignment Report — no login required."
+              title="Create a link a mediator or attorney can open in-browser to view this Co-Parenting Agreement — no login required."
             >
               <Link2 size={14} /> Get shareable link
             </button>
@@ -467,7 +467,7 @@ export default function JointProfessionalReport() {
               onClick={() => setEmailOpen(true)}
               data-testid="joint-report-email-open"
               className="inline-flex items-center gap-1.5 rounded-full bg-white border border-[#3D1A78] text-[#3D1A78] px-4 py-2 text-sm font-semibold hover:bg-[#F5F1FB] transition-colors"
-              title="Email this Joint Alignment Report to a mediator, attorney, court, or therapist."
+              title="Email this Co-Parenting Agreement to a mediator, attorney, court, or therapist."
             >
               <Mail size={14} /> Email to professional
             </button>
@@ -505,7 +505,7 @@ export default function JointProfessionalReport() {
           className="mt-2 text-xs text-[#4B4567] max-w-2xl leading-relaxed"
           data-testid="joint-report-parent-facing-subline"
         >
-          This is your <strong>Joint Alignment Report</strong> — send it to
+          This is your <strong>Co-Parenting Agreement</strong> — send it to
           your mediator or attorney. Your co-parent sees the same version.
         </p>
         <div className="mt-2 text-sm text-[#4B4567]" data-testid="joint-report-parents">

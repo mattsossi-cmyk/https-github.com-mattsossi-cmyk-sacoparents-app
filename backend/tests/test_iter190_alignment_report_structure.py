@@ -1,4 +1,4 @@
-"""Iter 190 — Joint Alignment Report (Step One - Alignment Before
+"""Iter 190 — Co-Parenting Agreement (Step One - Alignment Before
 Agreement) structure lock.
 
 Verifies that the payload + PDF renderer produce the sacoparentsalign
@@ -72,13 +72,13 @@ def _fixture_payload():
 # ---------------------------------------------------------------------------
 
 def test_payload_reports_alignment_report_type():
-    """The report is now framed as the Joint Alignment Report, not the
+    """The report is now framed as the Co-Parenting Agreement, not the
     older Joint Co-Parenting Agreement Draft. Consumers key off
     `report_type` so this string is a hard contract."""
     payload = _fixture_payload()
     assert payload["report_type"] == "joint_alignment_report"
     assert payload["report_title"] == "Step One - Alignment Before Agreement"
-    assert payload["report_subtitle"] == "Joint Alignment Report"
+    assert payload["report_subtitle"] == "Co-Parenting Agreement"
     assert "neutral map" in payload["report_tagline"].lower()
 
 

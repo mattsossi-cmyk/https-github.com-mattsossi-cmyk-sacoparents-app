@@ -4,12 +4,14 @@ import { toast } from "sonner";
 import { api } from "../../../lib/api";
 
 const keyFor = (userId) => `sacoparents_child_needs_v2:${userId || "local"}`;
+const EMPTY = { answers: {}, completed_at: {}, drafts: {}, notice_ack_at: null };
+const hasData = (d) => Object.keys(d.answers || {}).length || Object.keys(d.drafts || {}).length || d.notice_ack_at;
 
 const read = (userId) => {
   try {
-    return JSON.parse(window.localStorage.getItem(keyFor(userId)) || "null") || { answers: {}, completed_at: {} };
+    return { ...EMPTY, ...(JSON.parse(window.localStorage.getItem(keyFor(userId)) || "null") || {}) };
   } catch {
-    return { answers: {}, completed_at: {} };
+    return EMPTY;
   }
 };
 
@@ -33,9 +35,10 @@ export function useChildNeeds(userId) {
     api
       .get("/child-needs/me")
       .then(({ data }) => {
-        if (cancelled || !Object.keys(data.answers || {}).length) return;
-        setState(data);
-        write(userId, data);
+        if (cancelled || !hasData(data)) return;
+        const next = { ...EMPTY, ...data };
+        setState(next);
+        write(userId, next);
       })
       .catch(() => {});
     return () => {
@@ -43,16 +46,25 @@ export function useChildNeeds(userId) {
     };
   }, [userId]);
 
+  // `draft` saves a separate copy without marking complete; `acknowledged` = first-time privacy notice tick.
   const saveCategory = useCallback(
-    async (category, answers) => {
+    async (category, answers, { draft = false, acknowledged = false } = {}) => {
       let next;
       if (userId) {
-        ({ data: next } = await api.put(`/child-needs/me/${category}`, { answers }));
+        ({ data: next } = await api.put(`/child-needs/me/${category}`, { answers, draft, acknowledged }));
+        next = { ...EMPTY, ...next };
       } else {
-        next = {
-          answers: { ...state.answers, [category]: answers },
-          completed_at: { ...state.completed_at, [category]: new Date().toISOString() },
-        };
+        const now = new Date().toISOString();
+        const { [category]: _old, ...otherDrafts } = state.drafts || {};
+        next = draft
+          ? { ...state, drafts: { ...otherDrafts, [category]: answers } }
+          : {
+              ...state,
+              answers: { ...state.answers, [category]: answers },
+              completed_at: { ...state.completed_at, [category]: now },
+              drafts: otherDrafts,
+            };
+        next.notice_ack_at = state.notice_ack_at || now;
       }
       setState(next);
       write(userId, next);

@@ -2759,7 +2759,7 @@ def send_joint_agreement_draft(
     pdf_filename: str = "joint-coparenting-agreement.pdf",
     preview_url: Optional[str] = None,
 ) -> None:
-    """Email the Joint Co-Parenting Agreement Draft PDF directly to a
+    """Email the Co-Parenting Agreement PDF directly to a
     mediator, attorney, court, or therapist.
 
     Covering text is deliberately framed as a DRAFT FOR DISCUSSION — never
@@ -2839,7 +2839,7 @@ def send_joint_agreement_draft(
         f'<p style="font-size:15px;line-height:1.6;color:#4B4567;margin:0 0 16px 0;">'
         f'<strong>{_html.escape(sender)}</strong> is preparing for '
         f'co-parenting discussions through SA CoParents and asked me to '
-        f'send you the <strong>Joint Co-Parenting Agreement Draft</strong> '
+        f'send you the <strong>Co-Parenting Agreement</strong> '
         f'covering {scope}'
         f'{" (" + _html.escape(recipient_role) + ")" if recipient_role else ""}.'
         f'</p>'
@@ -2894,7 +2894,7 @@ def send_joint_agreement_draft(
         cta_label="",
     )
     subject = (
-        f"Joint Co-Parenting Agreement Draft \u2014 "
+        f"Co-Parenting Agreement \u2014 "
         f"{parent_a_name or 'Parent A'} & {parent_b_name or 'Parent B'}"
     )
     # Bundle the 3-minute Professional Intro alongside the draft so the
@@ -4042,7 +4042,7 @@ def send_joint_alignment_release_confirmation(
         f'margin:0 0 14px 0;">{salutation}</p>'
         f'<p style="font-size:15px;line-height:1.55;color:#4B4567;'
         f'margin:0 0 14px 0;">This is your receipt that the completed '
-        f'{_html.escape(assessment_label)} Joint Alignment Report on '
+        f'{_html.escape(assessment_label)} Co-Parenting Agreement on '
         f'case <strong>{_html.escape(case_id)}</strong> has been '
         f'released to <strong>{_html.escape(professional_name)}</strong>.</p>'
         f'<p style="font-size:14px;line-height:1.55;color:#4B4567;'
@@ -4053,7 +4053,7 @@ def send_joint_alignment_release_confirmation(
         'margin:0 0 12px 0;">'
         "Review, extend, or revoke access anytime from your "
         "<em>Shared with Professionals</em> page. "
-        "Nothing outside the completed Joint Alignment Report "
+        "Nothing outside the completed Co-Parenting Agreement "
         "was shared — your raw answers, journals, and AI-coach "
         "conversations remain private to you.</p>"
         '<p style="font-size:12px;line-height:1.5;color:#857E9C;'
@@ -4065,26 +4065,26 @@ def send_joint_alignment_release_confirmation(
     plain = (
         f"{salutation}\n\n"
         f"This is your receipt that the completed {assessment_label} "
-        f"Joint Alignment Report on case {case_id} has been released "
+        f"Co-Parenting Agreement on case {case_id} has been released "
         f"to {professional_name}.\n\n"
         f"Released on {when_str}.\n\n"
         + bcc_plain +
         "Review, extend, or revoke access anytime:\n"
         "https://sacoparentsapp.online/shared-with-professionals\n\n"
-        "Nothing outside the completed Joint Alignment Report was "
+        "Nothing outside the completed Co-Parenting Agreement was "
         "shared. Your raw answers, journals, and AI-coach "
         "conversations remain private to you.\n\n"
         "— SA CoParents · sacoparentsapp.online\n"
     )
     html = _branded_html(
-        headline=f"Joint Alignment Report released - Case {case_id}",
+        headline=f"Co-Parenting Agreement released - Case {case_id}",
         body_html=body_html,
         cta_label="Open Shared with Professionals",
         cta_url="https://sacoparentsapp.online/shared-with-professionals",
     )
     _send(
         to_email=to_email,
-        subject=f"Joint Alignment Report released to {professional_name}",
+        subject=f"Co-Parenting Agreement released to {professional_name}",
         html=html,
         text=plain,
         bcc=[valid_bcc] if valid_bcc else None,

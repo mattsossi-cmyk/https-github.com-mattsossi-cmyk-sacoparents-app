@@ -269,6 +269,13 @@ async def download_plan_pdf(user: UserPublic = Depends(get_current_user), db: As
     return _pdf_response(pdf_bytes, "SA_CoParents_Parallel_Parenting_Plan.pdf")
 
 
+@router.post("/court-notes/pdf")
+async def download_court_notes_pdf(user: UserPublic = Depends(get_current_user), db: AsyncIOMotorDatabase = Depends(get_db)):
+    plan = await _plan(db, user.user_id)
+    pdf_bytes = parallel_parenting_pdf.build_court_notes_pdf(CONTENT, plan.model_dump(), user.name)
+    return _pdf_response(pdf_bytes, "SA_CoParents_Court_Order_Notes.pdf")
+
+
 @router.get("/versions")
 async def list_versions(user: UserPublic = Depends(get_current_user), db: AsyncIOMotorDatabase = Depends(get_db)) -> Dict[str, Any]:
     docs = await db[VERSIONS].find({"user_id": user.user_id}, {"_id": 0, "user_id": 0, "tips": 0}).sort(

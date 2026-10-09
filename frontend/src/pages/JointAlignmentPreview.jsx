@@ -221,7 +221,7 @@ export default function JointAlignmentPreview() {
             <ShieldCheck size={14} /> Nothing is shared with anyone else yet
           </div>
           You are inside the private compare step. Releasing the full
-          Joint Alignment Report to a named professional is a{" "}
+          Co-Parenting Agreement to a named professional is a{" "}
           <em>separate</em> action that requires both of you to record
           release consent afterward.
         </div>
@@ -381,7 +381,7 @@ export default function JointAlignmentPreview() {
       {modalOpen && (
         <ReleaseConsentModal
           consentText={consentStatus?.consent_texts?.release_template
-            || "I authorize the completed Joint Alignment Report to be made available to {professional_name} through SA CoParents Align."}
+            || "I authorize the completed Co-Parenting Agreement to be made available to {professional_name} through SA CoParents Align."}
           profName={profName}
           setProfName={setProfName}
           profNameLocked={profNameLocked}
@@ -483,7 +483,7 @@ function ReleaseConsentModal({
               data-testid="release-modal-consent-checkbox"
             />
             <span>
-              I authorize release of the completed Joint Alignment Report to{" "}
+              I authorize release of the completed Co-Parenting Agreement to{" "}
               <strong>{profName.trim() || "the professional named above"}</strong>.
             </span>
           </label>

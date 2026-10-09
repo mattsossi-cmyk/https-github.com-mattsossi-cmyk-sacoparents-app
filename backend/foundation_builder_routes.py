@@ -70,12 +70,17 @@ def _safe_filename(name: str) -> str:
     return out[:60] or "me"
 
 
+class FBPdfIn(FBFields):
+    esign_name: Optional[str] = Field(default=None, min_length=2, max_length=120)
+
+
 @router.post("/pdf")
-async def download_statement_pdf(body: FBFields):
-    """Public on purpose (localStorage-first portal)."""
+async def download_statement_pdf(body: FBPdfIn):
+    """Public on purpose (localStorage-first portal). Optional typed e-signature for Parent 1."""
     if not any((v or "").strip() for v in body.fields.values()):
         raise HTTPException(400, "Write at least one part of your statement first.")
-    pdf_bytes = foundation_builder_pdf.build_foundation_builder_pdf(content=CONTENT, fields=body.fields)
+    esign = {"name": body.esign_name.strip(), "at": datetime.now(timezone.utc).isoformat()} if body.esign_name else None
+    pdf_bytes = foundation_builder_pdf.build_foundation_builder_pdf(content=CONTENT, fields=body.fields, esign=esign)
     name = _safe_filename(body.fields.get("parent_names", ""))
     return StreamingResponse(
         BytesIO(pdf_bytes),

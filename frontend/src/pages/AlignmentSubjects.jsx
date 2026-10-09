@@ -126,8 +126,8 @@ export default function AlignmentSubjects() {
             </h1>
             <p className="mt-2 text-sm text-[#4B4567] max-w-2xl leading-relaxed">
               Each subject uses the same six child-focused prompts. Complete
-              one, invite your co-parent, and a neutral Joint Alignment
-              Report shows where you already agree, where you differ, and
+              one, invite your co-parent, and a neutral Co-Parenting
+              Agreement shows where you already agree, where you differ, and
               what your child needs next. You can complete as many
               subjects as fits your family.
             </p>

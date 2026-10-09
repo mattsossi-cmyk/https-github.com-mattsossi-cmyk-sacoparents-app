@@ -6,6 +6,7 @@ from typing import Any, Callable, Dict, List, Optional
 
 from fpdf import FPDF
 
+from child_needs_pdf import render_notices
 from pdf_base import _safe, render_pdf_copyright
 
 PURPLE = (76, 40, 137)
@@ -169,6 +170,9 @@ def build_journey_summary_pdf(
     _self(pdf, sa_history, sa_content, band_for)
     _coparent(pdf, cp_doc)
     cats = {c["key"]: c for c in needs_content["categories"]}
+    _room(pdf, 60)
+    pdf.ln(3)
+    render_notices(pdf, needs_content["notices"])
     for i, key in enumerate(NEEDS_ORDER, start=3):
         _needs(pdf, i, cats[key], answers.get(key) or {}, completed.get(key))
     return bytes(pdf.output())

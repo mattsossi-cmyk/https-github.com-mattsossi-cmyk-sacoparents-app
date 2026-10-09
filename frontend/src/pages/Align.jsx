@@ -106,7 +106,7 @@ export default function Align() {
               Joint Reports
             </h3>
             <p className="text-xs text-slate-600 mt-1 leading-snug">
-              Review a case's Joint Alignment Report, Joint
+              Review a case's Co-Parenting Agreement, Joint
               Agreement, or Professional Intro PDF.
             </p>
             <div className="mt-3 text-[11px] font-bold text-emerald-700 group-hover:underline">

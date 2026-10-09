@@ -1,4 +1,4 @@
-"""Joint Co-Parenting Agreement Draft — API surface.
+"""Co-Parenting Agreement — API surface.
 
 Endpoints (all authenticated):
   * GET  /api/joint-agreement/{share_id}         — JSON of the merged draft
@@ -17,9 +17,10 @@ the other parent's identity beyond first name.
 """
 from __future__ import annotations
 
+from datetime import datetime, timezone
 from typing import Any, Dict, List, Optional
 
-from fastapi import APIRouter, Depends, HTTPException, Request
+from fastapi import APIRouter, Depends, HTTPException, Query, Request
 from fastapi.responses import Response
 from motor.motor_asyncio import AsyncIOMotorDatabase
 from pydantic import BaseModel, Field
@@ -161,15 +162,18 @@ async def get_joint_agreement(
 async def get_joint_agreement_pdf(
     share_id: str,
     request: Request,
+    esign_name: Optional[str] = Query(default=None, min_length=2, max_length=120),
     user: UserPublic = Depends(get_current_user),
     db: AsyncIOMotorDatabase = Depends(get_db),
 ):
-    """Branded PDF of the joint draft — attorney/mediator-ready."""
+    """Branded Co-Parenting Agreement PDF. Optional typed e-signature for the downloading parent (Parent A)."""
     from joint_agreement_pdf import build_joint_agreement_pdf
     from phi_access_routes import record_phi_access
 
     share = await _find_active_share(db, share_id, user.user_id)
     payload = await _assemble_joint_agreement(db, share, user.user_id, share_id)
+    if esign_name and esign_name.strip():
+        payload["esign_a"] = {"name": esign_name.strip(), "at": datetime.now(timezone.utc).isoformat()}
     pdf_bytes = build_joint_agreement_pdf(payload)
     filename = f"joint-coparenting-agreement-{share_id[:10]}.pdf"
     await record_phi_access(
@@ -657,9 +661,9 @@ async def joint_agreement_link_preview(token: str, request: Request):
         sender = ""
 
     if sender:
-        title = f"Joint Co-Parenting Agreement Draft · shared by {sender}"
+        title = f"Co-Parenting Agreement · shared by {sender}"
     else:
-        title = "Joint Co-Parenting Agreement Draft · SA CoParents"
+        title = "Co-Parenting Agreement · SA CoParents"
 
     description = (
         "A neutral, side-by-side draft of both parents' co-parenting "
@@ -671,7 +675,7 @@ async def joint_agreement_link_preview(token: str, request: Request):
         description=description,
         canonical_url=spa_url,
         og_image_url=f"{origin}/og-image.png",
-        og_image_alt="SA CoParents · Joint Co-Parenting Agreement Draft",
+        og_image_alt="SA CoParents · Co-Parenting Agreement",
     )
     return HTMLResponse(
         content=html_body,

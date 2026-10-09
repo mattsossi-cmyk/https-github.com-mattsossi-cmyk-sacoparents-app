@@ -3225,7 +3225,7 @@ async def list_professional_directory_invites(
 #     their answers with their co-parent's. Does not authorise anyone
 #     outside the household to see the resulting report.
 #   * `release_consent` — parent authorises the app to hand the
-#     Joint Alignment Report to a NAMED professional. Requires a
+#     Co-Parenting Agreement to a NAMED professional. Requires a
 #     matching consent from the co-parent for the same professional
 #     before the release actually happens.
 #
@@ -3245,7 +3245,7 @@ _JA_COMPARISON_CONSENT_TEXT = (
     "parental fitness, custody, or the best interests of the child."
 )
 _JA_RELEASE_CONSENT_TEXT_TEMPLATE = (
-    "I authorize the completed Joint Alignment Report to be made "
+    "I authorize the completed Co-Parenting Agreement to be made "
     "available to {professional_name} through SA CoParents Align. "
     "This authorization applies only to the completed Joint Alignment "
     "Report and does not provide access to my raw answers, private "
@@ -3264,7 +3264,7 @@ class ComparisonConsentBody(BaseModel):
 class ReleaseConsentBody(BaseModel):
     professional_name: str = Field(..., min_length=1, max_length=160)
     """The exact display name of the professional the parent is
-    releasing the Joint Alignment Report to. Case-insensitive when
+    releasing the Co-Parenting Agreement to. Case-insensitive when
     the sibling app resolves eligibility, but stored verbatim for
     audit."""
     consented: bool = True
@@ -3365,7 +3365,7 @@ async def record_release_consent(
     db: AsyncIOMotorDatabase = Depends(get_db),
 ):
     """The caller records (or revokes) their consent to release the
-    resulting Joint Alignment Report to a NAMED professional.
+    resulting Co-Parenting Agreement to a NAMED professional.
     Distinct from comparison consent — a parent may consent to
     compare without consenting to release."""
     professional_name = body.professional_name.strip()
@@ -3760,8 +3760,8 @@ async def get_case_alignment_preview(
 ):
     """
     Agreement-flag-only preview of the two parents' completed
-    assessments. Runs the same compare as the final Joint Alignment
-    Report but returns ONLY per-topic `agree / differ / incomplete`
+    assessments. Runs the same compare as the final Co-Parenting
+    Agreement but returns ONLY per-topic `agree / differ / incomplete`
     flags — never the underlying content. Powers the on-screen
     review step between comparison-consent and release-consent.
 
@@ -3858,7 +3858,7 @@ async def get_case_alignment_preview(
         "preview_notice": (
             "Nothing has been shared with anyone outside your household. "
             "This is a private, agreement-flag-only preview. To release "
-            "the full Joint Alignment Report to a named professional you "
+            "the full Co-Parenting Agreement to a named professional you "
             "both need to record separate release consent."
         ),
     }

@@ -145,6 +145,67 @@ def _checklist(pdf: _PPPDF, check: Dict[str, Any], plan: Dict[str, Any]) -> None
     pdf.ln(3)
 
 
+AMBER = (180, 98, 6)
+
+
+def _status_row(pdf: _PPPDF, label: str, matched: bool) -> None:
+    y = pdf.get_y()
+    pdf.set_font("Helvetica", "B", 8.5)
+    pdf.set_text_color(*(GREEN if matched else AMBER))
+    pdf.cell(36, 5.2, "Matches my order" if matched else "Still to check")
+    pdf.set_font("Helvetica", "", 9.5)
+    pdf.set_text_color(*INK)
+    pdf.multi_cell(pdf.epw - 36, 5.2, _safe(label), new_x="LMARGIN", new_y="NEXT")
+    pdf.set_draw_color(236, 232, 245)
+    pdf.line(pdf.l_margin, max(pdf.get_y(), y + 5.2) + 0.8, pdf.w - pdf.r_margin, max(pdf.get_y(), y + 5.2) + 0.8)
+    pdf.ln(1.8)
+
+
+def _heading(pdf: _PPPDF, text: str) -> None:
+    pdf.set_font("Helvetica", "B", 11)
+    pdf.set_text_color(*PURPLE)
+    pdf.cell(0, 7, _safe(text), new_x="LMARGIN", new_y="NEXT")
+    pdf.ln(0.5)
+
+
+def build_court_notes_pdf(content: Dict[str, Any], plan: Dict[str, Any], parent_name: str) -> bytes:
+    """One-page Court-Order Notes: the court-order self-check, notes and topics for professional review."""
+    lists = {c["key"]: c for c in content["checklists"]}
+    court, review = lists["court_check"], lists["professional_review"]
+    checks = plan.get("checks") or {}
+    notes = plan.get("notes") or {}
+    matched = set(checks.get("court_check") or [])
+    topics = [i for i in review["items"] if i["id"] in set(checks.get("professional_review") or [])]
+    pdf = _PPPDF(content["disclaimer"])
+    pdf.add_page()
+    pdf.set_font("Helvetica", "B", 17)
+    pdf.set_text_color(*PURPLE)
+    pdf.cell(0, 9, "Court-Order Notes", new_x="LMARGIN", new_y="NEXT")
+    pdf.set_font("Helvetica", "", 9)
+    pdf.set_text_color(*MUTED)
+    today = datetime.now(timezone.utc).isoformat()
+    pdf.cell(0, 5, _safe(f"Prepared by {parent_name} on {_day(today)}  ·  To bring to a family law attorney or mediator"), new_x="LMARGIN", new_y="NEXT")
+    pdf.ln(2.5)
+    _box(pdf, "Please note", court["note"], (255, 247, 237))
+    _heading(pdf, f"Texas Court-Order Compatibility Check  ·  {len(matched)} of {len(court['items'])} match my order")
+    for item in court["items"]:
+        _status_row(pdf, item["label"], item["id"] in matched)
+    pdf.ln(1.5)
+    if (notes.get("court_check") or "").strip():
+        _box(pdf, "My notes", notes["court_check"].strip())
+    _heading(pdf, "Topics for professional review")
+    pdf.set_font("Helvetica", "", 9.5)
+    pdf.set_text_color(*(INK if topics else MUTED))
+    for t in topics or [{"label": "None ticked yet."}]:
+        pdf.multi_cell(pdf.epw, 5.2, _safe(f"-  {t['label']}"), new_x="LMARGIN", new_y="NEXT")
+    if (notes.get("professional_review") or "").strip():
+        pdf.ln(1.5)
+        _box(pdf, "More to discuss", notes["professional_review"].strip())
+    pdf.ln(2)
+    _box(pdf, "Next step", "Bring this page and a copy of your current court order to your appointment so a professional can confirm what fits.")
+    return bytes(pdf.output())
+
+
 def build_pp_pdf(
     content: Dict[str, Any],
     plan: Dict[str, Any],

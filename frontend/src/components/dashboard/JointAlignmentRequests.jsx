@@ -212,7 +212,7 @@ export default function JointAlignmentRequests() {
           </button>
           <p className="text-[11.5px] text-[#857E9C] mt-1 leading-relaxed">
             Cases where both parents recorded release consent and the
-            Joint Alignment Report has already been handed off to a
+            Co-Parenting Agreement has already been handed off to a
             named professional.
           </p>
           {handedOffOpen && (

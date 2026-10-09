@@ -7,6 +7,7 @@ import {
   DialogTitle,
   DialogDescription,
 } from "../../components/ui/dialog";
+import { ESignField, esignValue } from "../../components/ESignField";
 import CONTENT from "./foundationBuilderContent.json";
 
 // Card 4 · Foundation Statement. Copy lives in foundationBuilderContent.json
@@ -48,6 +49,8 @@ function Pillars() {
 }
 
 function BuilderDialog({ open, onOpenChange, fb, parentName }) {
+  const [esignName, setEsignName] = useState("");
+  const [esignAgreed, setEsignAgreed] = useState(false);
   const value = (k) => fb.fields[k] ?? (k === "parent_names" ? parentName || "" : "");
   const close = async () => {
     if (await fb.save()) onOpenChange(false);
@@ -75,8 +78,12 @@ function BuilderDialog({ open, onOpenChange, fb, parentName }) {
               {STATUS_COPY[fb.status]}
             </p>
           )}
-          <div className="flex items-center gap-2 pt-2 border-t border-slate-200">
-            <button type="button" data-testid="foundation-download-pdf" disabled={fb.busy} onClick={fb.download} className="flex-1 py-2.5 rounded-full bg-slate-600 hover:bg-slate-700 disabled:opacity-60 text-white text-xs font-bold transition-colors">
+          <div className="pt-2 border-t border-slate-200 space-y-1.5">
+            <p className="text-[11px] text-slate-500">The PDF ends with signature lines for both parents and a notary section.</p>
+            <ESignField testid="foundation-esign" name={esignName} onName={setEsignName} agreed={esignAgreed} onAgree={setEsignAgreed} />
+          </div>
+          <div className="flex items-center gap-2">
+            <button type="button" data-testid="foundation-download-pdf" disabled={fb.busy} onClick={() => fb.download(esignValue(esignName, esignAgreed))} className="flex-1 py-2.5 rounded-full bg-slate-600 hover:bg-slate-700 disabled:opacity-60 text-white text-xs font-bold transition-colors">
               <i className={`fa-solid ${fb.busy ? "fa-spinner fa-spin" : "fa-file-pdf"} mr-1.5`}></i>
               {fb.busy ? "Building PDF…" : "Download PDF"}
             </button>

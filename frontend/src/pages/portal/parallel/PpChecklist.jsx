@@ -20,8 +20,23 @@ function CheckItem({ listKey, item, on, onToggle }) {
   );
 }
 
+export function CourtNotesButton({ testid, onClick, busy }) {
+  return (
+    <button
+      type="button"
+      data-testid={testid}
+      onClick={onClick}
+      disabled={busy}
+      className="w-full py-3 rounded-xl bg-white hover:bg-amber-50 border-2 border-amber-300 text-amber-900 text-sm font-bold transition-colors disabled:opacity-60"
+    >
+      <i className={`fa-solid ${busy ? "fa-spinner fa-spin" : "fa-file-pdf"} mr-2`}></i>
+      Download Court-Order Notes (one page)
+    </button>
+  );
+}
+
 // One quick-check list (Child-Focused, Safeguards, Court-Order self-check, Professional Review); ticks autosave.
-export function PpChecklist({ list, index, total, plan, onToggle, onNote, onBack, onNext }) {
+export function PpChecklist({ list, index, total, plan, onToggle, onNote, onBack, onNext, onCourtNotes, notesBusy }) {
   const ticked = plan.checks?.[list.key] || [];
   const last = index === total - 1;
   return (
@@ -64,6 +79,7 @@ export function PpChecklist({ list, index, total, plan, onToggle, onNote, onBack
           className="mt-2 w-full rounded-xl border border-slate-300 bg-slate-50 px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#8251b8]"
         />
       </div>
+      {list.key === "court_check" && <CourtNotesButton testid="pp-court-notes-pdf" onClick={onCourtNotes} busy={notesBusy} />}
       <div className="flex flex-col-reverse sm:flex-row items-stretch sm:items-center justify-between gap-3">
         <button
           type="button"

@@ -9,39 +9,50 @@ import { NEEDS_ART } from "./selfJourney/selfJourneyArt";
 
 const ORDER = NEEDS_ART.items.map((i) => i.key);
 const CATS = Object.fromEntries(CONTENT.categories.map((c) => [c.key, c]));
-const TAB_ON = {
-  educational: "border-green-400 bg-green-50 text-green-800",
-  medical: "border-sky-400 bg-sky-50 text-sky-800",
-  psychological: "border-purple-400 bg-purple-50 text-purple-800",
-};
 const GREETING = "Hi, I'm your Child Needs Guide. Ask me how to describe your child's school, health or emotional needs so both homes can support them.";
 const SUGGESTIONS = ["What should I include here?", "How do I keep this child-focused?", "How can both homes stay consistent?"];
 
-function NeedsTabs({ activeKey, done, onPick }) {
+function PortalBar() {
   return (
-    <div role="tablist" className="grid grid-cols-3 gap-2">
-      {NEEDS_ART.items.map((it) => {
-        const on = it.key === activeKey;
+    <div data-testid="child-needs-portal-bar" className="rounded-xl bg-[#4A154B] text-white px-4 py-3 flex flex-wrap items-center justify-between gap-x-3 gap-y-1.5 shadow-md">
+      <div className="flex items-center gap-3 min-w-0">
+        <span className="w-9 h-9 shrink-0 rounded-lg bg-white text-[#4A154B] font-extrabold flex items-center justify-center text-sm">SA</span>
+        <span className="font-semibold tracking-wide text-[14px] sm:text-[15px] leading-tight">{CONTENT.portal_title}</span>
+      </div>
+      <span className="text-[11px] opacity-85 whitespace-nowrap">
+        <i className="fa-solid fa-lock mr-1"></i>
+        {CONTENT.portal_badge}
+      </span>
+    </div>
+  );
+}
+
+function Tabs({ activeKey, done, drafts, onPick }) {
+  return (
+    <div role="tablist" className="flex gap-2.5 overflow-x-auto pb-1">
+      {ORDER.map((k) => {
+        const on = k === activeKey;
         return (
           <button
-            key={it.key}
+            key={k}
             type="button"
             role="tab"
             aria-selected={on}
-            data-testid={`child-needs-tab-${it.key}`}
-            onClick={() => onPick(it.key)}
-            className={`rounded-2xl border-2 px-2 py-3 flex flex-col items-center gap-1 text-center transition-[border-color,background-color,box-shadow] ${
-              on ? `${TAB_ON[it.key]} shadow-md` : "border-slate-200 bg-white text-slate-600 hover:border-purple-200"
+            data-testid={`child-needs-tab-${k}`}
+            onClick={() => onPick(k)}
+            className={`shrink-0 rounded-lg border-2 px-4 py-2.5 text-left font-semibold text-[13px] whitespace-nowrap transition-colors ${
+              on ? "bg-[#4A154B] border-[#4A154B] text-white" : "bg-white border-[#E2E8F0] text-[#718096] hover:border-[#611663] hover:text-[#4A154B]"
             }`}
           >
-            <i className={`fa-solid ${it.icon} text-lg`}></i>
-            <span className="text-[12px] font-extrabold leading-tight">{it.label}</span>
-            {done[it.key] ? (
-              <span data-testid={`child-needs-${it.key}-completed`} className="text-[10px] font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 rounded-full px-2 py-0.5 whitespace-nowrap">
+            {CATS[k].card_title}
+            {done[k] ? (
+              <span data-testid={`child-needs-${k}-completed`} className={`block text-[10px] font-bold ${on ? "text-emerald-200" : "text-emerald-700"}`}>
                 Completed <i className="fa-solid fa-check text-[9px]"></i>
               </span>
             ) : (
-              <span className="text-[10px] font-semibold text-slate-400">Not started</span>
+              <span data-testid={`child-needs-${k}-status`} className={`block text-[10px] font-semibold ${on ? "text-purple-200" : "text-slate-400"}`}>
+                {drafts[k] ? "Draft saved" : "Not started"}
+              </span>
             )}
           </button>
         );
@@ -50,10 +61,16 @@ function NeedsTabs({ activeKey, done, onPick }) {
   );
 }
 
-// Your Child's Specific Needs: picture bubbles + tabs switch the form on the left. `needs` is owned by JourneyShell.
+const askGuide = () => {
+  document.querySelector('[data-testid="cn-chat"]')?.scrollIntoView({ behavior: "smooth", block: "center" });
+  setTimeout(() => document.querySelector('[data-testid="cn-chat-input"]')?.focus(), 400);
+};
+
+// Your Child's Specific Needs: tabs + picture bubbles switch the form. `needs` is owned by JourneyShell.
 export function ChildNeedsView({ onBack, onQuickExit, needs, parentName, initialOpenKey = null, safetyFlag }) {
   const { state, saveCategory, downloadReport } = needs;
   const done = Object.fromEntries(ORDER.map((k) => [k, !!state.completed_at?.[k]]));
+  const drafts = state.drafts || {};
   const [activeKey, setActiveKey] = useState(initialOpenKey || ORDER.find((k) => !done[k]) || ORDER[0]);
   const category = CATS[activeKey];
   const chat = useGuideChat("/journey-guide/child-needs/chat", { section: category.form_title, safety_flagged: !!safetyFlag });
@@ -63,12 +80,15 @@ export function ChildNeedsView({ onBack, onQuickExit, needs, parentName, initial
     setActiveKey(k);
     document.getElementById("cn-work")?.scrollIntoView({ behavior: "smooth", block: "start" });
   };
-
-  const submit = async (values) => {
+  const save = async (values, acknowledged, draft) => {
     try {
-      const next = await saveCategory(activeKey, values);
+      const next = await saveCategory(activeKey, values, { draft, acknowledged });
+      if (draft) {
+        toast.success("Draft saved. It won't be marked complete until you submit.");
+        return;
+      }
       const ok = await downloadReport(next.answers, parentName);
-      if (ok) toast.success("Saved. Your Child's Specific Needs report is downloading.");
+      if (ok) toast.success("Submitted. Your Child's Specific Needs report is downloading.");
       const upNext = ORDER.find((k) => !next.completed_at?.[k]);
       if (upNext) pick(upNext);
     } catch (e) {
@@ -90,25 +110,49 @@ export function ChildNeedsView({ onBack, onQuickExit, needs, parentName, initial
       footer="Your Child's Specific Needs"
     >
       <div data-testid="door-view-child-needs" className="space-y-5">
-        <NeedsTabs activeKey={activeKey} done={done} onPick={pick} />
-        <section id="cn-work" data-testid={`child-needs-panel-${activeKey}`} className="bg-white rounded-3xl border border-purple-100 shadow-lg p-5 sm:p-7 scroll-mt-6">
-          <h3 data-testid="child-needs-form-title" className="text-xl sm:text-2xl font-extrabold text-[#3B1C6B]">
-            {category.form_title}
-          </h3>
-          <p className="text-sm text-slate-600 mt-1 mb-5">{category.card_desc}</p>
-          <ChildNeedsForm key={activeKey} category={category} initial={state.answers?.[activeKey]} onSubmit={submit} />
+        <PortalBar />
+        <Tabs activeKey={activeKey} done={done} drafts={drafts} onPick={pick} />
+        <section
+          id="cn-work"
+          data-testid={`child-needs-panel-${activeKey}`}
+          className="bg-white rounded-xl border border-[#E2E8F0] shadow-[0_10px_15px_-3px_rgba(0,0,0,0.05)] p-5 sm:p-8 scroll-mt-6"
+        >
+          <div className="mb-6 pb-4 border-b-2 border-[#F4EEF5] flex items-start justify-between gap-3">
+            <div>
+              <h2 data-testid="child-needs-form-title" className="text-xl sm:text-2xl font-bold text-[#4A154B]">
+                {category.form_title}
+              </h2>
+              <p className="text-sm text-[#718096] mt-1">{category.card_desc}</p>
+            </div>
+            <button
+              type="button"
+              data-testid="child-needs-ask-guide"
+              onClick={askGuide}
+              className="shrink-0 text-[11px] font-bold text-[#611663] bg-[#F4EEF5] hover:bg-[#E2D6E5] rounded-full px-3 py-1.5 transition-colors"
+            >
+              <i className="fa-solid fa-comments mr-1"></i>Ask the Guide
+            </button>
+          </div>
+          <ChildNeedsForm
+            key={activeKey}
+            category={category}
+            initial={drafts[activeKey] || state.answers?.[activeKey]}
+            ackDate={state.notice_ack_at}
+            onSubmit={(v, ack) => save(v, ack, false)}
+            onDraft={(v, ack) => save(v, ack, true)}
+          />
+          {doneCount > 0 && (
+            <button
+              type="button"
+              data-testid="child-needs-download-report"
+              onClick={() => downloadReport(state.answers, parentName)}
+              className="mt-5 w-full py-3 rounded-md bg-white hover:bg-[#F4EEF5] border border-[#4A154B]/30 text-[#4A154B] text-sm font-bold transition-colors"
+            >
+              <i className="fa-solid fa-file-pdf mr-1.5"></i>Download my Child's Specific Needs report
+            </button>
+          )}
+          <p className="mt-3 text-[11px] text-slate-500 text-center">{CONTENT.disclaimer}</p>
         </section>
-        {doneCount > 0 && (
-          <button
-            type="button"
-            data-testid="child-needs-download-report"
-            onClick={() => downloadReport(state.answers, parentName)}
-            className="w-full py-3 rounded-full bg-white hover:bg-purple-50 border border-purple-300 text-purple-900 text-sm font-bold transition-colors"
-          >
-            <i className="fa-solid fa-file-pdf mr-1.5"></i>Download my Child's Specific Needs report
-          </button>
-        )}
-        <p className="text-[11px] text-slate-500 text-center">{CONTENT.disclaimer}</p>
       </div>
     </JourneyPage>
   );

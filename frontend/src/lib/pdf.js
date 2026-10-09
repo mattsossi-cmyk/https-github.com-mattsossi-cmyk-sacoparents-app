@@ -39,7 +39,7 @@ const EMPTY_STATE_ROUTES = [
   { prefix: "/api/edu-deep/report",                     route: "/special-needs-v2/educational-deep-dive",   label: "Complete the Educational deep-dive" },
   { prefix: "/api/med-deep/report",                     route: "/special-needs-v2/medical-deep-dive",       label: "Complete the Medical deep-dive" },
   { prefix: "/api/psych-deep/report",                   route: "/special-needs-v2/psychological-deep-dive", label: "Complete the Psychological deep-dive" },
-  // Joint Alignment Report + Joint Agreement — dual-consent gated,
+  // Co-Parenting Agreement + Joint Agreement — dual-consent gated,
   // routes them to the SNC v2 comparison page where the Compare
   // share flow lives.
   { prefix: "/api/joint-professional-report",           route: "/special-needs-v2",   label: "Set up Compare with my co-parent" },

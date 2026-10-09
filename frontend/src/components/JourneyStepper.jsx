@@ -5,7 +5,7 @@
  * "companion" flow:
  *   - Reflect → Understand → Identify → Explore → Align → Agree
  *   - Assess → Understand Your Child → Set Priorities → Build Foundation → Prepare for Mediation → Review Progress
- *   - What's Going On? → Co-Parenting Assessment → Child Needs → Foundation Statement → Joint Assessment → Joint Alignment Report
+ *   - What's Going On? → Co-Parenting Assessment → Child Needs → Foundation Statement → Joint Assessment → Co-Parenting Agreement
  *
  * The single canonical framework (per 2026-03-06 product review):
  *   1. Reflect on Your Situation

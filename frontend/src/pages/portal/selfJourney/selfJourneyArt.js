@@ -21,6 +21,20 @@ export const ASSESS_ART = {
   ],
 };
 
+// Self-Assessment page artwork: four panels jump to that part of the latest results.
+export const SA_ART = {
+  name: "sa-self-assessment",
+  width: 1024,
+  height: 1536,
+  alt: "Self Assessment: reflect on your strengths, identify growth areas, set personal goals and track your progress. Your journey. Your growth. A brighter future for your child.",
+  items: [
+    { key: "strengths", name: "Reflect on Your Strengths", panel: [28, 2.1, 47.6, 10.4] },
+    { key: "growth", name: "Identify Growth Areas", panel: [39.6, 2.1, 47.6, 10.2] },
+    { key: "goals", name: "Set Personal Goals", panel: [51.1, 2.1, 47.6, 9.9] },
+    { key: "progress", name: "Track Your Progress", panel: [62, 2.1, 47.6, 11] },
+  ],
+};
+
 // Founder artwork: the round icon + label bubbles are the tap targets (no arrow buttons).
 export const NEEDS_ART = {
   name: "sa-child-needs-steps",

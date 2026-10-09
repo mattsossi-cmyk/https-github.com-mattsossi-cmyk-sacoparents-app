@@ -27,6 +27,7 @@ import AgreementShareLinkModal from "../components/joint/AgreementShareLinkModal
 import { requestPreShareConsent } from "../components/PreShareConsentDialog";
 import { api, API } from "../lib/api";
 import { downloadPdf as fetchPdfWithGracefulFailure } from "../lib/pdf";
+import { ESignField, esignValue } from "../components/ESignField";
 import { logError } from "../lib/logger";
 
 
@@ -35,6 +36,8 @@ export default function JointAgreement() {
   const shareId = params.get("share");
   const [state, setState] = useState({ loading: true, data: null, error: null });
   const [downloading, setDownloading] = useState(false);
+  const [esignName, setEsignName] = useState("");
+  const [esignAgreed, setEsignAgreed] = useState(false);
   const [emailOpen, setEmailOpen] = useState(false);
   const [emailSending, setEmailSending] = useState(false);
   const [regenConfirmOpen, setRegenConfirmOpen] = useState(false);
@@ -113,8 +116,9 @@ export default function JointAgreement() {
       await fetchPdfWithGracefulFailure(
         `/joint-agreement/${encodeURIComponent(shareId)}/pdf`,
         {
-          filename: `joint-coparenting-agreement-${shareId.slice(0, 10)}.pdf`,
+          filename: `coparenting-agreement-${shareId.slice(0, 10)}.pdf`,
           testid: "joint-agreement-download",
+          params: esignValue(esignName, esignAgreed) ? { esign_name: esignValue(esignName, esignAgreed) } : undefined,
         },
       );
     } finally {
@@ -264,7 +268,7 @@ export default function JointAgreement() {
       <AppShell>
         <div className="max-w-2xl mx-auto p-8" data-testid="joint-agreement-error">
           <h1 className="font-serif text-3xl text-[#1A1330] mb-4">
-            Step One — Alignment Before Agreement
+            Co-Parenting Agreement
           </h1>
           <p className="text-[#4B4567] leading-relaxed mb-6">{msg}</p>
           <div className="flex flex-wrap gap-2">
@@ -354,6 +358,12 @@ export default function JointAgreement() {
             </button>
           </div>
         </div>
+        <div className="mt-3 max-w-xl ml-auto">
+          <p className="text-[11px] text-slate-500 mb-1.5">
+            The PDF ends with signature lines for both parents and a notary section. Add your typed e-signature if you'd like.
+          </p>
+          <ESignField testid="joint-agreement-esign" name={esignName} onName={setEsignName} agreed={esignAgreed} onAgree={setEsignAgreed} />
+        </div>
 
         {/* Compact re-send strip: last 3 professionals this parent has
             emailed the Joint Agreement to. Auto-hides when empty. */}
@@ -366,7 +376,7 @@ export default function JointAgreement() {
         </div>
 
         <div className="text-[10px] uppercase tracking-[0.22em] font-bold text-[#3D1A78]">
-          {d.report_subtitle || "Joint Alignment Report"}
+          {d.report_subtitle || "Co-Parenting Agreement"}
         </div>
         <h1
           className="font-serif text-3xl sm:text-4xl text-[#1A1330] mt-1 leading-tight"
@@ -380,7 +390,7 @@ export default function JointAgreement() {
         >
           {d.report_tagline || (
             <>
-              This is your <strong>Joint Alignment Report</strong> — a neutral
+              This is your <strong>Co-Parenting Agreement</strong> — a neutral
               map of where you already agree, where you still differ, and what
               your child needs next.
             </>
@@ -539,8 +549,8 @@ export default function JointAgreement() {
         />
 
         <div className="mt-10 text-[11px] text-[#857E9C] leading-relaxed border-t border-[#E5E0EE] pt-4">
-          Draft for discussion · Not a signed agreement, court order, or legal
-          document. Share ID {d.share_id}.
+          Draft for discussion · Not a court order or legal advice, and not legally binding unless a court
+          approves it. Share ID {d.share_id}.
         </div>
 
         <JointReportEmailDialog

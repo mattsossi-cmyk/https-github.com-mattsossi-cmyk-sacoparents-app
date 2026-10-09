@@ -1148,7 +1148,9 @@ export function JourneyShell({
           onOpenModule={moduleCta}
           onOpenCard={openCourtCard}
           fb={foundationBuilder}
-          onOpenParallel={() => openPp()}
+          onOpenParallel={(screen) => openPp(screen)}
+          onOpenChildNeeds={(k) => openChildNeeds("court", k)}
+          assessDone={assessDone}
           onDownloadPdf={onDownloadCourtPdf}
           onOpenBiffHistory={() => onOpenCommBuilder("history")}
           alignUrl={ALIGN_SITE_URL}

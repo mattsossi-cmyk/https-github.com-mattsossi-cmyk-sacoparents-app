@@ -6,7 +6,7 @@ Endpoints (all under `/api`):
 
   * GET  /professionals
         Public. Returns the curated list of professionals a parent
-        can request a Joint Alignment Report from. Sourced from the
+        can request a Co-Parenting Agreement from. Sourced from the
         `professionals` collection; seeded on first read with the
         initial roster (Matt Sossi).
 
@@ -594,7 +594,7 @@ def _send_professional_email(
     body_html = (
         f"<p>{_html_escape(parent_name)} has completed the "
         f"<strong>{_html_escape(assessment_label)}</strong> in SA CoParents "
-        "and would like to invite you to prepare a Joint Alignment Report.</p>"
+        "and would like to invite you to prepare a Co-Parenting Agreement.</p>"
         f"<p><strong>Alignment Code:</strong> <code style=\"font-size:16px;"
         "font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;"
         f"background:#F8F7FC;padding:4px 10px;border-radius:6px;color:#3D1A78\">{code}</code></p>"
@@ -621,12 +621,12 @@ def _send_professional_email(
     )
     text_lines = [
         f"{parent_name} has completed the {assessment_label} in SA CoParents",
-        "and would like to invite you to prepare a Joint Alignment Report.",
+        "and would like to invite you to prepare a Co-Parenting Agreement.",
         "",
         f"Alignment Code: {code}",
         f"Open on SA CoParents Align: {join_url}",
         "",
-        "Individual responses remain private. The Joint Alignment Report is",
+        "Individual responses remain private. The Co-Parenting Agreement is",
         "prepared only after both parents have completed the same assessment.",
     ]
     if parent_message:

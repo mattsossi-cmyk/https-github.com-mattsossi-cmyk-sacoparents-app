@@ -1,4 +1,4 @@
-"""Iter192 · Public co-parenting Joint Alignment Report sample.
+"""Iter192 · Public co-parenting Co-Parenting Agreement sample.
 
 Fictional but realistic data — Alex R. and Sam R. co-parenting Maya
 (age 9). Used by the public `/api/insights/samples/co-parenting-alignment-report.pdf`

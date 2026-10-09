@@ -109,7 +109,7 @@ export default function JointAgreementShared() {
       >
         <div className="max-w-lg w-full rounded-3xl border border-[#E5E0EE] bg-white p-8 text-center shadow-sm">
           <h1 className="font-serif text-2xl text-[#1A1330] mb-3">
-            Step One — Alignment Before Agreement
+            Co-Parenting Agreement
           </h1>
           <p className="text-[#4B4567] leading-relaxed mb-5">{msg}</p>
           <p className="text-xs text-[#857E9C]">
@@ -151,10 +151,10 @@ export default function JointAgreementShared() {
                 Shared with you
               </div>
               <p className="mt-1 text-sm text-[#1A1330] leading-relaxed">
-                <strong>{sharedBy}</strong> shared this Joint Alignment
-                Report with you through SA CoParents. This is a neutral
-                alignment map — not a signed agreement, court order, or
-                legal document.
+                <strong>{sharedBy}</strong> shared this Co-Parenting
+                Agreement with you through SA CoParents. This is a neutral
+                alignment map — not a court order or legal advice, and not
+                binding unless a court approves it.
               </p>
             </div>
           </div>
@@ -185,7 +185,7 @@ export default function JointAgreementShared() {
         <div className="mt-6 flex items-center justify-between gap-3 flex-wrap">
           <div>
             <div className="text-[10px] uppercase tracking-[0.22em] font-bold text-[#3D1A78]">
-              {d.report_subtitle || "Joint Alignment Report"}
+              {d.report_subtitle || "Co-Parenting Agreement"}
             </div>
             <h1
               className="font-serif text-3xl sm:text-4xl text-[#1A1330] mt-1 leading-tight"
@@ -345,8 +345,8 @@ export default function JointAgreementShared() {
         )}
 
         <div className="mt-10 text-[11px] text-[#857E9C] leading-relaxed border-t border-[#E5E0EE] pt-4">
-          Draft for discussion · Not a signed agreement, court order, or
-          legal document. Rendered via a signed link the sending parent
+          Draft for discussion · Not a court order or legal advice, and not
+          binding unless a court approves it. Rendered via a signed link the sending parent
           created; the link can be revoked at any time from their account.
         </div>
       </div>

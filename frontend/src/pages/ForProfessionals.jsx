@@ -60,7 +60,7 @@ const ALIGN_WORKFLOW = [
     key: "guide-conversation",
     label: "Guide Conversation",
     icon: MessageCircle,
-    body: "Bring the Joint Alignment Report into your session and use it to focus the conversation on the child.",
+    body: "Bring the Co-Parenting Agreement into your session and use it to focus the conversation on the child.",
   },
 ];
 

@@ -36,7 +36,7 @@ import {
 const CATEGORIES = [
   {
     id: "joint",
-    label: "Joint Alignment Reports",
+    label: "Co-Parenting Agreements",
     icon: Handshake,
     tone: "purple",
     blurb:
@@ -44,7 +44,7 @@ const CATEGORIES = [
     samples: [
       {
         file: "snc-sample-comparison-report.pdf",
-        title: "Complete Joint Alignment Report",
+        title: "Complete Co-Parenting Agreement",
         blurb: "Full comparison across all lanes — the flagship joint artefact.",
       },
       {

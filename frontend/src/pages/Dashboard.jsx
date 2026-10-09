@@ -1424,9 +1424,9 @@ export default function Dashboard() {
                   to={`/joint-professional-report?share=${encodeURIComponent(sncHighlights.share_id)}`}
                   className="text-[11px] font-semibold text-[#3D1A78] underline underline-offset-2 hover:text-[#2a0f5f]"
                   data-testid="dashboard-joint-professional-report-link"
-                  title="Open the Joint Alignment Report — side-by-side, for attorneys and mediators."
+                  title="Open the Co-Parenting Agreement — side-by-side, for attorneys and mediators."
                 >
-                  Open Joint Alignment Report →
+                  Open Co-Parenting Agreement →
                 </Link>
                 <Link
                   to={`/joint-agreement?share=${encodeURIComponent(sncHighlights.share_id)}`}

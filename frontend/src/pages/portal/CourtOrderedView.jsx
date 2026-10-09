@@ -19,13 +19,14 @@ import { useCourtCompare } from "./court/useCourtCompare";
 import { useCourtSummary } from "./court/useCourtSummary";
 import { useGuideChat } from "./guide/useGuideChat";
 import { Hero, PageHeader, SafetyBanner, useLockScroll } from "./selfAssessment/SaChrome";
+import { CourtPictureCards } from "./court/CourtPictureCards";
 
 const BIFF_BOOK_URL = process.env.REACT_APP_BIFF_BOOK_URL;
 const AGREED_MARK = " (agreed): ";
 const openTab = (url) => window.open(url, "_blank", "noopener,noreferrer");
 
 // Full-page Court Ordered path (portal): interactive journey artwork, court tools, and a saved AI chat.
-export function CourtOrderedView({ onBack, onQuickExit, courtKey, mediator, onVerify, modules, onOpenModule, onOpenCard, fb, onOpenParallel, onDownloadPdf, onOpenBiffHistory, alignUrl, safetyFlag, signedIn, hidden = false }) {
+export function CourtOrderedView({ onBack, onQuickExit, courtKey, mediator, onVerify, modules, onOpenModule, onOpenCard, onOpenChildNeeds, assessDone = {}, fb, onOpenParallel, onDownloadPdf, onOpenBiffHistory, alignUrl, safetyFlag, signedIn, hidden = false }) {
   const [hints, setHints] = useState(true);
   const [dialog, setDialog] = useState(null);
   const [chatOpen, setChatOpen] = useState(false);
@@ -156,6 +157,7 @@ export function CourtOrderedView({ onBack, onQuickExit, courtKey, mediator, onVe
             <CourtAgreeCard compare={compare} onOpen={() => openPillar(PILLARS[1])} />
             <PillarCards onPillar={openPillar} />
             <CourtTools cc={cc} courtKey={courtKey} compare={compare} onCase={() => setDialog({ type: "accept" })} onBiff={onOpenBiffHistory} />
+            <CourtPictureCards done={assessDone} onChildNeeds={onOpenChildNeeds} onParallel={onOpenParallel} />
             <CourtModulesCard modules={modules} onOpenModule={onOpenModule} />
             <CourtChecklistCard checklist={checklist} />
           </div>

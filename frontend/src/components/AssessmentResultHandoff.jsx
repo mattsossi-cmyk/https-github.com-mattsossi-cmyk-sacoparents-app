@@ -104,7 +104,7 @@ export default function AssessmentResultHandoff({ assessmentType }) {
           Your co-parent will complete their assessment separately. When
           the required assessments have been completed, SA CoParents Align
           can use the designated assessment information to prepare the
-          Joint Alignment Report.
+          Co-Parenting Agreement.
         </p>
         <div className="mt-4 rounded-2xl bg-white border border-[#D0EBDE] p-3 flex gap-2 items-start text-[12.5px] text-[#186142] leading-relaxed">
           <ShieldCheck size={14} className="flex-shrink-0 mt-0.5" />

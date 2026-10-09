@@ -55,7 +55,7 @@ const VARIANTS = {
       "agreement drafts, unlocked by the active Compare share you both " +
       "consented to.",
     intro:
-      "We\u2019ll email your recipient the Joint Co-Parenting Agreement " +
+      "We\u2019ll email your recipient the Co-Parenting Agreement " +
       "Draft PDF. They can reply directly to your email.",
   },
 };
@@ -80,7 +80,7 @@ export default function JointReportEmailDialog({
     // HB 300 + Privacy Policy consent gate — the six "YOU CONTROL THIS
     // REPORT" bullets. Skip if the parent cancels.
     const label = variant === "agreement"
-      ? "the Joint Co-Parenting Agreement draft"
+      ? "the Co-Parenting Agreement"
       : "the Joint Co-Parenting Summary for Professional Review";
     const ok = await requestPreShareConsent(label);
     if (!ok) return;

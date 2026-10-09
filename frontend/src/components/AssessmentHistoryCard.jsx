@@ -9,15 +9,15 @@ import {
 import { jointReportUrl } from "../lib/jointArtefactUrls";
 
 /**
- * AssessmentHistoryCard — the third access point for the Joint Alignment
- * Report per the walkthrough.
+ * AssessmentHistoryCard — the third access point for the Co-Parenting
+ * Agreement per the walkthrough.
  *
  * Renders a compact table of every prep module the parent has completed.
  * Each row exposes:
  *   - The module label (parent-facing)
  *   - A soft "Completed" chip
  *   - A right-side action:
- *       • If a ready Compare share exists → "View Joint Alignment Report →"
+ *       • If a ready Compare share exists → "View Co-Parenting Agreement →"
  *         (routed with ?mint=1 so a single tap lands in the mint dialog)
  *       • Otherwise → a subtle "Review" link back to the module route
  *
@@ -50,7 +50,7 @@ export default function AssessmentHistoryCard({
           </h3>
           <p className="text-xs text-[#4B4567] mt-1 max-w-lg">
             Every finished module is here — tap any row to jump back in, or
-            open the Joint Alignment Report next to the modules your co-parent
+            open the Co-Parenting Agreement next to the modules your co-parent
             has finished too.
           </p>
         </div>
@@ -97,7 +97,7 @@ export default function AssessmentHistoryCard({
                     className="inline-flex items-center gap-1 text-xs font-semibold text-[#3D1A78] hover:underline"
                     data-testid={`${testidPrefix}-view-report-${s.key}`}
                   >
-                    View Joint Alignment Report
+                    View Co-Parenting Agreement
                     <ArrowRight size={12} />
                   </Link>
                 ) : (
@@ -121,7 +121,7 @@ export default function AssessmentHistoryCard({
           className="text-[11px] text-[#857E9C] mt-3"
           data-testid={`${testidPrefix}-waiting-hint`}
         >
-          Invite your co-parent to see a Joint Alignment Report link appear
+          Invite your co-parent to see a Co-Parenting Agreement link appear
           next to each row.
         </p>
       )}

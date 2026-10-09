@@ -341,7 +341,7 @@ export default function JointReportsPicker() {
           <BigCircle
             to={shareId ? `/joint-professional-report?share=${encodeURIComponent(shareId)}` : "/special-needs-v2/compare"}
             primary
-            title="Complete Joint Alignment Report"
+            title="Complete Co-Parenting Agreement"
             subtitle={
               shareId
                 ? "All areas — ready to open and share"

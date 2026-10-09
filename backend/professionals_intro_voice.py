@@ -54,7 +54,7 @@ INTRO_SCRIPT: str = (
     "independently, in their own time. "
     "Third, identify alignment. Align generates a side-by-side view "
     "of shared understanding and differences worth discussing. "
-    "Fourth, guide conversation. You bring the Joint Alignment Report "
+    "Fourth, guide conversation. You bring the Co-Parenting Agreement "
     "into your session and use it to focus the conversation on the "
     "child. "
     "Thank you for reviewing SA CoParents."

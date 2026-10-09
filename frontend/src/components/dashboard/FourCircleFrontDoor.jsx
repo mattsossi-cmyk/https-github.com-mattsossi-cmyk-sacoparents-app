@@ -128,7 +128,7 @@ const CIRCLES = [
     detail:
       "Take a deep look at what your child needs — one area at a time. You'll get your own report, and you can invite the other parent to compare notes side-by-side.",
     clinicalDetail:
-      "Under the hood: 25-question deep dives for Educational, Medical, and Psychological alignment, plus the Joint Alignment Report.",
+      "Under the hood: 25-question deep dives for Educational, Medical, and Psychological alignment, plus the Co-Parenting Agreement.",
     icon: Baby,
     tone: {
       ring: "ring-[#1E7A55]/25",
@@ -191,7 +191,7 @@ const CHILD_NEEDS_TILES = [
 /* Co-Parenting pathway (2026-03-04 founder spec):
    Co-Parenting Assessment → Foundation Statement →
    Mediation Statement → Mediation Preparation. Every step feeds
-   the joint alignment report on sacoparentsalign.com. */
+   the co-parenting agreement on sacoparentsalign.com. */
 const COPARENTING_PATHWAY_TILES = [
   {
     key: "assessment",
@@ -543,7 +543,7 @@ export default function FourCircleFrontDoor({ userName, situationChoice = null }
       )}
 
       {/* Inline reveal for Co-Parenting — the 4-step pathway that
-          feeds the joint alignment report on sacoparentsalign.com. */}
+          feeds the co-parenting agreement on sacoparentsalign.com. */}
       {expandedKey === "co-parenting" && (
         <div
           className="mt-6 rounded-2xl border border-[#D6CFE8] bg-[#F8F7FC] p-5 sm:p-6"
@@ -558,7 +558,7 @@ export default function FourCircleFrontDoor({ userName, situationChoice = null }
                 Walk through the four steps in order — or jump to one.
               </h2>
               <p className="text-[13px] text-[#4B4567] mt-1 leading-relaxed !mb-0">
-                Every step feeds the joint alignment report on
+                Every step feeds the co-parenting agreement on
                 <strong className="text-[#1A1330]"> sacoparentsalign.com</strong>{" "}
                 once your professional opens the case.
               </p>
@@ -849,7 +849,7 @@ function PathwayStepTile({ tile, onClick }) {
 /**
  * ClinicalDetailChip — a small "Under the hood" strip shown inside the
  * expanded pathway panels. Delays the formal / clinical terminology
- * (Foundation Statement, TISFL, Joint Alignment Report, etc.) until
+ * (Foundation Statement, TISFL, Co-Parenting Agreement, etc.) until
  * *after* the parent has told us they want to explore this pathway,
  * per the 2026-03-05 founder rule: everyday language first, clinical
  * terms revealed once they've selected.

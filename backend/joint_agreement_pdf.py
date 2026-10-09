@@ -1,4 +1,4 @@
-"""PDF renderer for the Joint Alignment Report ("Step One - Alignment
+"""PDF renderer for the Co-Parenting Agreement ("Step One - Alignment
 Before Agreement"). Historically titled the Joint Co-Parenting Agreement
 Draft; retitled in Iter190 to match sacoparentsalign.com's neutral
 alignment-report framing while keeping the same underlying payload.
@@ -19,6 +19,8 @@ from datetime import datetime, timezone
 from typing import Any, Dict, List, Optional
 
 from fpdf import FPDF
+
+from pdf_sign_notary import render_sign_and_notary
 
 from safety_assessment_pdf import (
     SAND, TEXT_DARK, TEXT_MID, DANGER, WARN, INFO, OK,
@@ -61,7 +63,7 @@ class _JointAgreementPDF(FPDF):
         self.set_text_color(*TEXT_DARK)
         self.set_font("Helvetica", "B", 11)
         self.set_xy(32, 5)
-        self.cell(0, 5, "Step One - Alignment Before Agreement", ln=1)
+        self.cell(0, 5, "Co-Parenting Agreement", ln=1)
         self.set_font("Helvetica", "", 8.5)
         self.set_text_color(*TEXT_MID)
         self.set_x(32)
@@ -75,7 +77,7 @@ class _JointAgreementPDF(FPDF):
         self.set_text_color(*TEXT_MID)
         self.cell(
             0, 4,
-            f"Draft for discussion - Not a signed agreement or court order - "
+            f"Draft for discussion - Not a court order or binding unless court-approved - "
             f"Generated {self._generated_at} - Share {self._share_id[:10]}",
             align="C", ln=1,
         )
@@ -867,7 +869,7 @@ def _cover_page(pdf: _JointAgreementPDF, payload: Dict[str, Any]):
 
 
 def build_joint_agreement_pdf(payload: Dict[str, Any]) -> bytes:
-    """Render the Joint Alignment Report PDF and return raw bytes.
+    """Render the Co-Parenting Agreement PDF and return raw bytes.
 
     Iter190 flow — mirrors sacoparentsalign.com's 10-section Joint
     Alignment Report:
@@ -1068,6 +1070,11 @@ def build_joint_agreement_pdf(payload: Dict[str, Any]) -> bytes:
         _bucket(pdf, f"{parent_b} only", section.get("parent_b_only") or [], WARN,
                 parent_a=parent_a, parent_b=parent_b, mode="b")
         pdf.ln(2)
+
+    render_sign_and_notary(pdf, [
+        {"role": f"Parent A  ·  {parent_a}", "esign": payload.get("esign_a")},
+        {"role": f"Parent B  ·  {parent_b}"},
+    ])
 
     out = pdf.output(dest="S")
     if isinstance(out, str):

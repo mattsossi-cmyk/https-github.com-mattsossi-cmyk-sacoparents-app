@@ -1,6 +1,7 @@
 import React from "react";
 
 import { PpHistory } from "./PpHistory";
+import { CourtNotesButton } from "./PpChecklist";
 function StepSummary({ step, plan, tipBusy, onEdit }) {
   const note = (plan.notes[step.key] || "").trim();
   const tip = plan.tips[step.key];
@@ -73,7 +74,7 @@ function CheckSummary({ list, plan, onEdit }) {
   );
 }
 
-export function PpSummary({ content, plan, tipBusy, onEdit, onEditCheck, onDownload, downloading, historyTick }) {
+export function PpSummary({ content, plan, tipBusy, onEdit, onEditCheck, onDownload, downloading, historyTick, onCourtNotes, notesBusy }) {
   const total = content.steps.reduce((n, s) => n + s.questions.length, 0);
   const made = Object.keys(plan.answers).length;
   const ticks = Object.values(plan.checks || {}).reduce((n, v) => n + v.length, 0);
@@ -105,6 +106,7 @@ export function PpSummary({ content, plan, tipBusy, onEdit, onEditCheck, onDownl
         {content.checklists.map((c, i) => (
           <CheckSummary key={c.key} list={c} plan={plan} onEdit={() => onEditCheck(i)} />
         ))}
+        <CourtNotesButton testid="pp-summary-court-notes-pdf" onClick={onCourtNotes} busy={notesBusy} />
       </div>
       <PpHistory tick={historyTick} />
       <p data-testid="pp-summary-closing" className="text-xs text-amber-900 bg-amber-50 border border-amber-200 rounded-xl p-3">

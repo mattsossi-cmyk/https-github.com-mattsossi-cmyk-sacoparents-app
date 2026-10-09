@@ -21,7 +21,9 @@ def test_child_needs_copy_in_lockstep():
 def test_structure_matches_founder_mockup():
     keys = [c["key"] for c in CONTENT["categories"]]
     assert keys == ["medical", "educational", "psychological"]
-    assert [len(c["fields"]) for c in CONTENT["categories"]] == [5, 5, 4]
+    # v2 (founder form design): design questions first, then the original questions grouped "Across both homes".
+    assert [len(c["fields"]) for c in CONTENT["categories"]] == [6, 10, 7]
+    assert [sum(f.get("group") == "home" for f in c["fields"]) for c in CONTENT["categories"]] == [2, 4, 4]
 
 
 def test_cleaning_drops_unknown_empty_and_bad_selects():

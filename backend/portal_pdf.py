@@ -1022,7 +1022,7 @@ def build_portal_complete_report_pdf(
         _draw_empty_state(
             pdf,
             "No joint alignment on file yet. Both parents can build one "
-            "in the Joint Alignment Report flow at "
+            "in the Co-Parenting Agreement flow at "
             "sacoparentsapp.online/joint-agreement.",
         )
 

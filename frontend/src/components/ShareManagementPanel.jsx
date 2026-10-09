@@ -17,7 +17,7 @@ import { toast } from "sonner";
 
 const DOC_TYPE_META = {
   joint_agreement: {
-    label: "Joint Co-Parenting Agreement Draft",
+    label: "Co-Parenting Agreement",
     accent: "#3D1A78",
     accentBg: "#F5F1FB",
     accentBorder: "#D6CFE8",

@@ -125,10 +125,10 @@ export default function CoparentCompletionToaster() {
               description: iMissing
                 ? "Case " +
                   ev.case_id +
-                  " — your turn. When you finish, your professional will generate the Joint Alignment Report."
+                  " — your turn. When you finish, your professional will generate the Co-Parenting Agreement."
                 : "Case " +
                   ev.case_id +
-                  " — both of you are done. Your professional can now generate the Joint Alignment Report.",
+                  " — both of you are done. Your professional can now generate the Co-Parenting Agreement.",
               duration: 9000,
               action: {
                 label: "Open dashboard",
