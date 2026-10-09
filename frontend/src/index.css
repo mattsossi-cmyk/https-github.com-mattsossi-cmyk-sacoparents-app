@@ -469,7 +469,7 @@ body:has(#court-page:not(.hidden)) [data-sonner-toaster][data-y-position="bottom
 }
 @keyframes sa-arrow-nudge {
     0%, 100% { transform: translateY(0); }
-    50% { transform: translateY(4px); }
+    50% { transform: translateY(10px); }
 }
 @media (prefers-reduced-motion: reduce) {
     .sa-arrow-nudge { animation: none; }

@@ -8867,3 +8867,4 @@ dashboard for sharing SELECTED completed reports with any professional.
 - Individual Journey: removed the duplicate welcome picture (`door-self-welcome-image`); the main dashboard keeps it (`door-welcome-image`).
 - Individual Journey: green arrow `selfJourney/FlowArrow.jsx` (`door-self-flow-arrow`, gentle nudge, reduced-motion safe)
   between the Self/Co-Parenting picture and the Child Needs picture.
+- 2026-06: Green arrow enlarged ~5x per founder: 160px circle on phones / 220px on desktop, 80/110px icon, thicker ring, 10px nudge.
