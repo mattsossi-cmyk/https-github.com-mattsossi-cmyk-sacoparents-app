@@ -1878,6 +1878,8 @@ from providers import build_router as _build_providers_router  # noqa: E402
 app.include_router(_build_providers_router(db, get_current_user), prefix="/api")
 from safety_screening import build_router as _build_safety_router  # noqa: E402
 app.include_router(_build_safety_router(db, get_current_user, get_joint_report_doc, report_role, _log_report_access), prefix="/api")
+from privacy_notice import build_router as _build_privacy_router  # noqa: E402
+app.include_router(_build_privacy_router(db, get_current_user), prefix="/api")
 from safety_screening import comm_router as _comm_router  # noqa: E402
 app.include_router(_comm_router(db, get_current_user, get_joint_report_doc, report_role), prefix="/api")
 from safety_pathway import build_router as _build_pathway_router  # noqa: E402

@@ -54,6 +54,7 @@ def public_user(u: dict) -> dict:
         "verification_level": u.get("verification_level", ""),
         "credentials_verified": u.get("verification_level") == "credentials_verified",
         "must_change_password": bool(u.get("must_change_password")),
+        "privacy_notice_version": (u.get("privacy_notice") or {}).get("version"),
         "profile": u.get("profile", {}),
     }
 

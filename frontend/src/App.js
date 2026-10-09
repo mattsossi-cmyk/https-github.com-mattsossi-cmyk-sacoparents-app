@@ -11,6 +11,8 @@ import Join from "@/pages/Join";
 import JointAssessment from "@/pages/JointAssessment";
 import SafetyScreening from "@/pages/SafetyScreening";
 import SafetyHub from "@/pages/SafetyHub";
+import PrivacyNotice from "@/pages/PrivacyNotice";
+export const PRIVACY_NOTICE_VERSION = "2026-10-09.1";
 import CommunicationReadiness from "@/pages/CommunicationReadiness";
 import SafetyResponses from "@/pages/SafetyResponses";
 import JointReport from "@/pages/JointReport";
@@ -52,6 +54,10 @@ function Protected({ children }) {
     );
   }
   if (!user) return <Navigate to="/auth" replace />;
+  if (user.privacy_notice_version !== PRIVACY_NOTICE_VERSION && window.location.pathname !== "/privacy-notice") {
+    sessionStorage.setItem("post-privacy-redirect", window.location.pathname + window.location.search);
+    return <Navigate to="/privacy-notice" replace />;
+  }
   if (user.role === "judge" && !/^\/(court-dashboard|court\/case\/)/.test(window.location.pathname)) return <Navigate to="/court-dashboard" replace />;
   return children;
 }
@@ -73,6 +79,7 @@ function App() {
             <Route path="/joint/new" element={<Protected><JointNew /></Protected>} />
             <Route path="/joint/:id/assess" element={<Protected><JointAssessment /></Protected>} />
             <Route path="/joint/:id/safety" element={<Protected><SafetyHub /></Protected>} />
+            <Route path="/privacy-notice" element={<Protected><PrivacyNotice /></Protected>} />
             <Route path="/joint/:id/communication-readiness" element={<Protected><CommunicationReadiness /></Protected>} />
             <Route path="/joint/:id/safety-screening" element={<Protected><SafetyScreening /></Protected>} />
             <Route path="/joint/:id/safety-screening/:role" element={<Protected><SafetyResponses /></Protected>} />
