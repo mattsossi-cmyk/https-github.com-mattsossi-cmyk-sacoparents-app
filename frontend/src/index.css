@@ -465,12 +465,17 @@ body:has(#court-page:not(.hidden)) [data-sonner-toaster][data-y-position="bottom
 
 /* Self Journey: green arrow between pictures, gentle downward nudge. */
 .sa-arrow-nudge {
-    animation: sa-arrow-nudge 2s ease-in-out infinite;
+    box-shadow: 0 0 0 6px #d1fae5, 0 0 18px 4px rgba(16, 185, 129, 0.35);
+    animation: sa-arrow-nudge 2s ease-in-out infinite, sa-arrow-glow 2s ease-in-out infinite;
 }
 @keyframes sa-arrow-nudge {
     0%, 100% { transform: translateY(0); }
-    50% { transform: translateY(10px); }
+    50% { transform: translateY(8px); }
+}
+@keyframes sa-arrow-glow {
+    0%, 100% { box-shadow: 0 0 0 6px #d1fae5, 0 0 18px 4px rgba(16, 185, 129, 0.35); }
+    50% { box-shadow: 0 0 0 10px #a7f3d0, 0 0 44px 16px rgba(16, 185, 129, 0.7); }
 }
 @media (prefers-reduced-motion: reduce) {
-    .sa-arrow-nudge { animation: none; }
+    .sa-arrow-nudge { animation: none; box-shadow: 0 0 0 8px #a7f3d0, 0 0 30px 10px rgba(16, 185, 129, 0.55); }
 }
