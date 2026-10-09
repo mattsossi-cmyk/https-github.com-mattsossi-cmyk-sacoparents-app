@@ -1,7 +1,7 @@
 import React from "react";
 
 // Glowing green "next step" arrow between journey steps; tapping scrolls to the step whose data-testid is `to`.
-export function FlowArrow({ testid, to, label }) {
+export function FlowArrow({ testid, to, label, step }) {
   const go = () => {
     const el = document.querySelector(`[data-testid="${to}"]`);
     if (!el) return;
@@ -15,11 +15,19 @@ export function FlowArrow({ testid, to, label }) {
         type="button"
         data-testid={testid}
         onClick={go}
-        aria-label={`Go to the next step: ${label}`}
+        aria-label={`Go to the next step${step ? ` (${step})` : ""}: ${label}`}
         title={label}
-        className="sa-arrow-nudge w-[107px] h-[107px] sm:w-[147px] sm:h-[147px] rounded-full bg-emerald-500 hover:bg-emerald-600 text-white flex items-center justify-center cursor-pointer transition-colors focus-visible:outline focus-visible:outline-4 focus-visible:outline-offset-[10px] focus-visible:outline-emerald-700"
+        className="sa-arrow-nudge relative w-[107px] h-[107px] sm:w-[147px] sm:h-[147px] rounded-full bg-emerald-500 hover:bg-emerald-600 text-white flex items-center justify-center cursor-pointer transition-colors focus-visible:outline focus-visible:outline-4 focus-visible:outline-offset-[10px] focus-visible:outline-emerald-700"
       >
         <i className="fa-solid fa-arrow-down text-[54px] sm:text-[74px]"></i>
+        {step && (
+          <span
+            data-testid={`${testid}-step`}
+            className="absolute -top-1 -right-4 sm:-right-3 whitespace-nowrap rounded-full bg-white border-2 border-emerald-200 text-emerald-700 text-[11px] sm:text-xs font-extrabold px-2.5 py-1 shadow-md"
+          >
+            {step}
+          </span>
+        )}
       </button>
     </div>
   );

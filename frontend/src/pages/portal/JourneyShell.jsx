@@ -1263,11 +1263,11 @@ export function JourneyShell({
             )}
           </JourneyArtCard>
 
-          <FlowArrow testid="door-self-flow-arrow" to="door-self-art-needs" label="Your Child's Specific Needs" />
+          <FlowArrow testid="door-self-flow-arrow" to="door-self-art-needs" label="Your Child's Specific Needs" step="3 of 6" />
 
           <JourneyArtCard testid="door-self-art-needs" art={NEEDS_ART} done={assessDone} nextKey={nextAssess} onAction={openAssessKey} />
 
-          <FlowArrow testid="door-self-flow-arrow-foundation" to="door-self-card-foundation" label="Create Your Foundation Statement" />
+          <FlowArrow testid="door-self-flow-arrow-foundation" to="door-self-card-foundation" label="Create Your Foundation Statement" step="4 of 6" />
 
           {/* Card 4 — Create Your Foundation Statement. */}
           <button
@@ -1306,7 +1306,7 @@ export function JourneyShell({
           </button>
         </div>
 
-        <FlowArrow testid="door-self-flow-arrow-parallel" to="door-self-art-parallel" label="Parallel Parenting" />
+        <FlowArrow testid="door-self-flow-arrow-parallel" to="door-self-art-parallel" label="Parallel Parenting" step="5 of 6" />
 
         <JourneyArtCard
           testid="door-self-art-parallel"
@@ -1314,7 +1314,7 @@ export function JourneyShell({
           onAction={(k) => openPp(PP_ART.items.find((it) => it.key === k).screen)}
         />
 
-        <FlowArrow testid="door-self-flow-arrow-biff" to="door-self-card-biff" label="SA CoParent Communication Builder" />
+        <FlowArrow testid="door-self-flow-arrow-biff" to="door-self-card-biff" label="SA CoParent Communication Builder" step="6 of 6" />
 
         {/* Communication Builder — the big purple hero card. */}
         <button
@@ -1347,7 +1347,7 @@ export function JourneyShell({
           </div>
         </button>
 
-        {allThreeDone && <FlowArrow testid="door-self-flow-arrow-rewards" to="door-self-finale-rewards" label="Keep your momentum" />}
+        {allThreeDone && <FlowArrow testid="door-self-flow-arrow-rewards" to="door-self-finale-rewards" label="Keep your momentum" step="Finish" />}
 
         {/* Keep the finale rewards block (badges + partner invite).
             Only visible once the all-three finale is earned. */}
