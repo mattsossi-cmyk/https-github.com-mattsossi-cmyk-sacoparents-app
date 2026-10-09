@@ -8847,3 +8847,10 @@ dashboard for sharing SELECTED completed reports with any professional.
   test inbox) for parent1.
 - Self-tested: curl (providers/shares/share + 401/404/422) and screenshots (desktop + 390px dialog, real send, Sent-to
   list refresh, Journey button). Testing agent not run yet.
+
+
+### 2026-06 — INTEGRATION_SHARED_SECRET rotated (preview)
+- Founder supplied a new "sacoparents shared secret" (kept in Keeper). It's saved single-quoted in backend/.env (special
+  characters: # $ etc.); the value never goes into docs. Verified: new key passes the gate (404 on a dummy code); old key → 401.
+- Align side NOT switched yet → until it is, Align calls to this preview get 401 "Invalid integration key" and completion
+  webhooks are signed with the new key. Legacy tests that hardcode the old hex key (e.g. tests/test_iter139_*) will fail; expected.
