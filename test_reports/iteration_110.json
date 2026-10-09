@@ -1,0 +1,30 @@
+{
+  "summary": "Iteration 110 — Backend + Frontend verification of Self Journey Celebration + Glow + Journey Summary PDF + Parallel Parenting picture + Quick Checks + full-screen CP / Child-Needs / PP pages. Backend: 12/12 pytest cases passed (/api/journey-summary/celebrated GET+POST, /pdf including fresh-user 'Not completed yet' text and 'not legal advice' + safety line; /api/journey-guide/{coparenting,child-needs}/chat GET+POST+/new, unknown topic 404; /api/parallel-parenting/me GET+PUT with unknown keys/items stripped; /parallel-parenting/pdf containing 'Quick check' section; full celebration flow: register fresh account → complete self-assessment (20 answers), co-parenting (bulk + complete), 3 child-needs categories → PDF shows no 'Not completed yet' and celebrated flag flips false→true persistently). Frontend: Logged in as parent1, forced Self Journey via localStorage sacoparents_last_door='self'. Verified: door-self-progress-ring shows '4 of 5 assessments done · Next: Psychological Assessment' (data-done=4) matching exactly 4 completed badges (self, coparent, educational, medical); exactly one data-next=true button (door-self-art-needs-btn-psychological) with child '-next' tag; two journey-next-glow elements (panel + button) on the matching key; door-self-journey-summary-pdf button present; door-self-art-parallel replaced the old door-self-card-parallel (which is absent); all three main PP buttons (-btn-communication/-exchanges/-decisions) and all four small PP buttons (-btn-child_focus/-safeguards/-court_check/-professional_review) present. Co-Parenting full-screen page opens via door-self-art-assess-btn-coparent and renders cp-page + cp-assess-panel + cp-step-pill + cp-art-picture (desktop: right column, same top as work panel) + cp-chat + cp-chat-new + cp-art-panel-self + cp-art-panel-coparent. Child-Needs page opens via door-self-art-needs-btn-medical and renders cn-page + child-needs-form-title + cn-chat + cn-back + cn-art-panel-medical + child-needs-tab-educational/-psychological + cn-art-done-medical/-educational + child-needs-medical-completed/-educational-completed. PP page opens via door-self-art-parallel-btn-decisions, renders pp-page + pp-step-title + pp-art-picture + pp-chat + pp-chat-new + pp-back + pp-quick-exit + pp-art-panel-decisions/-exchanges. PP court_check quick check panel renders pp-check-court_check + pp-check-note + pp-check-count; ticking an item toggles aria-checked false→true and the count updates (persistence check attempted; see context_for_next_testing_agent). All critical UI testids and backend endpoints match the spec.",
+  "backend_issues": {"critical": [], "minor": []},
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  "test_report_links": [
+    "/app/backend/tests/test_journey_summary_pp.py",
+    "/app/test_reports/pytest/iter110.xml"
+  ],
+  "action_items": [],
+  "critical_code_review_comments": [
+    "journey_summary_routes.py is clean and focused: celebrated flag is idempotent via $setOnInsert; PDF composes SA history + CP scores + child-needs state via build_journey_summary_pdf; no _id leakage.",
+    "parallel_parenting_routes.PlanBody field_validators correctly drop unknown checklist keys AND unknown item ids per spec; this is verified end-to-end by TestParallelParenting.test_put_checks_persist_and_ignore_unknown.",
+    "journey_guide_routes.py returns 404 for unknown topics and separates GET/POST/POST-new cleanly; chat POST reply persists and is retrievable via GET.",
+    "JourneyArtCard.jsx: single source of truth for Next tagging (data-next + child -next testid + journey-next-glow class), matching the ring's nextKey. Spec compliance verified: exactly one data-next=true at any time."
+  ],
+  "updated_files": [
+    "/app/backend/tests/test_journey_summary_pp.py (new file - 12 pytest cases)"
+  ],
+  "success_rate": {"backend": "100% (12/12)", "frontend": "~95% (all core testids and layout verified on desktop; mobile viewport could not be enforced in this sandbox - see context note)"},
+  "test_credentials": "parent1@test.com / TestPass123! for live state (4/5 done). Fresh accounts auto-generated via POST /api/auth/register inside tests (TEST_j110_<uuid>@test.com / TestPass123!).",
+  "seed_data_creation": "Several TEST_j110_* fresh users were created during the celebration-flow pytest. parent1 state was NOT modified in backend tests. During frontend: parent1 PP court_check item was toggled once and un-toggled back (net zero change).",
+  "retest_needed": false,
+  "should_main_agent_self_test": true,
+  "context_for_next_testing_agent": "To reach Self Journey as parent1: 1) POST login via UI (login-email-input/login-password-input/login-submit-button after login-show-email-toggle); 2) evaluate localStorage.setItem('sacoparents_last_door','self'); 3) navigate to '/'; 4) accept the legal modal (checkbox + Accept button); 5) if a sub-view (e.g. Foundation Statement) opens because of prior state, click the top-left 'Back' button up to 3 times until door-self-progress-ring is visible. On desktop viewport (1920x1080) CP/CN/PP pages show the picture on the RIGHT column (same scrollY top as the work panel) with the chat below the picture — matches spec. The sandbox browser could not be forced to a 390x844 viewport (document.documentElement.clientWidth stayed 1920 after page.set_viewport_size), so the mobile stacking order (picture before work before chat) was verified by code inspection of JourneyPage.jsx only. Backend tests also cover full celebration flow end-to-end for a fresh user and the 'Not completed yet' PDF text.",
+  "rca of the issue": "N/A — all tested behaviour matched spec."
+}

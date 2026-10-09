@@ -8775,3 +8775,23 @@ dashboard for sharing SELECTED completed reports with any professional.
 - Tap targets = the three icon+label bubbles (no arrows; `arrow` optional in JourneyArtCard). Coords in `NEEDS_ART`.
 - Order everywhere (buttons + ring) now matches picture: Educational → Medical → Psychological.
 - Self-tested via screenshot: each bubble opens the matching form, ring "Next" follows new order, no overflow at 390px.
+
+
+### 2026-06 — Iter110 · Celebration, glow, Journey Summary PDF, PP picture + quick checks, full-screen option pages
+- 5/5 celebration (`selfJourney/JourneyCelebration.jsx`, confetti, once per parent): backend `journey_summary_routes.py`
+  GET/POST `/api/journey-summary/celebrated` (collection `journey_celebrations`). Shown only on Self Journey view with no overlay open.
+- Next-step glow: `journey-next-glow` CSS on next unfinished picture spot + button, plus "Next" tag.
+- Journey Summary PDF: GET `/api/journey-summary/pdf` (`journey_summary_pdf.py`), button under ring + in celebration dialog.
+  Includes safety line + "not legal advice"; unfinished = "Not completed yet."
+- Parallel Parenting founder picture (`/images/sa-parallel-builder*.webp`, `PP_ART`) replaced PpBanner on Self Journey:
+  3 main buttons → Steps 1–3, 4 small → new quick checks. PpBanner/PpHeader deleted.
+- 4 PP quick checks (`checklists` in both ppContent.json + backend content): child_focus, safeguards, court_check
+  (self-check, not legal advice note), professional_review. Saved as `checks` on plan (validated), in versions, summary, PDF.
+  Flow: Step 6 → "Continue to Quick Checks" → checks 1–4 → summary.
+- Full-screen option pages in Comm Builder / Court layout via `selfJourney/JourneyPage.jsx` (work left, picture with
+  tap spots + remembered Guide chat right; phones picture → work → chat): Co-Parenting (`coparenting/CoparentingAssessmentView.jsx`,
+  replaces deleted modal, Picture 1), Child Needs (`ChildNeedsView.jsx` tabs + bubbles switch inline form, auto-advance
+  after save), Parallel Parenting (`ParallelParentingView.jsx`). New chats: `/api/journey-guide/{coparenting|child-needs}/chat`
+  (+ `/new`), collections `coparenting_guide_chats`, `child_needs_guide_chats`.
+- Testing agent iter110: backend 12/12, frontend pass; main agent self-verified 390px ordering/no overflow and
+  celebration dialog (once only). parent1 restored to 4/5 + celebrated=false afterwards.
