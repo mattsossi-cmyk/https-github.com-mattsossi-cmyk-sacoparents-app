@@ -960,3 +960,9 @@ Probed 2026-09-02: /api/link-codes, /api/integrations/* on sacoparentsapp.online
 ## 2026-10-09 Privacy Notification (agent-tested 3 backend + browser flow, NOT deployed)
 - `backend/privacy_notice.py`: PRIVACY_NOTICE_VERSION="2026-10-09.1" (also mirrored as PRIVACY_NOTICE_VERSION in frontend/src/App.js — keep in sync; test enforces), SUBHEAD pending-decision string, exact NOTICE text; GET /api/privacy-notice, POST /api/privacy-notice/accept (stores users.privacy_notice {version, accepted_at} + history). `public_user` exposes privacy_notice_version.
 - Frontend: /privacy-notice page (PrivacyNotice.jsx, Plus Jakarta/#3D1A78, Quick Exit, BrandLogo + "Start with Safety", Continue disabled until checkbox); Protected route redirects any signed-in user (parents + professionals; judges too) whose accepted version ≠ current, then returns to the original path. Footer links intentionally absent (placeholder comment).
+
+## 2026-10-09 — Privacy Notice follow-ups (deployed in release 84013524)
+- Footer links on Privacy Notice now live: /privacy, /legal/confidentiality, /legal/sharing-consent (two new DRAFT pages in Legal.jsx, badge "Draft — pending owner review").
+- Admin Acceptance Log tab (Dashboard → Acceptance Log): GET /api/admin/privacy-notice/acceptances (+ .csv export). Admin-only (403 otherwise).
+- Tests: backend/tests/test_iter95_privacy_notice.py (4 passed), iter94 regression green; deployment readiness PASS; deploy queued (job 84013524…). Awaiting system deploy notification.
+- PENDING: Professional-specific notice variant — user will supply exact wording. Owner review of Confidentiality / Sharing & Consent draft text.

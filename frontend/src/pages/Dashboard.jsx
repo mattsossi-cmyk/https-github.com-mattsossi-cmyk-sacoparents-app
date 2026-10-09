@@ -30,6 +30,7 @@ import { ProZipPrompt } from "@/components/ProZipPrompt";
 import { ProContactCard } from "@/components/ProContactCard";
 import { PublicListingCard } from "@/components/PublicListingCard";
 import { AdminListings } from "@/components/AdminListings";
+import { AdminAcceptanceLog } from "@/components/AdminAcceptanceLog";
 import { SenderStatusBadge } from "@/components/SenderStatusBadge";
 import { ProTopNav } from "@/components/dashboard/ProTopNav";
 import { ProHero } from "@/components/dashboard/ProHero";
@@ -431,6 +432,7 @@ export default function Dashboard() {
               <TabsTrigger value="judges" data-testid="admin-tab-judges">Judges</TabsTrigger>
               <TabsTrigger value="providers" data-testid="admin-tab-providers">Provider Directory</TabsTrigger>
               <TabsTrigger value="listings" data-testid="admin-tab-listings">Public Listings</TabsTrigger>
+              <TabsTrigger value="acceptance" data-testid="admin-tab-acceptance">Acceptance Log</TabsTrigger>
             </TabsList>
             <TabsContent value="invite"><InviteProfessional /></TabsContent>
             <TabsContent value="pending">
@@ -500,6 +502,7 @@ export default function Dashboard() {
             <TabsContent value="listings"><AdminListings /></TabsContent>
             <TabsContent value="judges"><AdminJudges /></TabsContent>
             <TabsContent value="providers"><AdminProviders /></TabsContent>
+            <TabsContent value="acceptance"><AdminAcceptanceLog /></TabsContent>
           </Tabs>
         )}
 

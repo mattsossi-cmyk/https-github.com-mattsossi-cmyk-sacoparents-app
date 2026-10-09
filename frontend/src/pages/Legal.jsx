@@ -51,6 +51,30 @@ const PAGES = {
       "Family-violence assessments on this platform are professional-mediated: individual safety responses are never converted into a joint comparison or shared with the other parent.",
     ],
   },
+  confidentiality: {
+    title: "Confidentiality",
+    draft: true,
+    body: [
+      "SA CoParents Align keeps your individual assessment answers, safety screening responses, personal reflections, and drafts private by default. Your co-parent does not automatically see any of this material.",
+      "Only professionals assigned to your matter may view individual screening answers. Every time a professional opens item-level screening responses, the access is recorded in an access log that includes who viewed the material and when.",
+      "Reports, court packets, and anything your co-parent may see contain only neutral, selected information — such as whether a screening was received and the professional-confirmed communication pathway — never raw answers, computed flags, locations, or narratives.",
+      "Privacy within the platform is not the same as legal privilege. Using SA CoParents Align does not by itself create an attorney-client, therapist-patient, mediator-client, or other legally privileged relationship. Information may be subject to lawful disclosure requirements such as a subpoena or court order. If you are involved in or anticipate litigation, consult your attorney before entering information you are concerned about.",
+      "An assessment is not a finding. A difference in perspective is not a determination of fact. An AI-assisted draft is not a professional opinion, and a professional report is not a court determination. Professionals — not software — review, decide, and certify what is shared.",
+      "Questions about confidentiality may be sent to the Privacy Officer at mattsossi@bsossi.com.",
+    ],
+  },
+  "sharing-consent": {
+    title: "Sharing & Consent",
+    draft: true,
+    body: [
+      "You control what you share. In the Self Journey you choose which completed reports to share and with whom. Sharing one report does not grant access to your whole account, your private journal, your raw answers, or any other report.",
+      "Joint participation is different. When you accept an invitation to a joint alignment report or co-parenting agreement, you are consenting to have your responses compared with your co-parent's responses in a neutral, structured report. You see only the generated comparison — never the other parent's raw answers — and the other parent sees only the comparison as well. Please review the subject list on the invitation before you begin.",
+      "Court-ordered or professionally facilitated participation follows separate rules. A professional you or a court have assigned may invite both parents, view individual screening answers (access-logged), and select which neutral material appears in a report or court packet. The professional's report is not a court determination.",
+      "Family-violence and communication-safety screenings are never turned into a joint comparison and are never shared with the other parent. Only the assigned professional may see them.",
+      "Consent is revocable going forward, but not backward. You may stop sharing a report or withdraw from a joint process at any time; however, copies that a recipient has already downloaded, printed, or forwarded cannot be recalled by SA CoParents Align.",
+      "Each time a sharing or consent choice is presented, you will be told what the recipient will receive before you confirm. If anything is unclear, pause and ask the assigned professional or contact mattsossi@bsossi.com before continuing.",
+    ],
+  },
   contact: {
     title: "Contact SA CoParents",
     body: [
@@ -75,6 +99,7 @@ export default function Legal() {
       </header>
       <main className="max-w-3xl mx-auto px-6 py-12">
         <h1 className="text-4xl font-extrabold text-brand-purple" data-testid={`legal-${page}-title`}>{content.title}</h1>
+        {content.draft && <p className="mt-3 inline-block rounded-md border border-amber-300 bg-amber-50 px-3 py-1 text-xs font-semibold text-amber-900" data-testid={`legal-${page}-draft`}>Draft — pending owner review</p>}
         <div className="mt-6 space-y-4">
           {content.body.map((p, i) => (
             <p key={i} className="text-muted-foreground leading-relaxed" data-testid={`legal-${page}-p-${i}`}>{p}</p>

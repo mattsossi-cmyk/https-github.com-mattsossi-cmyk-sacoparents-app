@@ -48,7 +48,14 @@ export default function PrivacyNotice() {
             <span className="text-sm font-medium">{n.checkbox}</span>
           </label>
           <Button onClick={go} disabled={!ok || busy} className="mt-5 h-12 w-full rounded-full bg-[#3D1A78] text-base font-bold hover:bg-[#2f1460] disabled:opacity-50 focus-visible:ring-2 focus-visible:ring-[#3D1A78] focus-visible:ring-offset-2" data-testid="privacy-continue-btn">{n.continue}</Button>
-          <p className="mt-4 flex items-center gap-1.5 text-[11px] text-slate-500"><Lock className="h-3 w-3" aria-hidden="true" /> Notice version {n.version}. {/* TODO(placeholder): footer links to Privacy Policy, Confidentiality, and Sharing & Consent will appear here once those pages exist. */}</p>
+          <p className="mt-4 flex items-center gap-1.5 text-[11px] text-slate-500"><Lock className="h-3 w-3" aria-hidden="true" /> Notice version {n.version}.</p>
+          {n.footer_links?.length > 0 && (
+            <nav className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-xs" aria-label="Privacy documents" data-testid="privacy-footer-links">
+              {n.footer_links.map((l) => (
+                <a key={l.href} href={l.href} target="_blank" rel="noopener noreferrer" className="font-medium text-[#3D1A78] underline-offset-2 hover:underline" data-testid={`privacy-footer-link-${l.href.split("/").pop()}`}>{l.label}</a>
+              ))}
+            </nav>
+          )}
         </section>
       </main>
     </div>

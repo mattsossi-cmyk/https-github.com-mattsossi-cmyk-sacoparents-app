@@ -1,7 +1,7 @@
 """Privacy Notification — shown on first sign-in and whenever PRIVACY_NOTICE_VERSION changes. Acceptance stored per user with timestamp + version."""
 from datetime import datetime, timezone
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Response
 from pydantic import BaseModel
 
 PRIVACY_NOTICE_VERSION = "2026-10-09.1"
@@ -23,8 +23,11 @@ NOTICE = {
     "legal": "Using SA CoParents does not automatically create an attorney-client, therapist-patient, or other legally privileged relationship. Information may be subject to lawful disclosure requirements.",
     "checkbox": "I have read and understand this privacy notification.",
     "continue": "Continue to SA CoParents",
-    # Footer links intentionally absent until the Privacy Policy / Confidentiality / Sharing & Consent pages exist.
-    "footer_links": [],
+    "footer_links": [
+        {"label": "Privacy Policy", "href": "/privacy"},
+        {"label": "Confidentiality", "href": "/legal/confidentiality"},
+        {"label": "Sharing & Consent", "href": "/legal/sharing-consent"},
+    ],
 }
 
 
@@ -55,5 +58,42 @@ def build_router(db, get_current_user) -> APIRouter:
         rec = {"version": PRIVACY_NOTICE_VERSION, "accepted_at": datetime.now(timezone.utc).isoformat()}
         await db.users.update_one({"_id": user["_id"]}, {"$set": {"privacy_notice": rec}, "$push": {"privacy_notice_history": rec}})
         return {"ok": True, **rec}
+
+    def _admin(user):
+        if user.get("role") != "admin":
+            raise HTTPException(status_code=403, detail="Admin only")
+
+    async def _log_rows():
+        cur = db.users.find({}, {"name": 1, "email": 1, "role": 1, "privacy_notice": 1, "privacy_notice_history": 1})
+        rows = []
+        async for u in cur:
+            acc = u.get("privacy_notice") or {}
+            rows.append({
+                "id": str(u["_id"]), "name": u.get("name") or "", "email": u.get("email") or "", "role": u.get("role") or "",
+                "accepted_version": acc.get("version"), "accepted_at": acc.get("accepted_at"),
+                "current": acc.get("version") == PRIVACY_NOTICE_VERSION,
+                "history": [{"version": h.get("version"), "accepted_at": h.get("accepted_at")} for h in (u.get("privacy_notice_history") or [])],
+            })
+        rows.sort(key=lambda x: (x["current"], x["accepted_at"] or ""), reverse=True)
+        return rows
+
+    @r.get("/admin/privacy-notice/acceptances")
+    async def acceptance_log(user=Depends(get_current_user)):
+        _admin(user)
+        rows = await _log_rows()
+        return {"current_version": PRIVACY_NOTICE_VERSION, "total": len(rows), "accepted_current": sum(1 for x in rows if x["current"]), "rows": rows}
+
+    @r.get("/admin/privacy-notice/acceptances.csv")
+    async def acceptance_log_csv(user=Depends(get_current_user)):
+        _admin(user)
+        import csv
+        import io
+        buf = io.StringIO()
+        w = csv.writer(buf)
+        w.writerow(["name", "email", "role", "accepted_version", "accepted_at", "current_version", "history"])
+        for x in await _log_rows():
+            w.writerow([x["name"], x["email"], x["role"], x["accepted_version"] or "", x["accepted_at"] or "", "yes" if x["current"] else "no",
+                        "; ".join(f"{h['version']}@{h['accepted_at']}" for h in x["history"])])
+        return Response(buf.getvalue(), media_type="text/csv", headers={"Content-Disposition": "attachment; filename=privacy-notice-acceptances.csv"})
 
     return r
