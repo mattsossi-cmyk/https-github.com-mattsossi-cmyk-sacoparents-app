@@ -6,6 +6,9 @@
 
 
 
+import os
+import secrets
+import uuid
 from datetime import datetime, timezone
 
 from html import escape
@@ -39,8 +42,24 @@ router = APIRouter()
 
 
 def check_integration_key(request: Request):
-    if request.headers.get("x-integration-key") != INTEGRATION_SECRET:
+    if not secrets.compare_digest(request.headers.get("x-integration-key") or "", INTEGRATION_SECRET):
         raise HTTPException(status_code=401, detail="Invalid integration key")
+
+
+async def _alert_bridge_write(report: dict, role: str, request: Request, fields: list[str]) -> None:
+    """Every bridge write is logged (no PII) and surfaced to the admin inbox so a leaked key cannot act silently."""
+    now = datetime.now(timezone.utc).isoformat()
+    await db.access_events.insert_one({"id": str(uuid.uuid4()), "report_id": report["id"], "kind": "integration_write", "role": role, "fields": fields, "ip": request.client.host if request.client else None, "at": now})
+    logger.info("integration write case=%s role=%s fields=%s", report["id"], role, ",".join(fields))
+    admin = os.environ.get("ADMIN_EMAIL")
+    if not admin:
+        return
+    try:
+        await send_email(to=admin, subject=f"Bridge write on Case {report.get('case_code') or report['id'][:8]} - {EMAIL_FROM_NAME}",
+                         html=f"<p>The sacoparentsapp.online bridge wrote to Parent {role.upper()} on case {escape(report.get('case_code') or report['id'][:8])} at {now[:19]}Z.</p><p>Fields: {escape(', '.join(fields))}. No answer content is included in this alert.</p><p>If this was not expected, rotate INTEGRATION_SHARED_SECRET immediately.</p>",
+                         case_id=report["id"], kind="integration_write_alert", to_role="Admin")
+    except Exception:
+        logger.warning("Bridge write alert not sent for case %s", report["id"])
 
 
 @router.get("/integrations/safety-screening-spec")
@@ -151,6 +170,7 @@ async def integration_case_update(body: CaseUpdateIn, request: Request):
         await db.invitations.update_one({"id": inv["id"]}, {"$set": {"status": "accepted", "accepted_at": now}})
     if updates:
         await db.joint_reports.update_one({"id": report["id"]}, {"$set": updates})
+        await _alert_bridge_write(report, inv["role"], request, sorted(k.split(".")[0] for k in updates))
     if updates.get("status") == "ready":
         await _notify_case_ready(report)
     return {"ok": True, "case_status": updates.get("status", report["status"])}

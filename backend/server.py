@@ -14,7 +14,7 @@ from html import escape
 
 
 
-from fastapi import FastAPI, APIRouter, HTTPException, Response, Depends
+from fastapi import FastAPI, APIRouter, HTTPException, Request, Response, Depends
 from pydantic import BaseModel, EmailStr
 
 from assessment_data import ASSESSMENT_TYPES, ORDERED_TYPE_KEYS, SCALE, demo_payload
@@ -253,7 +253,6 @@ async def seed_auto_approvals():
     now = datetime.now(timezone.utc).isoformat()
     res = await db.users.update_many({"email": {"$in": emails}, "role": {"$in": ["professional", "judge"]}},
                                      {"$set": {"approved": True, "declined": False, "verification_level": "credentials_verified", "credentials_verified_at": now, "auto_approved_at": now}})
-    await db.login_attempts.delete_many({"identifier": {"$regex": "(" + "|".join(re.escape(f":{e}") for e in emails) + ")$"}})
     logger.info("AUTO_APPROVE_EMAILS: %s account(s) approved", res.modified_count)
 
 
@@ -278,7 +277,6 @@ async def seed_admin():
             {"email": admin_email.lower()},
             {"$set": {"password_hash": hash_password(admin_password)}, "$unset": {"password_reset_by_user": ""}},
         )
-        await db.login_attempts.delete_many({"identifier": {"$regex": f":{admin_email.lower()}$"}})
         logger.info("Admin password re-synced from ADMIN_PASSWORD env")
     if not (existing or {}).get("profile", {}).get("pro_role"):
         await db.users.update_one(
@@ -1915,6 +1913,21 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+_CSP = ("default-src 'self'; script-src 'self' 'unsafe-inline' https://assets.emergent.sh; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https:; "
+        "font-src 'self' data:; connect-src 'self' https: wss:; frame-ancestors 'none'; base-uri 'self'; form-action 'self'; object-src 'none'")
+
+
+@app.middleware("http")
+async def _security_headers(request: Request, call_next):
+    response = await call_next(request)
+    response.headers.setdefault("Strict-Transport-Security", "max-age=31536000; includeSubDomains")
+    response.headers.setdefault("X-Content-Type-Options", "nosniff")
+    response.headers.setdefault("X-Frame-Options", "DENY")
+    response.headers.setdefault("Referrer-Policy", "strict-origin-when-cross-origin")
+    response.headers.setdefault("Permissions-Policy", "camera=(), microphone=(), geolocation=()")
+    response.headers.setdefault("Content-Security-Policy", _CSP)
+    return response
 
 
 @app.on_event("shutdown")

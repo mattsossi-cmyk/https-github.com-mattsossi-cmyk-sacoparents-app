@@ -12,6 +12,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ReminderPreviewButton } from "@/components/ReminderPreview";
 import { VerifiedBadge } from "@/components/VerifiedBadge";
+import { DeleteAccountButton } from "@/components/DeleteAccount";
 import { AdminProfessionals } from "@/components/AdminProfessionals";
 import { AdminJudges } from "@/components/AdminJudges";
 import { AdminProviders } from "@/components/AdminProviders";
@@ -384,6 +385,7 @@ export default function Dashboard() {
           <div className="flex items-center gap-2 sm:gap-4 shrink-0">
             <span className="text-sm hidden 2xl:block" data-testid="user-email"><span className="font-medium" data-testid="user-name">{user?.name}</span>{user?.name ? <span className="text-muted-foreground"> · {user?.email}</span> : <span className="text-muted-foreground">{user?.email}</span>}</span>
             {user?.credentials_verified && <span className="hidden sm:inline-flex"><VerifiedBadge /></span>}
+            {user?.role === "parent" && <DeleteAccountButton onDeleted={refresh} />}
             <Button variant="outline" size="sm" onClick={async () => { await logout(); navigate("/"); }} data-testid="logout-btn">
               Sign out
             </Button>

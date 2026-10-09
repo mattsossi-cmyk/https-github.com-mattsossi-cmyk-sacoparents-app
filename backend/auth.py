@@ -246,6 +246,35 @@ async def logout(response: Response):
     return {"ok": True}
 
 
+class DeleteAccountIn(BaseModel):
+    password: str
+    confirm: str
+
+
+@router.delete("/auth/me")
+async def delete_my_account(body: DeleteAccountIn, response: Response, user=Depends(get_current_user)):
+    """Parent self-erasure: password re-entry + typed confirmation. Removes the account and the parent's private data; keeps a PII-free audit record."""
+    if user.get("role") != "parent":
+        raise HTTPException(status_code=403, detail="Account deletion here is available to parent accounts. Professionals and judges: contact the administrator.")
+    full = await db.users.find_one({"_id": user["_id"]})
+    if body.confirm.strip().upper() != "DELETE" or not full or not verify_password(body.password, full.get("password_hash") or ""):
+        raise HTTPException(status_code=400, detail="Password or confirmation did not match")
+    uid, email, now = user["_id"], full["email"], datetime.now(timezone.utc).isoformat()
+    async for doc in db.joint_reports.find({"$or": [{"participants.a.user_id": uid}, {"participants.b.user_id": uid}]}, {"id": 1, "participants": 1}):
+        role = "a" if doc["participants"]["a"].get("user_id") == uid else "b"
+        await db.joint_reports.update_one({"id": doc["id"]}, {"$set": {f"participants.{role}": {"user_id": None, "name": "Former participant", "email": None, "gender": None, "deleted_at": now}},
+                                                              "$unset": {f"responses.{role}": "", f"safety_screenings.{role}": "", f"safety_flags.{role}": "", f"safety_pathway.{role}": "", f"communication_readiness.{role}": "", f"safety_version.{role}": "", f"safety_version_confirmed.{role}": "", f"safety_reminded_at.{role}": ""}})
+    await db.foundation_statements.delete_many({"user_id": uid})
+    await db.invitations.update_many({"invitee_email": email}, {"$set": {"invitee_email": None, "status": "revoked", "revoked_reason": "account_deleted"}})
+    await db.communications.update_many({"to": email}, {"$set": {"to": "[deleted]"}})
+    await db.password_resets.delete_many({"email": email})
+    await db.users.delete_one({"_id": uid})
+    await db.access_events.insert_one({"id": str(uuid.uuid4()), "kind": "account_deleted", "role": "parent", "at": now})
+    response.delete_cookie("access_token", path="/")
+    response.delete_cookie("refresh_token", path="/")
+    return {"ok": True, "deleted_at": now}
+
+
 @router.get("/auth/me")
 async def me(user=Depends(get_current_user)):
     return public_user(user)
