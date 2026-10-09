@@ -1263,9 +1263,11 @@ export function JourneyShell({
             )}
           </JourneyArtCard>
 
-          <FlowArrow testid="door-self-flow-arrow" />
+          <FlowArrow testid="door-self-flow-arrow" to="door-self-art-needs" label="Your Child's Specific Needs" />
 
           <JourneyArtCard testid="door-self-art-needs" art={NEEDS_ART} done={assessDone} nextKey={nextAssess} onAction={openAssessKey} />
+
+          <FlowArrow testid="door-self-flow-arrow-foundation" to="door-self-card-foundation" label="Create Your Foundation Statement" />
 
           {/* Card 4 — Create Your Foundation Statement. */}
           <button
@@ -1304,11 +1306,15 @@ export function JourneyShell({
           </button>
         </div>
 
+        <FlowArrow testid="door-self-flow-arrow-parallel" to="door-self-art-parallel" label="Parallel Parenting" />
+
         <JourneyArtCard
           testid="door-self-art-parallel"
           art={PP_ART}
           onAction={(k) => openPp(PP_ART.items.find((it) => it.key === k).screen)}
         />
+
+        <FlowArrow testid="door-self-flow-arrow-biff" to="door-self-card-biff" label="SA CoParent Communication Builder" />
 
         {/* Communication Builder — the big purple hero card. */}
         <button
@@ -1340,6 +1346,8 @@ export function JourneyShell({
             <i className="fa-solid fa-chevron-right text-sm"></i>
           </div>
         </button>
+
+        {allThreeDone && <FlowArrow testid="door-self-flow-arrow-rewards" to="door-self-finale-rewards" label="Keep your momentum" />}
 
         {/* Keep the finale rewards block (badges + partner invite).
             Only visible once the all-three finale is earned. */}
