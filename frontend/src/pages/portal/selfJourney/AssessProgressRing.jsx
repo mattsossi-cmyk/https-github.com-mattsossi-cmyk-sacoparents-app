@@ -5,6 +5,21 @@ import { ASSESS_ORDER, ASSESS_NAMES } from "./selfJourneyArt";
 const R = 22;
 const C = 2 * Math.PI * R;
 
+export function JourneySummaryButton({ onClick, downloading }) {
+  return (
+    <button
+      type="button"
+      data-testid="door-self-journey-summary-pdf"
+      onClick={onClick}
+      disabled={downloading}
+      className="w-full py-2.5 rounded-full bg-white hover:bg-purple-50 border border-purple-300 text-purple-900 text-[13px] font-bold transition-colors disabled:opacity-60"
+    >
+      <i className={`fa-solid ${downloading ? "fa-spinner fa-spin" : "fa-file-pdf"} mr-1.5`}></i>
+      Download my Journey Summary (PDF)
+    </button>
+  );
+}
+
 // "X of 5 assessments done" ring; tapping it opens the next unfinished assessment.
 export function AssessProgressRing({ done, onOpen }) {
   const count = ASSESS_ORDER.filter((k) => done[k]).length;

@@ -2,15 +2,21 @@ import React from "react";
 
 import { Spot } from "../court/CourtJourneyArt";
 
-function ActionButton({ testid, item, done, onClick }) {
+function ActionButton({ testid, item, done, next, onClick }) {
   return (
     <button
       type="button"
       data-testid={testid}
       data-done={done ? "true" : "false"}
+      data-next={next ? "true" : "false"}
       onClick={onClick}
-      className={`${item.tone} text-white rounded-2xl px-2 py-2.5 shadow-md flex flex-col items-center justify-center gap-1 text-center transition-[background-color,transform] active:scale-[0.97]`}
+      className={`${item.tone} ${next ? "journey-next-glow" : ""} relative text-white rounded-2xl px-2 py-2.5 shadow-md flex flex-col items-center justify-center gap-1 text-center transition-[background-color,transform] active:scale-[0.97]`}
     >
+      {next && (
+        <span data-testid={`${testid}-next`} className="absolute -top-2 right-2 bg-white text-[#6b2fb3] text-[9px] font-extrabold uppercase tracking-wider rounded-full px-2 py-0.5 shadow">
+          Next
+        </span>
+      )}
       <i className={`fa-solid ${item.icon} text-base`}></i>
       <span className="text-[12px] font-extrabold leading-tight">{item.label}</span>
       {done ? (
@@ -27,7 +33,7 @@ function ActionButton({ testid, item, done, onClick }) {
 }
 
 // Assessment artwork with tappable panels + arrow buttons, and a row of labeled buttons underneath.
-export function JourneyArtCard({ testid, art, done = {}, onAction, children }) {
+export function JourneyArtCard({ testid, art, done = {}, nextKey, onAction, children }) {
   return (
     <section data-testid={testid} className="space-y-2.5">
       <div className="relative w-full rounded-3xl overflow-hidden shadow-lg border border-purple-100 bg-white">
@@ -44,7 +50,7 @@ export function JourneyArtCard({ testid, art, done = {}, onAction, children }) {
         />
         {art.items.map((it) => (
           <React.Fragment key={it.key}>
-            <Spot testid={`${testid}-panel-${it.key}`} spot={it.panel} label={`Open ${it.label} Assessment`} className="!rounded-3xl" onClick={() => onAction(it.key)} />
+            <Spot testid={`${testid}-panel-${it.key}`} spot={it.panel} label={`Open ${it.label} Assessment`} className={`!rounded-3xl ${it.key === nextKey ? "journey-next-glow" : ""}`} onClick={() => onAction(it.key)} />
             {it.arrow && (
               <Spot testid={`${testid}-arrow-${it.key}`} spot={it.arrow} label={`Start ${it.label} Assessment`} className="!rounded-full" onClick={() => onAction(it.key)} />
             )}
@@ -53,7 +59,7 @@ export function JourneyArtCard({ testid, art, done = {}, onAction, children }) {
       </div>
       <div className={`grid gap-2 ${art.items.length === 3 ? "grid-cols-3" : "grid-cols-2"}`}>
         {art.items.map((it) => (
-          <ActionButton key={it.key} testid={`${testid}-btn-${it.key}`} item={it} done={!!done[it.key]} onClick={() => onAction(it.key)} />
+          <ActionButton key={it.key} testid={`${testid}-btn-${it.key}`} item={it} done={!!done[it.key]} next={it.key === nextKey} onClick={() => onAction(it.key)} />
         ))}
       </div>
       {children}

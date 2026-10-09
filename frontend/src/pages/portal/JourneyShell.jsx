@@ -11,8 +11,10 @@ import { useSelfAssessmentHistory } from "./selfAssessment/useSelfAssessmentHist
 import { GoalBanner } from "./selfAssessment/GoalBanner";
 import { WelcomeArtwork } from "./WelcomeArtwork";
 import { JourneyArtCard } from "./selfJourney/JourneyArtCard";
-import { ASSESS_ART, NEEDS_ART } from "./selfJourney/selfJourneyArt";
-import { AssessProgressRing } from "./selfJourney/AssessProgressRing";
+import { ASSESS_ART, ASSESS_ORDER, NEEDS_ART } from "./selfJourney/selfJourneyArt";
+import { AssessProgressRing, JourneySummaryButton } from "./selfJourney/AssessProgressRing";
+import { JourneyCelebration } from "./selfJourney/JourneyCelebration";
+import { useJourneySummary } from "./selfJourney/useJourneySummary";
 import { useCoparentingDone } from "./selfJourney/useCoparentingDone";
 import { useChildNeeds } from "./childNeeds/useChildNeeds";
 import { CoparentingAssessmentModal } from "./coparenting/CoparentingAssessmentModal";
@@ -857,6 +859,16 @@ export function JourneyShell({
     coparent: cpDone,
     ...Object.fromEntries(["educational", "psychological", "medical"].map((k) => [k, !!childNeeds.state.completed_at?.[k]])),
   };
+  const nextAssess = ASSESS_ORDER.find((k) => !assessDone[k]);
+  const journeySummary = useJourneySummary(user?.user_id);
+  const [celebrating, setCelebrating] = useState(false);
+  // First time a parent reaches 5 of 5 on the Self Journey: confetti once, saved on the account.
+  useEffect(() => {
+    if (view !== "self" || nextAssess || journeySummary.celebrated || assessOpen || cpAssessOpen) return;
+    setCelebrating(true);
+    journeySummary.markCelebrated();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [view, nextAssess, journeySummary.celebrated, assessOpen, cpAssessOpen]);
   const foundationBuilder = useFoundationBuilder(
     user?.user_id,
     user?.name ? user.name.split(" ")[0] : null
@@ -1238,8 +1250,9 @@ export function JourneyShell({
         {/* Assessment artwork (replaces cards 1–3): tappable panels/arrows + labeled buttons. */}
         <div id="door-self-actions" data-testid="door-self-actions" className="space-y-4 scroll-mt-4">
           <AssessProgressRing done={assessDone} onOpen={openAssessKey} />
+          <JourneySummaryButton onClick={journeySummary.downloadPdf} downloading={journeySummary.downloading} />
 
-          <JourneyArtCard testid="door-self-art-assess" art={ASSESS_ART} done={assessDone} onAction={openAssessKey}>
+          <JourneyArtCard testid="door-self-art-assess" art={ASSESS_ART} done={assessDone} nextKey={nextAssess} onAction={openAssessKey}>
             {saHistory.latest && (
               <p data-testid="door-self-card-assess-last" className="text-[11px] font-semibold text-purple-700 text-center">
                 Latest Self-Assessment: {saHistory.latest.scores.overall}/100 · {saHistory.history.length} completed
@@ -1247,7 +1260,7 @@ export function JourneyShell({
             )}
           </JourneyArtCard>
 
-          <JourneyArtCard testid="door-self-art-needs" art={NEEDS_ART} done={assessDone} onAction={openAssessKey} />
+          <JourneyArtCard testid="door-self-art-needs" art={NEEDS_ART} done={assessDone} nextKey={nextAssess} onAction={openAssessKey} />
 
           {/* Card 4 — Create Your Foundation Statement. */}
           <button
@@ -1475,6 +1488,12 @@ export function JourneyShell({
         </DialogContent>
       </Dialog>
 
+      <JourneyCelebration
+        open={celebrating}
+        onClose={() => setCelebrating(false)}
+        onPdf={journeySummary.downloadPdf}
+        downloading={journeySummary.downloading}
+      />
       {journeyOverlays}
     </div>
   );
