@@ -1,0 +1,24 @@
+{
+  "summary": "Frontend-only review of Self Journey artwork redesign (two assessment pictures replacing old cards 1–3). Logged in parent1@test.com, forced sacoparents_last_door='self', dismissed legal ack modal, verified all 20 new testids and 3 old testids absent on mobile 390x844 and desktop 1920x800. Order: door-self-art-assess (y=762) → door-self-art-needs (y=1530) → door-self-card-foundation (y=2171). Image srcs: /images/sa-journey-assess-640.webp and /images/sa-child-needs-assess-640.webp as specified. 'Latest Self-Assessment: 92/100 · 4 completed' appears under picture 1 (door-self-card-assess-last). Picture 1: panel-self / arrow-self / btn-self each switch view to SelfAssessmentView (testid 'self-assessment-page' present after click). Picture 1: panel-coparent / arrow-coparent / btn-coparent each open the Co-Parenting Relationship Assessment modal ('Understand Your Co-Parenting Relationship / Co-Parenting Assessment'). Picture 2: all 9 trio clicks (educational×3, psychological×3, medical×3) land on door-view-child-needs AND immediately open the correct child-needs dialog (Educational→'Child Educational Needs Assessment', Psychological→'Child Psychological & Emotional Assessment', Medical→'Child Medical Needs Assessment'). Dialog Esc leaves user on door-view-child-needs; child-needs-back returns to Self Journey (door-self-art-assess visible). WelcomeArtwork hotspot door-self-welcome-hotspot-self smooth-scrolls to #door-self-actions (top=16px after click). Labeled button rows fit mobile 390 with no overflow (2 cols under pic 1, 3 cols under pic 2, 358/358 scrollWidth/clientWidth, no overflow, 82px tall). Hotspot bounding boxes computed over the <img> match selfJourneyArt.js exactly: pic1 panel-self [36.5,2.5,95.0,23.3], arrow-self [50.0,87.0,8.5,4.8], panel-coparent [61.2,2.5,95.0,26.4], arrow-coparent [76.6,87.0,8.5,4.8]. Desktop 1920 shows both pictures stacked inside max-w-md container (as noted in request). Court regression (parent3@test.com): court-hints-toggle span now has white-space:nowrap, text 'Hide Action Buttons' is one line (height 16px, line-height 16px) — iteration 107 wrap issue is fixed. Court step-card-3 → court-step-dialog → 'Continue Step 3' navigates to door-view-child-needs with NO dialog auto-opened (dialogs=[]), matching the court-card3 regression requirement.",
+  "backend_issues": {"critical": [], "minor": []},
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  "test_report_links": [],
+  "action_items": [],
+  "critical_code_review_comments": [
+    "JourneyArtCard.jsx cleanly reuses the exported Spot component from CourtJourneyArt and keeps picture/button pairs declarative via selfJourneyArt.js data — adding/moving panels won't touch component code.",
+    "openChildNeeds(from, key) + ChildNeedsView.initialOpenKey wire deep-link behaviour (Child Needs page opens with the correct dialog immediately) while leaving the court path's card3 behaviour (no auto-dialog) intact — verified at runtime.",
+    "selfJourneyArt.js is pure data (name, width/height, items with panel+arrow [top,left,w,h]%), so hotspot coords stay auditable and the measured bounding boxes match the file exactly after rendering.",
+    "iter107 court-hints-toggle wrap was fixed by adding white-space:nowrap (computed style confirms ws:'nowrap', single-line label on mobile)."
+  ],
+  "updated_files": [],
+  "success_rate": {"backend": "n/a", "frontend": "100%"},
+  "test_credentials": "parent1@test.com / TestPass123! for Self Journey; parent3@test.com / TestPass123! for Court regression (PAIR-DEMO-01).",
+  "seed_data_creation": "None.",
+  "retest_needed": false,
+  "should_main_agent_self_test": true,
+  "context_for_next_testing_agent": "Self Journey artwork rework verified end-to-end: 2 pictures (door-self-art-assess, door-self-art-needs) + Foundation card, 20 new testids all working, old door-self-card-assess/-relationship/-child-needs absent, hotspot %s exactly match selfJourneyArt.js. Legal ack modal requires clicking [data-testid=legal-ack-checkbox] then [data-testid=legal-ack-continue-button] — the custom checkbox is role=checkbox not an <input>, so standard `check()` won't work; use click(force=True). Court step3 regression (no auto-dialog from Continue Step 3) is holding; iter107 hints-toggle wrap bug is resolved."
+}

@@ -8744,3 +8744,14 @@ dashboard for sharing SELECTED completed reports with any professional.
 - Step 4: "Add to Step 4" per agreed area with a note + "Add all agreements to Step 4" → Foundation field co_values ("Agreed co-parenting principles & values") lines "<area> (agreed): <note>"; existing exact lines skipped; an edited note replaces that area's line. Foundation PDF prints the intent wording under any box containing " (agreed): ".
 - User pasted a NEW, TRUNCATED HTML "SA CoParents - Safety & Communication Assessment" (quick-exit red bar, inclusive-care banner, 3-pillar assessment grid…) — cut off mid-CSS; not built yet. Ask the user to resend the full file and say where it goes.
 - STILL PENDING: real Court-Ordered Journey picture (temporary stand-in in place).
+
+
+### 2026-06 — Iter108 · Self Journey assessment artwork (replaces cards 1–3)
+- Picture 1 `/images/sa-journey-assess(-640).webp` (founder upload "SA CoParents Journey Assessment Screen") —
+  Self-Assessment + Co-Parenting Assessment panels; panel + arrow hotspots + 2 labeled buttons.
+- Picture 2 `/images/sa-child-needs-assess(-640).webp` (agent-generated, same style) — Educational /
+  Psychological / Medical; panel + arrow hotspots + 3 labeled buttons that open the matching
+  Child Needs form directly (`openChildNeeds("self", key)` → `ChildNeedsView initialOpenKey`).
+- Files: `portal/selfJourney/JourneyArtCard.jsx`, `portal/selfJourney/selfJourneyArt.js` (hotspot coords),
+  `court/CourtJourneyArt.jsx` (`Spot` exported). Card 4 Foundation, PP banner, Comm Builder unchanged.
+- Court hints toggle no longer wraps at 390px (verified iter108). Testing agent iter108: all pass.
