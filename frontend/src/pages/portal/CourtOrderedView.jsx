@@ -5,11 +5,11 @@ import { toast } from "sonner";
 import { CourtAcceptDialog } from "./court/CourtAcceptDialog";
 import { CourtAgreeCard } from "./court/CourtAgreement";
 import { CourtCelebration } from "./court/CourtCelebration";
-import { CourtChatPanel } from "./court/CourtChatPanel";
+import { CourtChatInline, CourtChatPanel } from "./court/CourtChatPanel";
 import { CourtChecklistCard } from "./court/CourtChecklistCard";
 import { PILLARS, STEPS } from "./court/courtContent";
-import { CourtHeader } from "./court/CourtHeader";
 import { CourtJourneyArt } from "./court/CourtJourneyArt";
+import { AcceptCard, PillarCards, StepCards } from "./court/CourtJourneyCards";
 import { CourtPillarDialog } from "./court/CourtPillarDialog";
 import { CourtStepDialog } from "./court/CourtStepDialog";
 import { CourtModulesCard, CourtTools } from "./court/CourtTools";
@@ -18,7 +18,7 @@ import { useCourtChecklist } from "./court/useCourtChecklist";
 import { useCourtCompare } from "./court/useCourtCompare";
 import { useCourtSummary } from "./court/useCourtSummary";
 import { useGuideChat } from "./guide/useGuideChat";
-import { SafetyBanner, useLockScroll } from "./selfAssessment/SaChrome";
+import { Hero, PageHeader, SafetyBanner, useLockScroll } from "./selfAssessment/SaChrome";
 
 const BIFF_BOOK_URL = process.env.REACT_APP_BIFF_BOOK_URL;
 const AGREED_MARK = " (agreed): ";
@@ -111,32 +111,54 @@ export function CourtOrderedView({ onBack, onQuickExit, courtKey, mediator, onVe
     { key: "hotline", icon: "fa-phone", title: "National DV Hotline: 1-800-799-7233", sub: "Free, confidential, 24/7. In danger? Call 911.", onClick: () => (window.location.href = "tel:18007997233") },
   ];
 
+  const doneSteps = STEPS.filter((st) => statusOf(st.card) === "done").length;
+  const nextStep = STEPS.find((st) => statusOf(st.card) !== "done");
+  const pill = nextStep ? <>Step <span data-testid="court-step-num">{nextStep.n}</span> of 4 · {nextStep.short}</> : "All 4 steps complete";
+  const openPillar = (pillar) => {
+    compare.load();
+    setDialog({ type: "pillar", pillar });
+  };
+  const openStep4 = () => onOpenCard("card4", { builder: true });
+
   return createPortal(
-    <div id="court-page" data-testid="court-page" className={`fixed inset-0 z-50 overflow-y-auto ${hidden ? "hidden" : ""} bg-[#f3eff9] text-[#202124] pb-28`}>
+    <div id="court-page" data-testid="court-page" className={`fixed inset-0 z-50 overflow-y-auto ${hidden ? "hidden" : ""} bg-gradient-to-b from-[#F3EFFE] to-[#EBE5FA] text-slate-800 pb-28`}>
       <SafetyBanner tp="court" icon="fa-scale-balanced" label="Court Ordered Portal" />
-      <div className="max-w-[900px] mx-auto px-[15px] pt-4">
-        <CourtHeader onBack={onBack} onQuickExit={onQuickExit} hints={hints} onToggleHints={() => setHints((h) => !h)} />
-        <CourtJourneyArt
-          hints={hints}
-          statusOf={statusOf}
-          onAccept={() => setDialog({ type: "accept" })}
-          onStep={(step) => setDialog({ type: "step", step })}
-          onPillar={(pillar) => {
-            compare.load();
-            setDialog({ type: "pillar", pillar });
-          }}
+      <div className="max-w-6xl mx-auto px-4 pt-6">
+        <PageHeader tp="court" onBack={onBack} onQuickExit={onQuickExit} backLabel="Back" tagline="Start with Alignment • End with Agreement" />
+        <Hero
+          tp="court"
+          title="Court-Ordered Path"
+          subtitle="You have been directed to participate in the SA CoParents process. Organize your perspective, identify your child's needs, and prepare information that may assist the professionals involved with your family."
+          textClassName="hidden lg:block"
+          pill={pill}
+          pct={Math.round((doneSteps / 4) * 100)}
         />
-        <CourtAgreeCard
-          compare={compare}
-          onOpen={() => {
-            compare.load();
-            setDialog({ type: "pillar", pillar: PILLARS[1] });
-          }}
-        />
-        <CourtTools cc={cc} courtKey={courtKey} compare={compare} onCase={() => setDialog({ type: "accept" })} onBiff={onOpenBiffHistory} />
-        <div className="grid md:grid-cols-2 gap-6 items-start">
-          <CourtModulesCard modules={modules} onOpenModule={onOpenModule} />
-          <CourtChecklistCard checklist={checklist} />
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+          {/* Phones: picture first, chat last (display: contents). Desktop: one right column with both. */}
+          <div className="contents lg:block lg:col-start-8 lg:col-span-5 lg:row-start-1 lg:space-y-6">
+            <div className="order-first">
+              <CourtJourneyArt
+                hints={hints}
+                onToggleHints={() => setHints((h) => !h)}
+                statusOf={statusOf}
+                onAccept={() => setDialog({ type: "accept" })}
+                onStep={(step) => setDialog({ type: "step", step })}
+                onPillar={openPillar}
+              />
+            </div>
+            <div className="order-last">
+              <CourtChatInline chat={chat} fb={fb} onOpenStep4={openStep4} />
+            </div>
+          </div>
+          <div className="lg:col-start-1 lg:col-span-7 lg:row-start-1 space-y-6">
+            <AcceptCard verified={cc.verified} courtKey={courtKey} onAccept={() => setDialog({ type: "accept" })} />
+            <StepCards statusOf={statusOf} onStep={(step) => setDialog({ type: "step", step })} />
+            <CourtAgreeCard compare={compare} onOpen={() => openPillar(PILLARS[1])} />
+            <PillarCards onPillar={openPillar} />
+            <CourtTools cc={cc} courtKey={courtKey} compare={compare} onCase={() => setDialog({ type: "accept" })} onBiff={onOpenBiffHistory} />
+            <CourtModulesCard modules={modules} onOpenModule={onOpenModule} />
+            <CourtChecklistCard checklist={checklist} />
+          </div>
         </div>
         <p data-testid="court-footer" className="mt-12 text-center text-xs text-[#5f6368] font-medium">
           &copy; SA CoParents &bull; Court Ordered Pathway &bull; Powered by Emergent AI &bull; General guidance, not legal advice
@@ -163,7 +185,7 @@ export function CourtOrderedView({ onBack, onQuickExit, courtKey, mediator, onVe
             onEnterCase={() => setDialog({ type: "accept" })}
           />
           <CourtCelebration open={celebrate} notice={compare.data?.intent_notice} onClose={compare.markCelebrated} onPdf={compare.downloadPdf} />
-          <CourtChatPanel chat={chat} open={chatOpen} onOpenChange={setChatOpen} draft={chatDraft} fb={fb} onOpenStep4={() => onOpenCard("card4", { builder: true })} />
+          <CourtChatPanel chat={chat} open={chatOpen} onOpenChange={setChatOpen} draft={chatDraft} fb={fb} onOpenStep4={openStep4} />
         </>
       )}
     </div>,

@@ -26,7 +26,7 @@ function StepPill({ n, status }) {
     <span
       data-testid={`court-step-${n}-status`}
       data-status={status}
-      className={`absolute top-1 right-1 sm:top-2 sm:right-2 inline-flex items-center gap-1 rounded-full px-1.5 sm:px-2 py-0.5 text-[8px] sm:text-[11px] font-bold shadow ${tone}`}
+      className={`absolute bottom-1 left-1 sm:bottom-2 sm:left-2 inline-flex items-center gap-1 rounded-full px-1.5 sm:px-2 py-0.5 text-[8px] sm:text-[11px] font-bold shadow ${tone}`}
     >
       <i className={`fa-solid ${icon}`}></i>
       {label}
@@ -34,27 +34,50 @@ function StepPill({ n, status }) {
   );
 }
 
-// The Court-Ordered Journey artwork with clickable hotspots and live step progress.
-export function CourtJourneyArt({ hints, statusOf, onAccept, onStep, onPillar }) {
+function HintsToggle({ hints, onToggle }) {
   return (
-    <div data-testid="court-art" className="relative w-full rounded-[18px] overflow-hidden shadow-[0_10px_30px_rgba(0,0,0,0.12)] bg-white">
-      <img
-        data-testid="court-art-img"
-        src="/images/court-journey.webp"
-        srcSet="/images/court-journey-640.webp 640w, /images/court-journey.webp 1024w"
-        sizes="(max-width: 640px) 100vw, 900px"
-        alt="SA CoParents Court-Ordered Journey: accept your invite, then complete four steps"
-        className="w-full h-auto block"
-      />
-      <Spot testid="court-spot-accept" spot={MAIN_SPOT} label="Accept Your Court-Ordered Invite" hints={hints} main onClick={onAccept} />
-      {STEPS.map((s) => (
-        <Spot key={s.n} testid={`court-spot-step-${s.n}`} spot={s.spot} label={s.title} hints={hints} onClick={() => onStep(s)}>
-          <StepPill n={s.n} status={statusOf(s.card)} />
-        </Spot>
-      ))}
-      {PILLARS.map((p) => (
-        <Spot key={p.key} testid={`court-spot-pillar-${p.key}`} spot={p.spot} label={p.title} hints={hints} onClick={() => onPillar(p)} />
-      ))}
+    <div className="flex items-center justify-between gap-2 mb-2.5">
+      <span className="text-[11px] font-bold uppercase tracking-wider text-purple-700">Tap the picture or the cards</span>
+      <button
+        type="button"
+        data-testid="court-hints-toggle"
+        aria-pressed={hints}
+        onClick={onToggle}
+        className="bg-[#f2ebfc] hover:bg-[#e7dbf8] text-[#3b1566] border border-[#e7dbf8] px-3 py-1.5 rounded-full text-xs font-semibold flex items-center gap-1.5 transition-colors"
+      >
+        <i className={`fa-solid ${hints ? "fa-eye" : "fa-eye-slash"}`}></i>
+        <span>{hints ? "Hide Action Buttons" : "Show Action Buttons"}</span>
+      </button>
+    </div>
+  );
+}
+
+// The Court-Ordered Journey artwork with clickable hotspots and live step progress (top on phones, right column on desktop).
+export function CourtJourneyArt({ hints, onToggleHints, statusOf, onAccept, onStep, onPillar }) {
+  return (
+    <div>
+      <HintsToggle hints={hints} onToggle={onToggleHints} />
+      <div data-testid="court-art" className="relative w-full rounded-3xl overflow-hidden shadow-lg border border-purple-100 bg-white">
+        <img
+          data-testid="court-art-img"
+          src="/images/court-journey-640.webp"
+          srcSet="/images/court-journey-640.webp 640w, /images/court-journey.webp 1024w"
+          sizes="(min-width: 1024px) 440px, 100vw"
+          width={1024}
+          height={1536}
+          alt="SA CoParents Court-Ordered Path: accept your court-ordered invite, then complete four steps: your co-parenting assessment, reflect on your parenting, identify your child's specific needs, and create your Foundation Statement."
+          className="w-full h-auto block"
+        />
+        <Spot testid="court-spot-accept" spot={MAIN_SPOT} label="Accept Your Court-Ordered Invite" hints={hints} main onClick={onAccept} />
+        {STEPS.map((s) => (
+          <Spot key={s.n} testid={`court-spot-step-${s.n}`} spot={s.spot} label={s.title} hints={hints} onClick={() => onStep(s)}>
+            <StepPill n={s.n} status={statusOf(s.card)} />
+          </Spot>
+        ))}
+        {PILLARS.map((p) => (
+          <Spot key={p.key} testid={`court-spot-pillar-${p.key}`} spot={p.spot} label={p.title} hints={hints} onClick={() => onPillar(p)} />
+        ))}
+      </div>
     </div>
   );
 }

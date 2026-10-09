@@ -21,10 +21,10 @@ function Tool({ testid, icon, title, sub, onClick, busy, tone = "bg-[#f2ebfc] te
 export function CourtTools({ cc, courtKey, compare, onCase, onBiff }) {
   const ready = compare.data?.state === "ready";
   return (
-    <section data-testid="court-tools" className="mt-8 mb-6">
+    <section data-testid="court-tools">
       <h2 className="text-xl sm:text-2xl font-extrabold text-[#3b1566] mb-1">Your Court Tools</h2>
       <p className="text-sm text-[#5f6368] mb-4">Everything you need for your court-ordered path, in one place.</p>
-      <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
+      <div className="grid sm:grid-cols-2 gap-3">
         <Tool
           testid="court-tool-case"
           icon={cc.verified ? "fa-circle-check" : "fa-key"}
@@ -44,7 +44,7 @@ export function CourtTools({ cc, courtKey, compare, onCase, onBiff }) {
           className={ready ? "" : "opacity-70"}
         />
         <Tool testid="court-tool-biff" icon="fa-wand-magic-sparkles" title="BIFF Communication Check" sub="Review your saved messages" onClick={onBiff} />
-        <Tool testid="court-tool-sync" icon="fa-rotate" title="Save Case & Open" sub={cc.alignHost} onClick={cc.sync} busy={cc.busy === "sync"} className="sm:col-span-2 lg:col-span-2" />
+        <Tool testid="court-tool-sync" icon="fa-rotate" title="Save Case & Open" sub={cc.alignHost} onClick={cc.sync} busy={cc.busy === "sync"} className="sm:col-span-2" />
       </div>
     </section>
   );

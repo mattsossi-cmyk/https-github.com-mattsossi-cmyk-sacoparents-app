@@ -185,7 +185,7 @@ export function CourtAgreeCard({ compare, onOpen }) {
       type="button"
       data-testid="court-agree-card"
       onClick={onOpen}
-      className="mt-5 w-full text-left bg-white rounded-2xl border border-[#e0d5ed] hover:border-[#5c2c8e] shadow-sm px-5 py-4 transition-colors"
+      className="w-full text-left bg-white rounded-2xl border border-[#e0d5ed] hover:border-[#5c2c8e] shadow-sm px-5 py-4 transition-colors"
     >
       <p className="text-sm font-extrabold text-[#3b1566] mb-2 flex items-center gap-2">
         <i className="fa-solid fa-handshake text-[#2fa144]"></i> Agreement
