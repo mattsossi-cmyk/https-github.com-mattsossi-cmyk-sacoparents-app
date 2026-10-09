@@ -29,8 +29,8 @@ export default function SafetyHub() {
       </header>
       <main className="mx-auto max-w-5xl space-y-8 px-4 py-8 sm:px-6">
         <section className="rounded-2xl border border-[#3D1A78]/15 bg-white p-5 shadow-sm" data-testid="hub-banner" aria-label="Inclusive support">
-          <p className="text-base font-bold text-[#3D1A78] md:text-lg">Inclusive, Confidential &amp; Non-Judgmental Support.</p>
-          <p className="mt-1 text-sm text-slate-700">Designed for all co-parents regardless of gender identity or family structure, with tailored safety questions for men, women, non-binary, and LGBTQ+ co-parents.</p>
+          <p className="text-base font-bold text-[#3D1A78] md:text-lg" data-testid="hub-banner-heading">Designed for All Co-Parents</p>
+          <p className="mt-1 text-sm text-slate-700" data-testid="hub-banner-text">Private, behavior-focused safety questions for every family structure, including non-binary and LGBTQ+ co-parents.</p>
         </section>
         <section>
           <h1 className="text-4xl font-bold tracking-tight text-[#3D1A78] sm:text-5xl" data-testid="hub-title">Family Safety &amp; Readiness</h1>

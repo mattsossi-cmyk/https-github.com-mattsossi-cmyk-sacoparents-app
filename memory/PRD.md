@@ -947,3 +947,5 @@ Probed 2026-09-02: /api/link-codes, /api/integrations/* on sacoparentsapp.online
 - P1 SEC-001: static INTEGRATION_SHARED_SECRET (pasted in chat) can read parent email/child name and overwrite answers via /integrations/case-update → rotate, scope, alert on writes.
 - P2 SEC-002: no account deletion / retention TTL for safety data. P2 SEC-003: joint report quotes co-parent's verbatim free-text answers (confirm intent).
 - P3: CORS `*` with credentials; missing HSTS/CSP/XFO/XCTO (verified live); reset 6-digit code lacks attempt lockout; emails logged on failures; AUTO_APPROVE_EMAILS/seed_professionals run every boot; assistant.py sends child + parent names + case code to Gemini; index.html loads assets.emergent.sh script without SRI. Pending user decision on fixes.
+
+## 2026-10-09 Hub banner copy (agent-tested, NOT deployed): heading "Designed for All Co-Parents"; line "Private, behavior-focused safety questions for every family structure, including non-binary and LGBTQ+ co-parents." Old "tailored… men, women" wording removed. Test added in test_iter93_comm_readiness.py.

@@ -22,3 +22,10 @@ def test_spec_export_includes_comm_contract():
     spec = spec_export()
     assert spec["communication_readiness"]["export_field"] == "communication_readiness"
     assert [i["id"] for i in spec["communication_readiness"]["items"]] == ["cr_conflict", "cr_direct", "cr_channel", "cr_child"]
+
+
+def test_hub_banner_copy_is_current():
+    src = open("/app/frontend/src/pages/SafetyHub.jsx", encoding="utf-8").read()
+    assert "Designed for All Co-Parents" in src
+    assert "Private, behavior-focused safety questions for every family structure, including non-binary and LGBTQ+ co-parents." in src
+    assert "tailored safety questions for men, women" not in src and "Non-Judgmental" not in src
