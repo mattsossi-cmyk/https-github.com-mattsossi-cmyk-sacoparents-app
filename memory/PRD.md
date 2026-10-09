@@ -8869,3 +8869,4 @@ dashboard for sharing SELECTED completed reports with any professional.
   between the Self/Co-Parenting picture and the Child Needs picture.
 - 2026-06: Green arrow enlarged ~5x per founder: 160px circle on phones / 220px on desktop, 80/110px icon, thicker ring, 10px nudge.
 - 2026-06: Arrow reduced by 1/3 (107px phones / 147px desktop, 54/74px icon) + pulsing green glow (`sa-arrow-glow`, 2s; static glow when reduced motion). Still decorative (not tappable).
+- 2026-06: Arrow ring changed to a solid 8px WHITE circle; the pulsing green glow is outside the white ring.
