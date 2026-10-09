@@ -8755,3 +8755,15 @@ dashboard for sharing SELECTED completed reports with any professional.
 - Files: `portal/selfJourney/JourneyArtCard.jsx`, `portal/selfJourney/selfJourneyArt.js` (hotspot coords),
   `court/CourtJourneyArt.jsx` (`Spot` exported). Card 4 Foundation, PP banner, Comm Builder unchanged.
 - Court hints toggle no longer wraps at 390px (verified iter108). Testing agent iter108: all pass.
+
+
+### 2026-06 — Iter109 · Self Journey progress ring + Completed badges
+- `selfJourney/AssessProgressRing.jsx` above Picture 1: "N of 5 assessments done", Next: <name>; tap opens next
+  unfinished (order self → coparent → educational → psychological → medical); disabled at 5/5.
+- "Completed ✓" pill on all 5 labeled buttons (`JourneyArtCard` `done` prop).
+- Done sources: self = Self-Assessment history length > 0; coparent = GET /coparenting/me exists && completed
+  (`useCoparentingDone`, refetch on modal close); child needs = `useChildNeeds` lifted into JourneyShell and passed
+  to `ChildNeedsView` as `needs` prop (live sync, no reload).
+- User re-attached Picture 1 (pixel-identical) — Educational/Psych/Medical picture stays agent-generated until founder
+  uploads own artwork (then swap `/images/sa-child-needs-assess*.webp` + re-align `NEEDS_ART` coords).
+- Testing agent iter109: all pass.

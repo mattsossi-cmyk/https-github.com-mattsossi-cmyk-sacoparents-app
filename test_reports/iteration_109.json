@@ -1,0 +1,25 @@
+{
+  "summary": "Frontend-only verification of the new Self Journey Assessment Progress Ring + Completed badges (iter269 ask). All 7 review items PASSED on mobile 390x844 (desktop 1920x800 also OK). Ring rendered inside #door-self-actions directly above door-self-art-assess with testid door-self-progress-ring, data-done attribute, inner '{count}/5', door-self-progress-count = '{count} of 5 assessments done', and door-self-progress-next either 'Next: <name>' or (when N=5) 'All five done. Wonderful work for your child.' with the button disabled.\n\nVerified on parent1@test.com (preview state: self✓, coparent✓, medical✓ → 3 of 5, Next: Educational Assessment): ring data-done=3 matched exactly the 3 buttons with data-done='true' (door-self-art-assess-btn-self, -btn-coparent, door-self-art-needs-btn-medical). Those 3 buttons showed the 'Completed ✓' pill via testid <id>-completed; the other 2 (educational, psychological) showed Start >. Ring sits above art-assess (y 761.5 vs 859.5).\n\nTap routing: on parent1 (next=educational) the ring tap landed on door-view-child-needs AND auto-opened child-needs-form-educational. After filling one field and tapping child-needs-submit, the form closed, child-needs-educational-completed badge appeared, child-needs-back returned to Self Journey, and WITHOUT a page reload the ring updated to '4 of 5 assessments done · Next: Psychological Assessment' with the educational button flipping to data-done='true' + completed pill — proving the lifted useChildNeeds in JourneyShell and the ChildNeedsView `needs` prop wiring are live-syncing.\n\nFresh account (POST /api/auth/register with random email, TestPass123!): ring shows data-done=0, '0 of 5 assessments done', 'Next: Self-Assessment'; all 5 buttons data-done='false' with Start > labels (no completed pills); tapping the ring opened the SelfAssessmentView (self-assessment-page present).\n\nRegression at 390px: no horizontal overflow (document scrollWidth=clientWidth=390). Desktop 1920x800: ring is visible inside the max-w-md column (as expected per request).\n\nMinor UX nit (not a bug): the ring sits a bit low on mobile (y≈762 of 844 viewport) so an unassisted finger tap works but a Playwright click() with force=True does not scroll it in; using scroll_into_view_if_needed() first worked. Real users scroll naturally so this is not a functional issue.",
+  "backend_issues": {"critical": [], "minor": []},
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  "test_report_links": [],
+  "action_items": [],
+  "critical_code_review_comments": [
+    "AssessProgressRing.jsx is pure/declarative: ASSESS_ORDER drives both the count and the Next: label; disabled state flips cleanly to the green circle-check when count=5. Nice.",
+    "JourneyShell lifted useChildNeeds up and passes `needs` into ChildNeedsView — this is what enables the live ring/badge refresh without a reload. Verified at runtime (4 of 5 appeared immediately after child-needs-back).",
+    "useCoparentingDone refetches /coparenting/me each time the modal closes (modalOpen dep), so the coparent badge will flip without reload too — consistent with the other sources.",
+    "The ring + the labeled button both call the same openAssessKey(k) → single source of truth for 'next' routing. Order constant ASSESS_ORDER is the only knob to change the sequence."
+  ],
+  "updated_files": [],
+  "success_rate": {"backend": "n/a", "frontend": "100%"},
+  "test_credentials": "parent1@test.com / TestPass123! for live Self Journey state; new fresh account registered via POST /api/auth/register for the 0/5 test.",
+  "seed_data_creation": "parent1 Educational Assessment answers were saved to exercise the live-sync path (as explicitly permitted by the request). No other state changed.",
+  "retest_needed": false,
+  "should_main_agent_self_test": true,
+  "context_for_next_testing_agent": "Progress Ring lives in /app/frontend/src/pages/portal/selfJourney/AssessProgressRing.jsx and is wired in JourneyShell.jsx (~L1240) above both JourneyArtCards. Ring testid door-self-progress-ring (data-done=count), inner count/5, count label door-self-progress-count, next-label door-self-progress-next. Button pill testids follow pattern <button-testid>-completed. useChildNeeds is now lifted — ChildNeedsView takes `needs` prop. Playwright gotcha: ring is at y≈762 on 390x844, so always call ring.scroll_into_view_if_needed() before click (force=True skips auto-scroll and won't work). parent1 live state at test time: self✓, coparent✓, medical✓, educational✓ (saved during this run), psychological✗ (4 of 5, Next: Psychological Assessment).",
+  "rca of the issue": "N/A — all behaviour matched spec."
+}
