@@ -8877,3 +8877,10 @@ dashboard for sharing SELECTED completed reports with any professional.
   The rules: 3 = all three Child Needs forms submitted; 4 = Foundation saved (`foundationBuilder.savedAt`); 5 = Parallel Parenting
   plan summary reached (`selfJourney/useParallelDone.js` → GET /api/parallel-parenting/me `completed_at`, re-checked when the builder
   closes); 6 = at least one message reworked (`biffAuthoredCount > 0`); "Finish" never changes.
+- 2026-06: "6 of 6 finished". allStepsDone = all 5 assessments + Foundation saved + PP completed + ≥1 BIFF rewrite.
+  `selfJourney/AllStepsBanner.jsx` (`door-self-all-steps-banner`) is a solid purple banner above the progress ring. While all steps
+  stay done it shows every visit. The purple star sparkle (canvas-confetti, stars) plays ONCE per account: flag at
+  GET/POST /api/journey-summary/steps-celebrated (collection `journey_step_celebrations`, separate from the 5-of-5 flag). The sparkle
+  waits until the 5-of-5 dialog and any builders are closed. Test account journey6@test.com (seed_journey_six.py). Verified: sparkle on first
+  visit, banner persists, no sparkle after reload, all badges ✓, no overflow at 390px.
+- 2026-06: Founder chose to SKIP provider "Opened" receipts; reports stay as PDF attachments.

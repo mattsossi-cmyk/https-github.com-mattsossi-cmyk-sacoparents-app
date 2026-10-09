@@ -41,6 +41,30 @@ async def mark_celebrated(
     return {"celebrated": True}
 
 
+STEP_CELEBRATIONS = "journey_step_celebrations"
+
+
+@router.get("/steps-celebrated")
+async def get_steps_celebrated(
+    user: UserPublic = Depends(get_current_user),
+    db: AsyncIOMotorDatabase = Depends(get_db),
+) -> Dict[str, bool]:
+    return {"celebrated": bool(await db[STEP_CELEBRATIONS].find_one({"user_id": user.user_id}, {"_id": 1}))}
+
+
+@router.post("/steps-celebrated")
+async def mark_steps_celebrated(
+    user: UserPublic = Depends(get_current_user),
+    db: AsyncIOMotorDatabase = Depends(get_db),
+) -> Dict[str, bool]:
+    await db[STEP_CELEBRATIONS].update_one(
+        {"user_id": user.user_id},
+        {"$setOnInsert": {"celebrated_at": datetime.now(timezone.utc).isoformat()}},
+        upsert=True,
+    )
+    return {"celebrated": True}
+
+
 @router.get("/pdf")
 async def journey_summary_pdf(
     user: UserPublic = Depends(get_current_user),
