@@ -16,6 +16,7 @@ import { JourneyCelebration } from "./selfJourney/JourneyCelebration";
 import { useJourneySummary } from "./selfJourney/useJourneySummary";
 import { useCoparentingDone } from "./selfJourney/useCoparentingDone";
 import { useChildNeeds } from "./childNeeds/useChildNeeds";
+import { SendToProvider } from "./childNeeds/SendToProvider";
 import { CoparentingAssessmentView } from "./coparenting/CoparentingAssessmentView";
 import { useFoundationBuilder } from "./foundation/useFoundationBuilder";
 import { ChildNeedsView } from "./ChildNeedsView";
@@ -1175,6 +1176,7 @@ export function JourneyShell({
         onQuickExit={quickExitAction}
         safetyFlag={safetyFlag}
         needs={childNeeds}
+        userId={user?.user_id}
         parentName={greetingName}
         initialOpenKey={childNeedsKey}
       />
@@ -1253,7 +1255,16 @@ export function JourneyShell({
         {/* Assessment artwork (replaces cards 1–3): tappable panels/arrows + labeled buttons. */}
         <div id="door-self-actions" data-testid="door-self-actions" className="space-y-4 scroll-mt-4">
           <AssessProgressRing done={assessDone} onOpen={openAssessKey} />
-          <JourneySummaryButton onClick={journeySummary.downloadPdf} downloading={journeySummary.downloading} />
+          <div className="flex flex-col sm:flex-row gap-2 [&>*]:flex-1">
+            <JourneySummaryButton onClick={journeySummary.downloadPdf} downloading={journeySummary.downloading} />
+            {user?.user_id && (
+              <SendToProvider
+                completedAt={childNeeds.state.completed_at}
+                testid="door-self-send-provider"
+                className="w-full py-2.5 rounded-full bg-white hover:bg-purple-50 border border-purple-300 text-purple-900 text-[13px] font-bold transition-colors"
+              />
+            )}
+          </div>
 
           <JourneyArtCard testid="door-self-art-assess" art={ASSESS_ART} done={assessDone} nextKey={nextAssess} onAction={openAssessKey}>
             {saHistory.latest && (

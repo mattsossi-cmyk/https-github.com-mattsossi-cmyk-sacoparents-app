@@ -8827,3 +8827,23 @@ dashboard for sharing SELECTED completed reports with any professional.
   switched by the active tab. Testids: `cn-chat-starters`, `cn-chat-starters-label`, `cn-chat-starter-{0..3}`.
 - Self-tested (screenshot): label + chips switch per tab; a tap sent the question and got a Guide reply; row stays after
   the chat starts; no page overflow at 390px.
+
+
+### 2026-06 — Child Needs · Send to a provider
+- Parents never type an address: recipients = professionals who ACCEPTED one of this parent's "Share with a Professional"
+  invitations (`parent_professional_invitations`, accepted_at set, status accepted/access_expired; revoked excluded; deduped
+  by email). None yet → empty state with a link to `/share/professional`.
+- Backend `child_needs_share_routes.py`: GET `/api/child-needs/providers`, GET `/api/child-needs/shares`,
+  POST `/api/child-needs/share {provider_id, categories}` (404 not an accepted provider; 422 unknown or not-completed form).
+  Builds one PDF with only the ticked forms (`build_child_needs_pdf`) and emails it via
+  `email_service.send_child_needs_report` (Resend, reply-to parent, `require_encrypted=True` so Virtru-forced setups fail
+  closed). The share is saved in `child_needs_shares` only after a successful send. Form order: Educational → Medical → Psychological.
+- Frontend: `childNeeds/SendToProvider.jsx` (button + dialog: pick provider → tick completed forms, current form ticked,
+  "Select all (full report)" → confirm screen showing who gets what + "health details leave SA CoParents, can't be unsent"
+  → Send now), `ShareProviderSteps.jsx`, `SentToList.jsx` ("Sent to" under each completed form), `useProviderShares.js`.
+  Placed next to Submit (only when that form is Completed, signed-in parents) and beside the Journey Summary download
+  on Self Journey (`door-self-send-provider`, shown when ≥1 child-needs form is completed).
+- Test data: `seed_child_needs_provider.py` upserts accepted provider "Dana Reyes (test)" (delivered@resend.dev, Resend
+  test inbox) for parent1.
+- Self-tested: curl (providers/shares/share + 401/404/422) and screenshots (desktop + 390px dialog, real send, Sent-to
+  list refresh, Journey button). Testing agent not run yet.

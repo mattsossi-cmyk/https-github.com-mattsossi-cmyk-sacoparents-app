@@ -324,6 +324,45 @@ def send_cp_progress_share(
     )
 
 
+def send_child_needs_report(
+    *,
+    to_email: str,
+    provider_name: str,
+    parent_name: str,
+    parent_email: Optional[str],
+    form_titles: List[str],
+    pdf_bytes: bytes,
+    filename: str,
+) -> None:
+    """Email the parent's chosen Child's Specific Needs forms (PDF attached) to a professional they invited."""
+    forms = ", ".join(form_titles)
+    paras = [
+        f"Hi {provider_name},",
+        f"{parent_name} has chosen to share part of their Child's Specific Needs report with you: {forms}. The PDF is attached.",
+        "This is a planning aid written by a parent. It is not a medical, educational or psychological evaluation.",
+        "It contains private information about a child, shared at the parent's request. Please keep it confidential. "
+        "If you received it by mistake, please delete it and let the parent know.",
+        "Please reply directly to this email if you have questions.",
+    ]
+    plain = "\n\n".join(paras) + f"\n\nThanks,\n{parent_name}\n" + (f"{parent_email}\n" if parent_email else "")
+    p = '<p style="font-size:15px;line-height:1.55;color:#4B4567;margin:0 0 16px 0;">{}</p>'
+    body_html = "".join(p.format(_html.escape(t)) for t in paras) + (
+        f'<p style="font-size:15px;line-height:1.55;color:#1A1330;margin:0;">Thanks,<br/><strong>{_html.escape(parent_name)}</strong>'
+        + (f"<br/>{_html.escape(parent_email)}" if parent_email else "")
+        + "</p>"
+    )
+    _send(
+        to_email=to_email,
+        subject=f"Child's Specific Needs report from {parent_name}",
+        html=_branded_html(headline="Child's Specific Needs report", body_html=body_html, cta_label=""),
+        text=plain,
+        reply_to=parent_email,
+        attachments=[(filename, pdf_bytes)],
+        failure_message="We couldn't send the report right now. Please try again in a moment.",
+        require_encrypted=True,
+    )
+
+
 def send_silent_reviewer_nudge(
     *,
     to_email: str,

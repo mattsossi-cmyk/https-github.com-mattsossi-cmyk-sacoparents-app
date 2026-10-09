@@ -3,6 +3,9 @@ import { toast } from "sonner";
 
 import CONTENT from "./childNeedsContent.json";
 import { ChildNeedsForm } from "./childNeeds/ChildNeedsForm";
+import { SendToProvider } from "./childNeeds/SendToProvider";
+import { SentToList } from "./childNeeds/SentToList";
+import { useProviderShares } from "./childNeeds/useProviderShares";
 import { useGuideChat } from "./guide/useGuideChat";
 import { JourneyPage } from "./selfJourney/JourneyPage";
 import { NEEDS_ART } from "./selfJourney/selfJourneyArt";
@@ -86,8 +89,9 @@ const askGuide = () => {
 };
 
 // Your Child's Specific Needs: tabs + picture bubbles switch the form. `needs` is owned by JourneyShell.
-export function ChildNeedsView({ onBack, onQuickExit, needs, parentName, initialOpenKey = null, safetyFlag }) {
+export function ChildNeedsView({ onBack, onQuickExit, needs, parentName, initialOpenKey = null, safetyFlag, userId }) {
   const { state, saveCategory, downloadReport } = needs;
+  const sharing = useProviderShares(!!userId);
   const done = Object.fromEntries(ORDER.map((k) => [k, !!state.completed_at?.[k]]));
   const drafts = state.drafts || {};
   const [activeKey, setActiveKey] = useState(initialOpenKey || ORDER.find((k) => !done[k]) || ORDER[0]);
@@ -159,7 +163,19 @@ export function ChildNeedsView({ onBack, onQuickExit, needs, parentName, initial
             ackDate={state.notice_ack_at}
             onSubmit={(v, ack) => save(v, ack, false)}
             onDraft={(v, ack) => save(v, ack, true)}
+            shareSlot={
+              userId && done[activeKey] ? (
+                <SendToProvider
+                  completedAt={state.completed_at}
+                  defaultKeys={[activeKey]}
+                  onSent={sharing.refresh}
+                  testid="child-needs-send-provider"
+                  className="px-5 py-2.5 rounded-md bg-white hover:bg-[#F4EEF5] border border-[#4A154B]/40 text-[#4A154B] text-sm font-semibold transition-colors"
+                />
+              ) : null
+            }
           />
+          {userId && done[activeKey] && <SentToList shares={sharing.shares} category={activeKey} />}
           {doneCount > 0 && (
             <button
               type="button"

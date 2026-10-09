@@ -53,7 +53,7 @@ function FieldList({ category, fields, values, set }) {
 }
 
 // One Child Needs form: notices, the design's questions, "Across both homes", one-time tick, Save Draft / Submit.
-export function ChildNeedsForm({ category, initial, ackDate, onSubmit, onDraft }) {
+export function ChildNeedsForm({ category, initial, ackDate, onSubmit, onDraft, shareSlot = null }) {
   const [values, setValues] = useState(initial || {});
   const [ack, setAck] = useState(false);
   const [busy, setBusy] = useState(null);
@@ -105,14 +105,17 @@ export function ChildNeedsForm({ category, initial, ackDate, onSubmit, onDraft }
         >
           {busy === "draft" ? <i className="fa-solid fa-spinner fa-spin"></i> : CONTENT.draft_label}
         </button>
-        <button
-          type="submit"
-          data-testid="child-needs-submit"
-          disabled={!!busy}
-          className="px-5 py-2.5 rounded-md bg-[#4A154B] hover:bg-[#350D36] text-white text-sm font-semibold transition-colors disabled:opacity-60"
-        >
-          {busy === "submit" ? <i className="fa-solid fa-spinner fa-spin"></i> : category.submit_label}
-        </button>
+        <div className="flex flex-col-reverse sm:flex-row gap-3">
+          {shareSlot}
+          <button
+            type="submit"
+            data-testid="child-needs-submit"
+            disabled={!!busy}
+            className="px-5 py-2.5 rounded-md bg-[#4A154B] hover:bg-[#350D36] text-white text-sm font-semibold transition-colors disabled:opacity-60"
+          >
+            {busy === "submit" ? <i className="fa-solid fa-spinner fa-spin"></i> : category.submit_label}
+          </button>
+        </div>
       </div>
     </form>
   );
