@@ -18,6 +18,7 @@ import { useCoparentingDone } from "./selfJourney/useCoparentingDone";
 import { useChildNeeds } from "./childNeeds/useChildNeeds";
 import { SendToProvider } from "./childNeeds/SendToProvider";
 import { FlowArrow } from "./selfJourney/FlowArrow";
+import { useParallelDone } from "./selfJourney/useParallelDone";
 import { CoparentingAssessmentView } from "./coparenting/CoparentingAssessmentView";
 import { useFoundationBuilder } from "./foundation/useFoundationBuilder";
 import { ChildNeedsView } from "./ChildNeedsView";
@@ -860,6 +861,7 @@ export function JourneyShell({
   const [cpAssessOpen, setCpAssessOpen] = useState(false);
   const childNeeds = useChildNeeds(user?.user_id);
   const cpDone = useCoparentingDone(user?.user_id, cpAssessOpen);
+  const ppDone = useParallelDone(user?.user_id, ppOpen);
   const assessDone = {
     self: saHistory.history.length > 0,
     coparent: cpDone,
@@ -1263,11 +1265,11 @@ export function JourneyShell({
             )}
           </JourneyArtCard>
 
-          <FlowArrow testid="door-self-flow-arrow" to="door-self-art-needs" label="Your Child's Specific Needs" step="3 of 6" />
+          <FlowArrow testid="door-self-flow-arrow" to="door-self-art-needs" label="Your Child's Specific Needs" step="3 of 6" done={NEEDS_ART.items.every((i) => assessDone[i.key])} />
 
           <JourneyArtCard testid="door-self-art-needs" art={NEEDS_ART} done={assessDone} nextKey={nextAssess} onAction={openAssessKey} />
 
-          <FlowArrow testid="door-self-flow-arrow-foundation" to="door-self-card-foundation" label="Create Your Foundation Statement" step="4 of 6" />
+          <FlowArrow testid="door-self-flow-arrow-foundation" to="door-self-card-foundation" label="Create Your Foundation Statement" step="4 of 6" done={!!foundationBuilder.savedAt} />
 
           {/* Card 4 — Create Your Foundation Statement. */}
           <button
@@ -1306,7 +1308,7 @@ export function JourneyShell({
           </button>
         </div>
 
-        <FlowArrow testid="door-self-flow-arrow-parallel" to="door-self-art-parallel" label="Parallel Parenting" step="5 of 6" />
+        <FlowArrow testid="door-self-flow-arrow-parallel" to="door-self-art-parallel" label="Parallel Parenting" step="5 of 6" done={ppDone} />
 
         <JourneyArtCard
           testid="door-self-art-parallel"
@@ -1314,7 +1316,7 @@ export function JourneyShell({
           onAction={(k) => openPp(PP_ART.items.find((it) => it.key === k).screen)}
         />
 
-        <FlowArrow testid="door-self-flow-arrow-biff" to="door-self-card-biff" label="SA CoParent Communication Builder" step="6 of 6" />
+        <FlowArrow testid="door-self-flow-arrow-biff" to="door-self-card-biff" label="SA CoParent Communication Builder" step="6 of 6" done={biffAuthoredCount > 0} />
 
         {/* Communication Builder — the big purple hero card. */}
         <button
