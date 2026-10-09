@@ -1,3 +1,12 @@
+export const ASSESS_ORDER = ["self", "coparent", "educational", "psychological", "medical"];
+export const ASSESS_NAMES = {
+  self: "Self-Assessment",
+  coparent: "Co-Parenting Assessment",
+  educational: "Educational Assessment",
+  psychological: "Psychological Assessment",
+  medical: "Medical Assessment",
+};
+
 // Hotspots are [top%, left%, width%, height%] over each artwork; `arrow` is the round chevron button in the picture.
 export const ASSESS_ART = {
   name: "sa-journey-assess",

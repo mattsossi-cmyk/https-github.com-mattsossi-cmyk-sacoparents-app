@@ -3,7 +3,6 @@ import { toast } from "sonner";
 
 import CONTENT from "./childNeedsContent.json";
 import { ChildNeedsForm } from "./childNeeds/ChildNeedsForm";
-import { useChildNeeds } from "./childNeeds/useChildNeeds";
 
 // Card 3 · "Your Child's Specific Needs" — founder mockup (3 assessment cards).
 const THEMES = {
@@ -46,8 +45,9 @@ function NeedsCard({ category, completed, onOpen }) {
   );
 }
 
-export function ChildNeedsView({ onBack = () => {}, QuickExit = null, userId, parentName, initialOpenKey = null }) {
-  const { state, saveCategory, downloadReport } = useChildNeeds(userId);
+// `needs` is the useChildNeeds() instance owned by JourneyShell so Self Journey badges stay in sync.
+export function ChildNeedsView({ onBack = () => {}, QuickExit = null, needs, parentName, initialOpenKey = null }) {
+  const { state, saveCategory, downloadReport } = needs;
   const [openKey, setOpenKey] = useState(initialOpenKey);
   const category = CONTENT.categories.find((c) => c.key === openKey);
   const anyDone = CONTENT.categories.some((c) => state.completed_at?.[c.key]);

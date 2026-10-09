@@ -2,25 +2,32 @@ import React from "react";
 
 import { Spot } from "../court/CourtJourneyArt";
 
-function ActionButton({ testid, item, onClick }) {
+function ActionButton({ testid, item, done, onClick }) {
   return (
     <button
       type="button"
       data-testid={testid}
+      data-done={done ? "true" : "false"}
       onClick={onClick}
       className={`${item.tone} text-white rounded-2xl px-2 py-2.5 shadow-md flex flex-col items-center justify-center gap-1 text-center transition-[background-color,transform] active:scale-[0.97]`}
     >
       <i className={`fa-solid ${item.icon} text-base`}></i>
       <span className="text-[12px] font-extrabold leading-tight">{item.label}</span>
-      <span className="text-[10px] font-semibold opacity-90">
-        Start <i className="fa-solid fa-chevron-right text-[8px] ml-0.5"></i>
-      </span>
+      {done ? (
+        <span data-testid={`${testid}-completed`} className="text-[10px] font-bold bg-white/25 rounded-full px-2 py-0.5 whitespace-nowrap">
+          Completed <i className="fa-solid fa-check text-[9px] ml-0.5"></i>
+        </span>
+      ) : (
+        <span className="text-[10px] font-semibold opacity-90">
+          Start <i className="fa-solid fa-chevron-right text-[8px] ml-0.5"></i>
+        </span>
+      )}
     </button>
   );
 }
 
 // Assessment artwork with tappable panels + arrow buttons, and a row of labeled buttons underneath.
-export function JourneyArtCard({ testid, art, onAction, children }) {
+export function JourneyArtCard({ testid, art, done = {}, onAction, children }) {
   return (
     <section data-testid={testid} className="space-y-2.5">
       <div className="relative w-full rounded-3xl overflow-hidden shadow-lg border border-purple-100 bg-white">
@@ -44,7 +51,7 @@ export function JourneyArtCard({ testid, art, onAction, children }) {
       </div>
       <div className={`grid gap-2 ${art.items.length === 3 ? "grid-cols-3" : "grid-cols-2"}`}>
         {art.items.map((it) => (
-          <ActionButton key={it.key} testid={`${testid}-btn-${it.key}`} item={it} onClick={() => onAction(it.key)} />
+          <ActionButton key={it.key} testid={`${testid}-btn-${it.key}`} item={it} done={!!done[it.key]} onClick={() => onAction(it.key)} />
         ))}
       </div>
       {children}

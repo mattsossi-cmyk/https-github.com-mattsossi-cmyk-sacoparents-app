@@ -12,6 +12,9 @@ import { GoalBanner } from "./selfAssessment/GoalBanner";
 import { WelcomeArtwork } from "./WelcomeArtwork";
 import { JourneyArtCard } from "./selfJourney/JourneyArtCard";
 import { ASSESS_ART, NEEDS_ART } from "./selfJourney/selfJourneyArt";
+import { AssessProgressRing } from "./selfJourney/AssessProgressRing";
+import { useCoparentingDone } from "./selfJourney/useCoparentingDone";
+import { useChildNeeds } from "./childNeeds/useChildNeeds";
 import { CoparentingAssessmentModal } from "./coparenting/CoparentingAssessmentModal";
 import { useFoundationBuilder } from "./foundation/useFoundationBuilder";
 import { ChildNeedsView } from "./ChildNeedsView";
@@ -847,6 +850,13 @@ export function JourneyShell({
   const saHistory = useSelfAssessmentHistory(user?.user_id);
   const [assessStartNew, setAssessStartNew] = useState(false);
   const [cpAssessOpen, setCpAssessOpen] = useState(false);
+  const childNeeds = useChildNeeds(user?.user_id);
+  const cpDone = useCoparentingDone(user?.user_id, cpAssessOpen);
+  const assessDone = {
+    self: saHistory.history.length > 0,
+    coparent: cpDone,
+    ...Object.fromEntries(["educational", "psychological", "medical"].map((k) => [k, !!childNeeds.state.completed_at?.[k]])),
+  };
   const foundationBuilder = useFoundationBuilder(
     user?.user_id,
     user?.name ? user.name.split(" ")[0] : null
@@ -854,6 +864,12 @@ export function JourneyShell({
   const openAssess = (startNew = false) => {
     setAssessStartNew(startNew);
     setAssessOpen(true);
+  };
+  // Self Journey pictures + progress ring: one entry point per assessment key.
+  const openAssessKey = (k) => {
+    if (k === "self") openAssess(false);
+    else if (k === "coparent") setCpAssessOpen(true);
+    else openChildNeeds("self", k);
   };
   const [fbStartOpen, setFbStartOpen] = useState(false);
   const openFoundation = (from, startOpen = false) => {
@@ -1143,7 +1159,7 @@ export function JourneyShell({
       <ChildNeedsView
         onBack={() => setView(subFrom)}
         QuickExit={quickExitChip}
-        userId={user?.user_id}
+        needs={childNeeds}
         parentName={greetingName}
         initialOpenKey={childNeedsKey}
       />
@@ -1221,11 +1237,9 @@ export function JourneyShell({
 
         {/* Assessment artwork (replaces cards 1–3): tappable panels/arrows + labeled buttons. */}
         <div id="door-self-actions" data-testid="door-self-actions" className="space-y-4 scroll-mt-4">
-          <JourneyArtCard
-            testid="door-self-art-assess"
-            art={ASSESS_ART}
-            onAction={(k) => (k === "self" ? openAssess(false) : setCpAssessOpen(true))}
-          >
+          <AssessProgressRing done={assessDone} onOpen={openAssessKey} />
+
+          <JourneyArtCard testid="door-self-art-assess" art={ASSESS_ART} done={assessDone} onAction={openAssessKey}>
             {saHistory.latest && (
               <p data-testid="door-self-card-assess-last" className="text-[11px] font-semibold text-purple-700 text-center">
                 Latest Self-Assessment: {saHistory.latest.scores.overall}/100 · {saHistory.history.length} completed
@@ -1233,7 +1247,7 @@ export function JourneyShell({
             )}
           </JourneyArtCard>
 
-          <JourneyArtCard testid="door-self-art-needs" art={NEEDS_ART} onAction={(k) => openChildNeeds("self", k)} />
+          <JourneyArtCard testid="door-self-art-needs" art={NEEDS_ART} done={assessDone} onAction={openAssessKey} />
 
           {/* Card 4 — Create Your Foundation Statement. */}
           <button
