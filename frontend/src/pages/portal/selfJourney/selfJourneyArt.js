@@ -1,4 +1,4 @@
-export const ASSESS_ORDER = ["self", "coparent", "educational", "psychological", "medical"];
+export const ASSESS_ORDER = ["self", "coparent", "educational", "medical", "psychological"];
 export const ASSESS_NAMES = {
   self: "Self-Assessment",
   coparent: "Co-Parenting Assessment",
@@ -19,14 +19,15 @@ export const ASSESS_ART = {
   ],
 };
 
+// Founder artwork: the round icon + label bubbles are the tap targets (no arrow buttons).
 export const NEEDS_ART = {
-  name: "sa-child-needs-assess",
-  width: 848,
-  height: 1264,
-  alt: "Your Child's Needs. Educational Assessment: learning, school support and routines. Psychological Assessment: emotions, behaviour and wellbeing. Medical Assessment: health, care and medical routines.",
+  name: "sa-child-needs-steps",
+  width: 1024,
+  height: 1536,
+  alt: "Identify Your Child's Needs. A young child ties his shoe beside three bubbles: Educational Needs, Medical Needs, and Psychological Needs. Small steps today, a brighter tomorrow.",
   items: [
-    { key: "educational", label: "Educational", icon: "fa-graduation-cap", tone: "bg-[#6b2fb3] hover:bg-[#5a2697]", panel: [38.8, 2.4, 95.3, 15.4], arrow: [48.3, 87, 8.3, 5.5] },
-    { key: "psychological", label: "Psychological", icon: "fa-brain", tone: "bg-[#2f9e44] hover:bg-[#268539]", panel: [55.8, 2.4, 95.3, 15.3], arrow: [64.5, 87, 8.3, 5.5] },
-    { key: "medical", label: "Medical", icon: "fa-stethoscope", tone: "bg-[#e0702b] hover:bg-[#c75f20]", panel: [72.2, 2.4, 95.3, 15.3], arrow: [81.3, 87, 8.3, 5.5] },
+    { key: "educational", label: "Educational", icon: "fa-book-open", tone: "bg-[#2f9e44] hover:bg-[#268539]", panel: [3.6, 68.7, 26.6, 17.9] },
+    { key: "medical", label: "Medical", icon: "fa-stethoscope", tone: "bg-[#1a73d9] hover:bg-[#1561b8]", panel: [25.1, 73.9, 24.4, 18.4] },
+    { key: "psychological", label: "Psychological", icon: "fa-brain", tone: "bg-[#6b2fb3] hover:bg-[#5a2697]", panel: [48.5, 73, 26.6, 17.4] },
   ],
 };

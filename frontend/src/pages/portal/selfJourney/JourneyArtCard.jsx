@@ -44,8 +44,10 @@ export function JourneyArtCard({ testid, art, done = {}, onAction, children }) {
         />
         {art.items.map((it) => (
           <React.Fragment key={it.key}>
-            <Spot testid={`${testid}-panel-${it.key}`} spot={it.panel} label={`Open ${it.label} Assessment`} onClick={() => onAction(it.key)} />
-            <Spot testid={`${testid}-arrow-${it.key}`} spot={it.arrow} label={`Start ${it.label} Assessment`} className="!rounded-full" onClick={() => onAction(it.key)} />
+            <Spot testid={`${testid}-panel-${it.key}`} spot={it.panel} label={`Open ${it.label} Assessment`} className="!rounded-3xl" onClick={() => onAction(it.key)} />
+            {it.arrow && (
+              <Spot testid={`${testid}-arrow-${it.key}`} spot={it.arrow} label={`Start ${it.label} Assessment`} className="!rounded-full" onClick={() => onAction(it.key)} />
+            )}
           </React.Fragment>
         ))}
       </div>

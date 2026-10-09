@@ -8767,3 +8767,11 @@ dashboard for sharing SELECTED completed reports with any professional.
 - User re-attached Picture 1 (pixel-identical) — Educational/Psych/Medical picture stays agent-generated until founder
   uploads own artwork (then swap `/images/sa-child-needs-assess*.webp` + re-align `NEEDS_ART` coords).
 - Testing agent iter109: all pass.
+
+
+### 2026-06 — Iter110 · Founder Child Needs picture swapped in
+- Picture 2 now founder artwork `/images/sa-child-needs-steps(-640).webp` (1024×1536, "Identify Your Child's Needs",
+  boy tying shoe). Agent-generated `sa-child-needs-assess*` removed.
+- Tap targets = the three icon+label bubbles (no arrows; `arrow` optional in JourneyArtCard). Coords in `NEEDS_ART`.
+- Order everywhere (buttons + ring) now matches picture: Educational → Medical → Psychological.
+- Self-tested via screenshot: each bubble opens the matching form, ring "Next" follows new order, no overflow at 390px.
