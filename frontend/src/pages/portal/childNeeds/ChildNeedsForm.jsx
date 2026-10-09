@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { toast } from "sonner";
 
-import { Dialog, DialogContent, DialogDescription, DialogTitle } from "../../../components/ui/dialog";
 import CONTENT from "../childNeedsContent.json";
 
 const inputCls =
@@ -29,13 +28,13 @@ function Field({ field, value, onChange }) {
   return <input data-testid={tid} id={field.id} type="text" value={value} placeholder={field.placeholder} onChange={(e) => onChange(e.target.value)} maxLength={2000} className={inputCls} />;
 }
 
-export function ChildNeedsForm({ category, initial, open, onOpenChange, onSubmit }) {
-  const [values, setValues] = useState({});
+// Inline form for one Child Needs category (shown on the left of the Child Needs screen).
+export function ChildNeedsForm({ category, initial, onSubmit }) {
+  const [values, setValues] = useState(initial || {});
   const [busy, setBusy] = useState(false);
   useEffect(() => {
-    if (open) setValues(initial || {});
-  }, [open, initial]);
-  if (!category) return null;
+    setValues(initial || {});
+  }, [initial]);
   const filled = Object.values(values).some((v) => (v || "").trim());
 
   const submit = async (e) => {
@@ -53,29 +52,23 @@ export function ChildNeedsForm({ category, initial, open, onOpenChange, onSubmit
   };
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent data-testid={`child-needs-form-${category.key}`} className="max-w-lg w-[calc(100%-1rem)] max-h-[92vh] overflow-y-auto rounded-2xl">
-        <DialogTitle className="text-lg font-extrabold text-[#4c2889] pr-6">{category.form_title}</DialogTitle>
-        <DialogDescription className="sr-only">{category.card_desc}</DialogDescription>
-        <form onSubmit={submit} className="space-y-4">
-          {category.fields.map((f) => (
-            <div key={f.id}>
-              <label htmlFor={f.id} className="block text-[13px] font-bold text-slate-700 mb-1.5">
-                {f.label}
-              </label>
-              <Field field={f} value={values[f.id] || ""} onChange={(v) => setValues((s) => ({ ...s, [f.id]: v }))} />
-            </div>
-          ))}
-          <button
-            type="submit"
-            data-testid="child-needs-submit"
-            disabled={busy}
-            className="w-full py-3.5 rounded-full bg-[#4c2889] hover:bg-[#371a68] text-white text-sm font-extrabold shadow-md transition-colors disabled:opacity-60"
-          >
-            {busy ? <i className="fa-solid fa-spinner fa-spin"></i> : CONTENT.submit_label}
-          </button>
-        </form>
-      </DialogContent>
-    </Dialog>
+    <form data-testid={`child-needs-form-${category.key}`} onSubmit={submit} className="space-y-4">
+      {category.fields.map((f) => (
+        <div key={f.id}>
+          <label htmlFor={f.id} className="block text-[13px] font-bold text-slate-700 mb-1.5">
+            {f.label}
+          </label>
+          <Field field={f} value={values[f.id] || ""} onChange={(v) => setValues((s) => ({ ...s, [f.id]: v }))} />
+        </div>
+      ))}
+      <button
+        type="submit"
+        data-testid="child-needs-submit"
+        disabled={busy}
+        className="w-full py-3.5 rounded-full bg-[#4c2889] hover:bg-[#371a68] text-white text-sm font-extrabold shadow-md transition-colors disabled:opacity-60"
+      >
+        {busy ? <i className="fa-solid fa-spinner fa-spin"></i> : CONTENT.submit_label}
+      </button>
+    </form>
   );
 }

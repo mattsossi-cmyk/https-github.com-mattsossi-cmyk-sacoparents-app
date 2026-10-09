@@ -1,6 +1,6 @@
 import React from "react";
 
-import { Spot } from "../court/CourtJourneyArt";
+import { ArtPicture } from "./ArtPicture";
 
 function ActionButton({ testid, item, done, next, onClick }) {
   return (
@@ -32,36 +32,39 @@ function ActionButton({ testid, item, done, next, onClick }) {
   );
 }
 
-// Assessment artwork with tappable panels + arrow buttons, and a row of labeled buttons underneath.
+function SmallButton({ testid, item, onClick }) {
+  return (
+    <button
+      type="button"
+      data-testid={testid}
+      onClick={onClick}
+      className="rounded-xl bg-white border border-purple-200 hover:border-purple-400 hover:bg-purple-50 text-[#3b1566] px-1 py-2 flex flex-col items-center gap-1 text-center shadow-sm transition-[border-color,background-color,transform] active:scale-[0.97]"
+    >
+      <i className={`fa-solid ${item.icon} text-sm text-[#6b2fb3]`}></i>
+      <span className="text-[10px] font-bold leading-tight">{item.label}</span>
+    </button>
+  );
+}
+
+// Self Journey picture card: tappable picture + a row of labeled buttons (and a smaller row for `small` items).
 export function JourneyArtCard({ testid, art, done = {}, nextKey, onAction, children }) {
+  const main = art.items.filter((it) => !it.small);
+  const small = art.items.filter((it) => it.small);
   return (
     <section data-testid={testid} className="space-y-2.5">
-      <div className="relative w-full rounded-3xl overflow-hidden shadow-lg border border-purple-100 bg-white">
-        <img
-          data-testid={`${testid}-img`}
-          src={`/images/${art.name}-640.webp`}
-          srcSet={`/images/${art.name}-640.webp 640w, /images/${art.name}.webp ${art.width}w`}
-          sizes="(min-width: 640px) 448px, 100vw"
-          width={art.width}
-          height={art.height}
-          alt={art.alt}
-          loading="lazy"
-          className="w-full h-auto block"
-        />
-        {art.items.map((it) => (
-          <React.Fragment key={it.key}>
-            <Spot testid={`${testid}-panel-${it.key}`} spot={it.panel} label={`Open ${it.label} Assessment`} className={`!rounded-3xl ${it.key === nextKey ? "journey-next-glow" : ""}`} onClick={() => onAction(it.key)} />
-            {it.arrow && (
-              <Spot testid={`${testid}-arrow-${it.key}`} spot={it.arrow} label={`Start ${it.label} Assessment`} className="!rounded-full" onClick={() => onAction(it.key)} />
-            )}
-          </React.Fragment>
-        ))}
-      </div>
-      <div className={`grid gap-2 ${art.items.length === 3 ? "grid-cols-3" : "grid-cols-2"}`}>
-        {art.items.map((it) => (
+      <ArtPicture tp={testid} art={art} nextKey={nextKey} onAction={onAction} />
+      <div className={`grid gap-2 ${main.length === 3 ? "grid-cols-3" : "grid-cols-2"}`}>
+        {main.map((it) => (
           <ActionButton key={it.key} testid={`${testid}-btn-${it.key}`} item={it} done={!!done[it.key]} next={it.key === nextKey} onClick={() => onAction(it.key)} />
         ))}
       </div>
+      {small.length > 0 && (
+        <div className="grid grid-cols-4 gap-1.5">
+          {small.map((it) => (
+            <SmallButton key={it.key} testid={`${testid}-btn-${it.key}`} item={it} onClick={() => onAction(it.key)} />
+          ))}
+        </div>
+      )}
       {children}
     </section>
   );

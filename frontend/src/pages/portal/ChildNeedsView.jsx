@@ -3,115 +3,114 @@ import { toast } from "sonner";
 
 import CONTENT from "./childNeedsContent.json";
 import { ChildNeedsForm } from "./childNeeds/ChildNeedsForm";
+import { useGuideChat } from "./guide/useGuideChat";
+import { JourneyPage } from "./selfJourney/JourneyPage";
+import { NEEDS_ART } from "./selfJourney/selfJourneyArt";
 
-// Card 3 · "Your Child's Specific Needs" — founder mockup (3 assessment cards).
-const THEMES = {
-  medical: { card: "from-white to-sky-100 border-sky-200", icon: "fa-stethoscope text-sky-600", title: "text-sky-700", btn: "bg-sky-600 hover:bg-sky-700" },
-  educational: { card: "from-white to-green-100 border-green-200", icon: "fa-book-open text-green-600", title: "text-green-700", btn: "bg-green-600 hover:bg-green-700" },
-  psychological: { card: "from-white to-orange-100 border-orange-200", icon: "fa-brain text-orange-600", title: "text-orange-700", btn: "bg-orange-600 hover:bg-orange-700" },
+const ORDER = NEEDS_ART.items.map((i) => i.key);
+const CATS = Object.fromEntries(CONTENT.categories.map((c) => [c.key, c]));
+const TAB_ON = {
+  educational: "border-green-400 bg-green-50 text-green-800",
+  medical: "border-sky-400 bg-sky-50 text-sky-800",
+  psychological: "border-purple-400 bg-purple-50 text-purple-800",
 };
+const GREETING = "Hi, I'm your Child Needs Guide. Ask me how to describe your child's school, health or emotional needs so both homes can support them.";
+const SUGGESTIONS = ["What should I include here?", "How do I keep this child-focused?", "How can both homes stay consistent?"];
 
-function NeedsCard({ category, completed, onOpen }) {
-  const t = THEMES[category.key];
+function NeedsTabs({ activeKey, done, onPick }) {
   return (
-    <div data-testid={`child-needs-card-${category.key}`} className={`rounded-[22px] border-2 bg-gradient-to-br ${t.card} p-5 shadow-[0_6px_20px_rgba(0,0,0,0.06)] space-y-4`}>
-      <div className="flex items-start gap-3.5">
-        <div className="shrink-0 w-14 h-14 rounded-full bg-white shadow flex items-center justify-center">
-          <i className={`fa-solid ${t.icon} text-2xl`}></i>
-        </div>
-        <div className="min-w-0">
-          <h2 className={`text-xl font-extrabold leading-tight ${t.title}`}>{category.card_title}</h2>
-          <p className="text-[13.5px] text-slate-600 leading-snug mt-1">{category.card_desc}</p>
-        </div>
-      </div>
-      <button
-        type="button"
-        data-testid={`child-needs-open-${category.key}`}
-        onClick={onOpen}
-        className={`w-full py-3.5 px-4 rounded-full text-white text-[14px] font-extrabold shadow-md flex items-center justify-center gap-2 transition-[filter,transform] active:scale-[0.98] ${t.btn}`}
-      >
-        {completed ? (
-          <span data-testid={`child-needs-${category.key}-completed`}>
-            Completed <i className="fa-solid fa-check mx-1"></i> · Edit
-          </span>
-        ) : (
-          <>
-            <span>{category.button}</span>
-            <span aria-hidden="true">→</span>
-          </>
-        )}
-      </button>
+    <div role="tablist" className="grid grid-cols-3 gap-2">
+      {NEEDS_ART.items.map((it) => {
+        const on = it.key === activeKey;
+        return (
+          <button
+            key={it.key}
+            type="button"
+            role="tab"
+            aria-selected={on}
+            data-testid={`child-needs-tab-${it.key}`}
+            onClick={() => onPick(it.key)}
+            className={`rounded-2xl border-2 px-2 py-3 flex flex-col items-center gap-1 text-center transition-[border-color,background-color,box-shadow] ${
+              on ? `${TAB_ON[it.key]} shadow-md` : "border-slate-200 bg-white text-slate-600 hover:border-purple-200"
+            }`}
+          >
+            <i className={`fa-solid ${it.icon} text-lg`}></i>
+            <span className="text-[12px] font-extrabold leading-tight">{it.label}</span>
+            {done[it.key] ? (
+              <span data-testid={`child-needs-${it.key}-completed`} className="text-[10px] font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 rounded-full px-2 py-0.5 whitespace-nowrap">
+                Completed <i className="fa-solid fa-check text-[9px]"></i>
+              </span>
+            ) : (
+              <span className="text-[10px] font-semibold text-slate-400">Not started</span>
+            )}
+          </button>
+        );
+      })}
     </div>
   );
 }
 
-// `needs` is the useChildNeeds() instance owned by JourneyShell so Self Journey badges stay in sync.
-export function ChildNeedsView({ onBack = () => {}, QuickExit = null, needs, parentName, initialOpenKey = null }) {
+// Your Child's Specific Needs: picture bubbles + tabs switch the form on the left. `needs` is owned by JourneyShell.
+export function ChildNeedsView({ onBack, onQuickExit, needs, parentName, initialOpenKey = null, safetyFlag }) {
   const { state, saveCategory, downloadReport } = needs;
-  const [openKey, setOpenKey] = useState(initialOpenKey);
-  const category = CONTENT.categories.find((c) => c.key === openKey);
-  const anyDone = CONTENT.categories.some((c) => state.completed_at?.[c.key]);
+  const done = Object.fromEntries(ORDER.map((k) => [k, !!state.completed_at?.[k]]));
+  const [activeKey, setActiveKey] = useState(initialOpenKey || ORDER.find((k) => !done[k]) || ORDER[0]);
+  const category = CATS[activeKey];
+  const chat = useGuideChat("/journey-guide/child-needs/chat", { section: category.form_title, safety_flagged: !!safetyFlag });
+  const doneCount = ORDER.filter((k) => done[k]).length;
+
+  const pick = (k) => {
+    setActiveKey(k);
+    document.getElementById("cn-work")?.scrollIntoView({ behavior: "smooth", block: "start" });
+  };
 
   const submit = async (values) => {
     try {
-      const next = await saveCategory(openKey, values);
-      setOpenKey(null);
+      const next = await saveCategory(activeKey, values);
       const ok = await downloadReport(next.answers, parentName);
       if (ok) toast.success("Saved. Your Child's Specific Needs report is downloading.");
+      const upNext = ORDER.find((k) => !next.completed_at?.[k]);
+      if (upNext) pick(upNext);
     } catch (e) {
       toast.error(e?.response?.data?.detail || "Couldn't save right now. Please try again.");
     }
   };
 
   return (
-    <div data-testid="door-view-child-needs" className="space-y-5 max-w-[540px] mx-auto">
-      <div className="flex items-center justify-between gap-2">
-        <button type="button" data-testid="child-needs-back" onClick={onBack} className="text-sm font-semibold text-purple-800 hover:underline">
-          <i className="fa-solid fa-arrow-left mr-1.5"></i>Back
-        </button>
-        {QuickExit}
+    <JourneyPage
+      tp="cn"
+      hero={{ title: CONTENT.title, subtitle: CONTENT.subtitle, pill: `${doneCount} of ${ORDER.length} completed`, pct: Math.round((doneCount / ORDER.length) * 100) }}
+      art={NEEDS_ART}
+      onArt={pick}
+      artState={{ done, activeKey }}
+      chat={chat}
+      chatProps={{ title: "Child Needs Guide", greeting: GREETING, suggestions: SUGGESTIONS }}
+      onBack={onBack}
+      onQuickExit={onQuickExit}
+      footer="Your Child's Specific Needs"
+    >
+      <div data-testid="door-view-child-needs" className="space-y-5">
+        <NeedsTabs activeKey={activeKey} done={done} onPick={pick} />
+        <section id="cn-work" data-testid={`child-needs-panel-${activeKey}`} className="bg-white rounded-3xl border border-purple-100 shadow-lg p-5 sm:p-7 scroll-mt-6">
+          <h3 data-testid="child-needs-form-title" className="text-xl sm:text-2xl font-extrabold text-[#3B1C6B]">
+            {category.form_title}
+          </h3>
+          <p className="text-sm text-slate-600 mt-1 mb-5">{category.card_desc}</p>
+          <ChildNeedsForm key={activeKey} category={category} initial={state.answers?.[activeKey]} onSubmit={submit} />
+        </section>
+        {doneCount > 0 && (
+          <button
+            type="button"
+            data-testid="child-needs-download-report"
+            onClick={() => downloadReport(state.answers, parentName)}
+            className="w-full py-3 rounded-full bg-white hover:bg-purple-50 border border-purple-300 text-purple-900 text-sm font-bold transition-colors"
+          >
+            <i className="fa-solid fa-file-pdf mr-1.5"></i>Download my Child's Specific Needs report
+          </button>
+        )}
+        <p className="text-[11px] text-slate-500 text-center">{CONTENT.disclaimer}</p>
       </div>
-
-      <header className="text-center pt-1">
-        <div className="text-[1.8rem] font-extrabold text-[#4c2889] tracking-tight">SA CoParents</div>
-        <div className="text-[11px] font-bold tracking-[0.18em] text-[#4c2889] uppercase mt-0.5">{CONTENT.brand_tagline}</div>
-      </header>
-      <div className="text-center">
-        <h1 data-testid="child-needs-title" className="text-4xl font-extrabold text-[#4c2889] leading-[1.15] tracking-tight">
-          {CONTENT.title}
-        </h1>
-        <p className="text-[15px] text-slate-600 leading-snug mt-2 px-2">{CONTENT.subtitle}</p>
-      </div>
-
-      <div className="space-y-5">
-        {CONTENT.categories.map((c) => (
-          <NeedsCard key={c.key} category={c} completed={!!state.completed_at?.[c.key]} onOpen={() => setOpenKey(c.key)} />
-        ))}
-      </div>
-
-      {anyDone && (
-        <button
-          type="button"
-          data-testid="child-needs-download-report"
-          onClick={() => downloadReport(state.answers, parentName)}
-          className="w-full py-3 rounded-full bg-white hover:bg-purple-50 border border-purple-300 text-purple-900 text-sm font-bold transition-colors"
-        >
-          <i className="fa-solid fa-file-pdf mr-1.5"></i>Download my Child's Specific Needs report
-        </button>
-      )}
-
-      <div className="text-center px-4 py-4 bg-purple-50 rounded-2xl border border-dashed border-purple-300 text-[#4c2889] text-[13px] font-extrabold tracking-wide uppercase">
-        {CONTENT.footer}
-      </div>
-
-      <ChildNeedsForm
-        category={category}
-        initial={state.answers?.[openKey]}
-        open={!!openKey}
-        onOpenChange={(o) => !o && setOpenKey(null)}
-        onSubmit={submit}
-      />
-    </div>
+    </JourneyPage>
   );
 }
 

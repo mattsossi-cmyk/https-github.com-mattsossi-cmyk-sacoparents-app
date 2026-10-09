@@ -2,7 +2,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 
 import { api } from "../../../lib/api";
 
-const EMPTY = { answers: {}, notes: {}, tips: {}, step: 0, completed_at: null };
+const EMPTY = { answers: {}, notes: {}, checks: {}, tips: {}, step: 0, completed_at: null };
 const detailOf = (e, fallback) => {
   const d = e?.response?.data?.detail;
   return typeof d === "string" ? d : fallback;
@@ -51,9 +51,9 @@ export function usePpPlan() {
 
   const save = useCallback(async (extra = {}) => {
     clearTimeout(timer.current);
-    const { answers, notes, step } = latest.current;
+    const { answers, notes, checks, step } = latest.current;
     try {
-      const { data } = await api.put("/parallel-parenting/me", { answers, notes, step, ...extra });
+      const { data } = await api.put("/parallel-parenting/me", { answers, notes, checks, step, ...extra });
       commit({ completed_at: data.completed_at, updated_at: data.updated_at });
     } catch {
       setLoadError(true);
@@ -68,6 +68,10 @@ export function usePpPlan() {
 
   const setAnswer = (qid, oid) => queueSave({ answers: { ...latest.current.answers, [qid]: oid } });
   const setNote = (key, text) => queueSave({ notes: { ...latest.current.notes, [key]: text } });
+  const toggleCheck = (key, id) => {
+    const cur = latest.current.checks[key] || [];
+    queueSave({ checks: { ...latest.current.checks, [key]: cur.includes(id) ? cur.filter((x) => x !== id) : [...cur, id] } });
+  };
   const goStep = (step, extra) => {
     commit({ step });
     return save(extra);
@@ -95,5 +99,5 @@ export function usePpPlan() {
     }
   };
 
-  return { plan, loadError, save, setAnswer, setNote, goStep, requestTip, tipBusy, tipError };
+  return { plan, loadError, save, setAnswer, setNote, toggleCheck, goStep, requestTip, tipBusy, tipError };
 }

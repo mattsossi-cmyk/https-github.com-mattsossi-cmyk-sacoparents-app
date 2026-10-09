@@ -474,5 +474,144 @@
         }
       ]
     }
+  ],
+  "checklists": [
+    {
+      "key": "child_focus",
+      "title": "Child-Focused Considerations",
+      "short": "Keep your child's age, routines and feelings at the centre.",
+      "icon": "fa-children",
+      "intro": "Tick each point your plan already covers. These keep your child's needs at the centre of both homes.",
+      "items": [
+        {
+          "id": "age_fit",
+          "label": "The schedule fits my child's age and stage of development."
+        },
+        {
+          "id": "steady_routines",
+          "label": "School, homework and activity routines stay steady in both homes."
+        },
+        {
+          "id": "both_parents",
+          "label": "My child can keep a loving relationship with both parents, where it is safe."
+        },
+        {
+          "id": "no_messenger",
+          "label": "My child is never asked to carry messages or choose sides."
+        },
+        {
+          "id": "belongings",
+          "label": "Comfort items, medicines and school things travel easily with my child."
+        },
+        {
+          "id": "child_voice",
+          "label": "My child's feelings are listened to, without asking them to decide adult issues."
+        }
+      ]
+    },
+    {
+      "key": "safeguards",
+      "title": "Safeguards and Boundaries",
+      "short": "Clear limits that keep contact calm, predictable and safe.",
+      "icon": "fa-shield-halved",
+      "intro": "Tick the safeguards that are part of your plan. Clear boundaries lower conflict for everyone, especially your child.",
+      "items": [
+        {
+          "id": "written_record",
+          "label": "Communication stays in writing so there is a clear record."
+        },
+        {
+          "id": "response_times",
+          "label": "We have set response times and quiet hours for non-urgent messages."
+        },
+        {
+          "id": "neutral_exchanges",
+          "label": "Exchanges happen at a neutral, public or supervised place when needed."
+        },
+        {
+          "id": "no_disparaging",
+          "label": "Neither home speaks badly about the other parent in front of our child."
+        },
+        {
+          "id": "emergency_plan",
+          "label": "There is a clear plan for how real emergencies are shared."
+        },
+        {
+          "id": "safety_plan",
+          "label": "If I have safety concerns, I have a safety plan and know who to contact."
+        }
+      ]
+    },
+    {
+      "key": "court_check",
+      "title": "Texas Court-Order Compatibility Check",
+      "short": "A self-check of your plan against your own court order.",
+      "icon": "fa-file-circle-check",
+      "intro": "A self-check: tick each part of your plan that you have compared with your current Texas court order and that matches it.",
+      "note": "This is a self-check, not legal advice. Your court order always comes first. Ask a Texas family law professional to confirm your plan fits your order.",
+      "items": [
+        {
+          "id": "possession_schedule",
+          "label": "Parenting time matches the possession and access schedule in my order."
+        },
+        {
+          "id": "exchange_terms",
+          "label": "Exchange times and places match what my order says."
+        },
+        {
+          "id": "holidays",
+          "label": "Holiday and school-break time matches my order."
+        },
+        {
+          "id": "decision_rights",
+          "label": "Decision-making matches the rights and duties my order gives each parent."
+        },
+        {
+          "id": "communication_terms",
+          "label": "Communication methods match any communication terms in my order."
+        },
+        {
+          "id": "money_terms",
+          "label": "Nothing in my plan changes child support, medical support or other money terms."
+        },
+        {
+          "id": "protective_terms",
+          "label": "Nothing in my plan conflicts with a protective order or supervised-visit terms."
+        }
+      ]
+    },
+    {
+      "key": "professional_review",
+      "title": "Areas for Professional Review",
+      "short": "Topics to review with a mediator, attorney or counselor.",
+      "icon": "fa-users",
+      "intro": "Tick the topics you would like a mediator, family law attorney or counselor to review with you.",
+      "items": [
+        {
+          "id": "schedule_changes",
+          "label": "Changing the parenting schedule or possession order."
+        },
+        {
+          "id": "relocation",
+          "label": "Moving or relocating with my child."
+        },
+        {
+          "id": "major_decisions",
+          "label": "Disagreements about school, medical or other major decisions."
+        },
+        {
+          "id": "child_wellbeing",
+          "label": "My child's emotional or behavioural needs (counselor or therapist)."
+        },
+        {
+          "id": "safety_concerns",
+          "label": "Safety concerns or protective orders."
+        },
+        {
+          "id": "money",
+          "label": "Child support or shared expenses."
+        }
+      ]
+    }
   ]
 }

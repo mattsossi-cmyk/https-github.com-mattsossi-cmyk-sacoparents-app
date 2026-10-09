@@ -119,6 +119,32 @@ def _step(pdf: _PPPDF, step: Dict[str, Any], plan: Dict[str, Any]) -> None:
     pdf.ln(2)
 
 
+def _checklist(pdf: _PPPDF, check: Dict[str, Any], plan: Dict[str, Any]) -> None:
+    if pdf.get_y() > 215:
+        pdf.add_page()
+    pdf.set_fill_color(*PURPLE)
+    pdf.set_text_color(255, 255, 255)
+    pdf.set_font("Helvetica", "B", 10.5)
+    pdf.cell(0, 7.5, _safe(f"  Quick check  ·  {check['title']}"), fill=True, new_x="LMARGIN", new_y="NEXT")
+    pdf.ln(2)
+    if check.get("note"):
+        _box(pdf, "Please note", check["note"], (255, 247, 237))
+    ticked = set((plan.get("checks") or {}).get(check["key"]) or [])
+    for item in check["items"]:
+        if pdf.get_y() > 250:
+            pdf.add_page()
+        on = item["id"] in ticked
+        pdf.set_font("Helvetica", "B" if on else "", 9.5)
+        pdf.set_text_color(*(GREEN if on else MUTED))
+        pdf.multi_cell(pdf.epw, 5.2, _safe(f"{'[x]' if on else '[  ]'}  {item['label']}"), new_x="LMARGIN", new_y="NEXT")
+        pdf.ln(0.8)
+    note = ((plan.get("notes") or {}).get(check["key"]) or "").strip()
+    if note:
+        pdf.ln(1)
+        _box(pdf, "My notes", note)
+    pdf.ln(3)
+
+
 def build_pp_pdf(
     content: Dict[str, Any],
     plan: Dict[str, Any],
@@ -135,6 +161,8 @@ def build_pp_pdf(
         pdf.ln(2)
     for step in content["steps"]:
         _step(pdf, step, plan)
+    for check in content["checklists"]:
+        _checklist(pdf, check, plan)
     if pdf.get_y() > 240:
         pdf.add_page()
     _box(pdf, "Before you rely on this plan", content["pdf_closing"], (255, 247, 237))

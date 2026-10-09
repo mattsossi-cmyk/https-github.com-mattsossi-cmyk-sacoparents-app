@@ -42,9 +42,41 @@ function StepSummary({ step, plan, tipBusy, onEdit }) {
   );
 }
 
-export function PpSummary({ content, plan, tipBusy, onEdit, onDownload, downloading, historyTick }) {
+function CheckSummary({ list, plan, onEdit }) {
+  const ticked = list.items.filter((it) => (plan.checks?.[list.key] || []).includes(it.id));
+  const note = (plan.notes[list.key] || "").trim();
+  return (
+    <div data-testid={`pp-summary-check-${list.key}`} className="rounded-2xl border border-purple-100 overflow-hidden">
+      <div className="flex items-center justify-between gap-3 bg-[#f4f0fa] px-4 py-3">
+        <h3 className="text-sm font-extrabold text-[#2d1548] flex items-center gap-2">
+          <i className={`fa-solid ${list.icon} text-[#4a2574]`}></i>
+          {list.title}
+        </h3>
+        <button type="button" data-testid={`pp-summary-edit-check-${list.key}`} onClick={onEdit} className="text-xs font-bold text-[#4a2574] hover:underline">
+          <i className="fa-solid fa-pen mr-1"></i>Edit
+        </button>
+      </div>
+      <ul className="px-4 py-2.5 space-y-1.5">
+        {ticked.length ? (
+          ticked.map((it) => (
+            <li key={it.id} className="text-sm text-[#2e7d32] font-semibold flex gap-2">
+              <i className="fa-solid fa-square-check mt-1 text-xs"></i>
+              {it.label}
+            </li>
+          ))
+        ) : (
+          <li className="text-sm text-slate-400 italic">Nothing ticked yet</li>
+        )}
+      </ul>
+      {note && <p className="mx-4 mb-4 text-xs text-slate-700 bg-slate-50 rounded-lg p-2.5"><span className="font-bold">My notes: </span>{note}</p>}
+    </div>
+  );
+}
+
+export function PpSummary({ content, plan, tipBusy, onEdit, onEditCheck, onDownload, downloading, historyTick }) {
   const total = content.steps.reduce((n, s) => n + s.questions.length, 0);
   const made = Object.keys(plan.answers).length;
+  const ticks = Object.values(plan.checks || {}).reduce((n, v) => n + v.length, 0);
   return (
     <div data-testid="pp-summary" className="bg-white rounded-3xl border border-purple-100 shadow-lg p-5 sm:p-8 space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
@@ -60,7 +92,7 @@ export function PpSummary({ content, plan, tipBusy, onEdit, onDownload, download
           type="button"
           data-testid="pp-download-pdf"
           onClick={onDownload}
-          disabled={downloading || made === 0}
+          disabled={downloading || (made === 0 && ticks === 0)}
           className="shrink-0 px-5 py-3 rounded-xl bg-[#388e3c] hover:bg-[#2e7d32] disabled:opacity-60 text-white text-sm font-bold shadow-md transition-colors"
         >
           <i className={`fa-solid ${downloading ? "fa-spinner fa-spin" : "fa-file-pdf"} mr-2`}></i>Download My Plan (PDF)
@@ -69,6 +101,9 @@ export function PpSummary({ content, plan, tipBusy, onEdit, onDownload, download
       <div className="space-y-4">
         {content.steps.map((s, i) => (
           <StepSummary key={s.key} step={s} plan={plan} tipBusy={tipBusy} onEdit={() => onEdit(i)} />
+        ))}
+        {content.checklists.map((c, i) => (
+          <CheckSummary key={c.key} list={c} plan={plan} onEdit={() => onEditCheck(i)} />
         ))}
       </div>
       <PpHistory tick={historyTick} />

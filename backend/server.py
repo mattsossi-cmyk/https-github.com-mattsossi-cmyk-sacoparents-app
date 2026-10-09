@@ -85,6 +85,7 @@ from court_compare import router as court_compare_router  # noqa: E402
 from parallel_parenting_routes import router as parallel_parenting_router  # noqa: E402
 from child_needs_routes import router as child_needs_router  # noqa: E402
 from journey_summary_routes import router as journey_summary_router  # noqa: E402
+from journey_guide_routes import router as journey_guide_router  # noqa: E402
 from foundation_builder_routes import router as foundation_builder_router  # noqa: E402
 from cron_routes import router as cron_router  # noqa: E402
 from release_check_routes import router as release_check_router  # noqa: E402
@@ -245,6 +246,7 @@ api_router.include_router(parallel_parenting_router)
 api_router.include_router(self_assessment_router)
 api_router.include_router(child_needs_router)
 api_router.include_router(journey_summary_router)
+api_router.include_router(journey_guide_router)
 api_router.include_router(foundation_builder_router)
 api_router.include_router(cron_router)
 api_router.include_router(release_check_router)

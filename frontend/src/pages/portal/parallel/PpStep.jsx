@@ -121,7 +121,7 @@ export function PpStep({ step, index, total, plan, prevStep, tipBusy, tipError, 
               onClick={onNext}
               className="px-6 py-3 rounded-xl bg-[#388e3c] hover:bg-[#2e7d32] text-white text-sm font-bold shadow-md transition-colors"
             >
-              {last ? "See My Plan" : "Save & Continue"}
+              {last ? "Continue to Quick Checks" : "Save & Continue"}
               <i className="fa-solid fa-arrow-right ml-2"></i>
             </button>
           </div>

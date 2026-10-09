@@ -27,6 +27,8 @@ CONTENT: Dict[str, Any] = json.loads(
 )
 STEPS = {s["key"]: s for s in CONTENT["steps"]}
 OPTIONS = {q["id"]: {o["id"]: o for o in q["options"]} for s in CONTENT["steps"] for q in s["questions"]}
+CHECKLISTS = {c["key"]: c for c in CONTENT["checklists"]}
+CHECK_ITEMS = {k: [i["id"] for i in c["items"]] for k, c in CHECKLISTS.items()}
 PLANS = "parallel_parenting_plans"
 CHATS = "parallel_parenting_chats"
 VERSIONS = "parallel_parenting_versions"
@@ -54,7 +56,9 @@ _CHAT_TASK = (
     "asterisks, lists, headings or emojis, and don't open with a greeting after the first reply. When it helps, "
     "point them to the right step of the builder: 1 Communication Boundaries, "
     "2 Parenting Time & Exchanges, 3 Decision-Making, 4 Information Sharing, 5 Household Routines, "
-    "6 Changes & Disagreements."
+    "6 Changes & Disagreements. Quick checks: Child-Focused Considerations, Safeguards and Boundaries, "
+    "Texas Court-Order Compatibility Check (a self-check against their own order, never a legal confirmation), "
+    "Areas for Professional Review."
 )
 
 
@@ -65,6 +69,7 @@ def _now() -> str:
 class PlanBody(BaseModel):
     answers: Dict[str, str] = Field(default_factory=dict)
     notes: Dict[str, str] = Field(default_factory=dict)
+    checks: Dict[str, List[str]] = Field(default_factory=dict)
     step: int = Field(default=0, ge=0, le=len(CONTENT["steps"]))
     completed: bool = False
 
@@ -76,13 +81,19 @@ class PlanBody(BaseModel):
     @field_validator("notes")
     @classmethod
     def _notes(cls, v: Dict[str, str]) -> Dict[str, str]:
-        return {k: t[:1000] for k, t in (v or {}).items() if k in STEPS and isinstance(t, str)}
+        return {k: t[:1000] for k, t in (v or {}).items() if (k in STEPS or k in CHECKLISTS) and isinstance(t, str)}
+
+    @field_validator("checks")
+    @classmethod
+    def _checks(cls, v: Dict[str, List[str]]) -> Dict[str, List[str]]:
+        return {k: [i for i in CHECK_ITEMS[k] if i in set(ids or [])] for k, ids in (v or {}).items() if k in CHECK_ITEMS}
 
 
 class PlanState(BaseModel):
     answers: Dict[str, str] = Field(default_factory=dict)
     notes: Dict[str, str] = Field(default_factory=dict)
     tips: Dict[str, str] = Field(default_factory=dict)
+    checks: Dict[str, List[str]] = Field(default_factory=dict)
     step: int = 0
     completed_at: Optional[str] = None
     updated_at: Optional[str] = None
@@ -142,14 +153,17 @@ async def _snapshot(db: AsyncIOMotorDatabase, uid: str, reason: str) -> None:
     """Save a new plan version if answers/notes changed since the last one; keep the latest 20."""
     plan = await _plan(db, uid)
     notes = {k: v.strip() for k, v in plan.notes.items() if v.strip()}
-    if not plan.answers and not notes:
+    checks = {k: v for k, v in plan.checks.items() if v}
+    if not plan.answers and not notes and not checks:
         return
-    last = await db[VERSIONS].find_one({"user_id": uid}, {"_id": 0, "answers": 1, "notes": 1}, sort=[("created_at", -1)])
-    if last and last["answers"] == plan.answers and last["notes"] == notes:
+    last = await db[VERSIONS].find_one(
+        {"user_id": uid}, {"_id": 0, "answers": 1, "notes": 1, "checks": 1}, sort=[("created_at", -1)]
+    )
+    if last and last["answers"] == plan.answers and last["notes"] == notes and last.get("checks", {}) == checks:
         return
     await db[VERSIONS].insert_one({
         "id": uuid.uuid4().hex, "user_id": uid, "created_at": _now(), "reason": reason,
-        "answers": plan.answers, "notes": notes, "tips": plan.tips,
+        "answers": plan.answers, "notes": notes, "checks": checks, "tips": plan.tips,
     })
     stale = await db[VERSIONS].find({"user_id": uid}, {"_id": 0, "id": 1}).sort("created_at", -1).skip(MAX_VERSIONS).to_list(200)
     if stale:
@@ -189,7 +203,7 @@ async def get_plan(user: UserPublic = Depends(get_current_user), db: AsyncIOMoto
 async def save_plan(
     body: PlanBody, user: UserPublic = Depends(get_current_user), db: AsyncIOMotorDatabase = Depends(get_db)
 ) -> PlanState:
-    fields = {"answers": body.answers, "notes": body.notes, "step": body.step, "updated_at": _now()}
+    fields = {"answers": body.answers, "notes": body.notes, "checks": body.checks, "step": body.step, "updated_at": _now()}
     if body.completed and not (await _plan(db, user.user_id)).completed_at:
         fields["completed_at"] = fields["updated_at"]
     await db[PLANS].update_one({"user_id": user.user_id}, {"$set": fields}, upsert=True)
@@ -247,7 +261,7 @@ async def chat(
 @router.post("/pdf")
 async def download_plan_pdf(user: UserPublic = Depends(get_current_user), db: AsyncIOMotorDatabase = Depends(get_db)):
     plan = await _plan(db, user.user_id)
-    if not plan.answers and not any(v.strip() for v in plan.notes.values()):
+    if not plan.answers and not any(v.strip() for v in plan.notes.values()) and not any(plan.checks.values()):
         raise HTTPException(status_code=400, detail="Choose at least one option first.")
     await _snapshot(db, user.user_id, "pdf")
     note = _change_note(*await _version_pair(db, user.user_id))

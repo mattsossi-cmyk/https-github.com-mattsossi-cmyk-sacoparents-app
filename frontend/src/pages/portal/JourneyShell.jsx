@@ -6,18 +6,17 @@ import InviteCoparentCard from "../../components/InviteCoparentCard";
 import { SelfAssessmentView } from "./SelfAssessmentView";
 import { CourtOrderedView } from "./CourtOrderedView";
 import { ParallelParentingView } from "./ParallelParentingView";
-import { PpBanner } from "./parallel/PpBanner";
 import { useSelfAssessmentHistory } from "./selfAssessment/useSelfAssessmentHistory";
 import { GoalBanner } from "./selfAssessment/GoalBanner";
 import { WelcomeArtwork } from "./WelcomeArtwork";
 import { JourneyArtCard } from "./selfJourney/JourneyArtCard";
-import { ASSESS_ART, ASSESS_ORDER, NEEDS_ART } from "./selfJourney/selfJourneyArt";
+import { ASSESS_ART, ASSESS_ORDER, NEEDS_ART, PP_ART } from "./selfJourney/selfJourneyArt";
 import { AssessProgressRing, JourneySummaryButton } from "./selfJourney/AssessProgressRing";
 import { JourneyCelebration } from "./selfJourney/JourneyCelebration";
 import { useJourneySummary } from "./selfJourney/useJourneySummary";
 import { useCoparentingDone } from "./selfJourney/useCoparentingDone";
 import { useChildNeeds } from "./childNeeds/useChildNeeds";
-import { CoparentingAssessmentModal } from "./coparenting/CoparentingAssessmentModal";
+import { CoparentingAssessmentView } from "./coparenting/CoparentingAssessmentView";
 import { useFoundationBuilder } from "./foundation/useFoundationBuilder";
 import { ChildNeedsView } from "./ChildNeedsView";
 import { FoundationStatementView } from "./FoundationStatementView";
@@ -849,6 +848,11 @@ export function JourneyShell({
   // iter268 — new Self Journey "Assess Your Situation" modal state.
   const [assessOpen, setAssessOpen] = useState(false);
   const [ppOpen, setPpOpen] = useState(false);
+  const [ppScreen, setPpScreen] = useState("welcome");
+  const openPp = (screen = "welcome") => {
+    setPpScreen(screen);
+    setPpOpen(true);
+  };
   const saHistory = useSelfAssessmentHistory(user?.user_id);
   const [assessStartNew, setAssessStartNew] = useState(false);
   const [cpAssessOpen, setCpAssessOpen] = useState(false);
@@ -1107,14 +1111,21 @@ export function JourneyShell({
           onQuickExit={quickExitAction}
           safetyFlag={safetyFlag}
           hidden={overlayOpen || biffCoachOpen}
+          initialScreen={ppScreen}
         />
       )}
-      <CoparentingAssessmentModal
-        open={cpAssessOpen}
-        onOpenChange={setCpAssessOpen}
-        userId={user?.user_id}
-        onQuickExit={quickExitAction}
-      />
+      {cpAssessOpen && (
+        <CoparentingAssessmentView
+          userId={user?.user_id}
+          onClose={() => setCpAssessOpen(false)}
+          onQuickExit={quickExitAction}
+          onOpenSelfAssessment={() => {
+            setCpAssessOpen(false);
+            openAssess(false);
+          }}
+          safetyFlag={safetyFlag}
+        />
+      )}
     </>
   );
 
@@ -1137,7 +1148,7 @@ export function JourneyShell({
           onOpenModule={moduleCta}
           onOpenCard={openCourtCard}
           fb={foundationBuilder}
-          onOpenParallel={() => setPpOpen(true)}
+          onOpenParallel={() => openPp()}
           onDownloadPdf={onDownloadCourtPdf}
           onOpenBiffHistory={() => onOpenCommBuilder("history")}
           alignUrl={ALIGN_SITE_URL}
@@ -1156,21 +1167,11 @@ export function JourneyShell({
   // Journey without clearing the door memory.
   // -----------------------------------------------------------------
   if (view === "child_needs") {
-    const quickExitChip = (
-      <button
-        type="button"
-        data-testid="door-quick-exit"
-        onClick={quickExitAction}
-        className="px-2.5 py-1 rounded-md text-[10px] font-bold bg-rose-600 hover:bg-rose-700 text-white shadow-sm transition"
-      >
-        <i className="fa-solid fa-bolt mr-1"></i>
-        Quick Exit
-      </button>
-    );
     return (
       <ChildNeedsView
         onBack={() => setView(subFrom)}
-        QuickExit={quickExitChip}
+        onQuickExit={quickExitAction}
+        safetyFlag={safetyFlag}
         needs={childNeeds}
         parentName={greetingName}
         initialOpenKey={childNeedsKey}
@@ -1299,7 +1300,11 @@ export function JourneyShell({
           </button>
         </div>
 
-        <PpBanner onOpen={() => setPpOpen(true)} />
+        <JourneyArtCard
+          testid="door-self-art-parallel"
+          art={PP_ART}
+          onAction={(k) => openPp(PP_ART.items.find((it) => it.key === k).screen)}
+        />
 
         {/* Communication Builder — the big purple hero card. */}
         <button
