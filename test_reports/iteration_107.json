@@ -1,0 +1,29 @@
+{
+  "summary": "Frontend-only review of Court-Ordered Path redesign (Communication-Builder-style layout with real picture). Logged in parent3@test.com, forced sacoparents_last_door='court', accepted legal modal, verified all requested testids exist and function on desktop 1920x1080 and mobile 390x844. Hotspot coords on real image match courtContent.js exactly (MAIN_SPOT [39.8,11.5,77,5.6]; steps 54.2/68.4 rows; pillars row 88). Visually, court-spot-accept outlines the green 'Accept Your Court-Ordered Invite' button, court-spot-step-1..4 outline the four step cards, and court-spot-pillar-* outline the four summary tiles with status pills parked at the BOTTOM-LEFT (no step title overlap). Dialog wiring verified: step-card-1 opens court-step-dialog titled 'Step 1: Complete Your CoParenting Assessment'; pillar-card-alignment opens court-pillar-dialog; court-accept-btn opens court-accept-dialog (shows update flow because PAIR-DEMO-01 already verified). Hero shows 'Court-Ordered Path', pill 'Step 3 of 4 \u00b7 Identify Your Child's Specific Needs', bar width 50% matches 2/4 done. Step statuses (card vs spot) match: 1=done, 2=done, 3=in_progress, 4=todo. Hints toggle flips 'Hide Action Buttons' \u2194 'Show Action Buttons'. Inline chat (court-inline-chat) and floating dialog (court-ai-fab \u2192 court-chat) share the same conversation: send in inline \u2192 messages mirrored in dialog; 'Start new chat' clears both. Inline chat has no close button. Mobile ordering is correct: court-art first (y=432), then accept-card (1000), step-cards (1443), pillar-cards (2342), court-inline-chat LAST (4667). Page has no horizontal overflow (scrollWidth==clientWidth==390). FAB visible on both viewports. Reseeded PAIR-DEMO-01 at the end.",
+  "backend_issues": {"critical": [], "minor": []},
+  "frontend_issues": {
+    "ui_bugs": [
+      {"component": "CourtJourneyArt / HintsToggle", "issue": "On mobile 390px the toggle button span 'Hide Action Buttons' / 'Show Action Buttons' wraps to TWO lines (spanHeight=32px with lineHeight=16px). The request explicitly asks for 'hints toggle text on one line'. Add whitespace-nowrap on the button span or shrink the padding/font so it stays single-line at 390px.", "selector": "[data-testid=\"court-hints-toggle\"] span", "priority": "MEDIUM"}
+    ],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  "test_report_links": [],
+  "action_items": [
+    "Prevent 'Hide/Show Action Buttons' label from wrapping on mobile (add whitespace-nowrap to the span inside [data-testid=court-hints-toggle], or shorten label on <sm)."
+  ],
+  "critical_code_review_comments": [
+    "CourtOrderedView.jsx uses 'display: contents' on the right column wrapper so phones can reorder art-first/chat-last around the left card column \u2014 clean and semantic.",
+    "Status pills in CourtJourneyArt.jsx are absolutely positioned bottom-left of each hotspot (bottom-1/left-1 sm:bottom-2/left-2), so they no longer cover step titles on the picture. Good.",
+    "Hotspot percentages live in courtContent.js (MAIN_SPOT + per-step/per-pillar spot arrays) and matched the measured bounding boxes exactly, confirming the picture-coord contract is intact after the real image swap.",
+    "CourtChatPanel.jsx shares ChatBody across the inline card and the dialog, passing the same chat (useGuideChat('/court-path/ai/chat')) so saved history and reset are naturally in sync. onClose is only wired for the dialog variant, so the inline variant correctly renders no close button."
+  ],
+  "updated_files": [],
+  "success_rate": {"backend": "n/a", "frontend": "~97%"},
+  "test_credentials": "parent3@test.com / TestPass123! (case PAIR-DEMO-01)",
+  "seed_data_creation": "Reseeded PAIR-DEMO-01 via `cd /app/backend && export $(grep -v '^#' .env | xargs) && python -c \"from seed_court_compare_pair import run; import asyncio; print(asyncio.run(run()))\"` after testing.",
+  "retest_needed": false,
+  "should_main_agent_self_test": true,
+  "context_for_next_testing_agent": "Court-Ordered redesign tested end-to-end on 1920 and 390: layout, hotspot alignment on the real picture, dialog wiring (accept/step/pillar), hints toggle, inline+floating chat sync & reset, mobile ordering, horizontal overflow. Only outstanding issue is a 2-line wrap on the hints toggle label at 390px. Note: review request listed testid 'court-checklist' but the actual testid on the checklist card is 'court-checklist-card' (plus court-checklist-list/bar/download) \u2014 only a naming note, not a bug.",
+  "rca of the issue": "HintsToggle button has no whitespace-nowrap and the span 'Hide Action Buttons' is ~18 chars; at the mobile button width (160px) with px-3/py-1.5 and the standard text-xs size, the words wrap after 'Hide Action'. Fix: add `whitespace-nowrap` to the span (or the button) in CourtJourneyArt.jsx HintsToggle, or render a shorter label (e.g., 'Hide buttons') below the sm breakpoint."
+}

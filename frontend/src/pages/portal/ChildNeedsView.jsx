@@ -46,9 +46,9 @@ function NeedsCard({ category, completed, onOpen }) {
   );
 }
 
-export function ChildNeedsView({ onBack = () => {}, QuickExit = null, userId, parentName }) {
+export function ChildNeedsView({ onBack = () => {}, QuickExit = null, userId, parentName, initialOpenKey = null }) {
   const { state, saveCategory, downloadReport } = useChildNeeds(userId);
-  const [openKey, setOpenKey] = useState(null);
+  const [openKey, setOpenKey] = useState(initialOpenKey);
   const category = CONTENT.categories.find((c) => c.key === openKey);
   const anyDone = CONTENT.categories.some((c) => state.completed_at?.[c.key]);
 

@@ -10,6 +10,8 @@ import { PpBanner } from "./parallel/PpBanner";
 import { useSelfAssessmentHistory } from "./selfAssessment/useSelfAssessmentHistory";
 import { GoalBanner } from "./selfAssessment/GoalBanner";
 import { WelcomeArtwork } from "./WelcomeArtwork";
+import { JourneyArtCard } from "./selfJourney/JourneyArtCard";
+import { ASSESS_ART, NEEDS_ART } from "./selfJourney/selfJourneyArt";
 import { CoparentingAssessmentModal } from "./coparenting/CoparentingAssessmentModal";
 import { useFoundationBuilder } from "./foundation/useFoundationBuilder";
 import { ChildNeedsView } from "./ChildNeedsView";
@@ -545,8 +547,10 @@ export function JourneyShell({
 
   // Card 3 can be opened from Self Journey or the Court page; Back returns there.
   const [subFrom, setSubFrom] = useState("self");
-  const openChildNeeds = (from) => {
+  const [childNeedsKey, setChildNeedsKey] = useState(null);
+  const openChildNeeds = (from, key = null) => {
     setSubFrom(from);
+    setChildNeedsKey(key);
     setView("child_needs");
   };
 
@@ -1141,6 +1145,7 @@ export function JourneyShell({
         QuickExit={quickExitChip}
         userId={user?.user_id}
         parentName={greetingName}
+        initialOpenKey={childNeedsKey}
       />
     );
   }
@@ -1214,98 +1219,21 @@ export function JourneyShell({
           }}
         />
 
-        {/* iter268 — 4 numbered action cards, matching the mockup. */}
-        <div id="door-self-actions" data-testid="door-self-actions" className="space-y-3 scroll-mt-4">
-          {/* Card 1 — Assess Your Situation (opens the new modal). */}
-          <button
-            type="button"
-            data-testid="door-self-card-assess"
-            onClick={() => openAssess(false)}
-            className="w-full bg-white border border-slate-200 shadow-sm hover:shadow-md hover:border-purple-300 rounded-2xl p-4 transition flex items-center gap-3 text-left"
+        {/* Assessment artwork (replaces cards 1–3): tappable panels/arrows + labeled buttons. */}
+        <div id="door-self-actions" data-testid="door-self-actions" className="space-y-4 scroll-mt-4">
+          <JourneyArtCard
+            testid="door-self-art-assess"
+            art={ASSESS_ART}
+            onAction={(k) => (k === "self" ? openAssess(false) : setCpAssessOpen(true))}
           >
-            <div className="shrink-0 w-9 h-9 rounded-full bg-violet-500 text-white font-extrabold flex items-center justify-center">
-              1
-            </div>
-            <div className="shrink-0 w-12 h-12 rounded-full bg-purple-100 text-purple-800 flex items-center justify-center">
-              <i className="fa-solid fa-magnifying-glass-chart text-lg"></i>
-            </div>
-            <div className="min-w-0 flex-1">
-              <div className="text-sm font-bold text-slate-900 leading-tight">
-                Assess Your Situation
-              </div>
-              <p className="text-[11px] text-slate-600 mt-0.5 leading-snug">
-                Understand where you are today. Explore your parenting
-                circumstances, strengths, and challenges.
+            {saHistory.latest && (
+              <p data-testid="door-self-card-assess-last" className="text-[11px] font-semibold text-purple-700 text-center">
+                Latest Self-Assessment: {saHistory.latest.scores.overall}/100 · {saHistory.history.length} completed
               </p>
-              {saHistory.latest && (
-                <p
-                  data-testid="door-self-card-assess-last"
-                  className="text-[10px] font-semibold text-purple-700 mt-1"
-                >
-                  Latest: {saHistory.latest.scores.overall}/100 ·{" "}
-                  {saHistory.history.length} completed
-                </p>
-              )}
-            </div>
-            <div className="shrink-0 w-8 h-8 rounded-full bg-slate-100 text-slate-600 flex items-center justify-center">
-              <i className="fa-solid fa-chevron-right text-xs"></i>
-            </div>
-          </button>
+            )}
+          </JourneyArtCard>
 
-          {/* Card 2 — Understand Your Co-Parenting Relationship → 67-Q assessment. */}
-          <button
-            type="button"
-            data-testid="door-self-card-relationship"
-            onClick={() => setCpAssessOpen(true)}
-            className="w-full bg-white border border-slate-200 shadow-sm hover:shadow-md hover:border-indigo-300 rounded-2xl p-4 transition flex items-center gap-3 text-left"
-          >
-            <div className="shrink-0 w-9 h-9 rounded-full bg-indigo-500 text-white font-extrabold flex items-center justify-center">
-              2
-            </div>
-            <div className="shrink-0 w-12 h-12 rounded-full bg-indigo-100 text-indigo-700 flex items-center justify-center">
-              <i className="fa-solid fa-users text-lg"></i>
-            </div>
-            <div className="min-w-0 flex-1">
-              <div className="text-sm font-bold text-slate-900 leading-tight">
-                Understand Your Co-Parenting Relationship
-              </div>
-              <p className="text-[11px] text-slate-600 mt-0.5 leading-snug">
-                Explore your co-parenting dynamic. Look at communication
-                patterns, co-parenting styles, and areas of alignment
-                and difference.
-              </p>
-            </div>
-            <div className="shrink-0 w-8 h-8 rounded-full bg-slate-100 text-slate-600 flex items-center justify-center">
-              <i className="fa-solid fa-chevron-right text-xs"></i>
-            </div>
-          </button>
-
-          {/* Card 3 — Identify Your Child's Specific Needs. */}
-          <button
-            type="button"
-            data-testid="door-self-card-child-needs"
-            onClick={() => openChildNeeds("self")}
-            className="w-full bg-white border border-slate-200 shadow-sm hover:shadow-md hover:border-emerald-300 rounded-2xl p-4 transition flex items-center gap-3 text-left"
-          >
-            <div className="shrink-0 w-9 h-9 rounded-full bg-emerald-500 text-white font-extrabold flex items-center justify-center">
-              3
-            </div>
-            <div className="shrink-0 w-12 h-12 rounded-full bg-emerald-100 text-emerald-700 flex items-center justify-center">
-              <i className="fa-solid fa-child-reaching text-lg"></i>
-            </div>
-            <div className="min-w-0 flex-1">
-              <div className="text-sm font-bold text-slate-900 leading-tight">
-                Identify Your Child's Specific Needs
-              </div>
-              <p className="text-[11px] text-slate-600 mt-0.5 leading-snug">
-                Focus on what matters most. Explore your child's
-                well-being, education, development, health, and stability.
-              </p>
-            </div>
-            <div className="shrink-0 w-8 h-8 rounded-full bg-slate-100 text-slate-600 flex items-center justify-center">
-              <i className="fa-solid fa-chevron-right text-xs"></i>
-            </div>
-          </button>
+          <JourneyArtCard testid="door-self-art-needs" art={NEEDS_ART} onAction={(k) => openChildNeeds("self", k)} />
 
           {/* Card 4 — Create Your Foundation Statement. */}
           <button

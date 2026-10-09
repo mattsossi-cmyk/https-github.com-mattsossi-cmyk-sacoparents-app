@@ -4,7 +4,7 @@ import { MAIN_SPOT, PILLARS, STATUS_PILL, STEPS } from "./courtContent";
 
 const box = ([top, left, width, height]) => ({ top: `${top}%`, left: `${left}%`, width: `${width}%`, height: `${height}%` });
 
-function Spot({ testid, spot, label, hints, main = false, onClick, children }) {
+export function Spot({ testid, spot, label, hints, main = false, className = "", onClick, children }) {
   return (
     <button
       type="button"
@@ -13,7 +13,7 @@ function Spot({ testid, spot, label, hints, main = false, onClick, children }) {
       title={label}
       onClick={onClick}
       style={box(spot)}
-      className={`court-spot absolute rounded-xl focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#7b2cbf] ${main ? "court-spot-main rounded-[35px]" : ""} ${hints ? "hint" : ""}`}
+      className={`court-spot absolute rounded-xl focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#7b2cbf] ${main ? "court-spot-main rounded-[35px]" : ""} ${hints ? "hint" : ""} ${className}`}
     >
       {children}
     </button>
@@ -37,13 +37,13 @@ function StepPill({ n, status }) {
 function HintsToggle({ hints, onToggle }) {
   return (
     <div className="flex items-center justify-between gap-2 mb-2.5">
-      <span className="text-[11px] font-bold uppercase tracking-wider text-purple-700">Tap the picture or the cards</span>
+      <span className="text-[10px] sm:text-[11px] font-bold uppercase tracking-wider text-purple-700 whitespace-nowrap">Tap the picture or the cards</span>
       <button
         type="button"
         data-testid="court-hints-toggle"
         aria-pressed={hints}
         onClick={onToggle}
-        className="bg-[#f2ebfc] hover:bg-[#e7dbf8] text-[#3b1566] border border-[#e7dbf8] px-3 py-1.5 rounded-full text-xs font-semibold flex items-center gap-1.5 transition-colors"
+        className="bg-[#f2ebfc] hover:bg-[#e7dbf8] text-[#3b1566] border border-[#e7dbf8] px-3 py-1.5 rounded-full text-xs font-semibold flex items-center gap-1.5 whitespace-nowrap transition-colors"
       >
         <i className={`fa-solid ${hints ? "fa-eye" : "fa-eye-slash"}`}></i>
         <span>{hints ? "Hide Action Buttons" : "Show Action Buttons"}</span>
