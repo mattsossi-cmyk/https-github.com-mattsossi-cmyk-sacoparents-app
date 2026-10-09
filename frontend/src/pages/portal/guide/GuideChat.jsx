@@ -26,8 +26,33 @@ function Typing({ tp }) {
   );
 }
 
+// Always-visible tap-to-ask row above the message box; `starters` = { label, items }.
+function Starters({ tp, starters, busy, onAsk }) {
+  return (
+    <div data-testid={`${tp}-chat-starters`} className="px-3 pt-2.5 border-t border-purple-100 bg-white">
+      <p data-testid={`${tp}-chat-starters-label`} className="text-[10px] font-bold uppercase tracking-wider text-purple-700 mb-1.5">
+        Quick questions · {starters.label}
+      </p>
+      <div className="pp-scroll flex gap-2 overflow-x-auto pb-1">
+        {starters.items.map((s, i) => (
+          <button
+            key={s}
+            type="button"
+            data-testid={`${tp}-chat-starter-${i}`}
+            disabled={busy}
+            onClick={() => onAsk(s)}
+            className="shrink-0 whitespace-nowrap text-[11px] font-semibold text-[#4a2574] bg-[#f8f6fc] border border-purple-200 hover:bg-purple-50 disabled:opacity-50 rounded-full px-3 py-1.5 transition-colors"
+          >
+            {s}
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 // Shared Guide chat box (Parallel Parenting Guide, Court Assistant). Testids are prefixed with `tp`.
-export function GuideChat({ chat, tp, title, greeting, suggestions, icon = "fa-comments", headerStyle = { background: "#2d1548" } }) {
+export function GuideChat({ chat, tp, title, greeting, suggestions = [], starters, icon = "fa-comments", headerStyle = { background: "#2d1548" } }) {
   const [text, setText] = useState("");
   const listRef = useRef(null);
   useEffect(() => {
@@ -63,7 +88,7 @@ export function GuideChat({ chat, tp, title, greeting, suggestions, icon = "fa-c
         {chat.messages.length === 0 && (
           <div data-testid={`${tp}-chat-empty`} className="space-y-3">
             <p className="text-sm text-slate-700 bg-white border border-purple-100 rounded-2xl rounded-bl-md px-3.5 py-2.5 shadow-sm">{greeting}</p>
-            <div className="flex flex-wrap gap-2">
+            {suggestions.length > 0 && <div className="flex flex-wrap gap-2">
               {suggestions.map((s, i) => (
                 <button
                   key={s}
@@ -75,7 +100,7 @@ export function GuideChat({ chat, tp, title, greeting, suggestions, icon = "fa-c
                   {s}
                 </button>
               ))}
-            </div>
+            </div>}
           </div>
         )}
         {chat.messages.map((m, i) => (
@@ -84,6 +109,7 @@ export function GuideChat({ chat, tp, title, greeting, suggestions, icon = "fa-c
         {chat.busy && <Typing tp={tp} />}
       </div>
       {chat.error && <p data-testid={`${tp}-chat-error`} className="px-4 pt-2 text-[11px] text-rose-700">{chat.error}</p>}
+      {starters && <Starters key={starters.label} tp={tp} starters={starters} busy={chat.busy} onAsk={submit} />}
       <form
         onSubmit={(e) => {
           e.preventDefault();

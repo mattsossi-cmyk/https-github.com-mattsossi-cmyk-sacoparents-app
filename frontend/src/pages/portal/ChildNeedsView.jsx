@@ -10,7 +10,26 @@ import { NEEDS_ART } from "./selfJourney/selfJourneyArt";
 const ORDER = NEEDS_ART.items.map((i) => i.key);
 const CATS = Object.fromEntries(CONTENT.categories.map((c) => [c.key, c]));
 const GREETING = "Hi, I'm your Child Needs Guide. Ask me how to describe your child's school, health or emotional needs so both homes can support them.";
-const SUGGESTIONS = ["What should I include here?", "How do I keep this child-focused?", "How can both homes stay consistent?"];
+const STARTERS = {
+  educational: [
+    "How do I describe my child's learning strengths?",
+    "What should I share about an IEP or 504 plan?",
+    "How can both homes handle homework the same way?",
+    "How do we split school communication fairly?",
+  ],
+  medical: [
+    "What health details are most useful to include?",
+    "How do we keep medication schedules the same in both homes?",
+    "How should we handle doctor appointments and updates?",
+    "What should I leave off this form for privacy?",
+  ],
+  psychological: [
+    "How do I describe my child's emotional needs without blaming?",
+    "What triggers or routines are worth noting?",
+    "How can both homes support therapy goals?",
+    "How do I talk about stress or big changes calmly?",
+  ],
+};
 
 function PortalBar() {
   return (
@@ -104,7 +123,7 @@ export function ChildNeedsView({ onBack, onQuickExit, needs, parentName, initial
       onArt={pick}
       artState={{ done, activeKey }}
       chat={chat}
-      chatProps={{ title: "Child Needs Guide", greeting: GREETING, suggestions: SUGGESTIONS }}
+      chatProps={{ title: "Child Needs Guide", greeting: GREETING, starters: { label: category.card_title, items: STARTERS[activeKey] } }}
       onBack={onBack}
       onQuickExit={onQuickExit}
       footer="Your Child's Specific Needs"

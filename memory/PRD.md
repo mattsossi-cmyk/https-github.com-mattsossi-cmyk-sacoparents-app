@@ -8817,3 +8817,13 @@ dashboard for sharing SELECTED completed reports with any professional.
 - Close-out (main agent): at 390px the Court "Tap the picture or the cards" hint is one line (15px tall); the page has no
   horizontal overflow (Court chat quick-prompt chips scroll sideways in their own overflow-x-auto row, by design).
 - Pending: user acceptance testing of all Iter108–111 work.
+
+
+### 2026-06 — Child Needs Guide starter questions
+- `GuideChat` takes an optional `starters` prop ({label, items}). It shows an always-visible "Quick questions · <form>"
+  row just above the message box, scrolling sideways. Tapping a chip sends it straight to the Guide; chips are disabled
+  while the Guide is replying; the row resets when the tab changes. The empty-state suggestions row is hidden when empty.
+- `ChildNeedsView` `STARTERS` holds 4 founder-approved questions each for Educational / Medical / Psychological,
+  switched by the active tab. Testids: `cn-chat-starters`, `cn-chat-starters-label`, `cn-chat-starter-{0..3}`.
+- Self-tested (screenshot): label + chips switch per tab; a tap sent the question and got a Guide reply; row stays after
+  the chat starts; no page overflow at 390px.
