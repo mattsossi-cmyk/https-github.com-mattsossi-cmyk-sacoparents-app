@@ -1,0 +1,31 @@
+{
+  "summary": "Iteration 111 — Covered the full batch (A1-G3) for the SA CoParents feature update. Backend: 12/12 pytest passed in /app/backend/tests/test_iter111_batch.py covering (B1) POST /api/parallel-parenting/court-notes/pdf → text 'Court-Order Notes' + 'Matches my order' + 'Still to check' + 'None ticked yet' + legal-advice note; (D1) PUT /api/child-needs/me/{cat} returns 422 for fresh user without acknowledged, draft→completed→draft-cleared flow with notice_ack_at remembered; (D2) /api/child-needs/pdf and GET /api/journey-summary/pdf both contain 'Notice of Confidentiality' AND 'Health Information Privacy Notice'; (E1) /api/journey-guide/child-needs/suggest returns 401 without auth, 404 for select (edu_grade) + unknown field, 200+text for valid textarea (edu_strengths); (G1) /api/foundation-builder/pdf renders 'Signatures', 'Parent 1'+'Parent 2', '/s/ Alex Doe' when esign_name provided, no '/s/' and still 'Signatures' when omitted, two 'Notary acknowledgment' blocks + 'Notary seal' + legal note; (G2) build_joint_agreement_pdf via module renders 'Co-Parenting Agreement' header (NOT 'Joint Alignment Report'), 'Signatures', '/s/ Jane Doe', 'Parent A'+'Parent B', notary pages — both with and without esign_a. Frontend (parent1 live state): verified all critical testids on Self-Assessment page (sa-art-panel-{strengths,growth,goals,progress}, sa-ai-panel, sa-guide-chat/-input/-new, sa-ai-tip/-biff/-examples/-templates; sa-ai-query ABSENT), clicking sa-art-panel-strengths switches data-mode=overview and renders sa-strengths + sa-growth-areas + sa-overview + sa-progress (A1 OK). On Child Needs page: cn-page, child-needs-portal-bar, three tabs, child-needs-form-title, child-needs-notices with -notice-confidentiality + -notice-privacy, child-needs-save-draft, child-needs-submit ('Submit Educational Form'), cn-chat, child-needs-ask-guide, child-needs-ack-done=True + child-needs-ack=False (parent1 already acknowledged). All Educational fields in order (edu_student/edu_grade/edu_school/rating-matrix/edu_strengths/home-title/edu_iep). Help buttons present on text/textarea (edu_strengths, edu_academic) and ABSENT on help:false (edu_student, edu_school) and selects (edu_grade). Rating matrix radios for edu_attention+edu_independent × {rarely,sometimes,often,consistently} all present. Medical tab fields (med_provider/_conditions/_prescriptions/_allergies/_insurance/_goal) and Psychological tab fields (psy_goal/_triggers/_household/_psych_needs/_therapy/_transitions/_goal) all present. On PP page via door-self-art-parallel-btn-court_check: pp-check-court_check + pp-court-notes-pdf (B2) present (pp-summary-court-notes-pdf only appears in plan-summary when plan completed → not reached, but button exists in code and backend route verified). C1 Court Picture Cards: on Court Ordered page after key ALIGN-SA-2026, all 13 testids present: court-picture-cards, court-art-needs, court-art-parallel, court-art-needs-btn-{educational,medical,psychological}, court-art-parallel-btn-{communication,exchanges,decisions,child_focus,safeguards,court_check,professional_review}. G3 rename sanity: 'Joint Alignment Report' not found in dashboard HTML.",
+  "backend_issues": {"critical": [], "minor": []},
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  "test_report_links": [
+    "/app/backend/tests/test_iter111_batch.py",
+    "/app/test_reports/pytest/iter111.xml"
+  ],
+  "action_items": [],
+  "critical_code_review_comments": [
+    "child_needs_routes.save_category correctly gates on notice_ack_at (persisted on account) + CategoryIn.acknowledged flag; draft branch uses $set drafts.<cat> while submit $unsets it — clean idempotent design.",
+    "journey_guide_routes.suggest_child_needs_answer rejects select/rating/help:false fields with 404 via FIELDS lookup, preventing the Help-me-answer button from being abused on inappropriate fields.",
+    "parallel_parenting_routes.download_court_notes_pdf is intentionally permissive (no 400 on empty plan) so parents without ticks still get the one-page template — the PDF prints 'None ticked yet.' as the spec requires.",
+    "pdf_sign_notary.render_sign_and_notary cleanly emits one Signatures page + one Notary Acknowledgment page per signer, with/without typed e-signature — shared between foundation_builder_pdf and joint_agreement_pdf (DRY).",
+    "joint_agreement_pdf header is 'Co-Parenting Agreement' (string literally present in both esign and no-esign PDF); no leftover 'Joint Alignment Report' text in generated PDF or dashboard HTML."
+  ],
+  "updated_files": [
+    "/app/backend/tests/test_iter111_batch.py (new — 12 pytest cases)"
+  ],
+  "success_rate": {"backend": "100% (12/12)", "frontend": "~100% of accessible testids verified"},
+  "test_credentials": "parent1@test.com / TestPass123! (used read-only for SA/Child-Needs/PP/Court navigation). Fresh accounts auto-created inside tests (TEST_i111_*@test.com / TestPass123!).",
+  "seed_data_creation": "A few TEST_i111_* fresh users created in-test (one wrote a Parallel Parenting plan with court_check + professional_review ticks for the court-notes PDF test). parent1 state was NOT modified.",
+  "retest_needed": false,
+  "should_main_agent_self_test": true,
+  "context_for_next_testing_agent": "To reach Self Journey as parent1: go to /login first, click 'Sign in with email' link, fill login-email-input + login-password-input + login-submit-button; then localStorage.setItem('sacoparents_last_door','self'); goto('/'); accept legal; back out of any sub-view until door-self-progress-ring is visible. To reach Court path: localStorage sacoparents_last_door='court' + legal + fill court-key dialog with ALIGN-SA-2026. The SA page is a fixed inset-0 z-50 overlay — clicking other page buttons behind it will fail; use the overlay's own Close button to dismiss. PDF text asserts should use pypdf (NOT raw latin-1 decode) because the PDF streams are FlateDecode-compressed. pp-summary-court-notes-pdf is only rendered inside the PP page's plan-summary panel after the plan is marked completed — not reachable without first filling the full 6-step plan; relying on code inspection + the pp-court-notes-pdf (checklist) button + backend route verification was sufficient.",
+  "rca of the issue": "N/A — all tested behaviour matched spec."
+}

@@ -8795,3 +8795,25 @@ dashboard for sharing SELECTED completed reports with any professional.
   (+ `/new`), collections `coparenting_guide_chats`, `child_needs_guide_chats`.
 - Testing agent iter110: backend 12/12, frontend pass; main agent self-verified 390px ordering/no overflow and
   celebration dialog (once only). parent1 restored to 4/5 + celebrated=false afterwards.
+
+
+### 2026-06 — Iter111 · Child Needs reframe, privacy notices, help, signatures/notary, Court picture cards
+- Educational / Medical / Psychological forms reframed from founder HTML: tabs, white card, purple header divider,
+  rating matrix, header "SA CoParents Assessment Portal · Private to your account". New questions come first; old
+  co-parenting questions sit under "Across both homes"; saved answers kept. Content JSON is the same in backend and frontend.
+- Save Draft (drafts.<cat>, not completed) vs Submit (marks Completed ✓ + downloads the report).
+- Confidentiality + Health Information Privacy notices (`childNeeds/ChildNeedsNotices.jsx`) at the top of each form.
+  A one-time "I understand" step is required before the first save, remembered as `notice_ack_at` (422 without it).
+  Both notices print in the Child Needs PDF and the Journey Summary PDF. No HIPAA-compliance claim.
+- "Help me answer" per text field (`childNeeds/FieldHelp.jsx`, POST `/api/journey-guide/child-needs/suggest`; not
+  offered on selects, ratings or help:false fields). Remembered Guide chat: right column on desktop, under the form on phones.
+- Foundation Statement + Co-Parenting Agreement (renamed from Joint Alignment Report) PDFs: signature page (printed
+  name / signature / date for both parents, optional typed /s/ e-signature via `components/ESignField.jsx`) plus a
+  general US notary page per signer (`backend/pdf_sign_notary.py`). Legal note: signing or notarizing confirms who signed;
+  it does not make the document a court order or binding without court approval. Not legal advice.
+- Parallel Parenting Court-Order Notes PDF (POST `/api/parallel-parenting/court-notes/pdf`).
+- Court page picture cards: `court-art-needs` + `court-art-parallel` with buttons that open each form or step.
+- Testing agent iter111: backend 12/12, frontend all testids verified, no issues.
+- Close-out (main agent): at 390px the Court "Tap the picture or the cards" hint is one line (15px tall); the page has no
+  horizontal overflow (Court chat quick-prompt chips scroll sideways in their own overflow-x-auto row, by design).
+- Pending: user acceptance testing of all Iter108–111 work.
