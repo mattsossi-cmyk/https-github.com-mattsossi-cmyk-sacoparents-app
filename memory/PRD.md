@@ -8854,3 +8854,16 @@ dashboard for sharing SELECTED completed reports with any professional.
   characters: # $ etc.); the value never goes into docs. Verified: new key passes the gate (404 on a dummy code); old key → 401.
 - Align side NOT switched yet → until it is, Align calls to this preview get 401 "Invalid integration key" and completion
   webhooks are signed with the new key. Legacy tests that hardcode the old hex key (e.g. tests/test_iter139_*) will fail; expected.
+
+
+### 2026-06 — Two-key switchover + Individual Journey tidy-up
+- Two-key switchover: `backend/integration_keys.py` `match_integration_key()` accepts INTEGRATION_SHARED_SECRET ("new") or
+  INTEGRATION_SHARED_SECRET_PREVIOUS ("old", the prior hex key) on every Align-facing check (integration_routes,
+  joint_alignment_routes, parent_professional_invitations). While PREVIOUS is set it logs `align integration key used=new|old|invalid`
+  (key values never logged). Outbound completion webhooks are signed with the new key (ALIGN_COMPLETION_WEBHOOK_URL unset → none sent).
+  END OF SWITCHOVER: when the founder confirms Align switched (logs show used=new only), delete the
+  INTEGRATION_SHARED_SECRET_PREVIOUS line from backend/.env and restart the backend. Verified: new/old → pass, wrong/empty → 401 on
+  link-code verify, joint-alignment case and report-permission routes. Legacy tests now strip quotes when reading the key (iter168: 19 passed).
+- Individual Journey: removed the duplicate welcome picture (`door-self-welcome-image`); the main dashboard keeps it (`door-welcome-image`).
+- Individual Journey: green arrow `selfJourney/FlowArrow.jsx` (`door-self-flow-arrow`, gentle nudge, reduced-motion safe)
+  between the Self/Co-Parenting picture and the Child Needs picture.

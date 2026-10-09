@@ -19,7 +19,7 @@ if not INTEGRATION_KEY:
         with open("/app/backend/.env") as f:
             for ln in f:
                 if ln.startswith("INTEGRATION_SHARED_SECRET="):
-                    INTEGRATION_KEY = ln.split("=", 1)[1].strip().strip('"')
+                    INTEGRATION_KEY = ln.split("=", 1)[1].strip().strip("'\"")
                     break
     except Exception:
         pass

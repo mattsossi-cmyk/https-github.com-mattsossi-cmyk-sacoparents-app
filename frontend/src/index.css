@@ -462,3 +462,15 @@ body:has(#court-page:not(.hidden)) [data-sonner-toaster][data-y-position="bottom
     25% { box-shadow: 0 0 0 4px rgba(107, 47, 179, 0.45); }
     100% { box-shadow: 0 0 0 0 rgba(107, 47, 179, 0); }
 }
+
+/* Self Journey: green arrow between pictures, gentle downward nudge. */
+.sa-arrow-nudge {
+    animation: sa-arrow-nudge 2s ease-in-out infinite;
+}
+@keyframes sa-arrow-nudge {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(4px); }
+}
+@media (prefers-reduced-motion: reduce) {
+    .sa-arrow-nudge { animation: none; }
+}

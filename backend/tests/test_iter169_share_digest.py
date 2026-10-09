@@ -37,7 +37,7 @@ if not INTEGRATION_KEY:
         with open("/app/backend/.env") as _f:
             for _line in _f:
                 if _line.startswith("INTEGRATION_SHARED_SECRET="):
-                    INTEGRATION_KEY = _line.split("=", 1)[1].strip()
+                    INTEGRATION_KEY = _line.split("=", 1)[1].strip().strip("'\"")
                     break
     except OSError:
         pass

@@ -17,6 +17,7 @@ import { useJourneySummary } from "./selfJourney/useJourneySummary";
 import { useCoparentingDone } from "./selfJourney/useCoparentingDone";
 import { useChildNeeds } from "./childNeeds/useChildNeeds";
 import { SendToProvider } from "./childNeeds/SendToProvider";
+import { FlowArrow } from "./selfJourney/FlowArrow";
 import { CoparentingAssessmentView } from "./coparenting/CoparentingAssessmentView";
 import { useFoundationBuilder } from "./foundation/useFoundationBuilder";
 import { ChildNeedsView } from "./ChildNeedsView";
@@ -1240,18 +1241,6 @@ export function JourneyShell({
           onOpen={() => openAssess(saHistory.dueDays > 0)}
         />
 
-        <WelcomeArtwork
-          testid="door-self-welcome-image"
-          actions={{
-            self: () =>
-              document
-                .getElementById("door-self-actions")
-                ?.scrollIntoView({ behavior: "smooth", block: "start" }),
-            court: () => openDoor("court"),
-            comm: onOpenCommBuilder,
-          }}
-        />
-
         {/* Assessment artwork (replaces cards 1–3): tappable panels/arrows + labeled buttons. */}
         <div id="door-self-actions" data-testid="door-self-actions" className="space-y-4 scroll-mt-4">
           <AssessProgressRing done={assessDone} onOpen={openAssessKey} />
@@ -1273,6 +1262,8 @@ export function JourneyShell({
               </p>
             )}
           </JourneyArtCard>
+
+          <FlowArrow testid="door-self-flow-arrow" />
 
           <JourneyArtCard testid="door-self-art-needs" art={NEEDS_ART} done={assessDone} nextKey={nextAssess} onAction={openAssessKey} />
 

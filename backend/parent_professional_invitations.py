@@ -40,7 +40,6 @@ Never stored / logged:
 from __future__ import annotations
 
 import hashlib
-import hmac
 import logging
 import os
 import secrets
@@ -53,6 +52,7 @@ from motor.motor_asyncio import AsyncIOMotorDatabase
 from pydantic import BaseModel, EmailStr, Field, ValidationError, field_validator
 
 from auth import UserPublic, get_current_user, get_db
+from integration_keys import match_integration_key
 
 
 router = APIRouter(tags=["parent-professional-invitations"])
@@ -670,7 +670,7 @@ def _verify_integration_key(header_value: Optional[str]) -> None:
     expected = os.environ.get("INTEGRATION_SHARED_SECRET")
     if not expected:
         raise HTTPException(status_code=503, detail="Integration not configured.")
-    if not hmac.compare_digest(header_value or "", expected):
+    if not match_integration_key(header_value):
         raise HTTPException(status_code=401, detail="Invalid integration key.")
 
 

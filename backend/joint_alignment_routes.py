@@ -75,6 +75,7 @@ from motor.motor_asyncio import AsyncIOMotorDatabase
 from pydantic import BaseModel, EmailStr, Field, ValidationError
 
 from auth import UserPublic, get_current_user, get_db
+from integration_keys import match_integration_key
 
 
 router = APIRouter(tags=["joint-alignment"])
@@ -157,7 +158,7 @@ def _verify_integration_key(header_value: Optional[str]) -> None:
     if not expected:
         logger.error("INTEGRATION_SHARED_SECRET is not set — refusing request")
         raise HTTPException(status_code=503, detail="Integration not configured")
-    if not hmac.compare_digest(header_value or "", expected):
+    if not match_integration_key(header_value):
         raise HTTPException(status_code=401, detail="Invalid integration key")
 
 

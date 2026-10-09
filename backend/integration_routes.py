@@ -38,7 +38,6 @@ Design notes
 """
 from __future__ import annotations
 
-import hmac
 import logging
 import os
 import secrets
@@ -54,6 +53,7 @@ from motor.motor_asyncio import AsyncIOMotorDatabase
 from pydantic import BaseModel, EmailStr, Field
 
 from auth import UserPublic, get_current_user, get_db
+from integration_keys import match_integration_key
 from safety_gate import require_ipv_clearance
 
 
@@ -128,7 +128,7 @@ def _verify_integration_key(header_value: Optional[str]) -> None:
         logger.error("INTEGRATION_SHARED_SECRET is not set — refusing request")
         raise HTTPException(status_code=503, detail="Integration not configured")
     provided = header_value or ""
-    if not hmac.compare_digest(provided, expected):
+    if not match_integration_key(provided):
         raise HTTPException(status_code=401, detail="Invalid integration key")
 
 
