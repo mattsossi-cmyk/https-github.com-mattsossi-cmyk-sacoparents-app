@@ -457,9 +457,9 @@ export default function AppStorePrivacy() {
           <li>
             <strong className="text-[#1A1330]">June 2026</strong> — Added the
             Google Play Data Safety answers (section 6). Removed product
-            analytics (PostHog) and crash diagnostics, which are no longer
-            collected, and the &ldquo;Usage Data&rdquo; Apple answer that
-            came from them. Added voice notes and optional Gmail messages,
+            analytics and crash diagnostics, which are no longer collected,
+            and the matching Apple answers. Added voice notes and optional
+            Gmail messages,
             both processed ephemerally. Child record folders were removed, so
             no child records or documents are stored. Account and session
             identifiers now map to Google &ldquo;User IDs&rdquo;.

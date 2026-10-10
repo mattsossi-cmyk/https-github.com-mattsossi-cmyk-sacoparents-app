@@ -580,7 +580,7 @@ export default function SharedWithProfessionals() {
           give access to another professional. Revoking prevents future portal
           access — but SA CoParents can&rsquo;t recall a copy already downloaded.
           <div className="mt-2">
-            <ProSeeLink testid="shared-pros-see-link" newTab={false} className="text-[12px]" />
+            <ProSeeLink testid="shared-pros-see-link" className="text-[12px]" />
           </div>
         </div>
       </div>

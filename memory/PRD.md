@@ -8940,3 +8940,33 @@ dashboard for sharing SELECTED completed reports with any professional.
   `window.posthog` is undefined. `assets.emergent.sh/scripts/emergent-main.js` has no PostHog references.
 - Past recordings: support says to email support@emergent.sh (job ID + key prefix phc_xAvL…) about who owns the
   project and how to delete recordings. Production keeps sending data until the user deploys.
+
+
+### 2026-06 — Privacy plan A–G (iter114: backend 9/9, frontend verified; PP fix re-checked by screenshot)
+- A. Child record folders removed: `RECORDS_ENABLED=false` (portalStorage.js); RecordsDrawer returns null; PUT /portal/state forces
+  align_records=[]; complete-report PDF + /portal/share never carry align_records (stored payload stripped). Startup purge in server.py
+  ($set align_records=[] on portal_state, $unset payload.align_records on portal_pdf_shares) — purged 5 accounts + 3 share links in preview.
+  Browser: SacoparentsPortal clears `sacoparents_align_records` and guided drafts for medical/educational/psychological. Forms kept.
+  No upload feature exists or is planned (founder: no child documents stored).
+- B. First-visit notice (LegalAcknowledgment) has a "Your privacy" box (components/privacy/PrivacyLinks: policy, /privacy#your-rights,
+  /what-professionals-see, #by-assessment). Login has `LoginPrivacyBox`. `lib/useHashScroll` scrolls hash anchors (Privacy + new page).
+- C. Public page /what-professionals-see (pages/WhatProfessionalsSee.jsx; all wording in lib/proVisibility.js, written from real code paths)
+  with visible "Draft, pending attorney review" label + "Attorney review" tags (Align + court sections). `ProSeeLink` (new tab) on every
+  sharing screen (Child Needs confirm, certificate share, Shared with professionals, Share with a professional, Foundation share modal,
+  Pathway email, ReportShareControls, Summary email-mediator, Safety results + intro, Joint report/agreement, Child Needs notices).
+  `SharingNotice` ("Who sees this") in Self-Assessment, Communication Builder, Parallel Parenting. Copy fixes: Summary email dialog and
+  SendToProvider no longer say "attach"/"emailed".
+- D. Self-Assessment tabs (`SaTabs`: My results | Progress over time). `ProgressOverTime`: one recharts line chart per area +
+  `GoalTimeline` (set = completed_at, reached = new SAEntry.reached_at). POST /api/self-assessment/goal/reached {entry_id, reached}
+  (404 unknown, 422 no goal). Picture spot "Track Your Progress" opens the Progress tab.
+- E. JourneyPage: hero now sits inside the grid (phones: picture → pill → work → chat, like Communication Builder) + optional
+  `banner` (BottomBanner). Child Needs hero: "<n> of <total> questions answered" (cn-step-pill/cn-answered-count). Parallel Parenting:
+  BottomBanner + `PpActionButton` (new picture /images/sa-parallel-action(-640).webp): welcome → START/CONTINUE/VIEW plan; other
+  screens → "SEE ALL STEPS AND QUICK CHECKS" (back to welcome, which shows the Who-sees-this notice).
+- F. /legal/app-store-privacy: Google Play Data Safety section (GOOGLE_ROWS, not-collected list, why Shared=No, attorney note about
+  Align), Apple answers corrected (no Usage Data/diagnostics; added voice notes + optional Gmail as ephemeral), delete URL from
+  REACT_APP_PARENT_URL. Founder must copy these into App Store Connect + Play Console.
+- OPEN PRIVACY GAP (flagged to founder, not changed): GET /api/integrations/export-assessments and /integrations/foundation-statement.pdf
+  return a parent's data to anyone holding the Align shared secret + the parent's email — they don't check that the parent linked.
+  The new page says "only if you link your account". Fix = require a verified link-code record for that email (needs Align coordination).
+- Also flagged: full Safety Assessment PDF emailed to a mediator includes Section 1 answers (page now says so).

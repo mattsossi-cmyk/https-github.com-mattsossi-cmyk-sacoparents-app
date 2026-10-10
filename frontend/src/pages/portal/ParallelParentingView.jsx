@@ -166,12 +166,13 @@ export function ParallelParentingView({ onClose, onQuickExit, safetyFlag, hidden
         </p>
       )}
       {body}
-      {pp.plan && screen === "welcome" && (
-        <>
-          <SharingNotice area="parallel-parenting" />
+      {pp.plan && (screen === "welcome" || screen === "summary") && <SharingNotice area="parallel-parenting" />}
+      {pp.plan &&
+        (screen === "welcome" ? (
           <PpActionButton label={actionLabel(pp.plan)} onClick={start} />
-        </>
-      )}
+        ) : (
+          <PpActionButton label="SEE ALL STEPS AND QUICK CHECKS" onClick={() => show("welcome")} />
+        ))}
     </JourneyPage>
   );
 }

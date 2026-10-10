@@ -1,0 +1,61 @@
+{
+  "summary": "Iteration 114 — End-to-end verification of plan A–G (child alignment records removal, privacy workflow, 'What professionals can see' public page, Self-Assessment 'Progress over time' tab, Parallel Parenting + Child Needs CB-style hero, app-store-privacy Google Data Safety, mobile 390 sweep). Backend: 9/9 pytest passed in /app/backend/tests/test_iter114_align_removal_and_goals.py (A1 PUT /portal/state strips align_records -> GET returns []; A2 complete-report-pdf has no 'Pediatrician' + contains privacy note; A2b /portal/share response has no align_records and share PDF has no record text; D1 goal/reached success + undo + 404 + 401 + 422 + history exposes reached_at; C1 SPA shell served). Direct Mongo audit: 0 portal_state docs with align_records!=[] and 0 portal_pdf_shares docs with payload.align_records!=[] after startup purge banners 'Purged child alignment records from 5 accounts' + '... 3 share links' (both found in supervisor logs). Frontend: A3 both localStorage keys cleared on next visit; folder-medical/educational/psychological/add-alignment-btn/modal-alignment absent on dashboard. B1 legal-acknowledgment-modal shows legal-ack-privacy with all 5 links (/privacy, /privacy#your-rights, /what-professionals-see, /what-professionals-see#by-assessment, /terms) + checkbox + continue button. B2 login-privacy-box with 3 points + 3 links. C1 /what-professionals-see at 390px: all required testids present (pros-see-page/title/draft-label/short-version/6 method cards/review tags/court points/6 assessment cards/control links), draft-label copy correct, hash scroll to #by-assessment lands at y=24 (in-view), no page-level overflow. D2 journey6 Self-Assessment: sa-tab-results/sa-tab-progress/sa-overview + sharing-notice-self-assessment all OK; progress tab shows sa-progress-over-time + sa-pot-summary ('4 Self-Assessments since Oct 7, 2026') + 4 area charts each with -latest/-change testids + sa-goal-timeline with 2 rows; sa-goal-toggle 'Mark as reached' -> 'Undo' flow works and goal left un-reached. E1 Child Needs medical page: cn-hero + cn-step-pill ('1 of 7 questions answered') + cn-answered-count + cn-step-bar + child-needs-portal-bar all present. F1 /legal/app-store-privacy at 390: all GoogleDataSafety testids (section + table + 8 rows + not-collected + review + quick-answers + delete-url=https://sacoparentsapp.online/delete-account) present; data table scrolls inside its overflow-x-auto container (348 cw / 658 sw) with document scrollWidth==clientWidth==390 (no page overflow).",
+  "backend_issues": {"critical": [], "minor": []},
+  "frontend_issues": {
+    "ui_bugs": [
+      {
+        "component": "ParallelParentingView entrypoints (JourneyShell.jsx L1334 Self Journey + CourtPictureCards.jsx L39 Court path)",
+        "issue": "pp-action-btn / pp-action-image / pp-action-label / sharing-notice-parallel-parenting are UNREACHABLE from the UI. Both the Self Journey tap (`onAction={(k) => openPp(PP_ART.items.find(it=>it.key===k).screen)}`) and the Court path tap always pass a specific step/panel key, so initialScreen is never 'welcome'. The welcome branch `pp.plan && screen === \"welcome\"` which renders <SharingNotice area=\"parallel-parenting\"/> + <PpActionButton .../> never executes for returning users. Image /images/sa-parallel-action-640.webp is served (HTTP 200) but no code path renders it.",
+        "selector": "[data-testid='pp-action-btn']",
+        "priority": "HIGH"
+      },
+      {
+        "component": "ShareWithProfessionalsPage ProSeeLink",
+        "issue": "data-testid='shared-pros-see-link' on /shared-with-professionals has NO target=_blank (href=/what-professionals-see). Spec requires 'What professionals can see' links to open in a new tab. The sibling link on /share/professional (share-with-pro-pros-see-link) correctly has target=_blank. Please add target=_blank + rel='noreferrer'.",
+        "selector": "[data-testid='shared-pros-see-link']",
+        "priority": "LOW"
+      },
+      {
+        "component": "AppStorePrivacy change-log paragraph",
+        "issue": "Body text on /legal/app-store-privacy still contains the strings 'PostHog' and 'Usage Data' — only in a change-log sentence describing their removal ('Removed product analytics (PostHog) ... and the \"Usage Data\" Apple answer that came from them.'). Reviewers scanning for 'No PostHog text' per spec will flag this. Consider rewording to 'Removed product analytics and crash diagnostics (no longer collected). Removed the matching Apple answer that came from them.' or similar.",
+        "selector": "n/a (plain text, section 'Change log')",
+        "priority": "LOW"
+      }
+    ],
+    "integration_issues": [
+      {
+        "flow": "Parallel Parenting welcome screen",
+        "issue": "Because the entrypoints never reach screen='welcome', the new CB-style action button + sharing notice are dead code until a 'back to welcome' or default-entry path is added. Suggested fix: in JourneyShell.jsx line 1334 and CourtPictureCards.jsx line 39, use `onAction={(k) => openPp(k === '__picture__' ? 'welcome' : PP_ART.items.find(it=>it.key===k).screen)}` and expose a whole-picture tap target that passes '__picture__' — OR change the default so pp opens on 'welcome' when `pp.plan.step < STEPS.length` and the user is coming from an outside entry.",
+        "affected_selectors": ["pp-action-btn","pp-action-image","pp-action-label","sharing-notice-parallel-parenting"]
+      }
+    ],
+    "design_issues": []
+  },
+  "test_report_links": [
+    "/app/backend/tests/test_iter114_align_removal_and_goals.py",
+    "/app/test_reports/pytest/iter114.xml"
+  ],
+  "action_items": [
+    "Wire ParallelParenting entrypoints so the welcome screen (with pp-action-btn + sharing-notice-parallel-parenting) is reachable from Self Journey and Court path — currently both always pass a specific step key, so the new CB-style action button + privacy notice never render.",
+    "Add target=_blank + rel='noreferrer' to the shared-pros-see-link ProSeeLink on /shared-with-professionals to match the rest of the sharing surfaces.",
+    "(nit) Reword the AppStorePrivacy change-log sentence so 'PostHog' and 'Usage Data' don't appear verbatim; keep the historical note but phrase it without the literal strings reviewers will grep for."
+  ],
+  "critical_code_review_comments": [
+    "ParallelParentingView.jsx L169 — the welcome branch `pp.plan && screen === 'welcome'` is dead code for any parent whose entry path is through JourneyShell L1334 or CourtPictureCards L39. Fix at the caller (pass 'welcome' for whole-picture taps) rather than inside the view, because the view intentionally reuses the same component for both tabs and steps.",
+    "backend/portal_routes.py L376/873/982/1031 — align_records is forced to [] at FOUR sites (put_state, complete-report-pdf, /portal/share stored payload, _regenerate_share_pdf). Consider centralising via a `_strip_records(payload)` helper so a future artefact type can't accidentally skip the strip.",
+    "self_assessment_routes.py goal_reached — correctly uses `datetime.now(timezone.utc).isoformat()` (ISO with offset, verified by test asserting 'T' in body['reached_at']). Returns full SAEntry so FE can replace the row in-place without a second GET; nice.",
+    "SharingNotice.jsx — one component drives three testids (sharing-notice-{self-assessment,communication-builder,parallel-parenting}) and nests a ProSeeLink with testid 'sharing-notice-<area>-link'. DRY and consistent.",
+    "WhatProfessionalsSee.jsx renders zero horizontal overflow at 390px (verified) and all 6 assessment anchors scroll correctly via useHashScroll (/what-professionals-see#by-assessment lands at y=24, confirmed in test)."
+  ],
+  "updated_files": [
+    "/app/backend/tests/test_iter114_align_removal_and_goals.py (new)",
+    "/app/test_reports/pytest/iter114.xml (new)"
+  ],
+  "success_rate": {"backend": "100% (9/9)", "frontend": "~85% (A3/B1/B2/C1/D2/E1/F1 fully verified; E2 welcome-screen bits unreachable; one minor target=_blank + change-log nit)"},
+  "test_credentials": "parent1@test.com / TestPass123! (used for a1/a2/a2b portal writes + Child Needs medical page view — did NOT click Submit/Save). journey6@test.com / TestPass123! (D2 goal toggle verified then UNDONE; final state leaves both goals 'In progress' as required). Mongo .env values are quoted — strip single+double quotes when parsing.",
+  "seed_data_creation": "None. parent1's portal_state received a transient put with align_records (immediately stripped to []) — safe. journey6 goal toggled and un-toggled; no residual seed changes.",
+  "retest_needed": true,
+  "should_main_agent_self_test": true,
+  "context_for_next_testing_agent": "ParallelParentingView welcome screen is never shown to a user who already has a pp.plan with step>0 — both Self Journey (JourneyShell.jsx:1334) and Court (CourtPictureCards.jsx:39) tap handlers always route to a specific step via `PP_ART.items.find(it=>it.key===k).screen`. The new pp-action-btn / pp-action-image / pp-action-label / sharing-notice-parallel-parenting therefore do not render in production flows. The image /images/sa-parallel-action-640.webp is served OK. Backend startup purge is a one-shot banner — if main agent reseeds portal_state with align_records!=[], restart backend to trigger purge again. /portal/share returns `share_id` (not `token`), and share PDF URL is `/api/portal/share/<share_id>.pdf`. /api/portal/state GET wraps in {exists, state: {...}}. On AppStorePrivacy, the strings 'PostHog' + 'Usage Data' remain in the change-log paragraph only (not in any Data Safety / Apple answer).",
+  "rca of the issue": "Parallel Parenting welcome-screen regression: when the plan model gained `step` and `answers`, the Journey + Court tap handlers were refactored to always open the current step directly for a smoother UX. The new CB-style welcome assets (action button + sharing notice) were added behind `screen === 'welcome'` but no caller was updated to send the user there (there is no 'whole-picture' tap target distinct from the per-panel buttons). Mitigation: either (a) in JourneyShell + CourtPictureCards, when the tap target is the picture itself (not a specific panel key) pass `openPp('welcome')`, or (b) in ParallelParentingView, change the initial screen to 'welcome' and let the user tap the action button to resume — this preserves the new CB-style frame per the plan."
+}
