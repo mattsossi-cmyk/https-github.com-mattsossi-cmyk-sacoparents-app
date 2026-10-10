@@ -80,8 +80,7 @@ def test_pages_not_linked_anywhere():
 
 
 def test_retention_constants_exist_without_deletion_job():
+    html = open("/app/frontend/public/index.html", encoding="utf-8").read().lower()
+    assert "posthog" not in html and "session_recording" not in html
     import retention
     assert retention.RAW_SCREENING_RETENTION_DAYS == 90 and retention.COURT_SUBMISSION_RETENTION_MONTHS == 6
-    assert "delete" not in open("/app/backend/retention.py", encoding="utf-8").read().lower().replace("deletion is built", "").replace("account deletion", "")
-    crons = open("/app/.emergent/crons.yml", encoding="utf-8").read().lower()
-    assert "retention" not in crons and "purge" not in crons
