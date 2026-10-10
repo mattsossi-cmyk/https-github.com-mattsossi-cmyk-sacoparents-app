@@ -982,3 +982,8 @@ Probed 2026-09-02: /api/link-codes, /api/integrations/* on sacoparentsapp.online
 - New draft "Security & Privacy Practices" page content (policies.json key security-practices) — unrouted, publish only after GAP items addressed and owner approval.
 - Full structured audit report v2 (GAP-01..GAP-20) delivered in chat 2026-10-10; not stored in app.
 - RULE: no deploy of anything without explicit user "deploy".
+
+## 2026-10-10 07:39 — Privacy Notification REDESIGN (preview only, NOT deployed)
+- New layout per "Privacy Welcome Screen" mockup: lavender banner + logo, "Privacy & Confidentiality" / "Start with Safety. Build with Trust.", five icon cards, bordered legal notice, #3D1A78 button, Plus Jakarta. Subhead now "Private by default. Shared with your consent, or as the law requires."
+- PRIVACY_NOTICE_VERSION bumped to 2026-10-10.1 (backend + App.js) → re-shown to all users. No policy links/buttons; hidden PLACEHOLDER kept; footer_links [].
+- Tests iter95 5/5; browser verified desktop+390px, keyboard (Space toggles checkbox → button enables), Quick Exit present, acceptance → dashboard.

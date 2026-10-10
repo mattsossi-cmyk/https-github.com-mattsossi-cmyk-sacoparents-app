@@ -12,7 +12,7 @@ import JointAssessment from "@/pages/JointAssessment";
 import SafetyScreening from "@/pages/SafetyScreening";
 import SafetyHub from "@/pages/SafetyHub";
 import PrivacyNotice from "@/pages/PrivacyNotice";
-export const PRIVACY_NOTICE_VERSION = "2026-10-09.1";
+export const PRIVACY_NOTICE_VERSION = "2026-10-10.1";
 import CommunicationReadiness from "@/pages/CommunicationReadiness";
 import SafetyResponses from "@/pages/SafetyResponses";
 import JointReport from "@/pages/JointReport";

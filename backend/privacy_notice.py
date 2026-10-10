@@ -4,11 +4,12 @@ from datetime import datetime, timezone
 from fastapi import APIRouter, Depends, HTTPException, Response
 from pydantic import BaseModel
 
-PRIVACY_NOTICE_VERSION = "2026-10-09.1"
-SUBHEAD = "Private by Default. Shared by Choice."  # PENDING user decision — single string, easy to change
+PRIVACY_NOTICE_VERSION = "2026-10-10.1"  # bumped: layout redesign (Privacy Welcome Screen) — re-shown to everyone
+SUBHEAD = "Private by default. Shared with your consent, or as the law requires."
 NOTICE = {
     "version": PRIVACY_NOTICE_VERSION,
-    "tagline": "Start with Safety",
+    "banner_heading": "Privacy & Confidentiality",
+    "tagline": "Start with Safety. Build with Trust.",
     "title": "Your Privacy Matters",
     "subhead": SUBHEAD,
     "intro": "Your preparation is private and under your control.",

@@ -9,15 +9,33 @@ MONGO = __import__("tests.test_iter88_safety_e2e", fromlist=["MONGO"]).MONGO
 
 
 def test_text_matches_spec():
-    assert NOTICE["title"] == "Your Privacy Matters" and NOTICE["subhead"] == "Private by Default. Shared by Choice."
+    assert NOTICE["title"] == "Your Privacy Matters" and NOTICE["subhead"] == "Private by default. Shared with your consent, or as the law requires."
+    assert NOTICE["banner_heading"] == "Privacy & Confidentiality" and NOTICE["tagline"] == "Start with Safety. Build with Trust."
     assert NOTICE["intro"] == "Your preparation is private and under your control."
-    assert [p["heading"] for p in NOTICE["points"]][4] == "Professionals and courts receive the information you authorize, or what the law or a court order requires."
-    assert NOTICE["points"][4]["body"] == "Assigned professionals may see individual screening answers."
-    assert NOTICE["legal"].startswith("Using SA CoParents does not automatically create an attorney-client")
+    assert [p["heading"] for p in NOTICE["points"]] == ["Your individual answers remain private.", "You control what you share.", "Reports are different from raw answers.", "Safety comes first.",
+                                                        "Professionals and courts receive the information you authorize, or what the law or a court order requires."]
+    assert [p["body"] for p in NOTICE["points"]] == ["Your co-parent does not automatically see your assessments, personal reflections, or journal entries.",
+                                                     "In the Self Journey, you choose which completed reports to share and with whom. Separate consent rules apply to joint and court-ordered participation.",
+                                                     "Sharing a selected report does not automatically provide access to your entire account or private journal.",
+                                                     "Family violence and communication safety concerns may require separate participation and additional safeguards.",
+                                                     "Assigned professionals may see individual screening answers."]
+    assert NOTICE["legal_heading"] == "Important Legal Notice"
+    assert NOTICE["legal"] == "Using SA CoParents does not automatically create an attorney-client, therapist-patient, or other legally privileged relationship. Information may be subject to lawful disclosure requirements."
     assert NOTICE["checkbox"] == "I have read and understand this privacy notification." and NOTICE["continue"] == "Continue to SA CoParents"
-    assert NOTICE["footer_links"] == [] and "encrypt" not in str(NOTICE).lower()
+    low = str(NOTICE).lower()
+    assert "responces" not in low and "encrypt" not in low and "my journey" not in low and "privacy policy" not in low
+    assert PRIVACY_NOTICE_VERSION == "2026-10-10.1" and NOTICE["footer_links"] == []
     legal = open("/app/frontend/src/pages/Legal.jsx", encoding="utf-8").read()
     assert "confidentiality: {" not in legal and '"sharing-consent": {' not in legal
+
+
+def test_frontend_screen_has_no_policy_link_or_mockup_text():
+    page = open("/app/frontend/src/pages/PrivacyNotice.jsx", encoding="utf-8").read()
+    low = page.lower()
+    assert "disabled={!ok || busy}" in page and "QuickExitBar" in page and "PLACEHOLDER" in page
+    assert "responces" not in low and "read full privacy policy" not in low and "complete details" not in low and "my journey" not in low
+    assert 'to="/privacy' not in page and 'href="/privacy' not in page and "fonts.googleapis" not in low and "cdn" not in low
+    assert "privacy-banner" in page and "lucide-react" in page
 
 
 def test_admin_acceptance_log_and_csv():
@@ -36,8 +54,6 @@ def test_admin_acceptance_log_and_csv():
 def test_frontend_version_constant_in_sync():
     src = open("/app/frontend/src/App.js", encoding="utf-8").read()
     assert re.search(r'PRIVACY_NOTICE_VERSION = "' + re.escape(PRIVACY_NOTICE_VERSION) + '"', src)
-    page = open("/app/frontend/src/pages/PrivacyNotice.jsx", encoding="utf-8").read()
-    assert "disabled={!ok || busy}" in page and "QuickExitBar" in page and "privacy-footer-links" in page
 
 
 def test_accept_flow_and_reshow_on_version_change():
