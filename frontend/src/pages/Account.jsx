@@ -15,6 +15,7 @@ import { Link } from "react-router-dom";
 import { ArrowLeft, User as UserIcon, Shield, Database, FileText } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
 import MarketingConsentToggle from "../components/account/MarketingConsentToggle";
+import AlignLinkCard from "../components/account/AlignLinkCard";
 
 
 function LinkTile({ to, icon, label, desc, testid }) {
@@ -91,6 +92,10 @@ export default function Account() {
         {/* Communication preferences (HB 300 marketing toggle) */}
         <section className="mt-4">
           <MarketingConsentToggle />
+        </section>
+
+        <section className="mt-4">
+          <AlignLinkCard />
         </section>
 
         {/* Related settings pages */}

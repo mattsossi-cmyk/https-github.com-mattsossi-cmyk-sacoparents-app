@@ -8,6 +8,7 @@ import { CourtOrderedView } from "./CourtOrderedView";
 import { ParallelParentingView } from "./ParallelParentingView";
 import { useSelfAssessmentHistory } from "./selfAssessment/useSelfAssessmentHistory";
 import { GoalBanner } from "./selfAssessment/GoalBanner";
+import { GoalReachedBanner } from "./selfJourney/GoalReachedBanner";
 import { WelcomeArtwork } from "./WelcomeArtwork";
 import { JourneyArtCard } from "./selfJourney/JourneyArtCard";
 import { ASSESS_ART, ASSESS_ORDER, NEEDS_ART, PP_ART } from "./selfJourney/selfJourneyArt";
@@ -1268,6 +1269,7 @@ export function JourneyShell({
           dueDays={saHistory.dueDays}
           onOpen={() => openAssess(saHistory.dueDays > 0)}
         />
+        <GoalReachedBanner history={saHistory.history} userId={user?.user_id} active={!(assessOpen || ppOpen || cpAssessOpen)} />
 
         {/* Assessment artwork (replaces cards 1–3): tappable panels/arrows + labeled buttons. */}
         <div id="door-self-actions" data-testid="door-self-actions" className="space-y-4 scroll-mt-4">

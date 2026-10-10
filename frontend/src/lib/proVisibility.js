@@ -3,11 +3,14 @@
 
 export const PROS_PAGE_PATH = "/what-professionals-see";
 
+// Single switch: set to false once the attorney approves this wording (hides the draft label and review tags).
+export const ATTORNEY_REVIEW_PENDING = true;
+
 export const SHORT_VERSION = [
   "Nothing in your account goes to a professional until you choose who gets it, choose what to include, and tap Send or Share.",
   "They get only the document or report you picked, never your whole account.",
   "Your Guide (AI) chats and journal entries are never sent to a professional.",
-  "Your safety answers stay private unless you choose to send your own Safety Assessment PDF. The court-report version leaves your answers out.",
+  "Your safety answers stay private. When you email your Safety Assessment to a mediator they're left out unless you tick the box to include them, and the court report never includes them.",
   "SA CoParents doesn't keep your child's medical, educational or psychological records or documents. Only the answers you type into the assessment forms are saved.",
 ];
 
@@ -73,7 +76,9 @@ export const METHODS = [
     lead: "Our companion site for professionals.",
     review: true,
     points: [
-      "Only if you link your account with a link code, Align can read your Situation Snapshot, Foundation Statement and Special Needs summaries.",
+      "Only after you link your account with a link code can Align read your Situation Snapshot, Foundation Statement and Special Needs summaries.",
+      "You can unlink at any time from your Account page. After that Align can't read anything until you link again with a new code.",
+      "If your safety results show a concern, Align only sees which sections are finished and the dates, not your answers or anything you wrote.",
       "Align never receives your co-parent's information or your safety answers.",
     ],
   },
@@ -82,7 +87,7 @@ export const METHODS = [
 export const COURT_POINTS = [
   "SA CoParents does not file or send anything to a court. A court only sees a document if you, your attorney or someone you gave it to files it.",
   "The Family Safety and Functioning court report includes four summary findings: the family-violence pattern, trauma impact, parenting-plan implications and your child's experience. It leaves out your individual answers.",
-  "Your full Safety Assessment PDF does include your answers. Only send it if you want the reader to see them.",
+  "The Safety Assessment PDF you download for yourself includes your answers. When you email it to a mediator, your answers are left out unless you tick the box to include them.",
   "The Complete Report shows whether your Quick Safety Check was completed and whether it was cleared or flagged, without the answers.",
   "Parallel Parenting Court-Order Notes list the choices you made so you can compare them with your own court order. You download them yourself.",
   "Court-facing PDFs carry a notice that they are a parent's own reflection, not an evaluation and not legal advice.",
@@ -117,7 +122,7 @@ export const SHARING_NOTICES = {
   "safety-check": {
     title: "Safety Assessment",
     stays: "Your answers are private. Your co-parent never sees them.",
-    leaves: "If you email your Safety Assessment PDF, it includes your answers. The court report includes summary findings only.",
+    leaves: "When you email your Safety Assessment to a mediator, your answers are left out unless you choose to include them. The court report includes summary findings only.",
     ai: "Short summaries in your PDF may be written by our AI provider from your results.",
   },
   "foundation-statement": {

@@ -227,14 +227,16 @@ def test_export_requires_integration_key(client: TestClient) -> None:
 
 
 def test_export_shape_for_new_parent(client: TestClient) -> None:
-    """Even a brand-new parent with no assessments has the reconciled shape."""
-    email, _ = _register(client)
-    r = client.get(
-        f"/api/integrations/export-assessments?email={email}",
-        headers={"X-Integration-Key": SHARED_SECRET},
-    )
+    """Unlinked parent → 404; after linking with a code, even a brand-new parent gets the reconciled shape."""
+    email, token = _register(client)
+    url = f"/api/integrations/export-assessments?email={email}"
+    assert client.get(url, headers={"X-Integration-Key": SHARED_SECRET}).status_code == 404
+    code = _mint_code(client, token)
+    assert client.post("/api/integrations/verify-link-code", headers={"X-Integration-Key": SHARED_SECRET}, json={"code": code}).status_code == 200
+    r = client.get(url, headers={"X-Integration-Key": SHARED_SECRET})
     assert r.status_code == 200, r.text
     body = r.json()
+    assert body["redacted_for_safety"] is False
     assert body["parent"]["email"] == email
     assert "situation_snapshot" in body
     assert "foundation_statement" in body

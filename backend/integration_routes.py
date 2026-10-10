@@ -55,6 +55,7 @@ from pydantic import BaseModel, EmailStr, Field
 from auth import UserPublic, get_current_user, get_db
 from integration_keys import match_integration_key
 from safety_gate import require_ipv_clearance
+from self_assessment_reminders import is_safety_flagged
 
 
 router = APIRouter(tags=["integrations"])
@@ -73,6 +74,9 @@ _CODE_TTL_MINUTES = 15
 _MINT_RATE_LIMIT_PER_HOUR = 5
 
 _COLL = "link_codes"
+_LINKS = "align_links"
+_ACCESS_LOG = "align_access_log"
+_NOT_LINKED = "No linked parent found"
 
 
 # ------------------------------- helpers ------------------------------- #
@@ -276,6 +280,7 @@ async def verify_link_code(
                     }
                 },
             )
+            await _record_link(db, candidate["user_id"], candidate["email"], candidate.get("context"))
             logger.info(
                 "link-code verified user=%s email=%s context=%s",
                 candidate.get("user_id"),
@@ -303,14 +308,10 @@ async def export_assessments(
     co-parent data, never any safety-screen answers.
     """
     _verify_integration_key(x_integration_key)
-
-    if not email:
-        raise HTTPException(status_code=400, detail="email query param required")
-
-    user = await db.users.find_one({"email": email.lower()}, {"user_id": 1, "email": 1, "name": 1})
-    if not user:
-        raise HTTPException(status_code=404, detail="No linked parent found")
+    user = await _linked_user(db, email)
     user_id = user["user_id"]
+    redacted = await is_safety_flagged(db, user_id)
+    await _log_read(db, user_id, "export-assessments", redacted)
 
     prep = await db.prep_data.find_one({"user_id": user_id}, {"_id": 0}) or {}
     completed = prep.get("completed") or {}
@@ -367,6 +368,10 @@ async def export_assessments(
         "educational": await _latest_deep_dive_report(db, "edu_deep_reports", user_id),
         "psychological": await _latest_deep_dive_report(db, "psych_deep_reports", user_id),
     }
+    if redacted:
+        situation_snapshot, foundation_statement, special_needs = _redact_for_safety(
+            situation_snapshot, foundation_statement, special_needs
+        )
 
     return {
         "parent": {
@@ -376,9 +381,85 @@ async def export_assessments(
         "situation_snapshot": situation_snapshot,
         "foundation_statement": foundation_statement,
         "special_needs": special_needs,
+        "redacted_for_safety": redacted,
         "exported_at": _iso(_now()),
         "schema_version": 1,
     }
+
+
+# ----------------------------- Align links ----------------------------- #
+
+async def _record_link(db: AsyncIOMotorDatabase, user_id: str, email: str, context: Optional[str]) -> None:
+    await db[_LINKS].update_one(
+        {"user_id": user_id},
+        {"$set": {"email": (email or "").lower(), "context": context, "linked_at": _now(), "unlinked_at": None}},
+        upsert=True,
+    )
+
+
+async def _linked_user(db: AsyncIOMotorDatabase, email: str) -> Dict[str, Any]:
+    """The parent behind `email`, only if they linked with a code and haven't unlinked. Same 404 either way."""
+    if not email:
+        raise HTTPException(status_code=400, detail="email query param required")
+    user = await db.users.find_one({"email": email.lower()}, {"_id": 0, "user_id": 1, "email": 1, "name": 1})
+    if not user or not await db[_LINKS].find_one({"user_id": user["user_id"], "unlinked_at": None}, {"_id": 1}):
+        raise HTTPException(status_code=404, detail=_NOT_LINKED)
+    return user
+
+
+async def _log_read(db: AsyncIOMotorDatabase, user_id: str, endpoint: str, redacted: bool) -> None:
+    await db[_ACCESS_LOG].insert_one({"user_id": user_id, "endpoint": endpoint, "redacted": redacted, "at": _now()})
+
+
+async def migrate_verified_links(db: AsyncIOMotorDatabase) -> int:
+    """Keep parents who already linked with a code before links were tracked (never re-links an unlinked parent)."""
+    n = 0
+    async for c in db[_COLL].find({"consumed_reason": "verified"}, {"_id": 0, "user_id": 1, "email": 1, "context": 1, "consumed_at": 1}):
+        res = await db[_LINKS].update_one(
+            {"user_id": c["user_id"]},
+            {"$setOnInsert": {"email": (c.get("email") or "").lower(), "context": c.get("context"),
+                              "linked_at": c.get("consumed_at") or _now(), "unlinked_at": None, "migrated": True}},
+            upsert=True,
+        )
+        n += 1 if res.upserted_id else 0
+    return n
+
+
+class AlignLinkStatus(BaseModel):
+    linked: bool
+    linked_at: Optional[str] = None
+    last_read_at: Optional[str] = None
+
+
+async def _link_status(db: AsyncIOMotorDatabase, user_id: str) -> AlignLinkStatus:
+    link = await db[_LINKS].find_one({"user_id": user_id, "unlinked_at": None}, {"_id": 0, "linked_at": 1})
+    last = await db[_ACCESS_LOG].find_one({"user_id": user_id}, {"_id": 0, "at": 1}, sort=[("at", -1)])
+    return AlignLinkStatus(linked=bool(link), linked_at=_iso((link or {}).get("linked_at")), last_read_at=_iso((last or {}).get("at")))
+
+
+@router.get("/integrations/align-link", response_model=AlignLinkStatus)
+async def align_link_status(current: UserPublic = Depends(get_current_user), db: AsyncIOMotorDatabase = Depends(get_db)):
+    return await _link_status(db, current.user_id)
+
+
+@router.delete("/integrations/align-link", response_model=AlignLinkStatus)
+async def unlink_align(current: UserPublic = Depends(get_current_user), db: AsyncIOMotorDatabase = Depends(get_db)):
+    """Parent turns off Align's access. Linking again needs a new code."""
+    await db[_LINKS].update_one({"user_id": current.user_id, "unlinked_at": None}, {"$set": {"unlinked_at": _now()}})
+    logger.info("align unlinked user=%s", current.user_id)
+    return await _link_status(db, current.user_id)
+
+
+_KEEP_WHEN_REDACTED = ("completed_sections", "updated_at")
+
+
+def _redact_for_safety(snapshot: Dict[str, Any], foundation: Dict[str, Any], needs: Dict[str, Any]):
+    """Safety-flagged parent: drop every answer and narrative; keep which sections are done, ratings and dates."""
+    snap = {k: (v if k in _KEEP_WHEN_REDACTED else None) for k, v in snapshot.items()}
+    fs = {k: None for k in ("child_lens", "my_part", "best_case", "coparent_lens")}
+    fs.update(canonical={k: None for k in foundation["canonical"]}, updated_at=foundation.get("updated_at"))
+    sn = {k: (v and {"rating_areas": v.get("rating_areas"), "generated_at": v.get("generated_at")}) for k, v in needs.items()}
+    return snap, fs, sn
 
 
 # --------------------------- payload shaping --------------------------- #
@@ -460,16 +541,11 @@ async def integrations_foundation_statement_pdf(
       calls.
     """
     _verify_integration_key(x_integration_key)
-
-    if not email:
-        raise HTTPException(status_code=400, detail="email query param required")
-
-    user = await db.users.find_one(
-        {"email": email.lower()},
-        {"user_id": 1, "email": 1, "name": 1},
-    )
-    if not user:
-        raise HTTPException(status_code=404, detail="No linked parent found")
+    user = await _linked_user(db, email)
+    if await is_safety_flagged(db, user["user_id"]):
+        await _log_read(db, user["user_id"], "foundation-statement.pdf", True)
+        raise HTTPException(status_code=403, detail="Not available for this parent.")
+    await _log_read(db, user["user_id"], "foundation-statement.pdf", False)
 
     prep = await db.prep_data.find_one({"user_id": user["user_id"]}, {"_id": 0}) or {}
     reflection = prep.get("reflection") or {}

@@ -12,6 +12,7 @@ export default function MediatorEmailDialog({ open, onClose, onSend, sending }) 
   const [email, setEmail] = useState("");
   const [name, setName] = useState("");
   const [message, setMessage] = useState("");
+  const [includeAnswers, setIncludeAnswers] = useState(false);
 
   if (!open) return null;
 
@@ -99,6 +100,23 @@ export default function MediatorEmailDialog({ open, onClose, onSend, sending }) 
               className="w-full rounded-xl border border-[#E5E0EE] bg-white px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#3D1A78]/30 resize-none"
             />
           </div>
+          <label data-testid="mediator-include-answers-row" className="flex items-start gap-3 rounded-2xl border border-[#E5E0EE] bg-[#F8F7FC] p-3 cursor-pointer">
+            <input
+              type="checkbox"
+              checked={includeAnswers}
+              onChange={(e) => setIncludeAnswers(e.target.checked)}
+              data-testid="mediator-include-answers"
+              className="mt-0.5 h-4 w-4 accent-[#3D1A78]"
+            />
+            <span className="text-[13px] text-[#4B4567] leading-relaxed">
+              <span className="font-semibold text-[#1A1330]">Include my answers</span>
+              <span className="block" data-testid="mediator-include-answers-hint">
+                {includeAnswers
+                  ? "Your mediator will see your Section 1 safety answers and Section 2 readiness answers."
+                  : "Left out. Your mediator sees your pathway and summary, not your individual answers."}
+              </span>
+            </span>
+          </label>
         </div>
         <div className="px-6 sm:px-7 pb-6 flex flex-wrap gap-3 justify-end">
           <button
@@ -116,6 +134,7 @@ export default function MediatorEmailDialog({ open, onClose, onSend, sending }) 
                 mediator_email: email.trim(),
                 mediator_name: name.trim(),
                 parent_message: message.trim(),
+                include_answers: includeAnswers,
               })
             }
             disabled={!emailOk || sending}

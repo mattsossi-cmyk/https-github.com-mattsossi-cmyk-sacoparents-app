@@ -394,6 +394,7 @@ class MediatorEmailBody(BaseModel):
     mediator_email: str = Field(min_length=3, max_length=254)
     mediator_name: str = ""
     parent_message: str = ""
+    include_answers: bool = False  # Section 1 + 2 answers stay out unless the parent ticks the box
 
 
 class ProblemSolvingSubmit(BaseModel):
@@ -1086,7 +1087,7 @@ async def email_assessment_to_mediator(
             detail="Add a real email to your account so your mediator can reply to you.",
         )
 
-    pdf_bytes = _build_pdf_bytes(doc)
+    pdf_bytes = _build_pdf_bytes(doc, excluded_sections=[] if body.include_answers else ["section_1", "section_2"])
     result = doc.get("result") or {}
     level = int(result.get("level") or 0)
     pathway_title = result.get("pathway_title") or ""
@@ -1125,6 +1126,7 @@ async def email_assessment_to_mediator(
             "to": mediator_email,
             "name": (body.mediator_name or "").strip(),
             "sent_at": datetime.now(timezone.utc).isoformat(),
+            "included_answers": body.include_answers,
         }}},
     )
     return {"ok": True, "emailed_to": mediator_email}

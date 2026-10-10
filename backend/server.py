@@ -340,6 +340,13 @@ async def startup_log():
             logger.info("Purged child alignment records from %d share links", res.modified_count)
     except Exception:  # noqa: BLE001
         logger.exception("Failed to purge child alignment records")
+    try:
+        from integration_routes import migrate_verified_links
+        n = await migrate_verified_links(app.state.db)
+        if n:
+            logger.info("Recorded %d existing Align links", n)
+    except Exception:  # noqa: BLE001
+        logger.exception("Failed to record existing Align links")
     # Kick off the post-event survey scheduler. It sleeps internally so it
     # won't run before the DB is warm.
     asyncio.create_task(survey_scheduler_loop(app))

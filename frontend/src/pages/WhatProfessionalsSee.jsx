@@ -2,12 +2,13 @@ import React from "react";
 import { Link } from "react-router-dom";
 import { ArrowLeft, Scale, ShieldCheck } from "lucide-react";
 
-import { COURT_POINTS, METHODS, SHARING_NOTICES, SHORT_VERSION } from "../lib/proVisibility";
+import { ATTORNEY_REVIEW_PENDING, COURT_POINTS, METHODS, SHARING_NOTICES, SHORT_VERSION } from "../lib/proVisibility";
 import { useHashScroll } from "../lib/useHashScroll";
 
 const UPDATED = "June 2026";
 
 function ReviewTag({ testid }) {
+  if (!ATTORNEY_REVIEW_PENDING) return null;
   return (
     <span data-testid={testid} className="inline-flex items-center gap-1 rounded-full bg-amber-100 border border-amber-300 text-amber-900 text-[10px] font-bold uppercase tracking-wider px-2 py-0.5">
       <Scale size={10} /> Attorney review
@@ -88,6 +89,7 @@ export default function WhatProfessionalsSee() {
         <div className="eyebrow mb-3">Privacy, in plain language</div>
         <h1 data-testid="pros-see-title" className="font-serif text-4xl sm:text-5xl text-[#1A1330] mb-3 leading-tight">What professionals can see</h1>
         <p className="text-sm text-[#857E9C] mb-6">Last updated: {UPDATED}</p>
+        {ATTORNEY_REVIEW_PENDING && (
         <div data-testid="pros-see-draft-label" role="note" className="rounded-2xl border-2 border-dashed border-amber-300 bg-amber-50 p-4 flex items-start gap-3 mb-8">
           <Scale size={18} className="text-amber-800 shrink-0 mt-0.5" />
           <p className="text-[13px] text-amber-950 leading-relaxed">
@@ -95,6 +97,7 @@ export default function WhatProfessionalsSee() {
             &ldquo;Attorney review&rdquo; are being checked by our attorney. It isn&rsquo;t legal advice.
           </p>
         </div>
+        )}
         <H2 id="short-version">The short version</H2>
         <Bullets items={SHORT_VERSION} testid="pros-see-short-version" />
         <H2 id="how">How something reaches a professional</H2>
