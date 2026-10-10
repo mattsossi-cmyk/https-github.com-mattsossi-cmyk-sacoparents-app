@@ -988,3 +988,7 @@ Probed 2026-09-02: /api/link-codes, /api/integrations/* on sacoparentsapp.online
 - PRIVACY_NOTICE_VERSION bumped to 2026-10-10.1 (backend + App.js) → re-shown to all users. No policy links/buttons; hidden PLACEHOLDER kept; footer_links [].
 - Tests iter95 5/5; browser verified desktop+390px, keyboard (Space toggles checkbox → button enables), Quick Exit present, acceptance → dashboard.
 - 07:53 — Legal notice box now 4 sentences (adds "SA CoParents is a separate tool from the law practice of Matt Sossi." / "Access to or use of this app does not create an attorney-client relationship."). Reusable in privacy_notice.LEGAL_NOTICE_SENTENCES / LEGAL_NOTICE. Version bumped to 2026-10-10.2 (backend + App.js). iter95 5/5; browser verified re-show + exact text. PREVIEW ONLY.
+
+## 2026-10-10 08:xx — Professional Dashboard redesign (PREVIEW ONLY, not deployed)
+- ProHero now: one-message headline ("SA CoParents Align helps professionals understand each parent's perspective…"), five workflow action cards with live counts (Invite Parents · Review Assessments · Joint Report · Legal Lens Review · Court Report) + Judge Portal & Referrals card (pending referral count). Counts computed in Dashboard.jsx heroCounts from case_status. Tour step text updated. Old PrimaryTiles remain under "More tools".
+- Deferred (owner skipped for now): hard "Approve for release" gate, Judge's Overview page 1, Safety-review badge on case rows.

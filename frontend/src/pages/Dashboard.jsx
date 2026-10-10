@@ -66,6 +66,13 @@ export default function Dashboard() {
   const pendingReferrals = (courtRefs || []).filter((x) => x.status === "pending").length;
   const awaitingSubmit = (courtRefs || []).filter((x) => x.status === "accepted").length;
   const overdueCount = (courtRefs || []).filter((x) => x.overdue).length;
+  const heroCounts = {
+    awaitingParents: realCases.filter((j) => ["DRAFT", "INVITED", "ONE_COMPLETE"].includes(j.case_status)).length,
+    assessmentsIn: realCases.filter((j) => ["ONE_COMPLETE", "READY_FOR_ALIGNMENT"].includes(j.case_status)).length,
+    jointReady: readyCount,
+    lensReady: realCases.filter((j) => j.case_status === "REPORT_GENERATED").length,
+    courtPending: awaitingSubmit, overdue: overdueCount, referrals: pendingReferrals,
+  };
   const [selectedCase, setSelectedCase] = useState(null);
   const [assistantOpen, setAssistantOpen] = useState(false);
   const [trigger, setTrigger] = useState(null);
@@ -400,7 +407,7 @@ export default function Dashboard() {
             <div className="lg:hidden"><ProTopNav cases={realCases} /></div>
             <div className="flex justify-end"><TourButton onClick={proTour.start} testId="pro-tour-start-btn" /></div>
             {proTour.open && <SampleTour steps={proTourSteps} storageKey={`pro-tour-${user?.id || "anon"}`} onDone={proTour.close} label="Dashboard tour" prefix="pro-tour" />}
-            <ProHero reviewTo={reviewTo} reportTo={reportTo} onTrigger={fireTrigger} />
+            <ProHero counts={heroCounts} reviewTo={reviewTo} reportTo={reportTo} onTrigger={fireTrigger} />
             <PipelineStepper cases={realCases} selectedId={activeCase?.id} onSelect={setSelectedCase} onTrigger={fireTrigger} />
             <AlignAssistant userId={user?.id || "anon"} caseId={activeCase?.id} caseLabel={activeCase?.case_code} trigger={trigger} open={assistantOpen} onOpenChange={setAssistantOpen} />
           </>

@@ -51,7 +51,7 @@ export const TourButton = ({ onClick, testId = "tour-start-btn" }) => (
 );
 
 export const PRO_TOUR = [
-  { id: "primary-cta-bar", title: "Three steps, three buttons", tip: "Invite Parents sends each parent a private assessment link. Review Joint Report opens the system-generated comparison once both finish. Create Prof. Report builds the neutral 11-section report you file with the court." },
+  { id: "primary-cta-bar", title: "Five steps, in order", tip: "Invite Parents sends each parent a private assessment link. Review Assessments shows who has completed and the private safety-screening status. Joint Report opens the system-generated comparison once both finish. Legal Lens Review is where you label sources and add your professional statement. Court Report freezes and submits the packet to the referring judge. Court-ordered matters arrive via the Judge Portal card below." },
   { id: "pipeline-stepper", title: "Workflow pipeline", tip: "Pick a case and watch it move: Individual Assessments → Joint → Options & Resources → Pathway → Professional Report. Click any step to jump straight into that part of the case." },
   { id: "pro-contact-card", title: "Report cover contact", tip: "Add your phone, office address, headshot, firm logo and signature once — they print on the Professional Report cover and the court-packet cover letter automatically." },
   { id: "assistant-open-btn", title: "Align Assistant", tip: "An advisory helper that explains where the parents agree, where gaps are minor or high, and which pathways from the library fit. It drafts for your review; it never files or decides anything." },
