@@ -23,7 +23,7 @@ export function GoalReachedBanner({ history, userId, active }) {
   useEffect(() => {
     if (!active || !pending) return;
     try {
-      window.localStorage.setItem(storeKey(userId), JSON.stringify([...readSeen(userId), pending.id].slice(-100)));
+      window.localStorage.setItem(storeKey(userId), JSON.stringify([...new Set([...readSeen(userId), pending.id])].slice(-100)));
     } catch {
       /* private mode: celebrate anyway */
     }

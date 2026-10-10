@@ -8966,7 +8966,20 @@ dashboard for sharing SELECTED completed reports with any professional.
 - F. /legal/app-store-privacy: Google Play Data Safety section (GOOGLE_ROWS, not-collected list, why Shared=No, attorney note about
   Align), Apple answers corrected (no Usage Data/diagnostics; added voice notes + optional Gmail as ephemeral), delete URL from
   REACT_APP_PARENT_URL. Founder must copy these into App Store Connect + Play Console.
-- OPEN PRIVACY GAP (flagged to founder, not changed): GET /api/integrations/export-assessments and /integrations/foundation-statement.pdf
-  return a parent's data to anyone holding the Align shared secret + the parent's email — they don't check that the parent linked.
-  The new page says "only if you link your account". Fix = require a verified link-code record for that email (needs Align coordination).
-- Also flagged: full Safety Assessment PDF emailed to a mediator includes Section 1 answers (page now says so).
+- (Gap closed in the next batch below.)
+
+### 2026-06 — Align lock, mediator answer choice, attorney switch, goal celebration (iter115: backend 15/15, frontend 100%)
+- Align lock: new `align_links` collection {user_id, email, context, linked_at, unlinked_at}. verify-link-code records the link;
+  export-assessments + integrations/foundation-statement.pdf require an active link (else the same 404 'No linked parent found').
+  Startup `migrate_verified_links` keeps parents whose link code was already 'verified' ($setOnInsert, never re-links; 32 in preview).
+  Every Align read → `align_access_log` {user_id, endpoint, redacted, at}. Parent: GET/DELETE /api/integrations/align-link;
+  Account page `AlignLinkCard` (status, last read, Unlink with AlertDialog). Relinking needs a new code.
+- Safety firewall (founder's production plan): if `is_safety_flagged` (quick check flagged OR safety level ≤ 2) the export is
+  `redacted_for_safety: true` (snapshot only completed_sections/updated_at; Foundation narratives null; special needs only
+  rating_areas + generated_at) and the Foundation PDF returns 403.
+- Mediator email: MediatorEmailBody.include_answers (default false) → Section 1 + 2 excluded unless ticked; recorded as
+  mediator_emails[].included_answers. Dialog checkbox `mediator-include-answers`.
+- `ATTORNEY_REVIEW_PENDING` in frontend/src/lib/proVisibility.js — flip to false when the attorney approves (hides draft label + tags).
+- `GoalReachedBanner` (selfJourney): once per goal (localStorage `sac_goal_celebrated_<uid>`), confetti + banner on Self Journey.
+- Founder's pasted plan (Vercel/Postgres/RLS migration) NOT actioned: this app runs on Emergent hosting + MongoDB; pending discussion.
+- Known stale test: test_safety_assessment_mediator_email.py::test_metadata expects 10 section_1 questions (now 28).
