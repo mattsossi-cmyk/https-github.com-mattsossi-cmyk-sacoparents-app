@@ -55,13 +55,13 @@ def test_no_bracketed_placeholders_rendered():
     assert "[" not in raw.replace('": [', "").replace("[\n", "").replace("]", "") or not re.search(r"\[[A-Za-z][^\]]*\]", raw)
 
 
-def test_noindex_and_routes():
+def test_noindex_and_routes_removed():
     page = open(f"{SRC}/pages/PolicyPage.jsx", encoding="utf-8").read()
     assert 'meta.name = "robots"' in page and 'meta.content = "noindex, nofollow"' in page and "font-jakarta" in page and "#3D1A78" in page
     app = open(f"{SRC}/App.js", encoding="utf-8").read()
     for slug in ("privacy", "confidentiality", "sharing-consent"):
-        assert f'<Route path="/{slug}" element={{<PolicyPage slug="{slug}" />}} />' in app
-    assert '<Route path="/privacy-policy" element={<Privacy />} />' in app
+        assert f'path="/{slug}"' not in app
+    assert "<PolicyPage" not in app and '<Route path="/privacy-policy" element={<Privacy />} />' in app
 
 
 def test_pages_not_linked_anywhere():
