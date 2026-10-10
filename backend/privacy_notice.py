@@ -4,8 +4,16 @@ from datetime import datetime, timezone
 from fastapi import APIRouter, Depends, HTTPException, Response
 from pydantic import BaseModel
 
-PRIVACY_NOTICE_VERSION = "2026-10-10.1"  # bumped: layout redesign (Privacy Welcome Screen) — re-shown to everyone
+PRIVACY_NOTICE_VERSION = "2026-10-10.2"  # bumped: legal notice wording (separate from the law practice of Matt Sossi)
 SUBHEAD = "Private by default. Shared with your consent, or as the law requires."
+# Reusable legal-notice sentences (also for the future privacy policy). Edit here only.
+LEGAL_NOTICE_SENTENCES = [
+    "Using SA CoParents does not automatically create an attorney-client, therapist-patient, or other legally privileged relationship.",
+    "Information may be subject to lawful disclosure requirements.",
+    "SA CoParents is a separate tool from the law practice of Matt Sossi.",
+    "Access to or use of this app does not create an attorney-client relationship.",
+]
+LEGAL_NOTICE = " ".join(LEGAL_NOTICE_SENTENCES)
 NOTICE = {
     "version": PRIVACY_NOTICE_VERSION,
     "banner_heading": "Privacy & Confidentiality",
@@ -21,7 +29,7 @@ NOTICE = {
         {"heading": "Professionals and courts receive the information you authorize, or what the law or a court order requires.", "body": "Assigned professionals may see individual screening answers."},
     ],
     "legal_heading": "Important Legal Notice",
-    "legal": "Using SA CoParents does not automatically create an attorney-client, therapist-patient, or other legally privileged relationship. Information may be subject to lawful disclosure requirements.",
+    "legal": LEGAL_NOTICE,
     "checkbox": "I have read and understand this privacy notification.",
     "continue": "Continue to SA CoParents",
     # PLACEHOLDER: footer links to /privacy, /confidentiality, /sharing-consent stay OFF until the owner confirms those draft pages are final.

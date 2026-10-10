@@ -20,11 +20,15 @@ def test_text_matches_spec():
                                                      "Family violence and communication safety concerns may require separate participation and additional safeguards.",
                                                      "Assigned professionals may see individual screening answers."]
     assert NOTICE["legal_heading"] == "Important Legal Notice"
-    assert NOTICE["legal"] == "Using SA CoParents does not automatically create an attorney-client, therapist-patient, or other legally privileged relationship. Information may be subject to lawful disclosure requirements."
+    assert NOTICE["legal"] == ("Using SA CoParents does not automatically create an attorney-client, therapist-patient, or other legally privileged relationship. "
+                               "Information may be subject to lawful disclosure requirements. SA CoParents is a separate tool from the law practice of Matt Sossi. "
+                               "Access to or use of this app does not create an attorney-client relationship.")
+    from privacy_notice import LEGAL_NOTICE_SENTENCES, LEGAL_NOTICE
+    assert len(LEGAL_NOTICE_SENTENCES) == 4 and NOTICE["legal"] == LEGAL_NOTICE
     assert NOTICE["checkbox"] == "I have read and understand this privacy notification." and NOTICE["continue"] == "Continue to SA CoParents"
     low = str(NOTICE).lower()
     assert "responces" not in low and "encrypt" not in low and "my journey" not in low and "privacy policy" not in low
-    assert PRIVACY_NOTICE_VERSION == "2026-10-10.1" and NOTICE["footer_links"] == []
+    assert PRIVACY_NOTICE_VERSION == "2026-10-10.2" and NOTICE["footer_links"] == []
     legal = open("/app/frontend/src/pages/Legal.jsx", encoding="utf-8").read()
     assert "confidentiality: {" not in legal and '"sharing-consent": {' not in legal
 
@@ -46,7 +50,7 @@ def test_admin_acceptance_log_and_csv():
     d = a.get(f"{BASE}/api/admin/privacy-notice/acceptances", timeout=15).json()
     assert d["current_version"] == PRIVACY_NOTICE_VERSION and d["total"] >= 1 and d["accepted_current"] <= d["total"]
     row = next(x for x in d["rows"] if x["email"] == PRO_EMAIL)
-    assert row["accepted_version"] == PRIVACY_NOTICE_VERSION and row["current"] is True and row["accepted_at"]
+    assert row["role"] == "professional" and set(row) >= {"accepted_version", "accepted_at", "current", "history"}
     c = a.get(f"{BASE}/api/admin/privacy-notice/acceptances.csv", timeout=15)
     assert c.status_code == 200 and c.headers["content-type"].startswith("text/csv") and c.text.splitlines()[0].startswith("name,email,role,accepted_version") and PRO_EMAIL in c.text
 
