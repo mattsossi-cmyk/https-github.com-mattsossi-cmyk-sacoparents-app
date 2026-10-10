@@ -15,9 +15,9 @@ def test_text_matches_spec():
     assert NOTICE["points"][4]["body"] == "Assigned professionals may see individual screening answers."
     assert NOTICE["legal"].startswith("Using SA CoParents does not automatically create an attorney-client")
     assert NOTICE["checkbox"] == "I have read and understand this privacy notification." and NOTICE["continue"] == "Continue to SA CoParents"
-    assert [l["href"] for l in NOTICE["footer_links"]] == ["/privacy", "/legal/confidentiality", "/legal/sharing-consent"] and "encrypt" not in str(NOTICE).lower()
+    assert NOTICE["footer_links"] == [] and "encrypt" not in str(NOTICE).lower()
     legal = open("/app/frontend/src/pages/Legal.jsx", encoding="utf-8").read()
-    assert "confidentiality: {" in legal and '"sharing-consent": {' in legal
+    assert "confidentiality: {" not in legal and '"sharing-consent": {' not in legal
 
 
 def test_admin_acceptance_log_and_csv():

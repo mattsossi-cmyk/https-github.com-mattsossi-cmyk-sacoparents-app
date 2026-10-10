@@ -40,6 +40,9 @@
     h1, h2, h3, h4 {
         @apply font-display tracking-tight;
     }
+    .font-jakarta, .font-jakarta h1, .font-jakarta h2, .font-jakarta h3 {
+        font-family: "Plus Jakarta Sans", ui-sans-serif, system-ui, sans-serif;
+    }
 }
 
 @layer base {

@@ -224,7 +224,7 @@ class TestParentScreening:
 
     def test_parent_b_tier2(self, pro_case, parent_b_session, parents_accepted):
         # b3 Frequently (non-tier3) + safe Very safe → tier 2
-        resp = {"b3": "Frequently", "safe": "Very safe"}
+        resp = {"b_3": "Frequently", "safe": "Very safe"}
         r = parent_b_session.put(f"{BASE}/api/joint/reports/{pro_case['id']}/safety-screening",
                                  json={"responses": resp}, timeout=15)
         assert r.status_code == 200, r.text
@@ -244,7 +244,7 @@ class TestParentScreening:
         _register(email, "NG Actual B", invite=token)
         s = _login(email, PARENT_PASSWORD)
         _accept_invite(s, token)
-        resp = {k: "Never" for k in ["b1", "b2", "b3", "b4", "b5", "b6", "b7", "b8", "b9"]}
+        resp = {f"b_{n}": "Never" for n in range(1, 16)}
         resp["safe"] = "Very safe"
         r = s.put(f"{BASE}/api/joint/reports/{pro_case_no_gender}/safety-screening",
                   json={"responses": resp}, timeout=15)

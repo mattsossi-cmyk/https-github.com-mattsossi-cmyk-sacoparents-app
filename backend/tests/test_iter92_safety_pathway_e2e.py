@@ -145,7 +145,7 @@ def test_04_dismiss_then_change_to_protected_review(case, pro):
 def test_05_parent_b_submits_x5_yes_then_confirm(case, pb, pro):
     rid = case["id"]
     r = pb.put(f"{BASE}/api/joint/reports/{rid}/safety-screening",
-               json={"responses": {"b1": "Never", "x_5": "Yes", "safe": "Very safe"}}, timeout=15)
+               json={"responses": {"b_1": "Never", "x_5": "Yes", "safe": "Very safe"}}, timeout=15)
     assert r.status_code == 200, r.text
     view = pro.get(f"{BASE}/api/joint/reports/{rid}/safety-screening/b/responses", timeout=15).json()
     sug = view["pathway"]["suggested"]

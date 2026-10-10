@@ -1,5 +1,5 @@
 {
-  "schema_version": 2,
+  "schema_version": 3,
   "label": "Screening questions, not a diagnostic tool",
   "scale_note": "Screening questions adapted from published sources. Not a validated or diagnostic instrument. Tiers are a design guide, not a clinical cutoff.",
   "trigger_warning": "Content note: these questions ask about fear, control, and physical or sexual harm in a relationship. Take a break at any time; your progress is saved only when you submit.",
@@ -27,29 +27,50 @@
   "resources": [
     {
       "name": "National Domestic Violence Hotline",
-      "contact": "1-800-799-7233 · text START to 88788",
+      "contact": "1-800-799-7233 \u00b7 text START to 88788",
       "url": "https://www.thehotline.org",
       "verified": true
     },
     {
-      "name": "Family Violence Prevention Services (San Antonio)",
+      "name": "Family Violence Prevention Services (San Antonio) 24-hour line",
       "contact": "210-733-8810",
       "url": "https://fvps.org",
-      "verified": false
+      "verified": true
     }
   ],
+  "resources_c": [
+    {
+      "name": "The Network/La Red (LGBTQ+ partner abuse hotline)",
+      "contact": "1-800-832-1901",
+      "url": "https://tnlr.org",
+      "verified": true
+    },
+    {
+      "name": "LGBTQ+ survivor resources from the National LGBTQ Institute on IPV, including a personal safety planning tool",
+      "contact": "",
+      "url": "https://lgbtqipvinstitute.org/resources-for-survivors/",
+      "verified": true,
+      "external": true
+    }
+  ],
+  "external_link_note": "Opens in a new tab and leaves SA CoParents.",
+  "version_b_source": "cdc",
+  "version_b_import_sources": {
+    "cdc_nisvs_adapted": "cdc",
+    "velonis_hits": "velonis"
+  },
   "versions": {
     "A": {
       "version": "A",
-      "title": "Safety Screening — Version A (Women)",
+      "title": "Safety Screening \u2014 Version A (Women)",
       "intro": "These questions are private. Your co-parent will not see your answers. Skip any you prefer not to answer. If you are in danger now, call 911 or the National Hotline at 1-800-799-7233 (or text START to 88788).",
       "label": "Screening questions, not a diagnostic tool",
-      "source": "Adapted from the WPSI Screening for Intimate Partner and Domestic Violence in Women — Resource Guide & Clinical Workflow (9.9.25).",
+      "source": "Adapted from the WPSI Screening for Intimate Partner and Domestic Violence in Women \u2014 Resource Guide & Clinical Workflow (9.9.25).",
       "items": [
         {
           "id": "a1",
-          "part": "Part 1 · Your relationship",
-          "stem": "Over the last 12 months, how often did your partner, an ex-partner, or someone you dated…",
+          "part": "Part 1 \u00b7 Your relationship",
+          "stem": "Over the last 12 months, how often did your partner, an ex-partner, or someone you dated\u2026",
           "text": "humiliate you or emotionally abuse you?",
           "kind": "freq",
           "scale": "freq",
@@ -57,8 +78,8 @@
         },
         {
           "id": "a2",
-          "part": "Part 1 · Your relationship",
-          "stem": "Over the last 12 months, how often did your partner, an ex-partner, or someone you dated…",
+          "part": "Part 1 \u00b7 Your relationship",
+          "stem": "Over the last 12 months, how often did your partner, an ex-partner, or someone you dated\u2026",
           "text": "make you feel afraid of them?",
           "kind": "freq",
           "scale": "freq",
@@ -66,8 +87,8 @@
         },
         {
           "id": "a3",
-          "part": "Part 1 · Your relationship",
-          "stem": "Over the last 12 months, how often did your partner, an ex-partner, or someone you dated…",
+          "part": "Part 1 \u00b7 Your relationship",
+          "stem": "Over the last 12 months, how often did your partner, an ex-partner, or someone you dated\u2026",
           "text": "force or pressure you into sexual activity?",
           "kind": "freq",
           "scale": "freq",
@@ -75,8 +96,8 @@
         },
         {
           "id": "a4",
-          "part": "Part 1 · Your relationship",
-          "stem": "Over the last 12 months, how often did your partner, an ex-partner, or someone you dated…",
+          "part": "Part 1 \u00b7 Your relationship",
+          "stem": "Over the last 12 months, how often did your partner, an ex-partner, or someone you dated\u2026",
           "text": "hit, kick, or otherwise physically hurt you?",
           "kind": "freq",
           "scale": "freq",
@@ -84,8 +105,8 @@
         },
         {
           "id": "a5",
-          "part": "Part 1 · Your relationship",
-          "stem": "Over the last 12 months, how often did your partner, an ex-partner, or someone you dated…",
+          "part": "Part 1 \u00b7 Your relationship",
+          "stem": "Over the last 12 months, how often did your partner, an ex-partner, or someone you dated\u2026",
           "text": "control your money, phone, transportation, or who you see?",
           "kind": "freq",
           "scale": "freq",
@@ -93,7 +114,7 @@
         },
         {
           "id": "a6",
-          "part": "Part 1 · Your relationship",
+          "part": "Part 1 \u00b7 Your relationship",
           "stem": null,
           "text": "How often do you feel you have to change what you say or do to avoid conflict with them?",
           "kind": "freq",
@@ -102,7 +123,7 @@
         },
         {
           "id": "c1",
-          "part": "Part 2 · Your children",
+          "part": "Part 2 \u00b7 Your children",
           "stem": null,
           "text": "Have your children seen or heard any of the above?",
           "kind": "yn",
@@ -111,7 +132,7 @@
         },
         {
           "id": "c2",
-          "part": "Part 2 · Your children",
+          "part": "Part 2 \u00b7 Your children",
           "stem": null,
           "text": "Have you noticed changes in them (sleep problems, fear, anxiety, school trouble, acting out)?",
           "kind": "yn",
@@ -120,7 +141,7 @@
         },
         {
           "id": "a9",
-          "part": "Part 3 · Optional",
+          "part": "Part 3 \u00b7 Optional",
           "stem": null,
           "text": "What makes it hard to stay safe or get help (money, fear of losing custody, immigration status, lack of support)?",
           "kind": "text",
@@ -140,95 +161,149 @@
     },
     "B": {
       "version": "B",
-      "title": "Safety Screening — Version B (Men)",
+      "title": "Safety Screening \u2014 Version B (Men)",
       "intro": "These questions are private. Your co-parent will not see your answers. Skip any you prefer not to answer. If you are in danger now, call 911 or the National Hotline at 1-800-799-7233 (or text START to 88788). Partner violence can happen to anyone, including men.",
       "label": "Screening questions, not a diagnostic tool",
-      "source": "Adapted from Velonis et al. (2021), Journal of Interpersonal Violence (HITS-based, 9 items). © SAGE Publications; used with attribution, permission pending.",
+      "source": "Adapted from the CDC National Intimate Partner and Sexual Violence Survey (NISVS) behavior categories. Screening questions, not a diagnostic tool; not a validated instrument. Temporary version.",
       "items": [
         {
-          "id": "b1",
-          "part": "Part 1 · Your relationship",
+          "id": "b_1",
+          "part": "Part 1 \u00b7 Your relationship",
+          "stem": "Over the last 12 months, how often did your partner, an ex-partner, or someone you dated\u2026",
+          "text": "insult, humiliate, or make fun of you in front of others?",
+          "kind": "freq",
+          "scale": "freq",
+          "tier3": false
+        },
+        {
+          "id": "b_2",
+          "part": "Part 1 \u00b7 Your relationship",
+          "stem": "Over the last 12 months, how often did your partner, an ex-partner, or someone you dated\u2026",
+          "text": "keep you from having your own money?",
+          "kind": "freq",
+          "scale": "freq",
+          "tier3": false
+        },
+        {
+          "id": "b_3",
+          "part": "Part 1 \u00b7 Your relationship",
+          "stem": "Over the last 12 months, how often did your partner, an ex-partner, or someone you dated\u2026",
+          "text": "try to keep you from seeing or talking to family or friends?",
+          "kind": "freq",
+          "scale": "freq",
+          "tier3": false
+        },
+        {
+          "id": "b_4",
+          "part": "Part 1 \u00b7 Your relationship",
+          "stem": "Over the last 12 months, how often did your partner, an ex-partner, or someone you dated\u2026",
+          "text": "keep track of you by demanding to know where you were and what you were doing?",
+          "kind": "freq",
+          "scale": "freq",
+          "tier3": false
+        },
+        {
+          "id": "b_5",
+          "part": "Part 1 \u00b7 Your relationship",
+          "stem": "Over the last 12 months, how often did your partner, an ex-partner, or someone you dated\u2026",
+          "text": "make threats to physically harm you?",
+          "kind": "freq",
+          "scale": "freq",
+          "tier3": true
+        },
+        {
+          "id": "b_6",
+          "part": "Part 1 \u00b7 Your relationship",
+          "stem": "Over the last 12 months, how often did your partner, an ex-partner, or someone you dated\u2026",
+          "text": "threaten to hurt themselves or commit suicide because they were upset with you?",
+          "kind": "freq",
+          "scale": "freq",
+          "tier3": false
+        },
+        {
+          "id": "b_7",
+          "part": "Part 1 \u00b7 Your relationship",
+          "stem": "Over the last 12 months, how often did your partner, an ex-partner, or someone you dated\u2026",
+          "text": "make decisions that should have been yours to make?",
+          "kind": "freq",
+          "scale": "freq",
+          "tier3": false
+        },
+        {
+          "id": "b_8",
+          "part": "Part 1 \u00b7 Your relationship",
+          "stem": "Over the last 12 months, how often did your partner, an ex-partner, or someone you dated\u2026",
+          "text": "destroy something important to you?",
+          "kind": "freq",
+          "scale": "freq",
+          "tier3": false
+        },
+        {
+          "id": "b_9",
+          "part": "Part 1 \u00b7 Your relationship",
+          "stem": "Over the last 12 months, how often did your partner, an ex-partner, or someone you dated\u2026",
+          "text": "slap, push, or shove you?",
+          "kind": "freq",
+          "scale": "freq",
+          "tier3": false
+        },
+        {
+          "id": "b_10",
+          "part": "Part 1 \u00b7 Your relationship",
+          "stem": "Over the last 12 months, how often did your partner, an ex-partner, or someone you dated\u2026",
+          "text": "hit you with a fist or something hard, kick you, pull your hair, or slam you against something?",
+          "kind": "freq",
+          "scale": "freq",
+          "tier3": true
+        },
+        {
+          "id": "b_11",
+          "part": "Part 1 \u00b7 Your relationship",
+          "stem": "Over the last 12 months, how often did your partner, an ex-partner, or someone you dated\u2026",
+          "text": "try to hurt you by choking or suffocating you, burn you on purpose, or use a knife or gun?",
+          "kind": "freq",
+          "scale": "freq",
+          "tier3": true
+        },
+        {
+          "id": "b_12",
+          "part": "Part 1 \u00b7 Your relationship",
+          "stem": "Over the last 12 months, how often did your partner, an ex-partner, or someone you dated\u2026",
+          "text": "pressure you into unwanted sex, force you, or make you penetrate them?",
+          "kind": "freq",
+          "scale": "freq",
+          "tier3": true
+        },
+        {
+          "id": "b_13",
+          "part": "Part 1 \u00b7 Your relationship",
+          "stem": "Over the last 12 months, how often did your partner, an ex-partner, or someone you dated\u2026",
+          "text": "touch your sexual body parts when you didn't want them to?",
+          "kind": "freq",
+          "scale": "freq",
+          "tier3": true
+        },
+        {
+          "id": "b_14",
+          "part": "Part 1 \u00b7 Your relationship",
+          "stem": "Over the last 12 months, how often did your partner, an ex-partner, or someone you dated\u2026",
+          "text": "follow, watch, or repeatedly contact you in ways that made you feel afraid?",
+          "kind": "freq",
+          "scale": "freq",
+          "tier3": false
+        },
+        {
+          "id": "b_15",
+          "part": "Part 1 \u00b7 Your relationship",
           "stem": null,
-          "text": "Over the last 12 months, how often did you feel uncomfortable doing or saying things around your current partner or someone you're currently dating?",
+          "text": "How often do you feel afraid of them?",
           "kind": "freq",
           "scale": "freq",
           "tier3": false
-        },
-        {
-          "id": "b2",
-          "part": "Part 1 · Your relationship",
-          "stem": "Over the last 12 months, how often did your partner, an ex-partner, or someone you dated…",
-          "text": "insult you or talk down to you?",
-          "kind": "freq",
-          "scale": "freq",
-          "tier3": false
-        },
-        {
-          "id": "b3",
-          "part": "Part 1 · Your relationship",
-          "stem": "Over the last 12 months, how often did your partner, an ex-partner, or someone you dated…",
-          "text": "yell, shout, or curse at you?",
-          "kind": "freq",
-          "scale": "freq",
-          "tier3": false
-        },
-        {
-          "id": "b4",
-          "part": "Part 1 · Your relationship",
-          "stem": "Over the last 12 months, how often did your partner, an ex-partner, or someone you dated…",
-          "text": "control who you see, where you go, what you do, or what you wear?",
-          "kind": "freq",
-          "scale": "freq",
-          "tier3": false
-        },
-        {
-          "id": "b5",
-          "part": "Part 1 · Your relationship",
-          "stem": "Over the last 12 months, how often did your partner, an ex-partner, or someone you dated…",
-          "text": "make you feel afraid or scared of them?",
-          "kind": "freq",
-          "scale": "freq",
-          "tier3": false
-        },
-        {
-          "id": "b6",
-          "part": "Part 1 · Your relationship",
-          "stem": "Over the last 12 months, how often did your partner, an ex-partner, or someone you dated…",
-          "text": "threaten to harm you or someone you care about?",
-          "kind": "freq",
-          "scale": "freq",
-          "tier3": true
-        },
-        {
-          "id": "b7",
-          "part": "Part 1 · Your relationship",
-          "stem": "Over the last 12 months, how often did your partner, an ex-partner, or someone you dated…",
-          "text": "physically hurt you?",
-          "kind": "freq",
-          "scale": "freq",
-          "tier3": true
-        },
-        {
-          "id": "b8",
-          "part": "Part 1 · Your relationship",
-          "stem": "Over the last 12 months, how often did your partner, an ex-partner, or someone you dated…",
-          "text": "beat, punch, kick, strangle, or hurt you with a weapon?",
-          "kind": "freq",
-          "scale": "freq",
-          "tier3": true
-        },
-        {
-          "id": "b9",
-          "part": "Part 1 · Your relationship",
-          "stem": "Over the last 12 months, how often did your partner, an ex-partner, or someone you dated…",
-          "text": "force, threaten, or pressure you to participate in any sexual activity when you didn't want to?",
-          "kind": "freq",
-          "scale": "freq",
-          "tier3": true
         },
         {
           "id": "c1",
-          "part": "Part 2 · Your children",
+          "part": "Part 2 \u00b7 Your children",
           "stem": null,
           "text": "Have your children seen or heard any of the above?",
           "kind": "yn",
@@ -237,7 +312,7 @@
         },
         {
           "id": "c2",
-          "part": "Part 2 · Your children",
+          "part": "Part 2 \u00b7 Your children",
           "stem": null,
           "text": "Have you noticed changes in them (sleep problems, fear, anxiety, school trouble, acting out)?",
           "kind": "yn",
@@ -246,7 +321,7 @@
         },
         {
           "id": "c3",
-          "part": "Part 2 · Your children",
+          "part": "Part 2 \u00b7 Your children",
           "stem": null,
           "text": "Do you worry about losing contact with your children if you ask for help?",
           "kind": "yn",
@@ -266,15 +341,15 @@
     },
     "C": {
       "version": "C",
-      "title": "Safety Screening — Version C (LGBTQ+ Relationship Self-Assessment)",
+      "title": "Safety Screening \u2014 Version C (LGBTQ+ Relationship Self-Assessment)",
       "intro": "These questions are private. Your co-parent will not see your answers. Skip any you prefer not to answer. These questions are for people of any gender or orientation. If you are in danger now, call 911 or the National Hotline at 1-800-799-7233 (text START to 88788). LGBTQ+ support: The Network/La Red, 1-800-832-1901.",
       "label": "Screening questions, not a diagnostic tool. Adapted from published guidance; not a validated instrument.",
-      "source": "Adapted from the Safe & Together Institute behavior/pattern-based approach and LGBTQ+ IPV screening guidance (NCAVP; The Network/La Red; LGBTQ health education sources).",
+      "source": "Adapted from the Safe & Together Institute behavior/pattern-based approach and LGBTQ+ IPV screening guidance (NCAVP; The Network/La Red; LGBTQ health education sources). Informed by guidance from the National LGBTQ Institute on Intimate Partner Violence (lgbtqipvinstitute.org).",
       "items": [
         {
           "id": "c_1",
-          "part": "Part 1 · Your relationship",
-          "stem": "Over the last 12 months, how often did your partner, an ex-partner, or someone you dated…",
+          "part": "Part 1 \u00b7 Your relationship",
+          "stem": "Over the last 12 months, how often did your partner, an ex-partner, or someone you dated\u2026",
           "text": "insult you, put you down, or yell at you?",
           "kind": "freq",
           "scale": "freq",
@@ -282,8 +357,8 @@
         },
         {
           "id": "c_2",
-          "part": "Part 1 · Your relationship",
-          "stem": "Over the last 12 months, how often did your partner, an ex-partner, or someone you dated…",
+          "part": "Part 1 \u00b7 Your relationship",
+          "stem": "Over the last 12 months, how often did your partner, an ex-partner, or someone you dated\u2026",
           "text": "control who you see, where you go, your money, or your phone?",
           "kind": "freq",
           "scale": "freq",
@@ -291,8 +366,8 @@
         },
         {
           "id": "c_3",
-          "part": "Part 1 · Your relationship",
-          "stem": "Over the last 12 months, how often did your partner, an ex-partner, or someone you dated…",
+          "part": "Part 1 \u00b7 Your relationship",
+          "stem": "Over the last 12 months, how often did your partner, an ex-partner, or someone you dated\u2026",
           "text": "make you feel afraid of them?",
           "kind": "freq",
           "scale": "freq",
@@ -300,8 +375,8 @@
         },
         {
           "id": "c_4",
-          "part": "Part 1 · Your relationship",
-          "stem": "Over the last 12 months, how often did your partner, an ex-partner, or someone you dated…",
+          "part": "Part 1 \u00b7 Your relationship",
+          "stem": "Over the last 12 months, how often did your partner, an ex-partner, or someone you dated\u2026",
           "text": "threaten to harm you or someone you care about?",
           "kind": "freq",
           "scale": "freq",
@@ -309,8 +384,8 @@
         },
         {
           "id": "c_5",
-          "part": "Part 1 · Your relationship",
-          "stem": "Over the last 12 months, how often did your partner, an ex-partner, or someone you dated…",
+          "part": "Part 1 \u00b7 Your relationship",
+          "stem": "Over the last 12 months, how often did your partner, an ex-partner, or someone you dated\u2026",
           "text": "physically hurt you?",
           "kind": "freq",
           "scale": "freq",
@@ -318,8 +393,8 @@
         },
         {
           "id": "c_6",
-          "part": "Part 1 · Your relationship",
-          "stem": "Over the last 12 months, how often did your partner, an ex-partner, or someone you dated…",
+          "part": "Part 1 \u00b7 Your relationship",
+          "stem": "Over the last 12 months, how often did your partner, an ex-partner, or someone you dated\u2026",
           "text": "force or pressure you into sexual activity?",
           "kind": "freq",
           "scale": "freq",
@@ -327,8 +402,8 @@
         },
         {
           "id": "c_7",
-          "part": "Part 1 · Your relationship",
-          "stem": "Over the last 12 months, how often did your partner, an ex-partner, or someone you dated…",
+          "part": "Part 1 \u00b7 Your relationship",
+          "stem": "Over the last 12 months, how often did your partner, an ex-partner, or someone you dated\u2026",
           "text": "isolate you from friends, family, or LGBTQ+ community?",
           "kind": "freq",
           "scale": "freq",
@@ -336,8 +411,8 @@
         },
         {
           "id": "c_8",
-          "part": "Part 2 · Identity-based tactics",
-          "stem": "Over the last 12 months, how often did your partner, an ex-partner, or someone you dated…",
+          "part": "Part 2 \u00b7 Identity-based tactics",
+          "stem": "Over the last 12 months, how often did your partner, an ex-partner, or someone you dated\u2026",
           "text": "threaten to out you to family, friends, an employer, or others?",
           "kind": "freq",
           "scale": "freq",
@@ -345,8 +420,8 @@
         },
         {
           "id": "c_9",
-          "part": "Part 2 · Identity-based tactics",
-          "stem": "Over the last 12 months, how often did your partner, an ex-partner, or someone you dated…",
+          "part": "Part 2 \u00b7 Identity-based tactics",
+          "stem": "Over the last 12 months, how often did your partner, an ex-partner, or someone you dated\u2026",
           "text": "threaten to use your sexual orientation, gender identity, or HIV status against you?",
           "kind": "freq",
           "scale": "freq",
@@ -354,8 +429,8 @@
         },
         {
           "id": "c_10",
-          "part": "Part 2 · Identity-based tactics",
-          "stem": "Over the last 12 months, how often did your partner, an ex-partner, or someone you dated…",
+          "part": "Part 2 \u00b7 Identity-based tactics",
+          "stem": "Over the last 12 months, how often did your partner, an ex-partner, or someone you dated\u2026",
           "text": "pressure you to change or hide your gender expression, name, pronouns, or transition?",
           "kind": "freq",
           "scale": "freq",
@@ -363,8 +438,8 @@
         },
         {
           "id": "c_11",
-          "part": "Part 2 · Identity-based tactics",
-          "stem": "Over the last 12 months, how often did your partner, an ex-partner, or someone you dated…",
+          "part": "Part 2 \u00b7 Identity-based tactics",
+          "stem": "Over the last 12 months, how often did your partner, an ex-partner, or someone you dated\u2026",
           "text": "hide, destroy, or withhold medication, hormones, or other personal items?",
           "kind": "freq",
           "scale": "freq",
@@ -372,8 +447,8 @@
         },
         {
           "id": "c_12",
-          "part": "Part 2 · Identity-based tactics",
-          "stem": "Over the last 12 months, how often did your partner, an ex-partner, or someone you dated…",
+          "part": "Part 2 \u00b7 Identity-based tactics",
+          "stem": "Over the last 12 months, how often did your partner, an ex-partner, or someone you dated\u2026",
           "text": "tell you no one will believe you, or that you won't get help because of who you are?",
           "kind": "freq",
           "scale": "freq",
@@ -381,7 +456,7 @@
         },
         {
           "id": "c1",
-          "part": "Part 3 · Your children",
+          "part": "Part 3 \u00b7 Your children",
           "stem": null,
           "text": "Have your children seen or heard any of the above?",
           "kind": "yn",
@@ -390,7 +465,7 @@
         },
         {
           "id": "c2",
-          "part": "Part 3 · Your children",
+          "part": "Part 3 \u00b7 Your children",
           "stem": null,
           "text": "Have you noticed changes in them (sleep problems, fear, anxiety, school trouble, acting out)?",
           "kind": "yn",
@@ -399,7 +474,7 @@
         },
         {
           "id": "c_15",
-          "part": "Part 3 · Your children",
+          "part": "Part 3 \u00b7 Your children",
           "stem": null,
           "text": "Do you worry about losing contact with your children, or how a court would view you, if you ask for help?",
           "kind": "yn",
@@ -430,10 +505,11 @@
         "a4"
       ],
       "B": [
-        "b6",
-        "b7",
-        "b8",
-        "b9"
+        "b_5",
+        "b_10",
+        "b_11",
+        "b_12",
+        "b_13"
       ],
       "C": [
         "c_4",
@@ -442,6 +518,182 @@
         "c_8",
         "c_9"
       ]
+    }
+  },
+  "additional_items": [
+    {
+      "id": "x_1",
+      "flag": "financialAbuse",
+      "text": "prevent you from having or using money, or run up debts in your name?",
+      "kind": "freq",
+      "part": "Additional safety questions",
+      "stem": "Over the last 12 months, how often did your partner, an ex-partner, or someone you dated\u2026",
+      "tier3": false
+    },
+    {
+      "id": "x_2",
+      "flag": "technologyStalking",
+      "text": "track your phone, location, accounts, or messages without your agreement?",
+      "kind": "freq",
+      "part": "Additional safety questions",
+      "stem": "Over the last 12 months, how often did your partner, an ex-partner, or someone you dated\u2026",
+      "tier3": false
+    },
+    {
+      "id": "x_3",
+      "flag": "childRelatedThreats",
+      "text": "threaten to hurt, take, or keep your children from you?",
+      "kind": "freq",
+      "part": "Additional safety questions",
+      "stem": "Over the last 12 months, how often did your partner, an ex-partner, or someone you dated\u2026",
+      "tier3": false
+    },
+    {
+      "id": "x_4",
+      "flag": "fearOfRetaliation",
+      "text": "How often do you feel afraid of what might happen if they knew you answered these questions or asked for help?",
+      "kind": "freq",
+      "part": "Additional safety questions",
+      "stem": null,
+      "tier3": false
+    },
+    {
+      "id": "x_5",
+      "flag": "activeProtectiveOrder",
+      "text": "Is there a protective order, restraining order, or no-contact order in place between you and your co-parent?",
+      "kind": "yn3",
+      "part": "Additional safety questions",
+      "stem": null,
+      "tier3": false
+    }
+  ],
+  "scales_extra": {
+    "yn3": [
+      "Yes",
+      "No",
+      "Prefer not to say"
+    ]
+  },
+  "safety_pathway": {
+    "flags": [
+      "threatsOrIntimidation",
+      "physicalOrSexualViolence",
+      "coerciveControl",
+      "financialAbuse",
+      "technologyStalking",
+      "childRelatedThreats",
+      "fearOfRetaliation",
+      "activeProtectiveOrder",
+      "imminentDangerReported"
+    ],
+    "flag_map": {
+      "A": {
+        "a2": "threatsOrIntimidation",
+        "a3": "physicalOrSexualViolence",
+        "a4": "physicalOrSexualViolence",
+        "a5": "coerciveControl"
+      },
+      "B": {
+        "b_5": "threatsOrIntimidation",
+        "b_6": "threatsOrIntimidation",
+        "b_14": "threatsOrIntimidation",
+        "b_15": "threatsOrIntimidation",
+        "b_9": "physicalOrSexualViolence",
+        "b_10": "physicalOrSexualViolence",
+        "b_11": "physicalOrSexualViolence",
+        "b_12": "physicalOrSexualViolence",
+        "b_13": "physicalOrSexualViolence",
+        "b_2": "coerciveControl",
+        "b_3": "coerciveControl",
+        "b_4": "coerciveControl",
+        "b_7": "coerciveControl",
+        "b_8": "coerciveControl"
+      },
+      "C": {
+        "c_3": "threatsOrIntimidation",
+        "c_4": "threatsOrIntimidation",
+        "c_5": "physicalOrSexualViolence",
+        "c_6": "physicalOrSexualViolence",
+        "c_2": "coerciveControl",
+        "c_7": "coerciveControl"
+      }
+    },
+    "rules": {
+      "protected_review": [
+        "imminentDangerReported",
+        "physicalOrSexualViolence",
+        "childRelatedThreats",
+        "activeProtectiveOrder"
+      ],
+      "structured": [
+        "coerciveControl",
+        "threatsOrIntimidation",
+        "technologyStalking",
+        "fearOfRetaliation",
+        "financialAbuse"
+      ]
+    },
+    "labels": {
+      "standard": "Standard",
+      "structured": "Structured communication recommended",
+      "protected_review": "Protected participation review recommended"
+    },
+    "export_fields": {
+      "safety_flags": "dict of the 9 booleans (optional)",
+      "safety_pathway": "standard|structured|protected_review (optional)"
+    },
+    "note": "Suggested flag only; the assigned professional confirms. Highest restriction wins across parents."
+  },
+  "communication_readiness": {
+    "items": [
+      {
+        "id": "cr_conflict",
+        "text": "Right now, how does conflict with your co-parent feel?",
+        "kind": "choice",
+        "options": [
+          "Low",
+          "Moderate",
+          "High",
+          "Safety concerns"
+        ]
+      },
+      {
+        "id": "cr_direct",
+        "text": "Do you feel safe communicating with your co-parent directly?",
+        "kind": "choice",
+        "options": [
+          "Yes",
+          "Only in writing",
+          "Not comfortable"
+        ]
+      },
+      {
+        "id": "cr_channel",
+        "text": "Which communication channel feels safest for your family?",
+        "kind": "choice",
+        "options": [
+          "Direct messaging",
+          "Written-only through a logged platform",
+          "Structured third-party communication",
+          "Prefer not to say"
+        ]
+      },
+      {
+        "id": "cr_child",
+        "text": "Is there anything about communication you are concerned about for your child? (optional)",
+        "kind": "text",
+        "options": null
+      }
+    ],
+    "export_field": "communication_readiness",
+    "shape": {
+      "completed_at": "ISO-8601",
+      "responses": {
+        "cr_conflict": "Low|Moderate|High|Safety concerns",
+        "cr_direct": "Yes|Only in writing|Not comfortable",
+        "cr_channel": "one of the listed channels",
+        "cr_child": "free text (optional)"
+      }
     }
   },
   "assignment": {
@@ -456,13 +708,14 @@
       "C"
     ],
     "always_offer": "C",
-    "store_only": "version letter (A|B|C) — never infer or store orientation"
+    "store_only": "version letter (A|B|C) \u2014 never infer or store orientation"
   },
   "export_contract": {
     "path": "GET /api/integrations/export-assessments?email=<parent email>",
     "field": "safety_screening",
     "shape": {
       "version": "A|B|C",
+      "source": "for Version B: cdc_nisvs_adapted (current) | velonis_hits (legacy ids b1-b9; auto-detected if omitted)",
       "completed_at": "ISO-8601",
       "tier": "1|2|3 (optional; recomputed if missing)",
       "answered_count": "int (optional)",

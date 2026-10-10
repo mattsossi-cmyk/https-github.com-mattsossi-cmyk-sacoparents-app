@@ -256,7 +256,7 @@ export default function Landing() {
             ))}
           </ul>
           <p className="mt-5 text-sm text-muted-foreground">
-            Read the full <Link to="/privacy" className="text-primary font-medium hover:underline" data-testid="confidentiality-privacy-link">Confidentiality &amp; Privacy Notice</Link>.
+            Read the full <Link to="/privacy-policy" className="text-primary font-medium hover:underline" data-testid="confidentiality-privacy-link">Confidentiality &amp; Privacy Notice</Link>.
           </p>
         </div>
         <div className="bg-align-yellow/10 border border-align-yellow/40 rounded-xl p-6" data-testid="parent-notice">
@@ -288,7 +288,7 @@ export default function Landing() {
           </p>
           <BrandLogo size="text-xl" />
           <div className="flex flex-wrap items-center gap-x-5 gap-y-2 text-sm text-muted-foreground">
-            <Link to="/privacy" className="hover:text-foreground" data-testid="footer-privacy-link">Privacy Policy</Link>
+            <Link to="/privacy-policy" className="hover:text-foreground" data-testid="footer-privacy-link">Privacy Policy</Link>
             <Link to="/legal/terms" className="hover:text-foreground" data-testid="footer-terms-link">Terms of Use</Link>
             <Link to="/legal/professional-use" className="hover:text-foreground" data-testid="footer-pro-use-link">Professional-Use Agreement</Link>
             <Link to="/methodology" className="hover:text-foreground" data-testid="footer-methodology-link">Methodology</Link>

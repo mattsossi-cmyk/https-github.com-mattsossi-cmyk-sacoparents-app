@@ -9,9 +9,9 @@ RAW_A = {"a1": "Frequently", "a2": "Sometimes", "a3": "Never", "a4": "Never", "a
 
 def test_versions_have_required_items_and_no_lethality_items():
     assert [i["id"] for i in VERSIONS["A"]["items"]] == ["a1", "a2", "a3", "a4", "a5", "a6", "c1", "c2", "a9", "safe"]
-    assert [i["id"] for i in VERSIONS["B"]["items"]] == ["b1", "b2", "b3", "b4", "b5", "b6", "b7", "b8", "b9", "c1", "c2", "c3", "safe"]
+    assert [i["id"] for i in VERSIONS["B"]["items"]] == [f"b_{n}" for n in range(1, 16)] + ["c1", "c2", "c3", "safe"]
     text = " ".join(i["text"] for v in VERSIONS.values() for i in v["items"]).lower()
-    assert "gun" not in text and "kill" not in text and "jealous" not in text
+    assert "kill" not in text and "jealous" not in text
     assert "including men" in VERSIONS["B"]["intro"]
 
 
@@ -25,16 +25,16 @@ def test_tiering_version_a():
 
 
 def test_tiering_version_b():
-    assert compute_tier("B", {"b2": "Rarely", "b3": "Rarely", "safe": "Very safe"}) == 1
-    assert compute_tier("B", {"b3": "Frequently", "safe": "Very safe"}) == 2
-    assert compute_tier("B", {"b5": "Frequently"}) == 2
-    for k in ("b6", "b7", "b8", "b9"):
+    assert compute_tier("B", {"b_1": "Rarely", "b_3": "Rarely", "safe": "Very safe"}) == 1
+    assert compute_tier("B", {"b_3": "Frequently", "safe": "Very safe"}) == 2
+    assert compute_tier("B", {"b_9": "Frequently"}) == 2
+    for k in ("b_5", "b_10", "b_11", "b_12", "b_13"):
         assert compute_tier("B", {k: "Sometimes"}) == 3
 
 
 def test_skips_and_prefer_not_to_say_never_raise_tier():
     assert compute_tier("A", {}) == 1
-    assert compute_tier("B", {"b8": "Prefer not to say", "safe": "Prefer not to say"}) == 1
+    assert compute_tier("B", {"b_11": "Prefer not to say", "safe": "Prefer not to say"}) == 1
     rec = build_record("A", {"a1": "Never", "a2": "Prefer not to say", "a9": ""})
     assert rec["answered_count"] == 1 and rec["skipped_count"] == 14 and rec["tier"] == 1 and "a9" not in rec["responses"]
 
@@ -46,9 +46,9 @@ def test_default_version_by_gender():
 
 
 def test_import_new_structured_format():
-    rec = extract_safety_screening({"safety_screening": {"version": "b", "completed_at": "2026-06-02T10:00:00Z", "tier": 3, "answered_count": 12, "responses": {"b6": "Sometimes", "safe": "Very safe"}}})
+    rec = extract_safety_screening({"safety_screening": {"version": "b", "completed_at": "2026-06-02T10:00:00Z", "tier": 3, "answered_count": 12, "source": "cdc_nisvs_adapted", "responses": {"b_5": "Sometimes", "safe": "Very safe"}}})
     assert rec["version"] == "B" and rec["tier"] == 3 and rec["completed_at"] == "2026-06-02" and rec["answered_count"] == 12 and rec["source"] == "sacoparentsapp.online"
-    assert rec["responses"] == {"b6": "Sometimes", "safe": "Very safe"}
+    assert rec["responses"] == {"b_5": "Sometimes", "safe": "Very safe"} and rec["b_source"] == "cdc"
     rec2 = extract_safety_screening({"safety_screening": {"version": "A", "responses": {"a2": "Frequently"}}})
     assert rec2["tier"] == 3
 

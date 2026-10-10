@@ -46,10 +46,16 @@ def _legacy(title: str, completed_at, resp: dict) -> dict:
 
 
 def _structured(s: dict) -> dict | None:
-    from safety_screening import VERSIONS, build_record
+    from safety_screening import VERSIONS, B_VARIANTS, IMPORT_SOURCE_B, build_record
     ver = str(s.get("version") or "").strip().upper()
     if ver not in VERSIONS or not isinstance(s.get("responses"), dict):
         return None
+    b_source = None
+    if ver == "B":
+        b_source = IMPORT_SOURCE_B.get(str(s.get("source") or "").strip().lower())
+        if not b_source:  # fallback: detect by item ids (legacy b1-b9 vs current b_1-b_15)
+            ids = set(s["responses"])
+            b_source = next((k for k, v in B_VARIANTS.items() if ids & {i["id"] for i in v["items"] if i["id"].startswith("b")}), None)
     tier = s.get("tier")
     try:
         tier = int(tier) if tier is not None else None
@@ -58,7 +64,7 @@ def _structured(s: dict) -> dict | None:
     ac = s.get("answered_count")
     from safety_pathway import normalize_import
     fl, pw = normalize_import(s.get("safety_flags"), s.get("safety_pathway"))
-    rec = build_record(ver, s["responses"], source=SOURCE, completed_at=_date(s.get("completed_at")) or None, tier=tier, answered_count=ac if isinstance(ac, int) else None, flags=fl, pathway=pw)
+    rec = build_record(ver, s["responses"], source=SOURCE, completed_at=_date(s.get("completed_at")) or None, tier=tier, answered_count=ac if isinstance(ac, int) else None, flags=fl, pathway=pw, b_source=b_source)
     rec["items"] = []
     return rec
 

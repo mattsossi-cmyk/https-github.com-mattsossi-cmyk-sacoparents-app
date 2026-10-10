@@ -89,7 +89,7 @@ export default function Resources() {
             ))}
           </ul>
           <p className="mt-4 text-sm text-muted-foreground">
-            Full terms: <Link to="/privacy" className="text-primary font-medium hover:underline" data-testid="resources-privacy-link">Confidentiality &amp; Privacy Notice</Link>.
+            Full terms: <Link to="/privacy-policy" className="text-primary font-medium hover:underline" data-testid="resources-privacy-link">Confidentiality &amp; Privacy Notice</Link>.
           </p>
         </section>
 

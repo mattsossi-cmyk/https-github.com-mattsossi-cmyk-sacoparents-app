@@ -23,7 +23,7 @@ export function ConfidentialityNotice({ variant = "parent" }) {
           responses. You should review any report before sharing it.
         </p>
       )}
-      <Link to="/privacy" className="inline-block mt-2 text-primary font-medium hover:underline" data-testid="confidentiality-full-link">
+      <Link to="/privacy-policy" className="inline-block mt-2 text-primary font-medium hover:underline" data-testid="confidentiality-full-link">
         Read the full Privacy, Confidentiality &amp; Notice Provision →
       </Link>
     </div>

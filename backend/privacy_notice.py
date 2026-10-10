@@ -23,11 +23,8 @@ NOTICE = {
     "legal": "Using SA CoParents does not automatically create an attorney-client, therapist-patient, or other legally privileged relationship. Information may be subject to lawful disclosure requirements.",
     "checkbox": "I have read and understand this privacy notification.",
     "continue": "Continue to SA CoParents",
-    "footer_links": [
-        {"label": "Privacy Policy", "href": "/privacy"},
-        {"label": "Confidentiality", "href": "/legal/confidentiality"},
-        {"label": "Sharing & Consent", "href": "/legal/sharing-consent"},
-    ],
+    # PLACEHOLDER: footer links to /privacy, /confidentiality, /sharing-consent stay OFF until the owner confirms those draft pages are final.
+    "footer_links": [],
 }
 
 

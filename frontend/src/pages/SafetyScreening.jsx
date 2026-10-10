@@ -1,16 +1,25 @@
 import { useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import { toast } from "sonner";
-import { ArrowLeft, Phone, ShieldCheck } from "lucide-react";
+import { ArrowLeft, ExternalLink, Phone, ShieldCheck } from "lucide-react";
 import api, { formatApiError } from "@/lib/api";
 import { BrandLogo } from "@/components/Brand";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { QuickExitBar } from "@/components/QuickExit";
 
-const Hotline = ({ resources }) => (
+const Hotline = ({ resources, externalNote }) => (
   <div className="rounded-md border border-red-200 bg-red-50 p-3 text-sm" data-testid="screening-hotline">
-    {resources.map((r) => <p key={r.name} className="flex items-start gap-2"><Phone className="mt-0.5 h-4 w-4 shrink-0 text-red-700" /><span><strong>{r.name}</strong> — {r.contact}{!r.verified && <span className="ml-1 text-[11px] text-muted-foreground">(verification pending)</span>}</span></p>)}
+    {resources.map((r) => (
+      <p key={r.name} className="flex items-start gap-2" data-testid={`screening-resource-${r.external ? "external" : "phone"}`}>
+        {r.external ? <ExternalLink className="mt-0.5 h-4 w-4 shrink-0 text-red-700" /> : <Phone className="mt-0.5 h-4 w-4 shrink-0 text-red-700" />}
+        <span>
+          {r.external
+            ? <><a href={r.url} target="_blank" rel="noopener noreferrer" className="font-semibold text-brand-purple underline underline-offset-2" data-testid="screening-external-link">{r.name}</a> <span className="text-[11px] text-muted-foreground" data-testid="screening-external-note">({externalNote || "Opens in a new tab and leaves SA CoParents."})</span></>
+            : <><strong>{r.name}</strong>{r.contact && <> — {r.contact}</>}{!r.verified && <span className="ml-1 text-[11px] text-muted-foreground">(verification pending)</span>}</>}
+        </span>
+      </p>
+    ))}
   </div>
 );
 
@@ -75,7 +84,7 @@ export default function SafetyScreening() {
               <p className="mt-1 text-xs text-muted-foreground">{result.answered_count} answered · {result.skipped_count} skipped. {result.scale_note}</p>
             </div>
             {result.tier >= 2 && <p className="text-sm" data-testid="screening-result-followup">{result.tier === 3 ? "Please consider reaching out to the hotline below and making a simple safety plan — where you could go, who you could call, what you would take. Your professional has been flagged to follow up with you." : "Your professional may suggest a follow-up conversation. The resources below are available any time."}</p>}
-            <Hotline resources={result.resources} />
+            <Hotline resources={result.resources} externalNote={result.external_link_note} />
             <Link to={`/joint/${id}`}><Button data-testid="screening-done-btn">Return to case</Button></Link>
           </div>
         )}
@@ -86,7 +95,7 @@ export default function SafetyScreening() {
               <h1 className="mt-1 text-2xl font-semibold" data-testid="screening-title">{spec.title}</h1>
               <p className="mt-3 text-sm" data-testid="screening-intro-text">{spec.intro}</p>
               <p className="mt-2 rounded-md border-l-4 border-amber-500 bg-amber-50 p-2 text-xs" data-testid="screening-trigger-warning">{spec.trigger_warning}</p>
-              <Hotline resources={spec.resources} />
+              <Hotline resources={spec.resources} externalNote={spec.external_link_note} />
             </div>
             {parts.map((part) => (
               <section key={part} className="space-y-2" data-testid={`screening-part-${part.split(" ")[0].replace(/[^A-Za-z0-9]/g, "").toLowerCase()}`}>

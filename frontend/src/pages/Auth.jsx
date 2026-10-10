@@ -258,7 +258,7 @@ export default function Auth() {
               <>
                 <label className="flex items-start gap-2.5 text-sm text-muted-foreground" data-testid="agreements-row">
                   <input type="checkbox" className="mt-1" checked={agreed} onChange={(e) => setAgreed(e.target.checked)} data-testid="agreements-checkbox" />
-                  <span>I accept the <Link to="/legal/professional-use" className="text-primary hover:underline">Professional-Use Agreement</Link>, confidentiality acknowledgment, <Link to="/privacy" className="text-primary hover:underline">Privacy Policy</Link>, appropriate-use policy, and no-professional-relationship disclaimer.</span>
+                  <span>I accept the <Link to="/legal/professional-use" className="text-primary hover:underline">Professional-Use Agreement</Link>, confidentiality acknowledgment, <Link to="/privacy-policy" className="text-primary hover:underline">Privacy Policy</Link>, appropriate-use policy, and no-professional-relationship disclaimer.</span>
                 </label>
                 <p className="text-xs text-muted-foreground bg-secondary/50 border border-border rounded-md p-3" data-testid="no-relationship-disclaimer">
                   Creating or using an SA CoParents Align account does not establish an attorney-client, therapist-client, physician-patient, mediator, evaluator, or other professional relationship with a parent or family.

@@ -1,0 +1,95 @@
+{
+  "version": "1.0",
+  "status": "draft",
+  "privacy": {
+    "slug": "privacy",
+    "title": "Privacy Policy",
+    "sections": [
+      { "heading": "Who we are", "paragraphs": [
+        "SA CoParents provides two connected tools: a parent app (sacoparentsapp.online) and a professional portal (sacoparentsalign.com).",
+        "Contact: mattsossi@bsossi.com, 210-224-1667."
+      ] },
+      { "heading": "What we collect", "bullets": [
+        "Account information (name, email address, and the role you choose, parent or professional).",
+        "Your preparation (reflections, assessments, the safety screening, communication readiness answers, and agreement drafts).",
+        "Safety screening (which version you took, A, B, or C, your answers, and a tier; we never ask for or store your sexual orientation).",
+        "Records of use (when you accepted this notice, and when assigned professionals view your information)."
+      ] },
+      { "heading": "How we use it", "paragraphs": [
+        "To run the tools you ask for, to build reports for professionals you authorize, and to keep the service safe.",
+        "We don't sell your information."
+      ] },
+      { "heading": "Who can see it", "bullets": [
+        "You, always.",
+        "Your co-parent, never your individual answers, reflections, or screening.",
+        "Assigned professionals may see individual screening answers on a protected screen, and each view is logged.",
+        "Courts, only what you authorize, or what the law or a court order requires.",
+        "Service providers: email delivery (Resend)."
+      ] },
+      { "heading": "Keeping it safe", "paragraphs": [
+        "We limit access by role and keep access logs."
+      ] },
+      { "heading": "How long we keep it", "paragraphs": [
+        "Raw screening answers are deleted 90 days after the case closes or the account is deleted, whichever comes first. Court submissions are kept for 6 months from the date they are submitted."
+      ] },
+      { "heading": "Your choices", "paragraphs": [
+        "You can ask to see what we hold and to delete your account. Deleting your account does not remove a record already submitted to a court."
+      ] },
+      { "heading": "Children", "paragraphs": [
+        "The tools are for adult parents. We collect information about children only as you or a professional enter it."
+      ] },
+      { "heading": "Changes", "paragraphs": [
+        "If this notice changes, we'll show it again and ask you to confirm."
+      ] }
+    ]
+  },
+  "confidentiality": {
+    "slug": "confidentiality",
+    "title": "Confidentiality",
+    "sections": [
+      { "heading": "Private by default", "paragraphs": [
+        "Your answers, reflections, and journal entries belong to you. Your co-parent does not see them."
+      ] },
+      { "heading": "Safety first", "paragraphs": [
+        "If you report family violence concerns, we limit what appears in joint reports, invitations, and email. Reports show only that your screening was received, a tier, and a neutral pathway label. They never show your raw answers, your narrative, or your locations, and the version appears only as a neutral label."
+      ] },
+      { "heading": "Professionals", "paragraphs": [
+        "Assigned professionals can see individual screening answers on a protected screen. Every view is logged. They receive reports built from what you authorize."
+      ] },
+      { "heading": "Limits", "paragraphs": [
+        "Using SA CoParents does not create an attorney-client, therapist-patient, or other legally privileged relationship. Information may be subject to lawful disclosure, including subpoenas and court orders."
+      ] },
+      { "heading": "If you are in danger now", "emergency": true, "bullets": [
+        "Call 911.",
+        "National Domestic Violence Hotline: 1-800-799-7233 (text START to 88788).",
+        "San Antonio, Family Violence Prevention Services 24-hour line: 210-733-8810."
+      ] }
+    ]
+  },
+  "sharing-consent": {
+    "slug": "sharing-consent",
+    "title": "Sharing & Consent",
+    "sections": [
+      { "heading": "You choose what to share", "paragraphs": [
+        "In your Self Journey you choose which completed reports to share and with whom. Sharing one report does not give access to your account or your private journal."
+      ] },
+      { "heading": "How consent works", "numbered": [
+        "You select a report and a recipient.",
+        "You see what the recipient will receive before it's sent.",
+        "You can stop sharing going forward at any time."
+      ] },
+      { "heading": "Joint and court-ordered participation", "paragraphs": [
+        "If a court or professional requires your participation, separate rules apply. We'll tell you what is required before you start."
+      ] },
+      { "heading": "Professionals' reports", "paragraphs": [
+        "A professional may build a report from what you authorize. A frozen court submission can't be changed afterward."
+      ] },
+      { "heading": "Safety exceptions", "paragraphs": [
+        "If safety concerns are flagged, a professional may recommend structured communication or additional safeguards. This is a flag for their judgment, not a decision about custody."
+      ] },
+      { "heading": "Withdrawing", "paragraphs": [
+        "You can delete your account. Records already submitted to a court stay with the court."
+      ] }
+    ]
+  }
+}

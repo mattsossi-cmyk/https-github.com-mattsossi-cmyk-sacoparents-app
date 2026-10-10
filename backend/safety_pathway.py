@@ -21,9 +21,15 @@ FLAGS = ["threatsOrIntimidation", "physicalOrSexualViolence", "coerciveControl",
 FLAG_LABEL = {"threatsOrIntimidation": "Threats or intimidation", "physicalOrSexualViolence": "Physical or sexual violence", "coerciveControl": "Coercive control", "financialAbuse": "Financial abuse",
               "technologyStalking": "Technology-facilitated stalking", "childRelatedThreats": "Child-related threats", "fearOfRetaliation": "Fear of retaliation", "activeProtectiveOrder": "Active protective / no-contact order", "imminentDangerReported": "Not safe to go home today"}
 # Version item ids -> flag (Sometimes/Frequently => true; skipped / Prefer not to say never infer)
+FLAG_MAP_B = {
+    "cdc": {"b_5": "threatsOrIntimidation", "b_6": "threatsOrIntimidation", "b_14": "threatsOrIntimidation", "b_15": "threatsOrIntimidation",
+            "b_9": "physicalOrSexualViolence", "b_10": "physicalOrSexualViolence", "b_11": "physicalOrSexualViolence", "b_12": "physicalOrSexualViolence", "b_13": "physicalOrSexualViolence",
+            "b_2": "coerciveControl", "b_3": "coerciveControl", "b_4": "coerciveControl", "b_7": "coerciveControl", "b_8": "coerciveControl"},
+    "velonis": {"b5": "threatsOrIntimidation", "b6": "threatsOrIntimidation", "b7": "physicalOrSexualViolence", "b8": "physicalOrSexualViolence", "b9": "physicalOrSexualViolence", "b4": "coerciveControl"},
+}
 FLAG_MAP = {
     "A": {"a2": "threatsOrIntimidation", "a3": "physicalOrSexualViolence", "a4": "physicalOrSexualViolence", "a5": "coerciveControl"},
-    "B": {"b5": "threatsOrIntimidation", "b6": "threatsOrIntimidation", "b7": "physicalOrSexualViolence", "b8": "physicalOrSexualViolence", "b9": "physicalOrSexualViolence", "b4": "coerciveControl"},
+    "B": FLAG_MAP_B["cdc"],
     "C": {"c_3": "threatsOrIntimidation", "c_4": "threatsOrIntimidation", "c_5": "physicalOrSexualViolence", "c_6": "physicalOrSexualViolence", "c_2": "coerciveControl", "c_7": "coerciveControl"},
 }
 PATHWAYS = ["standard", "structured", "protected_review"]
@@ -44,17 +50,17 @@ DECISIONS = {
     "structured": ["Category-based decision assignments (e.g., one parent leads medical, the other education), reviewed at each reassessment.", "Independent professional review of disputed child choices before either parent acts."],
     "protected_review": ["Category-based decision assignments with written notice only.", "Independent professional review of all disputed child choices; no joint decision meetings without the professional present."],
 }
-# TODO(verify): San Antonio Family Violence Prevention Services 210-733-8810 remains UNVERIFIED (see safety_screening.RESOURCES).
 
 
 def _hit(v) -> bool:
     return v in ("Sometimes", "Frequently")
 
 
-def compute_flags(version: str, responses: dict) -> dict:
+def compute_flags(version: str, responses: dict, b_source: str | None = None) -> dict:
     r = responses or {}
     flags = {f: False for f in FLAGS}
-    for item_id, flag in FLAG_MAP.get(version, {}).items():
+    fmap = FLAG_MAP_B[b_source] if version == "B" and b_source in FLAG_MAP_B else FLAG_MAP.get(version, {})
+    for item_id, flag in fmap.items():
         if _hit(r.get(item_id)):
             flags[flag] = True
     for it in EXTRA_ITEMS:

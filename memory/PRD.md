@@ -966,3 +966,12 @@ Probed 2026-09-02: /api/link-codes, /api/integrations/* on sacoparentsapp.online
 - Admin Acceptance Log tab (Dashboard → Acceptance Log): GET /api/admin/privacy-notice/acceptances (+ .csv export). Admin-only (403 otherwise).
 - Tests: backend/tests/test_iter95_privacy_notice.py (4 passed), iter94 regression green; deployment readiness PASS; deploy queued (job 84013524…). Awaiting system deploy notification.
 - PENDING: Professional-specific notice variant — user will supply exact wording. Owner review of Confidentiality / Sharing & Consent draft text.
+
+## 2026-10-10 — Version B (CDC), Version C credit, draft policy pages (NOT DEPLOYED — awaiting user confirmation)
+- Version B now CDC NISVS-adapted (ids b_1..b_15, tier3 b_5/b_10/b_11/b_12/b_13); Velonis/HITS kept in B_VARIANTS["velonis"], switched OFF via VERSION_B_SOURCE env ("cdc" default) / configure_version_b(). FLAG_MAP_B in safety_pathway. Import accepts source "cdc_nisvs_adapted"; legacy b1-b9 auto-detected. Records store b_source.
+- Version C credit adds National LGBTQ Institute on IPV; RESOURCES_C adds The Network/La Red + external lgbtqipvinstitute.org link (new tab, noopener, "leaves the app" note). FVPS 210-733-8810 marked verified.
+- Draft policy pages /privacy, /confidentiality, /sharing-consent (PolicyPage.jsx + content/policies.json, Version 1.0 draft, noindex, UNLINKED). Old approved policy moved to /privacy-policy (all existing links updated). Notice footer_links reverted to [] placeholder; /legal/confidentiality + sharing-consent drafts removed.
+- backend/retention.py: RAW_SCREENING_RETENTION_DAYS=90, COURT_SUBMISSION_RETENTION_MONTHS=6 — constants only, no deletion job.
+- Fixed tailwind duplicate fontFamily key: font-jakarta now works (Plus Jakarta Sans verified in browser).
+- Tests: iter96 (Version B/C), iter97 (policy pages); 45 passed across safety/privacy suites. Audit structured report delivered in chat (GAP-01..19).
+- PENDING: user confirms deploy; professional notice wording; Joint Report verbatim text decision; PostHog consent decision (GAP-05); CORS_ORIGINS prod value.

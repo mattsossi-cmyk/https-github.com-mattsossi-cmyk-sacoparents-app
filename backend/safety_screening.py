@@ -3,6 +3,7 @@
 Routing: a parent's answers go only to the assigned professional — never to the co-parent, never into a report or PDF.
 """
 from datetime import datetime, timezone
+import os
 
 from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel
@@ -16,18 +17,27 @@ TRIGGER_WARNING = "Content note: these questions ask about fear, control, and ph
 INTRO = ("These questions are private. Your co-parent will not see your answers. Skip any you prefer not to answer. "
          "If you are in danger now, call 911 or the National Hotline at 1-800-799-7233 (or text START to 88788).")
 INTRO_B = "Partner violence can happen to anyone, including men."
-# TODO(verify): San Antonio Family Violence Prevention Services 210-733-8810 is UNVERIFIED — pending verification before publication.
 RESOURCES = [
     {"name": "National Domestic Violence Hotline", "contact": "1-800-799-7233 · text START to 88788", "url": "https://www.thehotline.org", "verified": True},
-    {"name": "Family Violence Prevention Services (San Antonio)", "contact": "210-733-8810", "url": "https://fvps.org", "verified": False},
+    {"name": "Family Violence Prevention Services (San Antonio) 24-hour line", "contact": "210-733-8810", "url": "https://fvps.org", "verified": True},
 ]
 INTRO_C = ("These questions are private. Your co-parent will not see your answers. Skip any you prefer not to answer. These questions are for people of any gender or orientation. "
            "If you are in danger now, call 911 or the National Hotline at 1-800-799-7233 (text START to 88788). LGBTQ+ support: The Network/La Red, 1-800-832-1901.")
 LABEL_C = "Screening questions, not a diagnostic tool. Adapted from published guidance; not a validated instrument."
-# TODO(permission): Version B items are HITS-based (Velonis et al. 2021, J. Interpersonal Violence; © SAGE). Written permission from the author is pending.
+EXTERNAL_LINK_NOTE = "Opens in a new tab and leaves SA CoParents."
+RESOURCES_C = [
+    {"name": "The Network/La Red (LGBTQ+ partner abuse hotline)", "contact": "1-800-832-1901", "url": "https://tnlr.org", "verified": True},
+    {"name": "LGBTQ+ survivor resources from the National LGBTQ Institute on IPV, including a personal safety planning tool", "contact": "", "url": "https://lgbtqipvinstitute.org/resources-for-survivors/", "verified": True, "external": True},
+]
+# Version B source switch. "cdc" (default, TEMPORARY) = CDC NISVS behavior-category adaptation.
+# "velonis" = HITS-based items (Velonis et al. 2021, J. Interpersonal Violence; © SAGE) — kept, switched OFF until written permission is obtained.
+VERSION_B_SOURCE = os.environ.get("VERSION_B_SOURCE", "cdc")
+SOURCES_B = {"cdc": "Adapted from the CDC National Intimate Partner and Sexual Violence Survey (NISVS) behavior categories. Screening questions, not a diagnostic tool; not a validated instrument. Temporary version.",
+             "velonis": "Adapted from Velonis et al. (2021), Journal of Interpersonal Violence (HITS-based, 9 items). © SAGE Publications; used with attribution, permission pending."}
 SOURCES = {"A": "Adapted from the WPSI Screening for Intimate Partner and Domestic Violence in Women — Resource Guide & Clinical Workflow (9.9.25).",
-           "B": "Adapted from Velonis et al. (2021), Journal of Interpersonal Violence (HITS-based, 9 items). © SAGE Publications; used with attribution, permission pending.",
-           "C": "Adapted from the Safe & Together Institute behavior/pattern-based approach and LGBTQ+ IPV screening guidance (NCAVP; The Network/La Red; LGBTQ health education sources)."}
+           "B": SOURCES_B["cdc"],
+           "C": "Adapted from the Safe & Together Institute behavior/pattern-based approach and LGBTQ+ IPV screening guidance (NCAVP; The Network/La Red; LGBTQ health education sources). "
+                "Informed by guidance from the National LGBTQ Institute on Intimate Partner Violence (lgbtqipvinstitute.org)."}
 _C_FREQ = [("c_1", "insult you, put you down, or yell at you?", False), ("c_2", "control who you see, where you go, your money, or your phone?", False), ("c_3", "make you feel afraid of them?", False),
            ("c_4", "threaten to harm you or someone you care about?", True), ("c_5", "physically hurt you?", True), ("c_6", "force or pressure you into sexual activity?", True),
            ("c_7", "isolate you from friends, family, or LGBTQ+ community?", False)]
@@ -41,12 +51,34 @@ _A_FREQ = [("a1", "humiliate you or emotionally abuse you?", False), ("a2", "mak
 _B_FREQ = [("b2", "insult you or talk down to you?", False), ("b3", "yell, shout, or curse at you?", False), ("b4", "control who you see, where you go, what you do, or what you wear?", False),
            ("b5", "make you feel afraid or scared of them?", False), ("b6", "threaten to harm you or someone you care about?", True), ("b7", "physically hurt you?", True),
            ("b8", "beat, punch, kick, strangle, or hurt you with a weapon?", True), ("b9", "force, threaten, or pressure you to participate in any sexual activity when you didn't want to?", True)]
+# CDC NISVS-adapted Version B (TEMPORARY). Tier 3 items: Q5, Q10, Q11, Q12, Q13.
+_B_CDC_FREQ = [("b_1", "insult, humiliate, or make fun of you in front of others?", False), ("b_2", "keep you from having your own money?", False),
+               ("b_3", "try to keep you from seeing or talking to family or friends?", False), ("b_4", "keep track of you by demanding to know where you were and what you were doing?", False),
+               ("b_5", "make threats to physically harm you?", True), ("b_6", "threaten to hurt themselves or commit suicide because they were upset with you?", False),
+               ("b_7", "make decisions that should have been yours to make?", False), ("b_8", "destroy something important to you?", False),
+               ("b_9", "slap, push, or shove you?", False), ("b_10", "hit you with a fist or something hard, kick you, pull your hair, or slam you against something?", True),
+               ("b_11", "try to hurt you by choking or suffocating you, burn you on purpose, or use a knife or gun?", True),
+               ("b_12", "pressure you into unwanted sex, force you, or make you penetrate them?", True), ("b_13", "touch your sexual body parts when you didn't want them to?", True),
+               ("b_14", "follow, watch, or repeatedly contact you in ways that made you feel afraid?", False)]
 STEM = "Over the last 12 months, how often did your partner, an ex-partner, or someone you dated…"
 
 
 def _item(i, text, kind, part, tier3=False, stem=None):
     return {"id": i, "text": text, "kind": kind, "part": part, "tier3": tier3, "stem": stem}
 
+
+_B_CHILD = [*[_item(i, t, "yn", "Part 2 · Your children") for i, t, _k in _CHILD], _item("c3", "Do you worry about losing contact with your children if you ask for help?", "yn", "Part 2 · Your children")]
+B_VARIANTS = {
+    "velonis": {"version": "B", "title": "Safety Screening — Version B (Men)", "intro": f"{INTRO} {INTRO_B}", "source": SOURCES_B["velonis"], "b_source": "velonis", "items": [
+        _item("b1", "Over the last 12 months, how often did you feel uncomfortable doing or saying things around your current partner or someone you're currently dating?", "freq", "Part 1 · Your relationship"),
+        *[_item(i, t, "freq", "Part 1 · Your relationship", t3, STEM) for i, t, t3 in _B_FREQ], *_B_CHILD,
+        _item("safe", "How safe do you feel going home today?", "safe", "Closing")]},
+    "cdc": {"version": "B", "title": "Safety Screening — Version B (Men)", "intro": f"{INTRO} {INTRO_B}", "source": SOURCES_B["cdc"], "b_source": "cdc", "items": [
+        *[_item(i, t, "freq", "Part 1 · Your relationship", t3, STEM) for i, t, t3 in _B_CDC_FREQ],
+        _item("b_15", "How often do you feel afraid of them?", "freq", "Part 1 · Your relationship"), *_B_CHILD,
+        _item("safe", "How safe do you feel going home today?", "safe", "Closing")]},
+}
+IMPORT_SOURCE_B = {"cdc_nisvs_adapted": "cdc", "velonis_hits": "velonis"}
 
 VERSIONS = {
     "A": {"version": "A", "title": "Safety Screening — Version A (Women)", "intro": INTRO, "source": SOURCES["A"], "items": [
@@ -55,12 +87,7 @@ VERSIONS = {
         *[_item(i, t, "yn", "Part 2 · Your children") for i, t, _k in _CHILD],
         _item("a9", "What makes it hard to stay safe or get help (money, fear of losing custody, immigration status, lack of support)?", "text", "Part 3 · Optional"),
         _item("safe", "How safe is it for you to go home today?", "safe", "Closing")]},
-    "B": {"version": "B", "title": "Safety Screening — Version B (Men)", "intro": f"{INTRO} {INTRO_B}", "source": SOURCES["B"], "items": [
-        _item("b1", "Over the last 12 months, how often did you feel uncomfortable doing or saying things around your current partner or someone you're currently dating?", "freq", "Part 1 · Your relationship"),
-        *[_item(i, t, "freq", "Part 1 · Your relationship", t3, STEM) for i, t, t3 in _B_FREQ],
-        *[_item(i, t, "yn", "Part 2 · Your children") for i, t, _k in _CHILD],
-        _item("c3", "Do you worry about losing contact with your children if you ask for help?", "yn", "Part 2 · Your children"),
-        _item("safe", "How safe do you feel going home today?", "safe", "Closing")]},
+    "B": B_VARIANTS["cdc"],
     "C": {"version": "C", "title": "Safety Screening — Version C (LGBTQ+ Relationship Self-Assessment)", "intro": INTRO_C, "source": SOURCES["C"], "label": LABEL_C, "items": [
         *[_item(i, t, "freq", "Part 1 · Your relationship", t3, STEM) for i, t, t3 in _C_FREQ],
         *[_item(i, t, "freq", "Part 2 · Identity-based tactics", t3, STEM) for i, t, t3 in _C_IDENTITY],
@@ -76,17 +103,38 @@ CHOICE_LABEL = {"A": "The questions for women (Version A)", "B": "The questions 
 GENDER_DEFAULT = {"woman": "A", "female": "A", "f": "A", "man": "B", "male": "B", "m": "B"}
 
 
+def configure_version_b(source: str) -> None:
+    """Switch the live Version B between 'cdc' (temporary default) and 'velonis' (off until written permission)."""
+    global VERSION_B_SOURCE
+    if source not in B_VARIANTS:
+        raise ValueError("VERSION_B_SOURCE must be 'cdc' or 'velonis'")
+    import safety_pathway
+    VERSION_B_SOURCE = source
+    VERSIONS["B"] = B_VARIANTS[source]
+    SOURCES["B"] = SOURCES_B[source]
+    safety_pathway.FLAG_MAP["B"] = safety_pathway.FLAG_MAP_B[source]
+
+
+def _spec_for(version: str, b_source: str | None = None) -> dict:
+    return B_VARIANTS[b_source] if version == "B" and b_source in B_VARIANTS else VERSIONS[version]
+
+
+def resources_for(version: str) -> list[dict]:
+    return RESOURCES + RESOURCES_C if version == "C" else RESOURCES
+
+
 def public_spec(version: str) -> dict:
     v = VERSIONS[version]
     from safety_pathway import EXTRA_ITEMS, YN3
     items = [i for i in v["items"] if i["id"] != "safe"] + EXTRA_ITEMS + [i for i in v["items"] if i["id"] == "safe"]
-    return {**v, "items": items, "label": v.get("label", LABEL), "trigger_warning": TRIGGER_WARNING, "scale_note": SCALE_NOTE, "scales": {"freq": FREQ, "yn": YN, "safe": SAFE, "yn3": YN3}, "resources": RESOURCES,
+    return {**v, "items": items, "label": v.get("label", LABEL), "trigger_warning": TRIGGER_WARNING, "scale_note": SCALE_NOTE, "scales": {"freq": FREQ, "yn": YN, "safe": SAFE, "yn3": YN3}, "resources": resources_for(version),
+            "external_link_note": EXTERNAL_LINK_NOTE,
             "safe_device_notice": "Use a device your co-parent cannot see. The Quick Exit button (or pressing Escape twice) leaves this page immediately and clears it from this browser."}
 
 
-def compute_tier(version: str, responses: dict) -> int:
+def compute_tier(version: str, responses: dict, b_source: str | None = None) -> int:
     """Design guide, not a validated cutoff. Skipped / 'Prefer not to say' items never raise the tier."""
-    items = VERSIONS[version]["items"]
+    items = _spec_for(version, b_source)["items"]
     freq = {i["id"]: (responses.get(i["id"]) or "") for i in items if i["kind"] == "freq"}
     safe = responses.get("safe") or ""
     high = {k for k, v in freq.items() if v in ("Sometimes", "Frequently")}
@@ -104,16 +152,17 @@ def default_version(gender: str | None) -> str | None:
 
 
 def build_record(version: str, responses: dict, source: str = "sacoparentsalign.com", completed_at: str | None = None, tier: int | None = None, answered_count: int | None = None,
-                 flags: dict | None = None, pathway: str | None = None) -> dict:
+                 flags: dict | None = None, pathway: str | None = None, b_source: str | None = None) -> dict:
     from safety_pathway import EXTRA_ITEMS, compute_flags, pathway_from_flags
-    items = VERSIONS[version]["items"] + EXTRA_ITEMS
+    spec = _spec_for(version, b_source)
+    items = spec["items"] + EXTRA_ITEMS
     clean = {i["id"]: str(responses[i["id"]])[:1000].strip() for i in items if responses.get(i["id"]) not in (None, "")}
     skipped = [i["id"] for i in items if i["id"] not in clean or clean[i["id"]] == "Prefer not to say"]
-    t = tier if tier in (1, 2, 3) else compute_tier(version, clean)
-    fl = flags if isinstance(flags, dict) else compute_flags(version, clean)
+    t = tier if tier in (1, 2, 3) else compute_tier(version, clean, spec.get("b_source"))
+    fl = flags if isinstance(flags, dict) else compute_flags(version, clean, spec.get("b_source"))
     sugg = pathway_from_flags(fl) if not pathway else {"pathway": pathway, "label": __import__("safety_pathway").LABEL[pathway], "triggered": [k for k, v in fl.items() if v], "triggered_labels": [__import__("safety_pathway").FLAG_LABEL[k] for k, v in fl.items() if v]}
     concern = sum(1 for i in items if i["kind"] == "freq" and clean.get(i["id"]) in ("Sometimes", "Frequently")) + (1 if clean.get("safe") == "Not safe" else 0)
-    return {"source": source, "version": version, "title": VERSIONS[version]["title"], "completed_at": completed_at or datetime.now(timezone.utc).isoformat(), "tier": t,
+    return {"source": source, "version": version, "b_source": spec.get("b_source"), "title": spec["title"], "completed_at": completed_at or datetime.now(timezone.utc).isoformat(), "tier": t,
             "answered_count": answered_count if isinstance(answered_count, int) else len([k for k in clean if clean[k] != "Prefer not to say"]), "skipped_count": len(skipped),
             "item_count": len(items), "concern_count": concern, "responses": clean, "flags": fl, "pathway_suggested": sugg}
 
@@ -143,7 +192,7 @@ def item_view(scr: dict) -> list[dict]:
     r = scr.get("responses") or {}
     return [{"id": i["id"], "question": (f"{i['stem']} {i['text']}" if i.get("stem") else i["text"]), "answer": r.get(i["id"]) or "Skipped", "kind": i["kind"], "part": i["part"],
              "flag": i["kind"] == "freq" and r.get(i["id"]) in ("Sometimes", "Frequently") or (i["id"] == "safe" and r.get("safe") == "Not safe") or (i["kind"] == "yn3" and r.get(i["id"]) == "Yes")}
-            for i in VERSIONS[ver]["items"] + __import__("safety_pathway").EXTRA_ITEMS]
+            for i in _spec_for(ver, scr.get("b_source"))["items"] + __import__("safety_pathway").EXTRA_ITEMS]
 
 
 class SubmitIn(BaseModel):
@@ -176,7 +225,8 @@ def _status(doc: dict) -> dict:
 
 def spec_export() -> dict:
     """Machine-readable spec for the parent app: identical wording, scales, tiering, and the import payload contract."""
-    return {"schema_version": 2, "label": LABEL, "scale_note": SCALE_NOTE, "trigger_warning": TRIGGER_WARNING, "scales": {"freq": FREQ, "yn": YN, "safe": SAFE}, "resources": RESOURCES,
+    return {"schema_version": 3, "label": LABEL, "scale_note": SCALE_NOTE, "trigger_warning": TRIGGER_WARNING, "scales": {"freq": FREQ, "yn": YN, "safe": SAFE}, "resources": RESOURCES, "resources_c": RESOURCES_C, "external_link_note": EXTERNAL_LINK_NOTE,
+            "version_b_source": VERSION_B_SOURCE, "version_b_import_sources": IMPORT_SOURCE_B,
             "versions": {k: {"version": k, "title": v["title"], "intro": v["intro"], "label": v.get("label", LABEL), "source": v["source"],
                              "items": [{"id": i["id"], "part": i["part"], "stem": i["stem"], "text": i["text"], "kind": i["kind"], "scale": {"freq": "freq", "yn": "yn", "safe": "safe", "text": None}[i["kind"]], "tier3": i["tier3"]} for i in v["items"]]} for k, v in VERSIONS.items()},
             "tiers": {"note": "Design guide, not a validated or clinical cutoff. Skipped and 'Prefer not to say' never raise the tier.",
@@ -191,7 +241,7 @@ def spec_export() -> dict:
             "assignment": {"choice_screen": "Which questions fit your situation best?", "default_by_gender": {"woman": "A", "man": "B"}, "no_gender_or_non_binary": ["A", "B", "C"], "always_offer": "C",
                            "store_only": "version letter (A|B|C) — never infer or store orientation"},
             "export_contract": {"path": "GET /api/integrations/export-assessments?email=<parent email>", "field": "safety_screening",
-                                "shape": {"version": "A|B|C", "completed_at": "ISO-8601", "tier": "1|2|3 (optional; recomputed if missing)", "answered_count": "int (optional)", "responses": {"<item id>": "<scale value or free text>"}},
+                                "shape": {"version": "A|B|C", "source": "for Version B: cdc_nisvs_adapted (current) | velonis_hits (legacy ids b1-b9; auto-detected if omitted)", "completed_at": "ISO-8601", "tier": "1|2|3 (optional; recomputed if missing)", "answered_count": "int (optional)", "responses": {"<item id>": "<scale value or free text>"}},
                                 "privacy": "Reports/PDFs/co-parent views show only Received, version letter, tier, date. Raw responses go to the assigned professional only."}}
 
 
@@ -279,7 +329,7 @@ def build_router(db, get_current_user, get_joint_report_doc, report_role, log_ac
             except Exception as exc:  # alert must never block the parent's submission
                 import logging
                 logging.getLogger("safety_screening").warning("Tier 3 alert not sent for case %s: %s", rid, exc)
-        return {"tier": rec["tier"], "tier_label": TIER_LABEL[rec["tier"]], "resources": RESOURCES, "answered_count": rec["answered_count"], "skipped_count": rec["skipped_count"], "scale_note": SCALE_NOTE}
+        return {"tier": rec["tier"], "tier_label": TIER_LABEL[rec["tier"]], "resources": resources_for(version), "external_link_note": EXTERNAL_LINK_NOTE, "answered_count": rec["answered_count"], "skipped_count": rec["skipped_count"], "scale_note": SCALE_NOTE}
 
     @r.get("/joint/reports/{rid}/safety-screening/{role}/responses")
     async def screening_responses(rid: str, role: str, user=Depends(get_current_user)):
@@ -305,7 +355,8 @@ def build_router(db, get_current_user, get_joint_report_doc, report_role, log_ac
         comm = (doc.get("communication_readiness") or {}).get(role)
         communication = {"received": True, "completed_at": comm.get("completed_at"), "source": comm.get("source"), "flag_for_professional": comm.get("flag_for_professional"), "items": comm_items_view(comm),
                          "note": "Parent's private communication readiness answers — a flag input for you, not a decision."} if comm else {"received": False}
-        return {"status": st, "items": item_view(scr), "pathway": pathway, "communication": communication, "scale_note": SCALE_NOTE, "source_credit": SOURCES.get(scr.get("version") or "", ""),
+        return {"status": st, "items": item_view(scr), "pathway": pathway, "communication": communication, "scale_note": SCALE_NOTE,
+                "source_credit": SOURCES_B.get(scr.get("b_source"), SOURCES["B"]) if scr.get("version") == "B" else SOURCES.get(scr.get("version") or "", ""),
                 "notice": "Parent-reported screening responses, shown to the assigned professional only. Not findings. Never shared with the co-parent, the court, or any report."}
 
     return r

@@ -13,7 +13,7 @@ BANNED = ("parallel parenting", "lgbtq", "orientation", "frequently", "sometimes
 def test_flag_mapping_a_b_c():
     a = compute_flags("A", {"a2": "Sometimes", "a3": "Frequently", "a5": "Sometimes", "x_1": "Frequently", "x_2": "Sometimes", "x_3": "Sometimes", "x_4": "Frequently", "x_5": "Yes", "safe": "Not safe"})
     assert all(a[f] for f in FLAGS)
-    b = compute_flags("B", {"b5": "Sometimes", "b9": "Sometimes", "b4": "Frequently"})
+    b = compute_flags("B", {"b_5": "Sometimes", "b_9": "Sometimes", "b_4": "Frequently"})
     assert b["threatsOrIntimidation"] and b["physicalOrSexualViolence"] and b["coerciveControl"] and not b["financialAbuse"]
     c = compute_flags("C", {"c_4": "Frequently", "c_6": "Sometimes", "c_7": "Sometimes"})
     assert c["threatsOrIntimidation"] and c["physicalOrSexualViolence"] and c["coerciveControl"]
@@ -44,7 +44,7 @@ def test_import_with_and_without_flags():
 
 def _doc(confirm_a=None, confirm_b=None, order=False):
     sa = build_record("A", {"a3": "Sometimes", "x_5": "Yes" if order else "No", "a9": "we live at 123 Main St"})
-    sb = build_record("B", {"b4": "Sometimes"})
+    sb = build_record("B", {"b_4": "Sometimes"})
     doc = {"subject": "communication", "safety_screenings": {"a": sa, "b": sb}, "safety_pathway": {}}
     if confirm_a:
         doc["safety_pathway"]["a"] = {"status": "confirmed", "confirmed": confirm_a}
