@@ -1,5 +1,6 @@
 import React from "react";
 
+import { FlowArrow } from "../selfJourney/FlowArrow";
 import { PILLARS, POINTS, STATUS_PILL, STEPS } from "./courtContent";
 
 export function AcceptCard({ verified, courtKey, onAccept }) {
@@ -58,8 +59,11 @@ export function StepCards({ statusOf, onStep }) {
         {STEPS.map((s) => {
           const status = statusOf(s.card);
           return (
+            <React.Fragment key={s.n}>
+            {s.n > 1 && (
+              <FlowArrow testid={`court-flow-arrow-${s.n}`} to={`court-step-card-${s.n}`} label={s.short} step={`${s.n} of ${STEPS.length}`} done={status === "done"} size="sm" />
+            )}
             <button
-              key={s.n}
               type="button"
               data-testid={`court-step-card-${s.n}`}
               onClick={() => onStep(s)}
@@ -78,6 +82,7 @@ export function StepCards({ statusOf, onStep }) {
               </span>
               <i className="fa-solid fa-chevron-right text-[#5c2c8e] pt-1"></i>
             </button>
+            </React.Fragment>
           );
         })}
       </div>

@@ -479,3 +479,27 @@ body:has(#court-page:not(.hidden)) [data-sonner-toaster][data-y-position="bottom
 @media (prefers-reduced-motion: reduce) {
     .sa-arrow-nudge { animation: none; box-shadow: 0 0 0 8px #ffffff, 0 0 30px 14px rgba(16, 185, 129, 0.55); }
 }
+/* Half-size Court arrows: thinner white ring, smaller glow. */
+.sa-arrow-sm {
+    box-shadow: 0 0 0 5px #ffffff, 0 0 10px 5px rgba(16, 185, 129, 0.35);
+    animation: sa-arrow-nudge-sm 2s ease-in-out infinite, sa-arrow-glow-sm 2s ease-in-out infinite;
+}
+@keyframes sa-arrow-nudge-sm {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(4px); }
+}
+@keyframes sa-arrow-glow-sm {
+    0%, 100% { box-shadow: 0 0 0 5px #ffffff, 0 0 10px 5px rgba(16, 185, 129, 0.35); }
+    50% { box-shadow: 0 0 0 5px #ffffff, 0 0 24px 10px rgba(16, 185, 129, 0.7); }
+}
+@media (prefers-reduced-motion: reduce) {
+    .sa-arrow-sm { animation: none; box-shadow: 0 0 0 5px #ffffff, 0 0 16px 7px rgba(16, 185, 129, 0.55); }
+}
+/* Child Needs: questions highlighted after tapping a picture icon. */
+.cn-field-flash {
+    animation: cn-field-flash 1.8s ease-out;
+}
+@keyframes cn-field-flash {
+    0%, 35% { background-color: #f4eef5; box-shadow: 0 0 0 4px rgba(97, 22, 99, 0.35); }
+    100% { background-color: transparent; box-shadow: 0 0 0 0 rgba(97, 22, 99, 0); }
+}

@@ -19,7 +19,7 @@ export function RatingMatrix({ label, fields, scale, values, onChange }) {
           </thead>
           <tbody>
             {fields.map((f) => (
-              <tr key={f.id} className="border-t border-slate-200">
+              <tr key={f.id} data-field={f.id} className="border-t border-slate-200">
                 <td className="py-2.5 pr-2 font-medium text-slate-800">{f.label}</td>
                 {scale.map((s) => (
                   <td key={s} className="text-center">

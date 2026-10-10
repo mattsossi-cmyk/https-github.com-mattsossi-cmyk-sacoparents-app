@@ -40,6 +40,12 @@
           "placeholder": "e.g., Penicillin, Peanuts, Latex"
         },
         {
+          "id": "med_preventive",
+          "label": "Preventive Care: check-ups, vaccines, dental and vision",
+          "type": "textarea",
+          "placeholder": "e.g., Yearly check-up in August, vaccines up to date, dentist every 6 months, glasses for reading"
+        },
+        {
           "id": "med_insurance",
           "label": "Medical Insurance & Expense Coordination",
           "type": "select",
@@ -124,7 +130,7 @@
         },
         {
           "id": "edu_iep",
-          "label": "IEP, 504 Plan, or Learning Accommodation Status",
+          "label": "IEP, ARD, 504 Plan, or Learning Accommodation Status",
           "type": "select",
           "options": [
             "No special accommodations needed",

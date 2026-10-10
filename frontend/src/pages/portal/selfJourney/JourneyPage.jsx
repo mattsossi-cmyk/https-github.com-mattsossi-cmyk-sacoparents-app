@@ -18,7 +18,7 @@ export function JourneyPage({ tp, hero, art, onArt, artState = {}, chat, chatPro
       <SafetyBanner tp={tp} />
       <div className="max-w-6xl mx-auto px-4 pt-6">
         <PageHeader tp={tp} onBack={onBack} onQuickExit={onQuickExit} backLabel="Back" />
-        <Hero tp={tp} textClassName="hidden lg:block" {...hero} />
+        {hero && <Hero tp={tp} textClassName="hidden lg:block" {...hero} />}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
           <div className="contents lg:block lg:col-start-8 lg:col-span-5 lg:row-start-1 lg:space-y-6">
             <div className="order-first">

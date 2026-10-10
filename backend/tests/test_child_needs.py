@@ -22,7 +22,7 @@ def test_structure_matches_founder_mockup():
     keys = [c["key"] for c in CONTENT["categories"]]
     assert keys == ["medical", "educational", "psychological"]
     # v2 (founder form design): design questions first, then the original questions grouped "Across both homes".
-    assert [len(c["fields"]) for c in CONTENT["categories"]] == [6, 10, 7]
+    assert [len(c["fields"]) for c in CONTENT["categories"]] == [7, 10, 7]
     assert [sum(f.get("group") == "home" for f in c["fields"]) for c in CONTENT["categories"]] == [2, 4, 4]
 
 

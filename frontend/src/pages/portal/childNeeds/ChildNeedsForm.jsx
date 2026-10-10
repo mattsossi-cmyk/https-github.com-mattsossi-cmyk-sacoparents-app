@@ -40,7 +40,7 @@ function FieldList({ category, fields, values, set }) {
       continue;
     }
     out.push(
-      <div key={f.id}>
+      <div key={f.id} data-field={f.id} className="rounded-lg">
         <label htmlFor={f.id} className="block text-[13px] font-bold text-slate-700 mb-1.5">
           {f.label}
         </label>

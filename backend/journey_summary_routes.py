@@ -3,16 +3,18 @@ from __future__ import annotations
 
 from datetime import datetime, timezone
 from io import BytesIO
-from typing import Dict
+from typing import Dict, List
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, HTTPException
 from fastapi.responses import StreamingResponse
 from motor.motor_asyncio import AsyncIOMotorDatabase
+from pydantic import BaseModel, Field
 
 from auth import UserPublic, get_current_user, get_db
 from child_needs_routes import CONTENT as NEEDS_CONTENT
 from coparenting_routes import COLLECTION as CP_COLLECTION
 from coparenting_scoring import compute_scores as cp_scores
+from journey_certificate_pdf import build_certificate_pdf
 from journey_summary_pdf import build_journey_summary_pdf
 from self_assessment_routes import CONTENT as SA_CONTENT, band_for
 
@@ -42,6 +44,55 @@ async def mark_celebrated(
 
 
 STEP_CELEBRATIONS = "journey_step_celebrations"
+STEP_TITLES = [
+    "Self-Assessment",
+    "Co-Parenting Assessment",
+    "Your Child's Specific Needs",
+    "Foundation Statement",
+    "Parallel Parenting Plan",
+    "Communication Builder",
+]
+
+
+class CertificateIn(BaseModel):
+    name: str = Field(min_length=1, max_length=80)
+
+
+async def _missing_steps(db: AsyncIOMotorDatabase, uid: str) -> List[str]:
+    needs = await db.child_needs_assessments.find_one({"user_id": uid}, {"_id": 0, "completed_at": 1}) or {}
+    portal = await db.portal_state.find_one({"user_id": uid}, {"_id": 0, "biff_logs": 1}) or {}
+    done = [
+        bool(await db.self_assessment_history.find_one({"user_id": uid}, {"_id": 1})),
+        bool(await db[CP_COLLECTION].find_one({"user_id": uid, "completed": True}, {"_id": 1})),
+        all((needs.get("completed_at") or {}).get(k) for k in ("educational", "medical", "psychological")),
+        bool(await db.foundation_builder.find_one({"user_id": uid}, {"_id": 1})),
+        bool(await db.parallel_parenting_plans.find_one({"user_id": uid, "completed_at": {"$ne": None}}, {"_id": 1})),
+        len(portal.get("biff_logs") or []) > 1,  # the first entry is the built-in demo
+    ]
+    return [t for t, ok in zip(STEP_TITLES, done) if not ok]
+
+
+@router.post("/certificate")
+async def journey_certificate(
+    body: CertificateIn,
+    user: UserPublic = Depends(get_current_user),
+    db: AsyncIOMotorDatabase = Depends(get_db),
+) -> StreamingResponse:
+    name = body.name.strip()
+    if not name:
+        raise HTTPException(422, "Please enter the name to print.")
+    missing = await _missing_steps(db, user.user_id)
+    if missing:
+        raise HTTPException(422, f"Finish every step first. Still to do: {', '.join(missing)}.")
+    flag = await db[STEP_CELEBRATIONS].find_one({"user_id": user.user_id}, {"_id": 0, "celebrated_at": 1}) or {}
+    pdf_bytes = build_certificate_pdf(
+        name=name, finished_iso=flag.get("celebrated_at") or datetime.now(timezone.utc).isoformat(), steps=STEP_TITLES
+    )
+    return StreamingResponse(
+        BytesIO(pdf_bytes),
+        media_type="application/pdf",
+        headers={"Content-Disposition": 'attachment; filename="SA_CoParents_Individual_Journey_Certificate.pdf"'},
+    )
 
 
 @router.get("/steps-celebrated")

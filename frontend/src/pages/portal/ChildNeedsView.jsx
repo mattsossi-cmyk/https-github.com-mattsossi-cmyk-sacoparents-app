@@ -3,8 +3,9 @@ import { toast } from "sonner";
 
 import CONTENT from "./childNeedsContent.json";
 import { ChildNeedsForm } from "./childNeeds/ChildNeedsForm";
+import { NeedsProgress } from "./childNeeds/NeedsProgress";
+import { NEEDS_PAGE_ART } from "./childNeeds/needsPageArt";
 import { SendToProvider } from "./childNeeds/SendToProvider";
-import { SentToList } from "./childNeeds/SentToList";
 import { useProviderShares } from "./childNeeds/useProviderShares";
 import { useGuideChat } from "./guide/useGuideChat";
 import { JourneyPage } from "./selfJourney/JourneyPage";
@@ -88,6 +89,17 @@ const askGuide = () => {
   setTimeout(() => document.querySelector('[data-testid="cn-chat-input"]')?.focus(), 400);
 };
 
+// Picture icon → scroll to its questions and briefly highlight them; "start" → first question.
+const jumpToFields = (item) => {
+  const els = item.fields.map((id) => document.querySelector(`#cn-work [data-field="${id}"]`)).filter(Boolean);
+  const target = els[0] || document.querySelector("#cn-work [data-field]");
+  target?.scrollIntoView({ behavior: "smooth", block: item.fields.length ? "center" : "start" });
+  els.forEach((el) => {
+    el.classList.add("cn-field-flash");
+    setTimeout(() => el.classList.remove("cn-field-flash"), 1800);
+  });
+};
+
 // Your Child's Specific Needs: tabs + picture bubbles switch the form. `needs` is owned by JourneyShell.
 export function ChildNeedsView({ onBack, onQuickExit, needs, parentName, initialOpenKey = null, safetyFlag, userId }) {
   const { state, saveCategory, downloadReport } = needs;
@@ -97,7 +109,7 @@ export function ChildNeedsView({ onBack, onQuickExit, needs, parentName, initial
   const [activeKey, setActiveKey] = useState(initialOpenKey || ORDER.find((k) => !done[k]) || ORDER[0]);
   const category = CATS[activeKey];
   const chat = useGuideChat("/journey-guide/child-needs/chat", { section: category.form_title, safety_flagged: !!safetyFlag });
-  const doneCount = ORDER.filter((k) => done[k]).length;
+  const pageArt = NEEDS_PAGE_ART[activeKey];
 
   const pick = (k) => {
     setActiveKey(k);
@@ -122,10 +134,8 @@ export function ChildNeedsView({ onBack, onQuickExit, needs, parentName, initial
   return (
     <JourneyPage
       tp="cn"
-      hero={{ title: CONTENT.title, subtitle: CONTENT.subtitle, pill: `${doneCount} of ${ORDER.length} completed`, pct: Math.round((doneCount / ORDER.length) * 100) }}
-      art={NEEDS_ART}
-      onArt={pick}
-      artState={{ done, activeKey }}
+      art={pageArt}
+      onArt={(key) => jumpToFields(pageArt.items.find((i) => i.key === key))}
       chat={chat}
       chatProps={{ title: "Child Needs Guide", greeting: GREETING, starters: { label: category.card_title, items: STARTERS[activeKey] } }}
       onBack={onBack}
@@ -175,19 +185,17 @@ export function ChildNeedsView({ onBack, onQuickExit, needs, parentName, initial
               ) : null
             }
           />
-          {userId && done[activeKey] && <SentToList shares={sharing.shares} category={activeKey} />}
-          {doneCount > 0 && (
-            <button
-              type="button"
-              data-testid="child-needs-download-report"
-              onClick={() => downloadReport(state.answers, parentName)}
-              className="mt-5 w-full py-3 rounded-md bg-white hover:bg-[#F4EEF5] border border-[#4A154B]/30 text-[#4A154B] text-sm font-bold transition-colors"
-            >
-              <i className="fa-solid fa-file-pdf mr-1.5"></i>Download my Child's Specific Needs report
-            </button>
-          )}
-          <p className="mt-3 text-[11px] text-slate-500 text-center">{CONTENT.disclaimer}</p>
         </section>
+        <NeedsProgress
+          order={ORDER}
+          done={done}
+          drafts={drafts}
+          activeKey={activeKey}
+          onPick={pick}
+          shares={sharing.shares}
+          showSent={!!userId && done[activeKey]}
+          onDownload={() => downloadReport(state.answers, parentName)}
+        />
       </div>
     </JourneyPage>
   );

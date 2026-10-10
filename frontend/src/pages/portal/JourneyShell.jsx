@@ -21,6 +21,7 @@ import { FlowArrow } from "./selfJourney/FlowArrow";
 import { useParallelDone } from "./selfJourney/useParallelDone";
 import { useStepsCelebrated } from "./selfJourney/useStepsCelebrated";
 import { AllStepsBanner } from "./selfJourney/AllStepsBanner";
+import { ContinueStep } from "./selfJourney/ContinueStep";
 import { CoparentingAssessmentView } from "./coparenting/CoparentingAssessmentView";
 import { useFoundationBuilder } from "./foundation/useFoundationBuilder";
 import { ChildNeedsView } from "./ChildNeedsView";
@@ -883,7 +884,16 @@ export function JourneyShell({
     user?.user_id,
     user?.name ? user.name.split(" ")[0] : null
   );
-  const allStepsDone = !nextAssess && !!foundationBuilder.savedAt && ppDone && biffAuthoredCount > 0;
+  const journeySteps = [
+    { n: 1, label: "Self-Assessment", to: "door-self-art-assess", done: !!assessDone.self },
+    { n: 2, label: "Co-Parenting Assessment", to: "door-self-art-assess", done: !!assessDone.coparent },
+    { n: 3, label: "Your Child's Specific Needs", to: "door-self-art-needs", done: NEEDS_ART.items.every((i) => assessDone[i.key]) },
+    { n: 4, label: "Foundation Statement", to: "door-self-card-foundation", done: !!foundationBuilder.savedAt },
+    { n: 5, label: "Parallel Parenting", to: "door-self-art-parallel", done: ppDone },
+    { n: 6, label: "Communication Builder", to: "door-self-card-biff", done: biffAuthoredCount > 0 },
+  ];
+  const resumeStep = journeySteps.find((s) => !s.done);
+  const allStepsDone = !resumeStep;
   const stepsCelebrated = useStepsCelebrated(user?.user_id);
   const [sparkle, setSparkle] = useState(false);
   // First time all 6 Individual Journey steps are done: purple sparkle once, saved on the account.
@@ -1257,18 +1267,9 @@ export function JourneyShell({
 
         {/* Assessment artwork (replaces cards 1–3): tappable panels/arrows + labeled buttons. */}
         <div id="door-self-actions" data-testid="door-self-actions" className="space-y-4 scroll-mt-4">
-          {allStepsDone && <AllStepsBanner sparkle={sparkle} />}
-          <AssessProgressRing done={assessDone} onOpen={openAssessKey} />
-          <div className="flex flex-col sm:flex-row gap-2 [&>*]:flex-1">
-            <JourneySummaryButton onClick={journeySummary.downloadPdf} downloading={journeySummary.downloading} />
-            {user?.user_id && (
-              <SendToProvider
-                completedAt={childNeeds.state.completed_at}
-                testid="door-self-send-provider"
-                className="w-full py-2.5 rounded-full bg-white hover:bg-purple-50 border border-purple-300 text-purple-900 text-[13px] font-bold transition-colors"
-              />
-            )}
-          </div>
+          {!allStepsDone && (
+            <ContinueStep step={resumeStep} doneCount={journeySteps.filter((s) => s.done).length} total={journeySteps.length} />
+          )}
 
           <JourneyArtCard testid="door-self-art-assess" art={ASSESS_ART} done={assessDone} nextKey={nextAssess} onAction={openAssessKey}>
             {saHistory.latest && (
@@ -1278,11 +1279,11 @@ export function JourneyShell({
             )}
           </JourneyArtCard>
 
-          <FlowArrow testid="door-self-flow-arrow" to="door-self-art-needs" label="Your Child's Specific Needs" step="3 of 6" done={NEEDS_ART.items.every((i) => assessDone[i.key])} />
+          <FlowArrow testid="door-self-flow-arrow" to="door-self-art-needs" label="Your Child's Specific Needs" step="3 of 6" done={journeySteps[2].done} />
 
           <JourneyArtCard testid="door-self-art-needs" art={NEEDS_ART} done={assessDone} nextKey={nextAssess} onAction={openAssessKey} />
 
-          <FlowArrow testid="door-self-flow-arrow-foundation" to="door-self-card-foundation" label="Create Your Foundation Statement" step="4 of 6" done={!!foundationBuilder.savedAt} />
+          <FlowArrow testid="door-self-flow-arrow-foundation" to="door-self-card-foundation" label="Create Your Foundation Statement" step="4 of 6" done={journeySteps[3].done} />
 
           {/* Card 4 — Create Your Foundation Statement. */}
           <button
@@ -1321,7 +1322,7 @@ export function JourneyShell({
           </button>
         </div>
 
-        <FlowArrow testid="door-self-flow-arrow-parallel" to="door-self-art-parallel" label="Parallel Parenting" step="5 of 6" done={ppDone} />
+        <FlowArrow testid="door-self-flow-arrow-parallel" to="door-self-art-parallel" label="Parallel Parenting" step="5 of 6" done={journeySteps[4].done} />
 
         <JourneyArtCard
           testid="door-self-art-parallel"
@@ -1329,7 +1330,7 @@ export function JourneyShell({
           onAction={(k) => openPp(PP_ART.items.find((it) => it.key === k).screen)}
         />
 
-        <FlowArrow testid="door-self-flow-arrow-biff" to="door-self-card-biff" label="SA CoParent Communication Builder" step="6 of 6" done={biffAuthoredCount > 0} />
+        <FlowArrow testid="door-self-flow-arrow-biff" to="door-self-card-biff" label="SA CoParent Communication Builder" step="6 of 6" done={journeySteps[5].done} />
 
         {/* Communication Builder — the big purple hero card. */}
         <button
@@ -1362,7 +1363,23 @@ export function JourneyShell({
           </div>
         </button>
 
-        {allThreeDone && <FlowArrow testid="door-self-flow-arrow-rewards" to="door-self-finale-rewards" label="Keep your momentum" step="Finish" />}
+        {allThreeDone && <FlowArrow testid="door-self-flow-arrow-rewards" to="door-self-progress" label="Your progress" step="Finish" />}
+
+        {/* Accomplishments sit at the end, just before the badges. */}
+        <div data-testid="door-self-progress" className="space-y-4">
+          {allStepsDone && <AllStepsBanner sparkle={sparkle} defaultName={user?.name || ""} />}
+          <AssessProgressRing done={assessDone} onOpen={openAssessKey} />
+          <div className="flex flex-col sm:flex-row gap-2 [&>*]:flex-1">
+            <JourneySummaryButton onClick={journeySummary.downloadPdf} downloading={journeySummary.downloading} />
+            {user?.user_id && (
+              <SendToProvider
+                completedAt={childNeeds.state.completed_at}
+                testid="door-self-send-provider"
+                className="w-full py-2.5 rounded-full bg-white hover:bg-purple-50 border border-purple-300 text-purple-900 text-[13px] font-bold transition-colors"
+              />
+            )}
+          </div>
+        </div>
 
         {/* Keep the finale rewards block (badges + partner invite).
             Only visible once the all-three finale is earned. */}

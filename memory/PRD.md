@@ -8884,3 +8884,16 @@ dashboard for sharing SELECTED completed reports with any professional.
   waits until the 5-of-5 dialog and any builders are closed. Test account journey6@test.com (seed_journey_six.py). Verified: sparkle on first
   visit, banner persists, no sparkle after reload, all badges ✓, no overflow at 390px.
 - 2026-06: Founder chose to SKIP provider "Opened" receipts; reports stay as PDF attachments.
+
+
+### 2026-06 — Continue button, certificate, Court arrows
+- `selfJourney/ContinueStep.jsx` (`door-self-continue`): "Continue at Step N" at the top of the Individual Journey while any step is
+  unfinished, with "<label> · X of 6 steps done". It scrolls to the first unfinished step (`scrollToTestId`, exported from FlowArrow.jsx).
+  `journeySteps` in JourneyShell is the single source for step done-state (arrows, Continue, allStepsDone).
+- Certificate: POST /api/journey-summary/certificate {name 1–80} → landscape Letter PDF (`journey_certificate_pdf.py`: logo, name,
+  "Finished on <steps-celebrated date or today>", six steps with drawn ✓, the founder-approved "not a court-approved parenting course
+  certificate and not legal advice" note). The server re-checks all 6 steps → 422 listing missing steps; blank name → 422.
+  `selfJourney/CertificateButton.jsx` sits in the 6-of-6 banner (`door-self-certificate-btn` → dialog with editable name prefilled from the account).
+- Court Ordered: half-size `FlowArrow size="sm"` (`.sa-arrow-sm` glow) between the 4 numbered step cards (`court-flow-arrow-{2..4}`,
+  badges "N of 4", purple ✓ when that step's checklist status is done).
+- Verified by screenshots + curl (parent1 Continue at Step 3 → scrolls to Child Needs top=76; journey6 certificate download; Court badges 2✓ 3 4✓).
