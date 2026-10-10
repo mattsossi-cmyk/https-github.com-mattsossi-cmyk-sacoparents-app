@@ -8897,3 +8897,19 @@ dashboard for sharing SELECTED completed reports with any professional.
 - Court Ordered: half-size `FlowArrow size="sm"` (`.sa-arrow-sm` glow) between the 4 numbered step cards (`court-flow-arrow-{2..4}`,
   badges "N of 4", purple ✓ when that step's checklist status is done).
 - Verified by screenshots + curl (parent1 Continue at Step 3 → scrolls to Child Needs top=76; journey6 certificate download; Court badges 2✓ 3 4✓).
+
+
+### 2026-06 — Picture pages for Educational / Medical / Psychological + journey reorder (iter112 ✅)
+- Founder pictures saved as /images/sa-needs-{educational,medical,psychological}(-640).webp. `childNeeds/needsPageArt.js`
+  (NEEDS_PAGE_ART) holds the 4 icon tap spots per picture plus "start" (the round › button), each mapped to field ids.
+  `ChildNeedsView` shows the active tab's picture. Tapping an icon scrolls to its questions and flashes them
+  (`[data-field]` wrappers, `.cn-field-flash`); "start" scrolls to the first question.
+- The Child Needs page has no Hero now: picture at the very top on phones, then portal bar, tabs, form, then `childNeeds/NeedsProgress.jsx`
+  (`child-needs-progress`: N of 3 + bar + per-form status chips that switch tab + Sent-to list + report download + disclaimer), then chat.
+  `JourneyPage` hero is optional.
+- Content: medical has a new optional `med_preventive` ("Preventive Care: check-ups, vaccines, dental and vision"). edu_iep is relabelled
+  "IEP, ARD, 504 Plan, or Learning Accommodation Status". The backend and frontend JSON are identical; test_child_needs expects [7,10,7].
+  Psychological: no new questions (founder choice). Social→psy_household; Strengths→psych_therapy + psych_goal.
+- Individual Journey reorder (founder): Continue button at the top, then the pictures, and accomplishments (`door-self-progress`: 6-of-6 banner,
+  5-of-5 ring, Journey Summary, Send to a provider) at the END just before the badges. The "Finish" arrow now targets door-self-progress.
+- Testing agent iter112: backend 7/7 + 5/5 regression, frontend 100%, no issues (tests/test_iter112_journey_cert_and_med_preventive.py).

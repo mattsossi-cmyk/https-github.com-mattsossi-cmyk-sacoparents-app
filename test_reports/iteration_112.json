@@ -1,0 +1,32 @@
+{
+  "summary": "Iteration 112 — Full-stack verification of the Individual Journey Certificate + Continue-at-Step, Court Ordered half-size arrows + N-of-4 badges, Child Needs page reorder (Communication-Builder layout + per-tab founder picture + progress-at-end), and the new optional Medical Preventive Care textarea. Backend 7/7 pytest passed in /app/backend/tests/test_iter112_journey_cert_and_med_preventive.py; regression /app/backend/tests/test_child_needs.py 5/5 passed. Frontend verified live against parent1@test.com and journey6@test.com on the preview URL.",
+  "backend_issues": {"critical": [], "minor": []},
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  "test_report_links": [
+    "/app/backend/tests/test_iter112_journey_cert_and_med_preventive.py",
+    "/app/test_reports/pytest/iter112.xml"
+  ],
+  "action_items": [],
+  "critical_code_review_comments": [
+    "journey_summary_routes._missing_steps uses the live counts (BIFF-authored >1, PP completed_at not null, child-needs completed_at for all 3) so the certificate gate matches the UI 6-of-6 banner — single source of truth.",
+    "journey_certificate_pdf.build_certificate_pdf uses orientation='L', format='Letter' and a single add_page() → one landscape Letter page as required; honest note explicitly includes 'not a court-approved parenting course certificate and not legal advice' (verified by pypdf text extraction).",
+    "CertificateButton closes the dialog only on successful 200 response (setOpen(false) is inside the try after the download), and the button is disabled while busy or when name is empty — clean UX guard against double-submit.",
+    "FlowArrow size='sm' used in court/CourtJourneyCards gives the half-size (54–74px) glowing green arrow with the 'N of 4' badge that flips to purple+check via data-done binding to card status — DRY reuse of the Self Journey arrow.",
+    "ChildNeedsView loads NEEDS_PAGE_ART[activeKey] on every render; jumpToFields correctly looks up #cn-work [data-field=<id>] and toggles .cn-field-flash with 1800ms timeout — verified live for med_preventive.",
+    "child_needs_content.json medical group now carries 7 fields with med_preventive as an optional textarea; backend file equals frontend/src/pages/portal/childNeedsContent.json (byte-identical when parsed)."
+  ],
+  "updated_files": [
+    "/app/backend/tests/test_iter112_journey_cert_and_med_preventive.py (new — 7 pytest cases)"
+  ],
+  "success_rate": {"backend": "100% (7/7 new + 5/5 regression)", "frontend": "100% of batch testids verified"},
+  "test_credentials": "parent1@test.com / TestPass123! (partial progress), journey6@test.com / TestPass123! (all 6 done, name 'Jordan Six'). Re-ran seed_journey_six.py twice to reset.",
+  "seed_data_creation": "A couple of TEST_i112_* fresh users were created during pytest for steps-celebrated flow and medical-draft/submit persistence; no modification to parent1 or journey6 state. Final `cd /app/backend && python seed_journey_six.py` executed as spec requested.",
+  "retest_needed": false,
+  "should_main_agent_self_test": true,
+  "context_for_next_testing_agent": "Backend tests use /api/auth/login (not register) for the two seeded accounts and /api/auth/register for TEST_i112_* fresh users. The certificate endpoint returns a landscape 792x612pt Letter PDF (verified via pypdf.PageObject.mediabox); the honest-note line wraps across 'legal\\nadvice' in extracted text, so collapse whitespace before asserting. Child-needs state shape: drafts.<cat> is a FLAT answers dict (NOT {answers: {...}}), while committed answers live at answers.<cat>. Court arrow click: use page.evaluate('[...].click()') because .sa-arrow-nudge CSS animation makes element 'not stable' for Playwright's auto-wait. The Child Needs page uses JourneyPage (fixed inset-0 z-50 portal) with the picture in `order-first` and chat in `order-last` divs, giving the mobile reorder picture→portal_bar→form→progress→chat automatically.",
+  "rca of the issue": "N/A — all tested behaviour matches spec. The 3 initial pytest failures were test-script issues (missing /api/child-needs/content endpoint, wrong draft shape assumption, and PDF line-wrap on 'legal advice') — all fixed inside the test file, not the app code."
+}
