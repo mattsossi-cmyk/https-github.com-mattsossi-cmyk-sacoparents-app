@@ -558,9 +558,11 @@ export function JourneyShell({
   // Card 3 can be opened from Self Journey or the Court page; Back returns there.
   const [subFrom, setSubFrom] = useState("self");
   const [childNeedsKey, setChildNeedsKey] = useState(null);
-  const openChildNeeds = (from, key = null) => {
+  const [childNeedsJump, setChildNeedsJump] = useState(null);
+  const openChildNeeds = (from, key = null, jump = null) => {
     setSubFrom(from);
     setChildNeedsKey(key);
+    setChildNeedsJump(jump);
     setView("child_needs");
   };
 
@@ -1175,7 +1177,7 @@ export function JourneyShell({
           onOpenCard={openCourtCard}
           fb={foundationBuilder}
           onOpenParallel={(screen) => openPp(screen)}
-          onOpenChildNeeds={(k) => openChildNeeds("court", k)}
+          onOpenChildNeeds={(k, jump) => openChildNeeds("court", k, jump)}
           assessDone={assessDone}
           onDownloadPdf={onDownloadCourtPdf}
           onOpenBiffHistory={() => onOpenCommBuilder("history")}
@@ -1204,6 +1206,7 @@ export function JourneyShell({
         userId={user?.user_id}
         parentName={greetingName}
         initialOpenKey={childNeedsKey}
+        initialJump={childNeedsJump}
       />
     );
   }

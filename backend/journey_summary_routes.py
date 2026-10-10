@@ -72,22 +72,27 @@ async def _missing_steps(db: AsyncIOMotorDatabase, uid: str) -> List[str]:
     return [t for t, ok in zip(STEP_TITLES, done) if not ok]
 
 
+async def certificate_bytes(db: AsyncIOMotorDatabase, uid: str, raw_name: str) -> bytes:
+    """Validated certificate PDF: name present and all 6 steps finished (422 otherwise)."""
+    name = raw_name.strip()
+    if not name:
+        raise HTTPException(422, "Please enter the name to print.")
+    missing = await _missing_steps(db, uid)
+    if missing:
+        raise HTTPException(422, f"Finish every step first. Still to do: {', '.join(missing)}.")
+    flag = await db[STEP_CELEBRATIONS].find_one({"user_id": uid}, {"_id": 0, "celebrated_at": 1}) or {}
+    return build_certificate_pdf(
+        name=name, finished_iso=flag.get("celebrated_at") or datetime.now(timezone.utc).isoformat(), steps=STEP_TITLES
+    )
+
+
 @router.post("/certificate")
 async def journey_certificate(
     body: CertificateIn,
     user: UserPublic = Depends(get_current_user),
     db: AsyncIOMotorDatabase = Depends(get_db),
 ) -> StreamingResponse:
-    name = body.name.strip()
-    if not name:
-        raise HTTPException(422, "Please enter the name to print.")
-    missing = await _missing_steps(db, user.user_id)
-    if missing:
-        raise HTTPException(422, f"Finish every step first. Still to do: {', '.join(missing)}.")
-    flag = await db[STEP_CELEBRATIONS].find_one({"user_id": user.user_id}, {"_id": 0, "celebrated_at": 1}) or {}
-    pdf_bytes = build_certificate_pdf(
-        name=name, finished_iso=flag.get("celebrated_at") or datetime.now(timezone.utc).isoformat(), steps=STEP_TITLES
-    )
+    pdf_bytes = await certificate_bytes(db, user.user_id, body.name)
     return StreamingResponse(
         BytesIO(pdf_bytes),
         media_type="application/pdf",

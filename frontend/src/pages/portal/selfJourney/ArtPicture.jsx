@@ -3,7 +3,8 @@ import React from "react";
 import { Spot } from "../court/CourtJourneyArt";
 
 // Artwork with tappable panels (+ optional round arrows). Optional done ticks, active ring and next-step glow.
-export function ArtPicture({ tp, art, onAction, done = {}, activeKey, nextKey }) {
+// `onPicture` makes the whole picture tappable underneath the spots.
+export function ArtPicture({ tp, art, onAction, done = {}, activeKey, nextKey, onPicture, tickClass = "bg-[#2f9e44]" }) {
   return (
     <div data-testid={`${tp}-picture`} className="relative w-full rounded-3xl overflow-hidden shadow-lg border border-purple-100 bg-white">
       <img
@@ -16,6 +17,9 @@ export function ArtPicture({ tp, art, onAction, done = {}, activeKey, nextKey })
         alt={art.alt}
         className="w-full h-auto block"
       />
+      {onPicture && (
+        <button type="button" data-testid={`${tp}-open`} aria-label={`Open ${art.alt.split(".")[0]}`} onClick={onPicture} className="absolute inset-0 w-full h-full cursor-pointer" />
+      )}
       {art.items.map((it) => (
         <React.Fragment key={it.key}>
           <Spot
@@ -28,7 +32,7 @@ export function ArtPicture({ tp, art, onAction, done = {}, activeKey, nextKey })
             {done[it.key] && (
               <span
                 data-testid={`${tp}-done-${it.key}`}
-                className="absolute top-1.5 left-1.5 w-6 h-6 rounded-full bg-[#2f9e44] text-white text-[11px] flex items-center justify-center shadow ring-2 ring-white"
+                className={`absolute top-1.5 left-1.5 w-6 h-6 rounded-full ${tickClass} text-white text-[11px] flex items-center justify-center shadow ring-2 ring-white`}
               >
                 <i className="fa-solid fa-check"></i>
               </span>

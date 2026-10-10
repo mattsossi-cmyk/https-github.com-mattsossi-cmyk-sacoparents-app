@@ -53,13 +53,17 @@ function FieldList({ category, fields, values, set }) {
 }
 
 // One Child Needs form: notices, the design's questions, "Across both homes", one-time tick, Save Draft / Submit.
-export function ChildNeedsForm({ category, initial, ackDate, onSubmit, onDraft, shareSlot = null }) {
+export function ChildNeedsForm({ category, initial, ackDate, onSubmit, onDraft, shareSlot = null, onValuesChange }) {
   const [values, setValues] = useState(initial || {});
   const [ack, setAck] = useState(false);
   const [busy, setBusy] = useState(null);
   useEffect(() => {
     setValues(initial || {});
   }, [initial]);
+  useEffect(() => {
+    onValuesChange?.(values);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [values]);
   const set = (id, v) => setValues((s) => ({ ...s, [id]: v }));
   const filled = Object.values(values).some((v) => (v || "").trim());
 

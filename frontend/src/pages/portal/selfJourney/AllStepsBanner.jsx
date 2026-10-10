@@ -1,12 +1,34 @@
 import React, { useEffect } from "react";
 import confetti from "canvas-confetti";
 
+import { useProviderShares } from "../childNeeds/useProviderShares";
 import { CertificateButton } from "./CertificateButton";
+import { CertificateShare } from "./CertificateShare";
 
 const PURPLES = ["#4a1d7a", "#6b2fb3", "#9b6ad6", "#c9a8f0", "#ffffff"];
+const when = (iso) => new Date(iso).toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" });
 
-// "6 of 6 finished" banner; `sparkle` plays a short purple star burst once. Holds the certificate download.
+function CertSentList({ shares }) {
+  if (!shares.length) return null;
+  return (
+    <div data-testid="door-self-certificate-sent" className="basis-full rounded-xl bg-white/10 border border-white/15 px-4 py-2.5">
+      <p className="text-[10px] font-bold uppercase tracking-wider text-purple-200 mb-1">
+        <i className="fa-solid fa-paper-plane mr-1"></i>Certificate sent to
+      </p>
+      <ul className="space-y-0.5">
+        {shares.map((s) => (
+          <li key={s.share_id} data-testid={`door-self-certificate-sent-${s.share_id}`} className="text-[12px] text-purple-50">
+            <span className="font-semibold text-white">{s.name}</span> · {s.role_label} · {when(s.sent_at)}
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
+}
+
+// "6 of 6 finished" banner; `sparkle` plays a short purple star burst once. Holds certificate download + share.
 export function AllStepsBanner({ sparkle, defaultName }) {
+  const sent = useProviderShares(true, "/journey-summary/certificate/shares");
   useEffect(() => {
     if (!sparkle) return undefined;
     const fire = (x) => confetti({ particleCount: 70, spread: 80, startVelocity: 26, scalar: 1.1, shapes: ["star"], origin: { x, y: 0.3 }, colors: PURPLES, zIndex: 70, disableForReducedMotion: true });
@@ -28,7 +50,11 @@ export function AllStepsBanner({ sparkle, defaultName }) {
           Every step of your Individual Journey is done. That's a real gift to your child.
         </p>
       </div>
-      <CertificateButton defaultName={defaultName} />
+      <div className="flex flex-wrap gap-2">
+        <CertificateButton defaultName={defaultName} />
+        <CertificateShare defaultName={defaultName} onSent={sent.refresh} />
+      </div>
+      <CertSentList shares={sent.shares} />
     </div>
   );
 }

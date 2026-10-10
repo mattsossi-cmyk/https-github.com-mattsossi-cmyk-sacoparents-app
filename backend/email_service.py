@@ -324,6 +324,39 @@ def send_cp_progress_share(
     )
 
 
+def send_journey_certificate(
+    *,
+    to_email: str,
+    recipient_name: str,
+    parent_name: str,
+    parent_email: Optional[str],
+    pdf_bytes: bytes,
+) -> None:
+    """Email a parent's Individual Journey completion certificate (PDF attached) to someone they chose."""
+    paras = [
+        f"Hi {recipient_name},",
+        f"{parent_name} finished every step of the self-guided SA CoParents Individual Journey and wanted you to have their certificate. It's attached as a PDF.",
+        "This is a certificate of completion for a self-guided program. It is not a court-approved parenting course certificate and not legal advice.",
+        "Please reply directly to this email if you have questions.",
+    ]
+    plain = "\n\n".join(paras) + f"\n\nThanks,\n{parent_name}\n" + (f"{parent_email}\n" if parent_email else "")
+    p = '<p style="font-size:15px;line-height:1.55;color:#4B4567;margin:0 0 16px 0;">{}</p>'
+    body_html = "".join(p.format(_html.escape(t)) for t in paras) + (
+        f'<p style="font-size:15px;line-height:1.55;color:#1A1330;margin:0;">Thanks,<br/><strong>{_html.escape(parent_name)}</strong>'
+        + (f"<br/>{_html.escape(parent_email)}" if parent_email else "")
+        + "</p>"
+    )
+    _send(
+        to_email=to_email,
+        subject=f"{parent_name} completed the SA CoParents Individual Journey",
+        html=_branded_html(headline="Individual Journey certificate", body_html=body_html, cta_label=""),
+        text=plain,
+        reply_to=parent_email,
+        attachments=[("SA_CoParents_Individual_Journey_Certificate.pdf", pdf_bytes)],
+        failure_message="We couldn't send the certificate right now. Please try again in a moment.",
+    )
+
+
 def send_child_needs_report(
     *,
     to_email: str,

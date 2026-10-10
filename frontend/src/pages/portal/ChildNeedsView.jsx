@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { toast } from "sonner";
 
 import CONTENT from "./childNeedsContent.json";
@@ -101,7 +101,7 @@ const jumpToFields = (item) => {
 };
 
 // Your Child's Specific Needs: tabs + picture bubbles switch the form. `needs` is owned by JourneyShell.
-export function ChildNeedsView({ onBack, onQuickExit, needs, parentName, initialOpenKey = null, safetyFlag, userId }) {
+export function ChildNeedsView({ onBack, onQuickExit, needs, parentName, initialOpenKey = null, initialJump = null, safetyFlag, userId }) {
   const { state, saveCategory, downloadReport } = needs;
   const sharing = useProviderShares(!!userId);
   const done = Object.fromEntries(ORDER.map((k) => [k, !!state.completed_at?.[k]]));
@@ -110,6 +110,16 @@ export function ChildNeedsView({ onBack, onQuickExit, needs, parentName, initial
   const category = CATS[activeKey];
   const chat = useGuideChat("/journey-guide/child-needs/chat", { section: category.form_title, safety_flagged: !!safetyFlag });
   const pageArt = NEEDS_PAGE_ART[activeKey];
+  const [live, setLive] = useState({});
+  const iconDone = Object.fromEntries(pageArt.items.filter((i) => i.fields.length).map((i) => [i.key, i.fields.every((id) => String(live[id] || "").trim())]));
+  // Opened from a Court picture icon: jump to that icon's questions once the page is up.
+  useEffect(() => {
+    const item = initialJump && pageArt.items.find((i) => i.key === initialJump);
+    if (!item) return undefined;
+    const t = setTimeout(() => jumpToFields(item), 450);
+    return () => clearTimeout(t);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const pick = (k) => {
     setActiveKey(k);
@@ -136,6 +146,7 @@ export function ChildNeedsView({ onBack, onQuickExit, needs, parentName, initial
       tp="cn"
       art={pageArt}
       onArt={(key) => jumpToFields(pageArt.items.find((i) => i.key === key))}
+      artState={{ done: iconDone, tickClass: "bg-purple-700" }}
       chat={chat}
       chatProps={{ title: "Child Needs Guide", greeting: GREETING, starters: { label: category.card_title, items: STARTERS[activeKey] } }}
       onBack={onBack}
@@ -173,6 +184,7 @@ export function ChildNeedsView({ onBack, onQuickExit, needs, parentName, initial
             ackDate={state.notice_ack_at}
             onSubmit={(v, ack) => save(v, ack, false)}
             onDraft={(v, ack) => save(v, ack, true)}
+            onValuesChange={setLive}
             shareSlot={
               userId && done[activeKey] ? (
                 <SendToProvider

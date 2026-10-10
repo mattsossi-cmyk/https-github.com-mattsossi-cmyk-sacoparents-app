@@ -12,6 +12,8 @@ from motor.motor_asyncio import AsyncIOMotorClient
 load_dotenv(os.path.join(os.path.dirname(__file__), ".env"))
 EMAIL, PASSWORD, NAME = "journey6@test.com", "TestPass123!", "Jordan Six"
 SOURCE = "parent1@test.com"
+CO_EMAIL = "delivered+j6coparent@resend.dev"
+CASE_KEY = "J6-CASE-TEST"
 COPY = ("self_assessment_history", "cp_assessments", "child_needs_assessments", "foundation_builder", "parallel_parenting_plans")
 
 
@@ -44,6 +46,24 @@ async def run() -> str:
     await db.portal_state.update_one({"user_id": uid}, {"$set": {"user_id": uid, "biff_logs": logs, "last_door": "self"}}, upsert=True)
     await db.journey_celebrations.update_one({"user_id": uid}, {"$setOnInsert": {"celebrated_at": now}}, upsert=True)
     await db.journey_step_celebrations.delete_many({"user_id": uid})
+
+    # Certificate-share recipients: an accepted professional + a co-parent linked by case code (Resend test inboxes).
+    prov = await db.parent_professional_invitations.find_one({"invitation_id": "cnprovdemo01"}, {"_id": 0})
+    if prov:
+        await db.parent_professional_invitations.update_one(
+            {"invitation_id": "j6provdemo01"},
+            {"$set": {**prov, "invitation_id": "j6provdemo01", "inviting_parent_id": uid, "inviting_parent_email": EMAIL,
+                      "professional_first_name": "Dana", "professional_last_name": "Reyes (test)", "professional_role": "attorney"}},
+            upsert=True,
+        )
+    if not await db.users.find_one({"email": CO_EMAIL}, {"_id": 1}):
+        async with httpx.AsyncClient() as c:
+            r = await c.post("http://localhost:8001/api/auth/register", json={"email": CO_EMAIL, "password": PASSWORD, "name": "Casey Six (test co-parent)"})
+            r.raise_for_status()
+    co_uid = (await db.users.find_one({"email": CO_EMAIL}, {"user_id": 1}))["user_id"]
+    for who in (uid, co_uid):
+        await db.portal_state.update_one({"user_id": who}, {"$set": {"user_id": who, "court_key": CASE_KEY}}, upsert=True)
+    await db.journey_certificate_shares.delete_many({"user_id": uid})
     return f"seeded {EMAIL} ({uid}): 6 of 6 steps done, sparkle reset"
 
 
