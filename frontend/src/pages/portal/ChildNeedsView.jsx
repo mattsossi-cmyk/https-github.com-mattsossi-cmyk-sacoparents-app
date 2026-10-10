@@ -111,6 +111,14 @@ export function ChildNeedsView({ onBack, onQuickExit, needs, parentName, initial
   const chat = useGuideChat("/journey-guide/child-needs/chat", { section: category.form_title, safety_flagged: !!safetyFlag });
   const pageArt = NEEDS_PAGE_ART[activeKey];
   const [live, setLive] = useState({});
+  const answered = category.fields.filter((f) => String(live[f.id] || "").trim()).length;
+  const total = category.fields.length;
+  const hero = {
+    title: category.card_title,
+    subtitle: category.card_desc,
+    pill: <><span data-testid="cn-answered-count">{answered}</span> of {total} questions answered</>,
+    pct: Math.round((answered / total) * 100),
+  };
   const iconDone = Object.fromEntries(pageArt.items.filter((i) => i.fields.length).map((i) => [i.key, i.fields.every((id) => String(live[id] || "").trim())]));
   // Opened from a Court picture icon: jump to that icon's questions once the page is up.
   useEffect(() => {
@@ -144,6 +152,7 @@ export function ChildNeedsView({ onBack, onQuickExit, needs, parentName, initial
   return (
     <JourneyPage
       tp="cn"
+      hero={hero}
       art={pageArt}
       onArt={(key) => jumpToFields(pageArt.items.find((i) => i.key === key))}
       artState={{ done: iconDone, tickClass: "bg-purple-700" }}

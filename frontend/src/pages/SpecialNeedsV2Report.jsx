@@ -190,7 +190,7 @@ export default function SpecialNeedsV2Report() {
             </button>
             <button onClick={emailReport} disabled={busy} data-testid="snc2-report-email"
               className="inline-flex items-center gap-2 px-4 py-2 rounded-full text-xs border border-[#3D1A78] text-[#3D1A78] hover:bg-[#EEE9F7] disabled:opacity-60">
-              <Mail size={13} /> Email me the PDF
+              <Mail size={13} /> Email me a private link
             </button>
             <EmailDeliveryBadge reportType="snc_report" refreshKey={deliveryTick} />
             <button onClick={regenerate} disabled={busy} data-testid="snc2-report-regenerate"

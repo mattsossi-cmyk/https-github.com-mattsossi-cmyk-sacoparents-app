@@ -350,100 +350,18 @@ class TestSendEndpointReturnsDigestCounts:
 # ---------------------------------------------------------------------------
 # 4. Email service unit test — HTML + plain both include cheer block
 # ---------------------------------------------------------------------------
-class TestEmailServiceRenderCheerBlock:
 
-    def test_render_includes_cheer_block_when_data_present(self, monkeypatch):
-        """We patch `_send` so we can inspect the HTML/plain the email
-        service would send, then assert both include the cheer block."""
-        import email_service
-        captured = {}
 
-        def _fake_send(*, to_email, subject, html, text, failure_message):
-            captured["html"] = html
-            captured["text"] = text
-
-        monkeypatch.setattr(email_service, "_send", _fake_send)
-
+def test_weekly_progress_email_has_no_details():
+    import email_service
+    from unittest.mock import patch
+    with patch.object(email_service, "_send") as m:
         email_service.send_weekly_progress_summary(
-            to_email="p1@test.com",
-            user_name="Sam",
-            completed_count=3,
-            total=5,
-            streak_days=4,
-            milestones_this_week=["lit all five milestones — Foundation Ready"],
-            alignment_pct=88,
-            dashboard_url="https://sacoparentsapp.online/dashboard",
-            personal_note="",
-            cheers_received=[
-                {"badge_type": "foundation_ready",
-                 "badge_label": "lit all five milestones — Foundation Ready.",
-                 "cheer_count": 3,
-                 "earned_at": "2026-02-02T10:00:00+00:00"},
-            ],
-            community_pulse=[
-                {"badge_type": "high_alignment_90",
-                 "badge_label": "hit 90%+ alignment with their co-parent.",
-                 "cheer_count": 12},
-            ],
-            wall_opted_in=True,
+            to_email="p@example.com", user_name="Sam", completed_count=3, total=8, streak_days=4,
+            milestones_this_week=["Secret milestone"], alignment_pct=71, dashboard_url="https://e/dash",
+            personal_note="private note", cheers_received=[{"badge_label": "Badge X", "count": 2}],
         )
-        html = captured.get("html", "")
-        text = captured.get("text", "")
-        # HTML block
-        assert "Community cheers" in html
-        assert "3 cheers" in html or "3 cheer" in html
-        assert "hit 90%+ alignment" in html
-        # Plain block
-        assert "Community cheers on your milestones" in text
-        assert "3 cheer" in text
-        assert "Most-cheered community moment" in text
-
-    def test_render_uses_opted_out_header(self, monkeypatch):
-        import email_service
-        captured = {}
-        monkeypatch.setattr(email_service, "_send",
-                            lambda **kw: captured.update(kw))
-        email_service.send_weekly_progress_summary(
-            to_email="p1@test.com",
-            user_name="Sam",
-            completed_count=2,
-            total=5,
-            streak_days=0,
-            milestones_this_week=[],
-            alignment_pct=None,
-            dashboard_url="https://sacoparentsapp.online/dashboard",
-            personal_note="",
-            cheers_received=[],
-            community_pulse=[
-                {"badge_type": "communication_master",
-                 "badge_label": "completed every mediation-prep section — Communication Master.",
-                 "cheer_count": 4},
-            ],
-            wall_opted_in=False,
-        )
-        assert "From the community" in captured["html"]
-        # No "Community cheers on YOUR milestones" for opted-out.
-        assert "landed on your milestones" not in captured["html"]
-
-    def test_render_omits_block_entirely_when_both_lists_empty(
-            self, monkeypatch):
-        import email_service
-        captured = {}
-        monkeypatch.setattr(email_service, "_send",
-                            lambda **kw: captured.update(kw))
-        email_service.send_weekly_progress_summary(
-            to_email="p1@test.com",
-            user_name="Sam",
-            completed_count=2,
-            total=5,
-            streak_days=0,
-            milestones_this_week=[],
-            alignment_pct=None,
-            dashboard_url="https://sacoparentsapp.online/dashboard",
-            personal_note="",
-            cheers_received=[],
-            community_pulse=[],
-            wall_opted_in=False,
-        )
-        assert "Community cheers" not in captured["html"]
-        assert "From the community" not in captured["html"]
+    body = m.call_args.kwargs["html"] + m.call_args.kwargs["text"]
+    for leaked in ("Secret milestone", "71", "private note", "Badge X"):
+        assert leaked not in body
+    assert "https://e/dash" in body

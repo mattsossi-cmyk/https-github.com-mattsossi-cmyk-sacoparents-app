@@ -925,9 +925,8 @@ def build_portal_complete_report_pdf(
         list(align_records or []),
         heading="3. Individual Align Before Agreement",
         empty_stub=(
-            "No individual alignment records logged yet. Add Medical, "
-            "Educational, and Psychological documents from the Portal's "
-            "Align Before Agreement section."
+            "To protect your child's privacy, SA CoParents does not keep "
+            "medical, educational or psychological records."
         ),
     )
 

@@ -5,6 +5,8 @@
 
 export const BIFF_LOG_KEY = "sacoparents_biff_logs";
 export const ALIGN_RECORDS_KEY = "sacoparents_align_records";
+// Child medical/educational/psychological record folders are switched off for privacy.
+export const RECORDS_ENABLED = false;
 export const MILESTONE_KEY = "sacoparents_milestone_logs";
 export const FOUNDATION_KEY = "sacoparents_foundation_statement";
 export const LEGAL_REPORT_KEY = "sacoparents_legal_report";

@@ -7,6 +7,9 @@ import { PAGE_STEP_COUNT, STEPS, currentStepIndex, pageStepOf } from "./selfAsse
 import { AiInsightPanel, TipBox } from "./selfAssessment/AiInsightPanel";
 import { JourneySteps } from "./selfAssessment/JourneySteps";
 import { OverviewPanel } from "./selfAssessment/OverviewPanel";
+import { ProgressOverTime } from "./selfAssessment/ProgressOverTime";
+import { SaTabs } from "./selfAssessment/SaTabs";
+import { SharingNotice } from "../../components/privacy/SharingNotice";
 import { QuestionPanel } from "./selfAssessment/QuestionPanel";
 import { useGuideChat } from "./guide/useGuideChat";
 import { ArtPicture } from "./selfJourney/ArtPicture";
@@ -16,7 +19,7 @@ import { useSaInsight } from "./selfAssessment/useSaInsight";
 import { useSelfAssessmentDraft } from "./selfAssessment/useSelfAssessmentDraft";
 
 const STAGE = { intro: 0, rate: 0, reflect: 1, goal: 2 };
-const JUMP = { strengths: "sa-strengths", growth: "sa-growth-areas", goals: "sa-current-goal", progress: "sa-progress" };
+const JUMP = { strengths: "sa-strengths", growth: "sa-growth-areas", goals: "sa-current-goal", progress: "sa-progress-over-time" };
 const chatSection = (mode, step) =>
   mode !== "assess" || !step ? "their Self-Assessment results" : step.type === "rate" ? step.section.title : step.type === "reflect" ? "the reflection questions" : step.type === "goal" ? "setting a personal goal" : null;
 const ORDER = ["reflect", "identify", "goals", "track"];
@@ -37,10 +40,11 @@ function useLockScroll() {
 }
 
 // Full-page Self-Assessment (Card 1). Rendered in a portal over Self Journey.
-export function SelfAssessmentView({ onClose, onQuickExit, onOpenBiffCoach, parentName, userId, history = [], startNew = false, onCompleted, onEntryUpdate, safetyFlag, hidden = false }) {
+export function SelfAssessmentView({ onClose, onQuickExit, onOpenBiffCoach, parentName, userId, history = [], startNew = false, onCompleted, onEntryUpdate, onGoalReached, safetyFlag, hidden = false }) {
   const { draft, update, status, flush, complete, ready } = useSelfAssessmentDraft({ open: true, userId, parentName, onCompleted });
   const [view, setView] = useState(startNew ? "assess" : "auto");
   const [busy, setBusy] = useState(false);
+  const [tab, setTab] = useState("results");
   useLockScroll();
   const currentIdx = currentStepIndex(draft);
   const mode = !ready ? "loading" : view !== "auto" ? view : draft.started || history.length === 0 ? "assess" : "overview";
@@ -114,6 +118,7 @@ export function SelfAssessmentView({ onClose, onQuickExit, onOpenBiffCoach, pare
       return;
     }
     if (mode === "assess") setView("overview");
+    setTab(k === "progress" ? "progress" : "results");
     setJump(JUMP[k]);
   };
 
@@ -158,7 +163,12 @@ export function SelfAssessmentView({ onClose, onQuickExit, onOpenBiffCoach, pare
               />
             ) : (
               <div className="bg-white rounded-2xl p-5 shadow-md border border-purple-100 mt-6">
-                <OverviewPanel history={history} celebrate={mode === "results"} onStartNew={start} onClose={close} />
+                <SaTabs tab={tab} onTab={setTab} />
+                {tab === "progress" ? (
+                  <ProgressOverTime history={history} onReached={onGoalReached} />
+                ) : (
+                  <OverviewPanel history={history} celebrate={mode === "results"} onStartNew={start} onClose={close} />
+                )}
               </div>
             )}
             {tip.text && (
@@ -166,6 +176,7 @@ export function SelfAssessmentView({ onClose, onQuickExit, onOpenBiffCoach, pare
                 <TipBox tip={tip} loading={loading} testid="sa-ai-tip-inline" />
               </div>
             )}
+            {showStart && <SharingNotice area="self-assessment" />}
             {showStart && (
               <div className="pt-4">
                 <button

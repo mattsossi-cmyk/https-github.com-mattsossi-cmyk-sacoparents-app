@@ -3,6 +3,7 @@ import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import { api } from "../lib/api";
 import { toast } from "sonner";
+import { LoginPrivacyBox } from "../components/privacy/LoginPrivacyBox";
 
 /**
  * Login — Demo-first entry point.
@@ -242,6 +243,7 @@ export default function Login() {
             )}
           </div>
         </div>
+        <LoginPrivacyBox />
       </div>
     </div>
   );

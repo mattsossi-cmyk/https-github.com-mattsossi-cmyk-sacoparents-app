@@ -12,6 +12,7 @@
  * disclaimer-stamped PDF as an artefact.
  */
 import { useEffect, useRef, useState } from "react";
+import { ProSeeLink } from "../privacy/ProSeeLink";
 import { Loader2, X, Send, Download, ShieldCheck, History, RefreshCw, Ban, Eye, Mail } from "lucide-react";
 import { toast } from "sonner";
 import { api } from "../../lib/api";
@@ -382,7 +383,8 @@ export default function FoundationStatementShareModal({
               <p className="!m-0 leading-relaxed text-[#1A1330]">
                 The PDF is stamped with a court-report disclaimer so nobody
                 mistakes it for an evaluation. Replies come back to your
-                email address.
+                email address.{" "}
+                <ProSeeLink testid="foundation-share-pros-see-link" area="foundation-statement" className="text-[12px]" />
               </p>
             </div>
 
@@ -439,7 +441,7 @@ export default function FoundationStatementShareModal({
                 {emailingMe ? (
                   <><Loader2 size={12} className="animate-spin" /> Sending…</>
                 ) : (
-                  <><Mail size={12} /> Email me the PDF</>
+                  <><Mail size={12} /> Email me a private link</>
                 )}
               </button>
               <EmailDeliveryBadge

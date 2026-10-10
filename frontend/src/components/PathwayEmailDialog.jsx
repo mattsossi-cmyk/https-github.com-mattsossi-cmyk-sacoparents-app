@@ -13,6 +13,7 @@
  * knows exactly what they're sending.
  */
 import { useState } from "react";
+import { ProSeeLink } from "./privacy/ProSeeLink";
 import { X, Send, Loader2 } from "lucide-react";
 
 const ROLES = [
@@ -82,9 +83,10 @@ export default function PathwayEmailDialog({
         </div>
 
         <div className="px-6 sm:px-7 py-5 space-y-4">
+          <ProSeeLink testid="pathway-email-pros-see-link" className="text-[13px]" />
           <div className="rounded-2xl border border-[#E5E0EE] bg-[#F8F7FC] p-3">
             <div className="text-[10px] uppercase tracking-[0.22em] font-bold text-[#3D1A78] mb-1">
-              Primary pathway attached
+              Primary pathway (sent as a private link)
             </div>
             <div className="text-sm text-[#1A1330] font-semibold leading-tight"
               data-testid="pathway-email-dialog-pathway-label">

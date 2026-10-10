@@ -1,0 +1,129 @@
+// Plain-language facts for the "What professionals can see" page and the in-app sharing notices.
+// Keep every line true to how the app works today. `review: true` = wording pending attorney review.
+
+export const PROS_PAGE_PATH = "/what-professionals-see";
+
+export const SHORT_VERSION = [
+  "Nothing in your account goes to a professional until you choose who gets it, choose what to include, and tap Send or Share.",
+  "They get only the document or report you picked, never your whole account.",
+  "Your Guide (AI) chats and journal entries are never sent to a professional.",
+  "Your safety answers stay private unless you choose to send your own Safety Assessment PDF. The court-report version leaves your answers out.",
+  "SA CoParents doesn't keep your child's medical, educational or psychological records or documents. Only the answers you type into the assessment forms are saved.",
+];
+
+export const METHODS = [
+  {
+    key: "secure-document",
+    icon: "fa-envelope-circle-check",
+    title: "Documents you send by email",
+    lead: "For example your Child Needs report, Journey certificate, Foundation Statement or Safety Assessment PDF.",
+    points: [
+      "The email never contains the document. It only says who sent it and that a document is waiting.",
+      "They open a private page and enter a one-time code we email to their address, so a forwarded email doesn't open it.",
+      "The link works for 7 days. You can cancel it any time before it's opened, from Shared with professionals.",
+      "Once they download it, SA CoParents can't take that copy back.",
+    ],
+  },
+  {
+    key: "invitation",
+    icon: "fa-user-shield",
+    title: "Inviting a professional to view reports",
+    lead: "From Share with a professional.",
+    points: [
+      "You pick the professional and the finished reports they can see: Foundation Statement, Co-Parenting Assessment Report, Medical, Educational or Psychological Needs Report, or Special Needs Report.",
+      "You choose view-only or view and download, and how long access lasts (7, 30, 60 or 90 days).",
+      "You can turn access off at any time, and we let you know when they first open a report.",
+      "Your raw answers, journal, Guide chats, unfinished drafts and safety answers are not included.",
+    ],
+  },
+  {
+    key: "share-link",
+    icon: "fa-link",
+    title: "Share links you copy yourself",
+    lead: "Some PDFs, like your Foundation Statement or a progress report, can be shared as a link.",
+    points: [
+      "Anyone who has the link (and the passphrase, if you add one) can open it until it expires after 7 or 30 days.",
+      "Treat a share link like a key and only send it to people you trust.",
+    ],
+  },
+  {
+    key: "joint",
+    icon: "fa-people-arrows",
+    title: "Joint reports with your co-parent",
+    lead: "Comparisons and joint reports.",
+    points: [
+      "A joint report only exists after both parents agree to compare.",
+      "It never includes either parent's safety answers. It can include a short summary of what the safety results mean for a parenting plan.",
+    ],
+  },
+  {
+    key: "case",
+    icon: "fa-briefcase",
+    title: "When a professional invites you to a case",
+    lead: "A mediator or attorney can start a case and invite you.",
+    points: [
+      "Nothing from your account reaches them until you accept the invitation.",
+      "After you accept, they see whether each step they asked for is finished, and the results of only those steps.",
+    ],
+  },
+  {
+    key: "align",
+    icon: "fa-arrows-left-right",
+    title: "SA CoParents Align",
+    lead: "Our companion site for professionals.",
+    review: true,
+    points: [
+      "Only if you link your account with a link code, Align can read your Situation Snapshot, Foundation Statement and Special Needs summaries.",
+      "Align never receives your co-parent's information or your safety answers.",
+    ],
+  },
+];
+
+export const COURT_POINTS = [
+  "SA CoParents does not file or send anything to a court. A court only sees a document if you, your attorney or someone you gave it to files it.",
+  "The Family Safety and Functioning court report includes four summary findings: the family-violence pattern, trauma impact, parenting-plan implications and your child's experience. It leaves out your individual answers.",
+  "Your full Safety Assessment PDF does include your answers. Only send it if you want the reader to see them.",
+  "The Complete Report shows whether your Quick Safety Check was completed and whether it was cleared or flagged, without the answers.",
+  "Parallel Parenting Court-Order Notes list the choices you made so you can compare them with your own court order. You download them yourself.",
+  "Court-facing PDFs carry a notice that they are a parent's own reflection, not an evaluation and not legal advice.",
+];
+
+// Shown inside each assessment and repeated on the page under "Assessment by assessment".
+export const SHARING_NOTICES = {
+  "self-assessment": {
+    title: "Self-Assessment",
+    stays: "Your answers, scores, reflections and goals are private to your account.",
+    leaves: "Nothing is sent from here. You can download your own PDF.",
+    ai: "If you ask for a tip or use the Guide, the text needed for that reply goes to our AI provider to write it.",
+  },
+  "communication-builder": {
+    title: "Communication Builder",
+    stays: "Your drafts and saved messages stay in your account.",
+    leaves: "Nothing is sent to your co-parent. You copy the message and send it yourself.",
+    ai: "When you tap Transform, your draft goes to our AI provider to suggest calmer wording.",
+  },
+  "child-needs": {
+    title: "Educational, Medical and Psychological",
+    stays: "Your answers are private to your account. SA CoParents doesn't keep your child's records or documents.",
+    leaves: "Only the finished forms you tick are sent, and only to a professional who accepted your invitation, when you tap Send to a provider.",
+    ai: "If you ask the Guide, your question goes to our AI provider to answer it.",
+  },
+  "parallel-parenting": {
+    title: "Parallel Parenting",
+    stays: "Your plan choices and notes are private to your account.",
+    leaves: "Nothing is sent from here. You can download your plan or Court-Order Notes PDF yourself.",
+    ai: "If you ask the Guide or for a tip, your question and the step you're on go to our AI provider.",
+  },
+  "safety-check": {
+    title: "Safety Assessment",
+    stays: "Your answers are private. Your co-parent never sees them.",
+    leaves: "If you email your Safety Assessment PDF, it includes your answers. The court report includes summary findings only.",
+    ai: "Short summaries in your PDF may be written by our AI provider from your results.",
+  },
+  "foundation-statement": {
+    title: "Foundation Statement",
+    stays: "Private until you share it.",
+    leaves: "You can download it, email it, copy a share link, or include it when you invite a professional. If you link your account to SA CoParents Align, Align can read it.",
+    ai: "If you use guided help, your answers go to our AI provider to draft wording.",
+  },
+};

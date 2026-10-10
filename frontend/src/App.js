@@ -32,6 +32,7 @@ import Summary from "@/pages/Summary";
 import Safety from "@/pages/Safety";
 import Watch from "@/pages/Watch";
 import Privacy from "@/pages/Privacy";
+import WhatProfessionalsSee from "@/pages/WhatProfessionalsSee";
 import AppStorePrivacy from "@/pages/AppStorePrivacy";
 import HipaaNotice from "@/pages/HipaaNotice";
 import PrivacyPractices from "@/pages/PrivacyPractices";
@@ -92,6 +93,7 @@ import ForgotPassword from "@/pages/ForgotPassword";
 import ResetPassword from "@/pages/ResetPassword";
 import VerifyEmail from "@/pages/VerifyEmail";
 import VerifySignature from "@/pages/VerifySignature";
+import SecureDocument from "@/pages/SecureDocument";
 import VerifyBriefing from "@/pages/VerifyBriefing";
 import VerifyPathway from "@/pages/VerifyPathway";
 import VerifyCourtReport from "@/pages/VerifyCourtReport";
@@ -177,6 +179,7 @@ function AppRoutes() {
         <Route path="/verify/pathway/:sig_id" element={<VerifyPathway />} />
         <Route path="/verify/court-report/:sig_id" element={<VerifyCourtReport />} />
         <Route path="/verify/:sig_id" element={<VerifySignature />} />
+        <Route path="/doc/:token" element={<SecureDocument />} />
         <Route path="/admin/reviewers" element={<AdminReviewers />} />
         <Route path="/admin/nd-coordinator" element={<AdminNDCoordinator />} />
         <Route path="/pathway-report" element={<PathwayReport />} />
@@ -247,6 +250,7 @@ function AppRoutes() {
           }
         />
         <Route path="/privacy" element={<Privacy />} />
+        <Route path="/what-professionals-see" element={<WhatProfessionalsSee />} />
         <Route path="/legal/app-store-privacy" element={<AppStorePrivacy />} />
         <Route path="/legal/hipaa" element={<HipaaNotice />} />
         <Route path="/legal/privacy-practices" element={<PrivacyPractices />} />

@@ -1,4 +1,5 @@
 import React, { useCallback, useEffect, useState } from "react";
+import { ProSeeLink } from "../components/privacy/ProSeeLink";
 import { useNavigate, Link, useSearchParams } from "react-router-dom";
 import AppShell from "../components/AppShell";
 import DemoModeBanner from "../components/DemoModeBanner";
@@ -1116,9 +1117,10 @@ function EmailMediatorDialog({ open, onClose, summaryId, agreementId, defaultDoc
               Email to your mediator
             </div>
             <p className="text-sm text-[#4B4567] mt-1">
-              We'll attach your selected PDF(s) with a short cover note. Replies
-              go straight to your inbox.
+              We'll email your mediator a private link to your selected PDF(s).
+              They open it with a one-time code. Replies go straight to your inbox.
             </p>
+            <ProSeeLink testid="email-mediator-pros-see-link" className="text-[13px] mt-2" />
           </div>
           <button
             type="button"
@@ -1369,7 +1371,7 @@ function OrgContactCard() {
       data-testid="org-contact-card"
     >
       <img
-        src="https://customer-assets.emergentagent.com/job_prepared-parents/artifacts/3vfnf7kd__sacoparentscharactersacoparents_three_feet_away_rotating_and.png"
+        src="/images/sa-coparents-character.webp"
         alt="SA CoParents"
         className="w-24 h-24 sm:w-28 sm:h-28 rounded-2xl object-cover shrink-0 shadow-sm"
       />

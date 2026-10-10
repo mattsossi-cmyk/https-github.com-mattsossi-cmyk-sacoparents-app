@@ -2,6 +2,7 @@ import React from "react";
 import { Link } from "react-router-dom";
 
 import CONTENT from "../childNeedsContent.json";
+import { ProSeeLink } from "../../../components/privacy/ProSeeLink";
 
 export const TITLES = Object.fromEntries(CONTENT.categories.map((c) => [c.key, c.card_title]));
 const rowCls = (on) =>
@@ -67,8 +68,9 @@ export function ConfirmStep({ provider, keys }) {
       </div>
       <p data-testid="share-confirm-reminder" className="rounded-lg bg-amber-50 border border-amber-200 text-amber-900 p-3 text-[12.5px] leading-relaxed">
         <i className="fa-solid fa-triangle-exclamation mr-1.5"></i>
-        Once you send this, these health details leave SA CoParents. {provider.name} can keep, print or forward the email, and it can't be unsent.
+        The email won&rsquo;t contain the report. {provider.name} gets a private link and a one-time code to open it, and can download it after that. Once downloaded, it can&rsquo;t be unsent, but you can cancel the link before then.
       </p>
+      <ProSeeLink testid="share-confirm-pros-see-link" area="child-needs" className="text-[12.5px]" />
     </div>
   );
 }

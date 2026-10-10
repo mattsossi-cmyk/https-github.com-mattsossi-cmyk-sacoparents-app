@@ -46,11 +46,7 @@
         <meta name="twitter:image" content="%PUBLIC_URL%/screenshots/joint-composite-og.png" />
         <meta name="twitter:image:alt" content="SA CoParents Joint Report and Joint Agreement — two separated parents, one shared story." />
 
-        <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-
-        <!-- Font Awesome (used by SacoparentsPortal) -->
-        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+        <link rel="stylesheet" href="%PUBLIC_URL%/fonts/fonts.css" />
 
         <!-- Canonical + crawler directives -->
         <link rel="canonical" href="https://sacoparentsapp.online/" />
@@ -152,7 +148,7 @@
         -->
         <title>SA CoParents — With Reflection. Build Alignment. Create Better Agreements.</title>
         <script>window.addEventListener("error",function(e){if(e.error instanceof DOMException&&e.error.name==="DataCloneError"&&e.message&&e.message.includes("PerformanceServerTiming")){e.stopImmediatePropagation();e.preventDefault()}},true);</script>
-        <script src="https://assets.emergent.sh/scripts/emergent-main.js"></script>
+        <script>if(location.hostname==="localhost"||/\.preview\.emergentagent\.com$/.test(location.hostname)){document.write('<script src="https://assets.emergent.sh/scripts/emergent-main.js"><\/script>');}</script>
     </head>
     <body>
         <noscript>

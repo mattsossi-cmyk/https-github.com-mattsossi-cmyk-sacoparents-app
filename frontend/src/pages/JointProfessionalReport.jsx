@@ -18,6 +18,7 @@
  *                       the caller is a participant.
  */
 import React, { useEffect, useRef, useState } from "react";
+import { ProSeeLink } from "../components/privacy/ProSeeLink";
 import { Link, useSearchParams } from "react-router-dom";
 import {
   ArrowLeft, Download, Loader2, ShieldAlert, ScrollText, Users, Info, Mail,
@@ -471,6 +472,7 @@ export default function JointProfessionalReport() {
             >
               <Mail size={14} /> Email to professional
             </button>
+            <ProSeeLink testid="joint-report-pros-see-link" className="text-sm self-center px-1" />
             <button
               type="button"
               onClick={downloadPdf}

@@ -4,6 +4,7 @@ import { api } from "../../lib/api";
 import {
   GUIDED_DRAFT_KEY_PREFIX,
   GUIDED_DRAFT_TTL_MS,
+  RECORDS_ENABLED,
 } from "./portalStorage";
 
 /**
@@ -45,7 +46,9 @@ const SAVE_KEY_LABELS = {
   foundation_text: "Foundation Statement (a paragraph you can save + print as PDF)",
   cop_assessment_note: "Co-parenting Assessment note (attached to your Health Index)",
   cop_assessment: "Co-parenting Assessment note (attached to your Health Index)",
-  align_record: "Align-Before-Agreement record (added to your folder)",
+  align_record: RECORDS_ENABLED
+    ? "Align-Before-Agreement record (added to your folder)"
+    : "Nothing is saved. Your child's details stay private and are not kept as a record",
   safety_ack: "Private Safety Check summary (kept on this device)",
 };
 

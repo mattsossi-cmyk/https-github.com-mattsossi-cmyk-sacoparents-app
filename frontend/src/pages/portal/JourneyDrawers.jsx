@@ -4,6 +4,7 @@ import { toast } from "sonner";
 import { BiffTab } from "./BiffTab";
 import { GreyRockToggleChip } from "./AlignmentHub";
 import { SafetySoftBanner } from "./SafetyScreen";
+import { RECORDS_ENABLED } from "./portalStorage";
 
 /**
  * JourneyDrawers — iter248 (Inline Phase B tail).
@@ -244,6 +245,7 @@ export function RecordsDrawer({
   filteredRecords,
   onAddAlignment,
 }) {
+  if (!RECORDS_ENABLED) return null;
   return (
     <DrawerShell
       open={open}

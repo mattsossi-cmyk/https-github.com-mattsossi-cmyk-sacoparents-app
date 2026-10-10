@@ -8,18 +8,19 @@ import {
   ALIGN_RECORDS_KEY,
   BIFF_LOG_KEY,
   COURT_KEY_KEY,
-  DEFAULT_ALIGNMENTS,
   DEFAULT_BIFF_LOGS,
   DEFAULT_FOUNDATION,
   DEFAULT_HEALTH_INDEX,
   DEFAULT_LEGAL_REPORT,
   DEFAULT_MILESTONES,
   FOUNDATION_KEY,
+  GUIDED_DRAFT_KEY_PREFIX,
   HEALTH_INDEX_KEY,
   LEGAL_REPORT_KEY,
   MILESTONE_KEY,
   PRESETS,
   REASSESSMENT_KEY,
+  RECORDS_ENABLED,
   SAFETY_ACK_KEY,
   SAFETY_PLAN_KEY,
   SNAPSHOT_HISTORY_KEY,
@@ -264,9 +265,16 @@ export default function SacoparentsPortal() {
     if (initialisedRef.current) return;
     initialisedRef.current = true;
 
-    const seededAlignments = readJson(ALIGN_RECORDS_KEY, null);
-    if (seededAlignments == null) writeJson(ALIGN_RECORDS_KEY, DEFAULT_ALIGNMENTS);
-    setAlignRecords(seededAlignments ?? DEFAULT_ALIGNMENTS);
+    // Child record folders are off: clear any copy saved in this browser.
+    try {
+      window.localStorage.removeItem(ALIGN_RECORDS_KEY);
+      ["medical", "educational", "psychological"].forEach((t) =>
+        window.localStorage.removeItem(`${GUIDED_DRAFT_KEY_PREFIX}${t}`)
+      );
+    } catch {
+      /* storage unavailable */
+    }
+    setAlignRecords([]);
 
     const seededMilestones = readJson(MILESTONE_KEY, null);
     if (seededMilestones == null) writeJson(MILESTONE_KEY, DEFAULT_MILESTONES);
@@ -363,7 +371,7 @@ export default function SacoparentsPortal() {
           return;
         }
         const s = data.state || {};
-        if (Array.isArray(s.align_records)) {
+        if (RECORDS_ENABLED && Array.isArray(s.align_records)) {
           setAlignRecords(s.align_records);
           writeJson(ALIGN_RECORDS_KEY, s.align_records);
         }
@@ -1246,7 +1254,7 @@ export default function SacoparentsPortal() {
           .slice(0, 8000);
         setFoundationText(stitched);
         writeString(FOUNDATION_KEY, stitched);
-      } else if (save_key === "align_record" && category) {
+      } else if (save_key === "align_record" && category && RECORDS_ENABLED) {
         const first = answers[0]?.answer || "Guided record";
         const rest = answers.slice(1).map((qa) => `- ${qa.answer}`).join("\n");
         const entry = {

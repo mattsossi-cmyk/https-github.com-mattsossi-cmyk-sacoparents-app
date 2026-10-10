@@ -62,6 +62,14 @@ export function useSelfAssessmentHistory(userId) {
   );
 
   const latest = history.length ? history[history.length - 1] : null;
+  const markReached = useCallback(
+    async (entryId, reached) => {
+      let reachedAt = reached ? new Date().toISOString() : null;
+      if (userId) ({ data: { reached_at: reachedAt } } = await api.post("/self-assessment/goal/reached", { entry_id: entryId, reached }));
+      updateEntry(entryId, { reached_at: reachedAt });
+    },
+    [userId, updateEntry]
+  );
   const current = useMemo(
     () => (latest && practice?.entry_id === latest.id ? practice : { entry_id: latest?.id, count: 0, last_date: null }),
     [latest, practice]
@@ -106,5 +114,6 @@ export function useSelfAssessmentHistory(userId) {
     dueDays: latest && daysSince(latest.completed_at) >= REASSESS_AFTER_DAYS ? daysSince(latest.completed_at) : 0,
     addEntry,
     updateEntry,
+    markReached,
   };
 }

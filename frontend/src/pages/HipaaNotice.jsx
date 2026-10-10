@@ -51,7 +51,7 @@ export default function HipaaNotice() {
             <li><strong>Your account</strong>: stored in our database, accessible only to you when signed in.</li>
             <li><strong>Special Needs Assessment answers, Safety-Lens findings, and any drafts</strong>: private to your account. The co-parent never sees them unless you both explicitly consent through the Compare flow.</li>
             <li><strong>Findings 1 (family-violence pattern) and 2 (trauma impact)</strong> of the Safety Lens: private to you even after a Compare consent. Only Finding 3 (parenting-plan implications) is ever included in any joint artefact.</li>
-            <li><strong>Emails to professionals</strong> you send from the app: transmitted through Resend. The PDF attachment leaves our servers when you press "Send".</li>
+            <li><strong>Emails to professionals</strong> you send from the app: delivered through Resend, but they never contain your report or any health details. The email only says who sent it and that a document is waiting. The person opens it in SA CoParents with a one-time code sent to their email address, and you can cancel the link before it&rsquo;s opened.</li>
             <li><strong>AI-generated summaries</strong>: your prep content is sent to Anthropic's Claude via the Emergent LLM proxy. Anthropic does not train on API traffic. See our <Link to="/privacy" className="text-[#2A0F5F] underline">Privacy Policy</Link> for the exact processing chain and retention limits, and please avoid pasting raw clinical records into free-text fields until the Emergent → Anthropic BAA chain is confirmed.</li>
           </ul>
 

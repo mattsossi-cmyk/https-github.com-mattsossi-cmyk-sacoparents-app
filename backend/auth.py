@@ -12,6 +12,8 @@ from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from passlib.context import CryptContext
 from motor.motor_asyncio import AsyncIOMotorDatabase
 
+import secure_docs
+
 from models import UserRegister, UserLogin, UserPublic, TokenResponse, GuestClaimPayload, MagicLinkRequest, MagicLinkConsume, SignupFromToken, PasswordResetRequest, PasswordResetConfirm, EmailVerifyConfirm, EmailCodeSend, EmailCodeConfirm, PasswordResetCodeConfirm
 from email_service import send_magic_link, send_setup_link, send_password_reset_link, send_verification_link, send_verification_code, send_password_reset_code, EmailNotConfigured, EmailSendError
 
@@ -156,6 +158,7 @@ async def get_current_user(
             continue
         user = await resolver(db, token)
         if user:
+            secure_docs.set_sender(user, _frontend_origin(request))
             return user
 
     raise HTTPException(status_code=401, detail="Not authenticated")

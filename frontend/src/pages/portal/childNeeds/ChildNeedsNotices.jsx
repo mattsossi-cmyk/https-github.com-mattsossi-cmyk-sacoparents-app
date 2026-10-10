@@ -1,6 +1,7 @@
 import React from "react";
 
 import CONTENT from "../childNeedsContent.json";
+import { ProSeeLink } from "../../../components/privacy/ProSeeLink";
 
 const N = CONTENT.notices;
 const ICONS = { confidentiality: "fa-lock", privacy: "fa-shield-heart" };
@@ -19,6 +20,7 @@ export function NoticesBox({ ackDate }) {
           <p>{N[k].body}</p>
         </div>
       ))}
+      <ProSeeLink testid="child-needs-notices-pros-see-link" area="child-needs" className="text-[12px]" />
       {ackDate && (
         <p data-testid="child-needs-ack-done" className="text-[11px] font-semibold text-emerald-700">
           <i className="fa-solid fa-circle-check mr-1"></i>

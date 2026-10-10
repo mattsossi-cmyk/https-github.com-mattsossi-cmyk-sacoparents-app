@@ -210,7 +210,7 @@ export default function SpecialNeedsV2EducationalDeepDiveReport() {
             </button>
             <button onClick={emailReport} disabled={busy} data-testid="psych-deep-report-email"
               className="inline-flex items-center gap-2 px-4 py-2 rounded-full text-xs border border-[#3D1A78] text-[#3D1A78] hover:bg-[#EEE9F7] disabled:opacity-60">
-              <Mail size={13} /> Email me the PDF
+              <Mail size={13} /> Email me a private link
             </button>
             <EmailDeliveryBadge reportType="psych_deep" refreshKey={deliveryTick} />
             <button onClick={load} disabled={busy} data-testid="psych-deep-report-refresh"

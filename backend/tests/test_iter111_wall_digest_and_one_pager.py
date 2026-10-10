@@ -152,55 +152,6 @@ def test_weekly_cheer_digest_empty_when_no_events(db):
 
 # ---------- send_weekly_compliance_reminder rendering ----------
 
-def test_email_html_renders_cheer_digest_when_provided():
-    """The email builder should include the digest block in the HTML
-    when a non-empty digest is passed."""
-    from email_service import send_weekly_compliance_reminder  # noqa: F401
-    # Capture the html+text without actually sending. We monkeypatch the
-    # low-level _send inside email_service.
-    import email_service
-    captured = {}
-
-    orig_send = getattr(email_service, "_send")
-
-    def fake_send(*, to_email, subject, html, text, **kwargs):
-        captured["html"] = html
-        captured["text"] = text
-
-    email_service._send = fake_send
-    try:
-        email_service.send_weekly_compliance_reminder(
-            to_email="p@example.com",
-            user_name="Alex",
-            pending_items=[{"text": "morning check-in"}],
-            pending_total=1,
-            current_streak=2,
-            compliance_pct=64.0,
-            week_start="2026-01-05",
-            cta_url="https://example.com/settings",
-            wall_cheer_digest={
-                "cheer_count": 4,
-                "unique_events": 2,
-                "top_badges": [
-                    {"badge_type": "week_streak_7", "label": "7-day streak", "cheer_count": 3},
-                    {"badge_type": "communication_master", "label": "Communication master", "cheer_count": 1},
-                ],
-                "period_start": "2026-01-01T00:00:00+00:00",
-            },
-        )
-    finally:
-        email_service._send = orig_send
-
-    html = captured["html"]
-    text = captured["text"]
-    # Digest heading and count both render.
-    assert "Cheers you got this week" in html
-    assert "4 cheers" in html or "4 cheer" in html
-    # Badges surfaced.
-    assert "7-day streak" in html
-    assert "Communication master" in html
-    # Plain-text form carries the same info.
-    assert "Cheers you got this week" in text or "cheers" in text.lower()
 
 
 def test_email_omits_cheer_digest_when_empty():
@@ -297,3 +248,17 @@ def test_one_pager_content_carries_universal_disclaimer_and_questions():
     assert '"pattern"' in source and '"trauma"' in source
     assert '"plan"' in source and '"child"' in source
     assert '"general"' in source
+
+
+def test_compliance_email_has_only_a_count():
+    import email_service
+    from unittest.mock import patch
+    with patch.object(email_service, "_send") as m:
+        email_service.send_weekly_compliance_reminder(
+            to_email="p@example.com", user_name="Sam Parent", pending_items=[{"text": "Secret intervention"}],
+            pending_total=1, current_streak=2, compliance_pct=40.0, week_start="2026-01-05",
+            cta_url="https://e/log", wall_cheer_digest={"cheers_received": [{"badge_label": "Badge X"}]},
+        )
+    body = m.call_args.kwargs["html"] + m.call_args.kwargs["text"]
+    assert "Secret intervention" not in body and "Badge X" not in body and "40%" not in body
+    assert "1 item still to tick" in body

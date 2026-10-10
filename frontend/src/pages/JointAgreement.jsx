@@ -10,6 +10,7 @@
  *   ?share=<share_id>   Required. Active Compare share.
  */
 import React, { useEffect, useRef, useState } from "react";
+import { ProSeeLink } from "../components/privacy/ProSeeLink";
 import { Link, useSearchParams } from "react-router-dom";
 import {
   ArrowLeft, Download, Loader2, ShieldCheck, Users, Info, Mail, RefreshCw,
@@ -346,6 +347,7 @@ export default function JointAgreement() {
             >
               <Mail size={14} /> Email to professional
             </button>
+            <ProSeeLink testid="joint-agreement-pros-see-link" className="text-sm self-center px-1" />
             <button
               type="button"
               onClick={downloadPdf}

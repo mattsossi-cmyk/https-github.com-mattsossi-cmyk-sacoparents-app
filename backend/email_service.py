@@ -71,6 +71,12 @@ def _send(
     provider. Used for HIPAA-scoped joint reports / agreements once
     the tenant is provisioned (`VIRTRU_FORCE_ENCRYPT_REQUIRED=true`).
     """
+    if attachments:
+        _send_document_waiting(
+            to_email=to_email, bcc=bcc, reply_to=reply_to, files=attachments, label=subject,
+            failure_message=failure_message, require_encrypted=require_encrypted,
+        )
+        return
     # Late imports so a missing virtru_mailer module never breaks
     # the rest of the email service.
     try:
@@ -164,6 +170,91 @@ def _send(
 
 
 # ============ Internal helpers ============
+def _p(text: str) -> str:
+    return f'<p style="font-size:15px;line-height:1.55;color:#4B4567;margin:0 0 16px 0;">{_html.escape(text)}</p>'
+
+
+def _send_document_waiting(
+    *, to_email: str, bcc: Optional[List[str]], reply_to: Optional[str], files: List[Tuple[str, bytes]],
+    label: str, failure_message: str, require_encrypted: bool,
+) -> None:
+    """Never email files: store them and send each recipient a private 'document waiting' link."""
+    import secure_docs  # noqa: WPS433
+
+    recipients = [to_email] + [
+        a for a in (bcc or []) if a and "@" in a and a.lower() != (to_email or "").lower()
+    ]
+    for addr in recipients:
+        info = secure_docs.store(to_email=addr, files=files, label=label)
+        until = f'{info["expires_at"]:%B} {info["expires_at"].day}, {info["expires_at"]:%Y}'
+        if info["is_self"]:
+            subject = "Your document is ready"
+            lines = [
+                "Your document is ready in SA CoParents.",
+                "To keep it private, it isn't attached to this email. Open it while signed in, "
+                "or with a one-time code we'll email to this address.",
+                f"The link works until {until}.",
+            ]
+        else:
+            subject = f'{info["sender_name"]} sent you a document'
+            lines = [
+                f'{info["sender_name"]} sent you a document through SA CoParents. A document is waiting for you.',
+                "To keep it private, it isn't attached to this email. When you open it, "
+                "we'll email a one-time code to this address.",
+                f"The link works until {until}.",
+            ]
+        _send(
+            to_email=addr,
+            subject=subject,
+            html=_branded_html(
+                headline="A document is waiting", body_html="".join(_p(t) for t in lines),
+                cta_label="Open document", cta_url=info["url"],
+            ),
+            text="\n\n".join(lines + [f"Open it here: {info['url']}", "— SA CoParents"]),
+            reply_to=reply_to,
+            failure_message=failure_message,
+            require_encrypted=require_encrypted,
+        )
+
+
+def _notice_email(
+    *, to_email: str, subject: str, headline: str, lines: List[str], cta_label: str, cta_url: str,
+    failure_message: str, footer_html: str = "",
+) -> None:
+    """Short notice with no report details — the person signs in to see the rest."""
+    _send(
+        to_email=to_email,
+        subject=subject,
+        html=_branded_html(
+            headline=headline, body_html="".join(_p(t) for t in lines), cta_label=cta_label, cta_url=cta_url,
+        ) + footer_html,
+        text="\n\n".join(lines + [f"{cta_label}: {cta_url}", "— SA CoParents · sacoparentsapp.online"]),
+        failure_message=failure_message,
+    )
+
+
+def send_document_code(*, to_email: str, code: str) -> None:
+    """One-time code for opening a securely sent document."""
+    body_html = (
+        _p("Enter this code to open your document. It expires in 10 minutes.")
+        + f'<div style="text-align:center;margin:24px 0 32px;"><div style="display:inline-block;'
+        f'font-family:-apple-system,SFMono-Regular,Menlo,monospace;letter-spacing:0.6em;font-size:34px;'
+        f'font-weight:800;color:#1A1330;background:#F1EEF7;border:1px solid #E5E0EE;border-radius:16px;'
+        f'padding:18px 30px 18px 36px;">{_html.escape(code)}</div></div>'
+        + _p("If you didn't try to open a document, you can ignore this email.")
+    )
+    _send(
+        to_email=to_email,
+        subject=f"Your SA CoParents code: {code}",
+        html=_branded_html(headline="Your one-time code", body_html=body_html, cta_label=""),
+        text=(
+            f"Your one-time code is {code}. It expires in 10 minutes.\n\n"
+            "If you didn't try to open a document, you can ignore this email.\n\n— SA CoParents\n"
+        ),
+        failure_message="We couldn't send the code right now. Please try again in a moment.",
+    )
+
+
 def _branded_html(*, headline: str, body_html: str, cta_label: str, cta_url: Optional[str] = None) -> str:
     """Wrap content in the SA CoParents branded email shell."""
     cta = (
@@ -947,64 +1038,19 @@ def send_post_summary_checkin(
     recap_text: Optional[str] = None,
     journal_url: str = "",
 ) -> None:
-    """Two-week post-summary check-in. Embeds the user's AI-generated weekly
-    journal recap if they have one; otherwise sends a simpler check-in note."""
+    """Two-week post-summary check-in. Never includes the journal recap — the parent signs in to read it."""
     greeting = f"Hi {user_name}," if user_name else "Hi there,"
-    cta_url = journal_url or "https://sacoparentsapp.online/journal"
-
-    if recap_text:
-        plain = (
-            f"{greeting}\n\n"
-            "It's been two weeks since you put your Mediation Prep Summary together. "
-            "We just wanted to check in.\n\n"
-            "Here's a short recap of your journal from the past week:\n\n"
-            f"{recap_text}\n\n"
-            f"Pick up where you left off:\n{cta_url}\n\n"
-            "— SA CoParenting App · sacoparentsapp.online\n"
-        )
-        body_html = (
-            f'<p style="font-size:15px;line-height:1.55;color:#4B4567;margin:0 0 16px 0;">'
-            f"{greeting} It's been two weeks since you put your Mediation Prep "
-            f"Summary together. We wanted to check in.</p>"
-            '<div style="background:#F8F7FC;border-left:3px solid #3D1A78;'
-            'padding:14px 18px;border-radius:6px;margin:0 0 22px 0;">'
-            '<div style="font-size:10px;letter-spacing:.18em;text-transform:uppercase;'
-            'color:#3D1A78;font-weight:700;margin-bottom:6px;">Your week in review</div>'
-            f'<div style="font-size:14px;line-height:1.6;color:#1A1330;white-space:pre-wrap;">'
-            f"{recap_text}</div></div>"
-        )
-        subject = "Two weeks on — your check-in from SA CoParenting App"
-    else:
-        plain = (
-            f"{greeting}\n\n"
-            "It's been two weeks since you put together your Mediation Prep Summary. "
-            "We just wanted to check in.\n\n"
-            "How are things going? A few quiet minutes in the journal — even one short "
-            "entry — can help you stay grounded and focused on what matters most.\n\n"
-            f"Open your journal:\n{cta_url}\n\n"
-            "— SA CoParenting App · sacoparentsapp.online\n"
-        )
-        body_html = (
-            f'<p style="font-size:15px;line-height:1.55;color:#4B4567;margin:0 0 16px 0;">'
-            f"{greeting} It's been two weeks since you put together your Mediation "
-            f"Prep Summary. We wanted to check in.</p>"
-            '<p style="font-size:15px;line-height:1.55;color:#4B4567;margin:0 0 22px 0;">'
-            "How are things going? A few quiet minutes in the journal — even one short "
-            "entry — can help you stay grounded and focused on what matters most.</p>"
-        )
-        subject = "Two weeks on — your check-in from SA CoParenting App"
-
-    html = _branded_html(
-        headline="Just checking in",
-        body_html=body_html,
-        cta_label="Open my journal",
-        cta_url=cta_url,
-    )
-    _send(
+    _notice_email(
         to_email=to_email,
-        subject=subject,
-        html=html,
-        text=plain,
+        subject="Two weeks on — your check-in from SA CoParents",
+        headline="Just checking in",
+        lines=[
+            greeting,
+            "It's been two weeks since you put your Mediation Prep Summary together. We wanted to check in.",
+            "Your journal is waiting whenever you're ready. Sign in to see your week in review.",
+        ],
+        cta_label="Open my journal",
+        cta_url=journal_url or "https://sacoparentsapp.online/journal",
         failure_message="Could not send the check-in email right now.",
     )
 
@@ -1017,129 +1063,17 @@ def send_admin_weekly_briefing(
     signals: dict,
     view_url: str = "",
 ) -> None:
-    """Monday 8 AM admin email — wraps the AI-generated weekly briefing in
-    branded HTML."""
-
-    def _ul(items):
-        items = [i for i in (items or []) if i]
-        if not items:
-            return ""
-        lis = "".join(
-            f'<li style="margin:0 0 8px 0;color:#1A1330;font-size:14px;line-height:1.55;">{i}</li>'
-            for i in items
-        )
-        return f'<ul style="margin:0 0 18px 18px;padding:0;list-style:disc;">{lis}</ul>'
-
-    counts = (signals or {}).get("counts") or {}
-    avg_nps = ((signals or {}).get("nps") or {}).get("avg")
-    nps_line = f"Avg NPS {avg_nps}/10" if avg_nps is not None else "No NPS yet"
-    sign_ups = (counts.get("new_users") or 0) + (counts.get("new_guests") or 0)
-    counts_strip = (
-        '<table role="presentation" cellspacing="0" cellpadding="0" border="0" '
-        'style="width:100%;margin:0 0 22px 0;border-collapse:collapse;">'
-        '<tr>'
-        f'<td style="width:25%;background:#F8F7FC;padding:14px 12px;border-radius:8px;text-align:center;">'
-        f'<div style="font-size:11px;letter-spacing:.15em;text-transform:uppercase;color:#857E9C;font-weight:700;">Signups</div>'
-        f'<div style="font-size:22px;color:#1A1330;margin-top:4px;font-family:Georgia,serif;">{sign_ups}</div>'
-        '</td>'
-        '<td style="width:8px;"></td>'
-        f'<td style="width:25%;background:#F8F7FC;padding:14px 12px;border-radius:8px;text-align:center;">'
-        f'<div style="font-size:11px;letter-spacing:.15em;text-transform:uppercase;color:#857E9C;font-weight:700;">Summaries</div>'
-        f'<div style="font-size:22px;color:#1A1330;margin-top:4px;font-family:Georgia,serif;">{counts.get("summaries_generated", 0)}</div>'
-        '</td>'
-        '<td style="width:8px;"></td>'
-        f'<td style="width:25%;background:#F8F7FC;padding:14px 12px;border-radius:8px;text-align:center;">'
-        f'<div style="font-size:11px;letter-spacing:.15em;text-transform:uppercase;color:#857E9C;font-weight:700;">Surveys</div>'
-        f'<div style="font-size:22px;color:#1A1330;margin-top:4px;font-family:Georgia,serif;">{counts.get("survey_responses", 0)}</div>'
-        f'<div style="font-size:10px;color:#857E9C;margin-top:2px;">{nps_line}</div>'
-        '</td>'
-        '<td style="width:8px;"></td>'
-        f'<td style="width:25%;background:#F8F7FC;padding:14px 12px;border-radius:8px;text-align:center;">'
-        f'<div style="font-size:11px;letter-spacing:.15em;text-transform:uppercase;color:#857E9C;font-weight:700;">Invites</div>'
-        f'<div style="font-size:22px;color:#1A1330;margin-top:4px;font-family:Georgia,serif;">{counts.get("invites_sent", 0)}</div>'
-        f'<div style="font-size:10px;color:#857E9C;margin-top:2px;">{counts.get("invites_accepted", 0)} accepted</div>'
-        '</td>'
-        '</tr></table>'
-    )
-
-    concerning = briefing.get("concerning_patterns") or []
-    concerning_block = ""
-    if concerning:
-        lis = "".join(
-            f'<li style="margin:0 0 6px 0;color:#9A3A23;font-size:14px;line-height:1.5;">{i}</li>'
-            for i in concerning
-        )
-        concerning_block = (
-            '<div style="background:#FCE3DC;border-left:4px solid #9A3A23;'
-            'padding:14px 18px;border-radius:6px;margin:0 0 22px 0;">'
-            '<div style="font-size:11px;letter-spacing:.15em;text-transform:uppercase;color:#9A3A23;'
-            'font-weight:700;margin-bottom:6px;">Worth a closer look</div>'
-            f'<ul style="margin:6px 0 0 18px;padding:0;list-style:disc;">{lis}</ul>'
-            '</div>'
-        )
-
-    headline = briefing.get("headline") or "Quiet week — too little data to call."
-    _empty_msg = (
-        '<p style="font-size:13px;color:#857E9C;margin:0 0 18px 0;">Nothing this week.</p>'
-    )
-    _empty_actions = (
-        '<p style="font-size:13px;color:#857E9C;margin:0 0 18px 0;">No suggestions this week.</p>'
-    )
-    body_html = (
-        f'<p style="font-size:11px;letter-spacing:.18em;text-transform:uppercase;color:#3D1A78;font-weight:700;margin:0 0 4px 0;">Weekly insights · {week_iso}</p>'
-        f'<p style="font-family:Georgia,serif;font-size:20px;line-height:1.4;color:#1A1330;margin:0 0 22px 0;">{headline}</p>'
-        f"{counts_strip}"
-        f"{concerning_block}"
-        '<p style="font-size:11px;letter-spacing:.18em;text-transform:uppercase;color:#3D1A78;font-weight:700;margin:0 0 6px 0;">Highlights</p>'
-        f"{_ul(briefing.get('highlights')) or _empty_msg}"
-        '<p style="font-size:11px;letter-spacing:.18em;text-transform:uppercase;color:#3D1A78;font-weight:700;margin:0 0 6px 0;">User voice themes</p>'
-        f"{_ul(briefing.get('user_voice_themes')) or _empty_msg}"
-        '<p style="font-size:11px;letter-spacing:.18em;text-transform:uppercase;color:#3D1A78;font-weight:700;margin:0 0 6px 0;">Recommended actions</p>'
-        f"{_ul(briefing.get('recommended_actions')) or _empty_actions}"
-    )
-
-    if briefing.get("closing_note"):
-        body_html += (
-            f'<p style="font-family:Georgia,serif;font-style:italic;font-size:14px;color:#4B4567;'
-            f'border-top:1px solid #E5E0EE;padding-top:14px;margin:18px 0 0 0;">'
-            f'&ldquo;{briefing["closing_note"]}&rdquo;</p>'
-        )
-
-    plain_lines = [
-        f"Weekly insights · {week_iso}",
-        "",
-        headline,
-        "",
-        f"Signups: {sign_ups} | Summaries: {counts.get('summaries_generated', 0)} | "
-        f"Survey responses: {counts.get('survey_responses', 0)} ({nps_line}) | "
-        f"Invites: {counts.get('invites_sent', 0)} ({counts.get('invites_accepted', 0)} accepted)",
-    ]
-    if concerning:
-        plain_lines += ["", "Worth a closer look:"]
-        plain_lines += [f"  • {i}" for i in concerning]
-    for label, key in (
-        ("Highlights", "highlights"),
-        ("User voice themes", "user_voice_themes"),
-        ("Recommended actions", "recommended_actions"),
-    ):
-        items = briefing.get(key) or []
-        if items:
-            plain_lines += ["", f"{label}:"] + [f"  • {i}" for i in items]
-    if briefing.get("closing_note"):
-        plain_lines += ["", briefing["closing_note"]]
-    plain_lines += ["", f"Open the dashboard: {view_url or 'https://sacoparentsapp.online/admin/insights'}"]
-
-    html = _branded_html(
-        headline="Your 5-minute Monday read",
-        body_html=body_html,
-        cta_label="Open the full dashboard",
-        cta_url=view_url or "https://sacoparentsapp.online/admin/insights",
-    )
-    _send(
+    """Monday admin notice that the weekly briefing is ready. Details stay on the dashboard."""
+    _notice_email(
         to_email=to_email,
         subject=f"SA CoParents — weekly insights ({week_iso})",
-        html=html,
-        text="\n".join(plain_lines),
+        headline="Your weekly insights are ready",
+        lines=[
+            f"Your weekly insights briefing for {week_iso} is ready.",
+            "To keep parents' information private, the details aren't in this email. Sign in to read them on the dashboard.",
+        ],
+        cta_label="Open the dashboard",
+        cta_url=view_url or "https://sacoparentsapp.online/admin/insights",
         failure_message="Could not send the weekly admin briefing email.",
     )
 
@@ -1153,110 +1087,20 @@ def send_compare_invite(
     aligned_pct: Optional[int] = None,
     previous_aligned_pct: Optional[int] = None,
 ) -> None:
-    """Notify a co-parent that a compare request is awaiting their consent.
-
-    Sent once when the first parent hits POST /compare/link so the invited
-    co-parent knows to log in and consent (or decline). Never contains any
-    private assessment content — only a call to log in.
-
-    If ``aligned_pct`` is provided (both parents already completed their
-    assessments at invite time), the email gets a neutral one-line teaser
-    of the current alignment percentage so the recipient sees the value
-    before they click through. The number is a summary only — no items or
-    prompts leak before consent.
-
-    If ``previous_aligned_pct`` is also provided (the user pair has at
-    least one earlier compare snapshot for this pathway), a small trend
-    line — "↑ +7% since your last check-in" — is rendered next to the
-    current percentage so co-parents see progress at a glance.
-    """
+    """Notify a co-parent that a compare request awaits their consent. No scores or answers in the email."""
     inviter = (inviter_name or "Your co-parent").strip() or "Your co-parent"
-    # Clamp to a safe integer range in case an upstream caller ever hands us
-    # a float or an out-of-bounds value.
-    def _clamp(v):
-        if isinstance(v, (int, float)):
-            return max(0, min(100, int(v)))
-        return None
-    preview = _clamp(aligned_pct)
-    previous = _clamp(previous_aligned_pct)
-    delta = None if (preview is None or previous is None) else preview - previous
-    # Trend copy pieces
-    trend_plain = ""
-    trend_html = ""
-    if delta is not None:
-        if delta > 0:
-            arrow = "↑"
-            trend_word = f"up {delta} points since your last check-in"
-            trend_color = "#1F5C3B"
-        elif delta < 0:
-            arrow = "↓"
-            trend_word = f"down {abs(delta)} points since your last check-in"
-            trend_color = "#8C3A3A"
-        else:
-            arrow = "→"
-            trend_word = "no change since your last check-in"
-            trend_color = "#4B4567"
-        trend_plain = f" {arrow} {trend_word} (was {previous}%)."
-        trend_html = (
-            f'<div style="font-size:12px;color:{trend_color};margin:8px 0 0 0;'
-            f'font-weight:600;">{arrow} {trend_word} '
-            f'<span style="color:#857E9C;font-weight:400;">(was {previous}%)</span>'
-            f'</div>'
-        )
-    preview_plain = ""
-    preview_html = ""
-    if preview is not None:
-        preview_plain = (
-            f"\nBefore you decide: based on both of your answers so far, you "
-            f"already agree on about {preview}% of them.{trend_plain}\n"
-        )
-        preview_html = (
-            '<div style="margin:0 0 18px 0;padding:14px 16px;border-radius:14px;'
-            'border:1px solid #B5DFC5;background:#F1F9F4;">'
-            '<div style="font-size:10px;letter-spacing:0.18em;text-transform:uppercase;'
-            'color:#1F5C3B;font-weight:700;margin:0 0 4px 0;">A quick preview</div>'
-            f'<div style="font-size:22px;line-height:1.2;color:#1A1330;font-weight:800;'
-            f'font-family:Georgia,\'Times New Roman\',serif;">You already agree on '
-            f'about {preview}% of your answers.</div>'
-            f'{trend_html}'
-            '<div style="font-size:12px;color:#4B4567;margin:6px 0 0 0;">'
-            "This is a summary only — no items are shared until you consent."
-            '</div></div>'
-        )
-    plain = (
-        f"{inviter} would like to compare {product_label} answers with you on "
-        "SA CoParenting App.\n"
-        f"{preview_plain}"
-        "\nNothing is shared automatically. Log in and, if you consent, both parents' "
-        "answers will appear neutrally side-by-side — never labelling either of you "
-        "'right' or 'wrong'.\n\n"
-        f"Review the request here:\n{link_url}\n\n"
-        "If you'd rather not, ignore this email and no comparison will ever be created.\n\n"
-        "— SA CoParenting App · sacoparentsapp.online\n"
-    )
-    body_html = (
-        f'<p style="font-size:15px;line-height:1.55;color:#4B4567;margin:0 0 14px 0;">'
-        f"<strong>{inviter}</strong> would like to compare {product_label} answers with "
-        f"you on SA CoParenting App.</p>"
-        f"{preview_html}"
-        '<p style="font-size:15px;line-height:1.55;color:#4B4567;margin:0 0 14px 0;">'
-        "Nothing is shared automatically. Log in and, if you consent, both parents' "
-        "answers will appear neutrally side-by-side — never labelling either of you "
-        "<em>right</em> or <em>wrong</em>.</p>"
-        '<p style="font-size:13px;line-height:1.55;color:#857E9C;margin:0 0 22px 0;">'
-        "If you'd rather not, ignore this email — no comparison will ever be created.</p>"
-    )
-    html = _branded_html(
+    _notice_email(
+        to_email=to_email,
+        subject=f"{inviter} invited you to compare answers on SA CoParents",
         headline=f"{inviter} invited you to compare notes",
-        body_html=body_html,
+        lines=[
+            f"{inviter} would like to compare answers with you on SA CoParents.",
+            "Nothing is shared automatically. Sign in and, if you consent, both parents' answers will appear "
+            "neutrally side by side — never labelling either of you right or wrong.",
+            "If you'd rather not, ignore this email and no comparison will ever be created.",
+        ],
         cta_label="Review the request",
         cta_url=link_url,
-    )
-    _send(
-        to_email=to_email,
-        subject=f"{inviter} invited you to compare {product_label} answers on SA CoParenting App",
-        html=html,
-        text=plain,
         failure_message="Could not send the compare-request email right now.",
     )
 
@@ -3059,175 +2903,18 @@ def send_weekly_progress_summary(
     community_pulse: Optional[List[Dict[str, Any]]] = None,
     wall_opted_in: bool = False,
 ) -> None:
-    """Sunday-friendly momentum email. Neutral, encouraging, single CTA.
-
-    ``cheers_received`` / ``community_pulse`` come from
-    ``wall_utils.build_weekly_cheer_digest`` and render an optional
-    "Community cheers" block below the milestones list. Cheerer identity
-    is never exposed — counts + anonymised badge labels only. If both
-    lists are empty (or the parent isn't opted-in AND the community has
-    no cheer activity yet) the block is silently skipped.
-    """
+    """Sunday notice that the progress snapshot is ready. Details stay in the app."""
     hello = (user_name or "").strip() or "there"
-    note = (personal_note or "").strip()
-    lit = ", ".join(milestones_this_week) if milestones_this_week else ""
-    week_line = (
-        f"This week you lit {lit}." if lit
-        else "No new milestones lit this week — small steps still count."
-    )
-    streak_line = (
-        f"You've shown up {streak_days} day{'s' if streak_days != 1 else ''} in a row. "
-        "Consistency is the quiet superpower of co-parenting."
-        if streak_days > 0
-        else "A brand-new week is a great time to start a streak."
-    )
-    align_line = (
-        f"Latest alignment with your co-parent: {alignment_pct}%."
-        if isinstance(alignment_pct, int)
-        else ""
-    )
-
-    # ------------------------------------------------------------------
-    # Cheer digest — plain-text lines
-    # ------------------------------------------------------------------
-    cheers_received = cheers_received or []
-    community_pulse = community_pulse or []
-    total_cheers_received = sum(int(r.get("cheer_count") or 0) for r in cheers_received)
-    cheer_lines_plain: List[str] = []
-    if cheers_received:
-        cheer_lines_plain.append(
-            f"Community cheers on your milestones this week: {total_cheers_received}"
-        )
-        for r in cheers_received:
-            n = int(r.get("cheer_count") or 0)
-            lbl = str(r.get("badge_label") or r.get("badge_type") or "").rstrip(".")
-            cheer_lines_plain.append(
-                f"  \u2665 {n} cheer{'s' if n != 1 else ''} on: {lbl}"
-            )
-    if community_pulse:
-        top = community_pulse[0]
-        n = int(top.get("cheer_count") or 0)
-        lbl = str(top.get("badge_label") or top.get("badge_type") or "").rstrip(".")
-        cheer_lines_plain.append(
-            f"Most-cheered community moment this week: {lbl} ({n} cheers)."
-        )
-    cheer_block_plain = ("\n" + "\n".join(cheer_lines_plain) + "\n") if cheer_lines_plain else ""
-
-    plain = (
-        f"Hi {hello},\n\n"
-        f"Your Sunday snapshot from SA CoParents.\n\n"
-        + (f"A quick note from you:\n\u201C{note}\u201D\n\n" if note else "")
-        + f"Progress: {completed_count} of {total} milestones lit.\n"
-        f"{week_line}\n"
-        f"{streak_line}\n"
-        f"{align_line}\n"
-        f"{cheer_block_plain}\n"
-        f"Open your dashboard: {dashboard_url}\n\n"
-        "\u2014 SA CoParents \u00b7 sacoparentsapp.online\n"
-    )
-    milestone_html = ""
-    if milestones_this_week:
-        milestone_html = (
-            '<ul style="margin:8px 0 14px 0;padding:0 0 0 18px;color:#1A1330;font-size:14px;line-height:1.55;">'
-            + "".join(f"<li>{m}</li>" for m in milestones_this_week)
-            + "</ul>"
-        )
-    align_html = ""
-    if align_line:
-        align_html = (
-            '<div style="font-size:13px;color:#4B4567;margin:6px 0 0 0;">'
-            f'{align_line}</div>'
-        )
-    note_html = ""
-    if note:
-        safe_note = _html.escape(note).replace("\n", "<br/>")
-        note_html = (
-            '<div style="margin:0 0 18px 0;padding:16px 18px;border-radius:14px;'
-            'border:1px solid #E4D8B8;background:#FFF9EB;position:relative;">'
-            '<div style="font-size:10px;letter-spacing:0.22em;text-transform:uppercase;'
-            'color:#8A6B12;font-weight:700;margin:0 0 6px 0;">A note from you</div>'
-            '<div style="font-family:\'Caveat\',\'Bradley Hand\',cursive;'
-            'font-size:20px;line-height:1.45;color:#3B2A05;">'
-            f'\u201C{safe_note}\u201D'
-            '</div>'
-            '</div>'
-        )
-
-    # ------------------------------------------------------------------
-    # Cheer digest — HTML block
-    # ------------------------------------------------------------------
-    cheer_block_html = ""
-    if cheers_received or community_pulse:
-        rows_html_parts: List[str] = []
-        if cheers_received:
-            rows_html_parts.append(
-                '<div style="font-size:13px;color:#4B4567;margin:0 0 8px 0;">'
-                f'<strong>{total_cheers_received} cheer{"s" if total_cheers_received != 1 else ""}</strong> '
-                'landed on your milestones this week from other parents on the wall.'
-                '</div>'
-            )
-            for r in cheers_received[:5]:
-                n = int(r.get("cheer_count") or 0)
-                lbl = _html.escape(str(r.get("badge_label") or "").rstrip("."))
-                rows_html_parts.append(
-                    '<div style="font-size:13px;color:#1A1330;margin:0 0 4px 0;">'
-                    f'<span style="color:#B8125A;">&hearts;</span> '
-                    f'<strong>{n}</strong> on: <em style="color:#4B4567;font-style:normal;">{lbl}</em>'
-                    '</div>'
-                )
-        if community_pulse:
-            top = community_pulse[0]
-            n = int(top.get("cheer_count") or 0)
-            lbl = _html.escape(str(top.get("badge_label") or "").rstrip("."))
-            rows_html_parts.append(
-                '<div style="font-size:12px;color:#4B4567;margin:10px 0 0 0;'
-                'padding-top:10px;border-top:1px dashed #D6CFE8;">'
-                'Most-cheered community moment this week: '
-                f'<em style="color:#3D1A78;font-style:normal;">{lbl}</em> '
-                f'\u00b7 <strong>{n} cheers</strong>.'
-                '</div>'
-            )
-        header_label = "Community cheers" if wall_opted_in else "From the community"
-        cheer_block_html = (
-            '<div style="margin:0 0 18px 0;padding:14px 16px;border-radius:14px;'
-            'border:1px solid #F4D0DE;background:#FEF5F8;">'
-            '<div style="font-size:10px;letter-spacing:0.18em;text-transform:uppercase;'
-            f'color:#B8125A;font-weight:700;margin:0 0 6px 0;">{header_label}</div>'
-            + "".join(rows_html_parts)
-            + '</div>'
-        )
-
-    body_html = (
-        f'<p style="font-size:15px;line-height:1.55;color:#4B4567;margin:0 0 14px 0;">'
-        f"Hi <strong>{hello}</strong>, your Sunday snapshot from SA CoParents.</p>"
-        f'{note_html}'
-        '<div style="margin:0 0 18px 0;padding:14px 16px;border-radius:14px;'
-        'border:1px solid #D6CFE8;background:#F5F1FB;">'
-        '<div style="font-size:10px;letter-spacing:0.18em;text-transform:uppercase;'
-        'color:#3D1A78;font-weight:700;margin:0 0 4px 0;">Weekly progress</div>'
-        f'<div style="font-size:22px;line-height:1.2;color:#1A1330;font-weight:800;'
-        f'font-family:Georgia,\'Times New Roman\',serif;">'
-        f'{completed_count} of {total} milestones lit.</div>'
-        f'<div style="font-size:13px;color:#4B4567;margin:6px 0 0 0;">{streak_line}</div>'
-        f'{align_html}'
-        '</div>'
-        f'<p style="font-size:15px;line-height:1.55;color:#4B4567;margin:0 0 8px 0;">{week_line}</p>'
-        f"{milestone_html}"
-        f"{cheer_block_html}"
-        '<p style="font-size:13px;line-height:1.55;color:#857E9C;margin:0 0 18px 0;">'
-        "Small, steady work is what mediators love to see.</p>"
-    )
-    html = _branded_html(
+    _notice_email(
+        to_email=to_email,
+        subject="Your Sunday progress snapshot is ready",
         headline="Your Sunday progress snapshot",
-        body_html=body_html,
+        lines=[
+            f"Hi {hello}, your weekly progress snapshot from SA CoParents is ready.",
+            "To keep it private, the details aren't in this email. Sign in to see it on your dashboard.",
+        ],
         cta_label="Open my dashboard",
         cta_url=dashboard_url,
-    )
-    _send(
-        to_email=to_email,
-        subject="Your Sunday co-parenting progress snapshot",
-        html=html,
-        text=plain,
         failure_message="Couldn't send your weekly summary right now. Please try again in a moment.",
     )
 
@@ -3450,163 +3137,19 @@ def send_weekly_compliance_reminder(
     cta_url: str,
     wall_cheer_digest: Optional[Dict[str, Any]] = None,
 ) -> None:
-    """Warm Monday nudge protecting the follow-through streak.
-
-    Copy stays short and specific: "You have N unticked things this week,
-    your K-week streak is still alive — here are the top few." No guilt
-    trip, no dark patterns.
-    """
-    greeting = (
-        f"Hi {user_name.split()[0] if user_name else 'there'},"
-    )
-
-    if current_streak >= 4:
-        streak_line = (
-            f"You're on a <strong>{current_streak}-week streak</strong> of 80%+ "
-            f"follow-through. Nice work — keep the momentum this week."
-        )
-        streak_plain = (
-            f"You're on a {current_streak}-week streak of 80%+ follow-through. "
-            f"Nice work — keep the momentum this week."
-        )
-    elif current_streak >= 1:
-        streak_line = (
-            f"Your current streak is <strong>{current_streak} week"
-            f"{'' if current_streak == 1 else 's'}</strong>. "
-            f"One steady week keeps it alive."
-        )
-        streak_plain = (
-            f"Your current streak is {current_streak} week"
-            f"{'' if current_streak == 1 else 's'}. One steady week keeps it alive."
-        )
-    else:
-        streak_line = (
-            "Every kept promise this week is the first brick of a new streak."
-        )
-        streak_plain = streak_line
-
-    items_html = ""
-    items_plain = ""
-    if pending_items:
-        rows_html = "".join([
-            f'<li style="padding:8px 0;border-bottom:1px solid #EFEBF6;'
-            f'font-size:14px;color:#1A1330;line-height:1.5;">'
-            f'{_html.escape(str(it.get("text") or ""))}'
-            f'</li>'
-            for it in pending_items
-        ])
-        items_html = (
-            f'<div style="background:#FCFBFE;border-radius:16px;padding:14px 18px;'
-            f'border:1px solid #E5E0EE;margin:14px 0 20px 0;">'
-            f'<div style="font-size:11px;letter-spacing:0.22em;text-transform:uppercase;'
-            f'color:#3D1A78;font-weight:800;margin-bottom:6px;">'
-            f"Top of the list this week</div>"
-            f'<ul style="margin:0;padding:0 0 0 18px;">{rows_html}</ul>'
-            f"</div>"
-        )
-        overflow = pending_total - len(pending_items)
-        if overflow > 0:
-            items_html += (
-                f'<p style="font-size:12px;color:#857E9C;margin:-8px 0 16px 0;'
-                f'font-style:italic;">'
-                f"+ {overflow} more waiting for you in the app.</p>"
-            )
-        items_plain = (
-            "Top of the list this week:\n"
-            + "\n".join([f"  · {it.get('text','')}" for it in pending_items])
-            + (f"\n  · (+ {overflow} more in the app)\n" if overflow > 0 else "\n")
-        )
-
-    pct_line = ""
-    if compliance_pct > 0:
-        pct_line = (
-            f'<p style="font-size:13px;color:#857E9C;margin:0 0 14px 0;">'
-            f"You're at <strong style=\"color:#3D1A78;\">{compliance_pct:.0f}%</strong> "
-            f"for the week of {_html.escape(week_start)}.</p>"
-        )
-
-    # Wall Cheer Digest — roll the week's cheers into the Monday email
-    # so parents feel the community response alongside the reminder.
-    cheers_html = ""
-    cheers_plain = ""
-    if wall_cheer_digest and int(wall_cheer_digest.get("cheer_count") or 0) > 0:
-        n = int(wall_cheer_digest["cheer_count"])
-        badges = wall_cheer_digest.get("top_badges") or []
-        badge_rows_html = "".join([
-            f'<li style="padding:6px 0;font-size:13px;color:#1A1330;line-height:1.5;">'
-            f'<strong style="color:#3D1A78;">{int(b.get("cheer_count") or 0)} '
-            f"cheer{'' if int(b.get('cheer_count') or 0) == 1 else 's'}</strong> "
-            f'on your <em>{_html.escape(str(b.get("label") or ""))}</em>'
-            f"</li>"
-            for b in badges
-        ])
-        cheers_html = (
-            f'<div style="background:linear-gradient(135deg,#F5F1FB 0%,#E0F7F5 100%);'
-            f"border-radius:16px;padding:14px 18px;border:1px solid #C6BEE0;"
-            f'margin:14px 0 20px 0;">'
-            f'<div style="font-size:11px;letter-spacing:0.22em;text-transform:uppercase;'
-            f'color:#3D1A78;font-weight:800;margin-bottom:6px;">'
-            f"Cheers you got this week</div>"
-            f'<p style="font-size:14px;color:#1A1330;margin:0 0 6px 0;">'
-            f"You received <strong>{n} cheer{'' if n == 1 else 's'}</strong> "
-            f"from other parents on the Wall this week — proof someone else "
-            f"is watching you show up.</p>"
-            + (f'<ul style="margin:6px 0 0 0;padding:0 0 0 18px;">{badge_rows_html}</ul>'
-               if badge_rows_html else "")
-            + "</div>"
-        )
-        badge_plain = "\n".join([
-            f"  · {int(b.get('cheer_count') or 0)} cheer(s) on your "
-            f"{b.get('label') or ''}"
-            for b in badges
-        ])
-        cheers_plain = (
-            f"\nCheers you got this week: {n} from other parents.\n"
-            + (badge_plain + "\n" if badge_plain else "")
-        )
-
-    body_html = (
-        f'<p style="font-size:15px;line-height:1.55;color:#4B4567;margin:0 0 12px 0;">'
-        f"{_html.escape(greeting)}</p>"
-        f'<p style="font-size:15px;line-height:1.55;color:#4B4567;margin:0 0 14px 0;">'
-        f"You have <strong>{pending_total} intervention"
-        f"{'' if pending_total == 1 else 's'}</strong> still un-ticked for this week. "
-        f"{streak_line}</p>"
-        f"{pct_line}"
-        f"{cheers_html}"
-        f"{items_html}"
-        f'<p style="font-size:13px;color:#857E9C;margin:16px 0 0 0;">'
-        f"Prefer not to get this Monday email? "
-        f"<a href=\"{_html.escape(cta_url)}\" style=\"color:#3D1A78;\">"
-        f"Turn it off in your compliance settings</a>.</p>"
-    )
-
-    plain = (
-        f"{greeting}\n\n"
-        f"You have {pending_total} intervention"
-        f"{'' if pending_total == 1 else 's'} still un-ticked for this week. "
-        f"{streak_plain}\n\n"
-        + (f"You're at {compliance_pct:.0f}% for the week of {week_start}.\n\n"
-           if compliance_pct > 0 else "")
-        + cheers_plain
-        + items_plain
-        + f"\nTick them off: {cta_url}\n\n"
-        + "Prefer not to get this Monday email? Turn it off in your compliance settings.\n"
-    )
-
-    html = _branded_html(
-        headline=f"Monday check-in · {pending_total} to tick",
-        body_html=body_html,
+    """Monday nudge with only a count of open items. Item text stays in the app."""
+    greeting = f"Hi {user_name.split()[0] if user_name else 'there'},"
+    _notice_email(
+        to_email=to_email,
+        subject="Monday check-in from SA CoParents",
+        headline="Monday check-in",
+        lines=[
+            greeting,
+            f"You have {pending_total} item{'' if pending_total == 1 else 's'} still to tick this week. Sign in to see them.",
+            "Prefer not to get this Monday email? You can turn it off in your compliance settings.",
+        ],
         cta_label="Open my compliance log",
         cta_url=cta_url,
-    )
-    _send(
-        to_email=to_email,
-        subject=f"Monday check-in · {pending_total} intervention"
-        + ("" if pending_total == 1 else "s")
-        + " still open",
-        html=html,
-        text=plain,
         failure_message="Couldn't send the weekly compliance reminder right now.",
     )
 
@@ -4362,27 +3905,19 @@ def render_self_journey_weekly_note(
     unsubscribe_url: str,
     first_name: Optional[str] = None,
 ) -> Dict[str, str]:
-    """Pure renderer for the Sunday weekly note (used by the send path and the admin preview)."""
-    hello = f"Hi {_html.escape(first_name)}," if first_name else "Hi,"
-    lead = "Here's a quick look back at what you made time for this week:"
-    note = "Every small step is a step for your child. You're only ever measured against yourself."
-    plain = (
-        f"{hello}\n\n{lead}\n\n" + "\n".join(f"- {h}" for h in highlights)
-        + f"\n\n{note}\n\nOpen my Self Journey:\n{cta_url}\n\n"
-        f"Don't want weekly notes? Unsubscribe: {unsubscribe_url}\n"
-    )
-    items = "".join(
-        f'<li style="margin:0 0 8px 0;">{_html.escape(h)}</li>' for h in highlights
-    )
-    body_html = (
-        f'<p style="font-size:15px;line-height:1.55;color:#4B4567;margin:0 0 14px 0;">{hello}</p>'
-        f'<p style="font-size:15px;line-height:1.55;color:#4B4567;margin:0 0 12px 0;">{lead}</p>'
-        f'<ul style="font-size:15px;line-height:1.5;color:#1A1330;margin:0 0 18px 18px;padding:0;">{items}</ul>'
-        f'<p style="font-size:13px;line-height:1.55;color:#857E9C;margin:0 0 22px 0;">{note}</p>'
+    """Pure renderer for the Sunday weekly note (send path + admin preview). No step details in the email."""
+    hello = f"Hi {first_name}," if first_name else "Hi,"
+    lines = [
+        hello,
+        "Your weekly Self Journey note is ready. Sign in to look back at what you made time for this week.",
+        "Every small step is a step for your child. You're only ever measured against yourself.",
+    ]
+    plain = "\n\n".join(lines) + (
+        f"\n\nOpen my Self Journey:\n{cta_url}\n\nDon't want weekly notes? Unsubscribe: {unsubscribe_url}\n"
     )
     html = _branded_html(
         headline="A look back at your week",
-        body_html=body_html,
+        body_html="".join(_p(t) for t in lines),
         cta_label="Open my Self Journey",
         cta_url=cta_url,
     ) + (
@@ -4455,24 +3990,14 @@ def send_compare_ready_alert(*, to_email: str, user_name: Optional[str], link_ur
 
 
 def send_agreement_update_alert(*, to_email: str, user_name: Optional[str], link_url: str, items: List[Dict[str, Any]], notice: str) -> None:
-    """Bundled 'your co-parent updated your agreements' email (areas marked agreed + notes added)."""
-    lines = []
-    for it in items:
-        if it["kind"] == "note":
-            lines.append(f"{it['area']}: a note was added - \"{it.get('note') or ''}\"")
-        else:
-            lines.append(f"{it['area']}: marked as agreed")
+    """Notice that the co-parent updated agreements. Areas and notes stay on the Court page."""
     hello = f"Hi {user_name.split()[0]}," if user_name else "Hi,"
-    p = '<p style="font-size:15px;line-height:1.55;color:#4B4567;margin:0 0 14px 0;">{}</p>'
-    li = "".join(f'<li style="margin:0 0 6px 0;">{_html.escape(line)}</li>' for line in lines)
-    body_html = (
-        p.format(_html.escape(hello))
-        + p.format("Your co-parent updated your agreements on your Court page:")
-        + f'<ul style="font-size:15px;line-height:1.5;color:#4B4567;margin:0 0 14px 18px;padding:0;">{li}</ul>'
-        + f'<p style="font-size:12px;line-height:1.5;color:#6B6585;margin:0 0 14px 0;">{_html.escape(notice)}</p>'
+    _notice_email(
+        to_email=to_email,
+        subject="Your co-parent updated your agreements",
+        headline="Your agreements were updated",
+        lines=[hello, "Your co-parent updated your agreements on your Court page. Sign in to see what changed.", notice],
+        cta_label="Open my Court page",
+        cta_url=link_url,
+        failure_message="Could not send the agreement update right now.",
     )
-    out_html = _branded_html(headline="Your agreements were updated", body_html=body_html, cta_label="Open my Court page", cta_url=link_url)
-    text = "\n\n".join([hello, "Your co-parent updated your agreements on your Court page:", "\n".join(f"- {line}" for line in lines),
-                        notice, f"Open your Court page: {link_url}", "— SA CoParents · sacoparentsapp.online"])
-    _send(to_email=to_email, subject="Your co-parent updated your agreements", html=out_html, text=text,
-          failure_message="Could not send the agreement update right now.")

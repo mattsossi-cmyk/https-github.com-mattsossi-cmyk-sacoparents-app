@@ -396,7 +396,8 @@ async def put_state(
 
     updates = payload.model_dump(exclude_unset=True)
     if "align_records" in updates:
-        updates["align_records"] = _cap(updates["align_records"], 500)
+        # Child record folders are switched off: never keep these records.
+        updates["align_records"] = []
     if "milestones" in updates:
         updates["milestones"] = _cap(updates["milestones"], 500)
     if "biff_logs" in updates:
@@ -872,7 +873,7 @@ async def complete_report_pdf(
         pdf_bytes = portal_pdf.build_portal_complete_report_pdf(
             safety_ack=body.safety_ack,
             cop_assessment=body.cop_assessment,
-            align_records=body.align_records or [],
+            align_records=[],
             joint_records=body.joint_records or [],
             joint_summary=joint_summary,
             foundation_text=body.foundation_text,
@@ -978,7 +979,7 @@ async def create_share_link(body: SharePayload, request: Request) -> Dict[str, A
         {
             "share_id": share_id,
             "artefact_type": body.artefact_type,
-            "payload": body.payload,
+            "payload": {k: v for k, v in body.payload.items() if k != "align_records"},
             "created_at": now.isoformat(),
             "expires_at": expires_at.isoformat(),
             "revoked_at": None,
@@ -1027,7 +1028,7 @@ def _regenerate_share_pdf(artefact_type: str, payload: Dict[str, Any]) -> bytes:
         return portal_pdf.build_portal_complete_report_pdf(
             safety_ack=payload.get("safety_ack"),
             cop_assessment=payload.get("cop_assessment"),
-            align_records=payload.get("align_records") or [],
+            align_records=[],
             joint_records=payload.get("joint_records") or [],
             joint_summary=payload.get("joint_summary"),
             foundation_text=payload.get("foundation_text"),

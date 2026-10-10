@@ -61,7 +61,7 @@ export function SendToProvider({ completedAt, defaultKeys = [], onSent, testid, 
         <DialogContent data-testid="share-provider-dialog" className="max-w-lg max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle className="text-[#4A154B]">{step === "pick" ? "Send to a provider" : "Check before you send"}</DialogTitle>
-            <DialogDescription>{step === "pick" ? "Pick a professional who accepted your invitation, then tick the forms to include." : "This is exactly what will be emailed."}</DialogDescription>
+            <DialogDescription>{step === "pick" ? "Pick a professional who accepted your invitation, then tick the forms to include." : "This is exactly what they'll be able to open."}</DialogDescription>
           </DialogHeader>
           {step === "pick" ? (
             <div className="space-y-5">

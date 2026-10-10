@@ -161,7 +161,7 @@ class TestPortalState:
         assert r.status_code == 200, r.text
         g = requests.get(f"{API}/portal/state", headers=auth_headers, timeout=30).json()
         s = g["state"]
-        assert len(s["align_records"]) == 500
+        assert s["align_records"] == []  # child record folders are off: never stored
         assert len(s["reassessments"]) == 200
         assert s["health_index"]["s1"] == 10
         assert s["health_index"]["s2"] == 1

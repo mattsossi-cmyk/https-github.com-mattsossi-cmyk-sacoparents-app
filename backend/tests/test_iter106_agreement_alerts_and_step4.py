@@ -296,17 +296,12 @@ def test_send_agreement_update_alert_content(monkeypatch):
         link_url="https://example.test/dashboard", items=items, notice=notice,
     )
     assert captured["subject"] == "Your co-parent updated your agreements"
-    text = captured["text"]
-    assert "Pick-Up, Drop-Off & Transitions: marked as agreed" in text
-    assert 'Communication & Conflict: a note was added - "Say "Hi" & be nice <ok>"' in text
-    assert notice in text
-    html = captured["html"]
-    # HTML-escaped
-    assert "&quot;" in html or "&#x27;" in html or "&lt;ok&gt;" in html
-    assert "<ok>" not in html  # raw not present
-    assert "Pick-Up, Drop-Off &amp; Transitions: marked as agreed" in html or "Pick-Up, Drop-Off" in html
-    # Intent notice present (html-escaped)
-    assert "evidenced their intent" in html
+    body = captured["text"] + captured["html"]
+    # Privacy: areas and notes stay on the Court page, never in the email.
+    assert "Pick-Up" not in body and "Say" not in body and "Communication & Conflict" not in body
+    assert notice in captured["text"]
+    assert "evidenced their intent" in captured["html"]
+    assert "https://example.test/dashboard" in body
 
 
 # =========================================================

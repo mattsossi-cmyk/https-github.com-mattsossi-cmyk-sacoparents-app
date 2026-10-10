@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { ProSeeLink } from "../../../components/privacy/ProSeeLink";
 import { Link } from "react-router-dom";
 import { toast } from "sonner";
 
@@ -72,8 +73,9 @@ export function CertificateShare({ defaultName, onSent }) {
         <DialogContent data-testid="cert-share-dialog" className="max-w-md max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle className="text-[#4a1d7a]">{picked ? `Send to ${picked.name} (${picked.role_label})?` : "Share your certificate"}</DialogTitle>
-            <DialogDescription>{picked ? `It will be emailed to ${picked.email} as a PDF, and replies come back to you.` : "Tap who should get it."}</DialogDescription>
+            <DialogDescription>{picked ? `${picked.email} gets a private link with a one-time code to open it (no file in the email). Replies come back to you.` : "Tap who should get it."}</DialogDescription>
           </DialogHeader>
+          <ProSeeLink testid="cert-share-pros-see-link" className="text-[12.5px] -mt-1" />
           {picked ? (
             <div className="flex flex-col-reverse sm:flex-row sm:justify-end gap-2 pt-1">
               <button type="button" data-testid="cert-share-back" onClick={() => setPicked(null)} disabled={busy} className={`${btn} bg-[#F4EEF5] hover:bg-[#E2D6E5] text-[#4A154B]`}>

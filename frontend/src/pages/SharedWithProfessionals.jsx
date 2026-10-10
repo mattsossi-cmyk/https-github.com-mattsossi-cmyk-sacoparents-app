@@ -7,6 +7,7 @@
  *   POST /api/parent/professional-invitations/{id}/resend
  */
 import { useEffect, useState } from "react";
+import { ProSeeLink } from "../components/privacy/ProSeeLink";
 import { Link } from "react-router-dom";
 import {
   ArrowLeft, ShieldCheck, Loader2, RefreshCcw, Send, Ban, CalendarClock,
@@ -14,6 +15,7 @@ import {
 } from "lucide-react";
 
 import AppShell from "../components/AppShell";
+import { SecureDocsSent } from "../components/SecureDocsSent";
 import { toast } from "sonner";
 import { api } from "../lib/api";
 import { logError } from "../lib/logger";
@@ -567,6 +569,8 @@ export default function SharedWithProfessionals() {
           </ul>
         )}
 
+        <SecureDocsSent />
+
         <div className="mt-8 rounded-2xl bg-[#F5F1FB] border border-[#D6CFE8] p-4 text-[12px] text-[#3D1A78]" data-testid="shared-privacy-note">
           <div className="font-semibold flex items-center gap-1.5 mb-1">
             <ShieldCheck size={12} /> Privacy at a glance
@@ -575,6 +579,9 @@ export default function SharedWithProfessionals() {
           share your full account. Giving one professional access doesn&rsquo;t
           give access to another professional. Revoking prevents future portal
           access — but SA CoParents can&rsquo;t recall a copy already downloaded.
+          <div className="mt-2">
+            <ProSeeLink testid="shared-pros-see-link" newTab={false} className="text-[12px]" />
+          </div>
         </div>
       </div>
     </AppShell>

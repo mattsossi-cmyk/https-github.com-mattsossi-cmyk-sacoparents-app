@@ -17,10 +17,13 @@ import React from "react";
 import { Link } from "react-router-dom";
 import { ArrowLeft } from "lucide-react";
 
+import { useHashScroll } from "../lib/useHashScroll";
+
 const EFFECTIVE_DATE = "February 21, 2026";
 const LAST_UPDATED = "February 21, 2026";
 
 export default function Privacy() {
+  useHashScroll();
   return (
     <div className="min-h-screen gentle-bg" data-testid="privacy-page">
       <div className="max-w-3xl mx-auto px-5 sm:px-6 py-10 sm:py-14">
@@ -418,7 +421,7 @@ export default function Privacy() {
             <li><strong>Emergent Labs</strong> — application hosting and the LLM proxy that fronts Anthropic Claude for report generation.</li>
             <li><strong>Anthropic (Claude Sonnet 4.5)</strong> — generates AI-assisted report content, called only through the Emergent proxy.</li>
             <li><strong>MongoDB Atlas</strong> — primary database, US-East region, encryption at rest.</li>
-            <li><strong>Resend</strong> — transactional email delivery (magic links, standard PDF-to-professional sends).</li>
+            <li><strong>Resend</strong> — transactional email delivery (sign-in links and codes, and notices that a document is waiting). Emails never contain reports, health details or attachments; recipients open documents in SA CoParents with a one-time code.</li>
             <li><strong>Virtru Hosted Gateway</strong> — HIPAA-scoped joint-artefact email, enabled once our BAA and tenant provisioning complete. Currently OFF; standard emails route through Resend in the meantime.</li>
             <li><strong>Google (optional)</strong> — only if you sign in with Google. We receive your name and email, nothing more.</li>
           </ul>
@@ -489,6 +492,7 @@ export default function Privacy() {
           <p>Users may request deletion of their account and associated personal information. Upon a valid deletion request, SA CoParents will delete or de-identify covered personal information from active systems within the period described in our Data Retention Policy, except where retention is reasonably necessary or legally required.</p>
           <p>Information contained in system backups may remain for a limited backup-retention period before being automatically overwritten or deleted. Deleting information from SA CoParents cannot delete copies previously downloaded, printed, saved, or independently retained by another person.</p>
 
+          <span id="your-rights" className="block scroll-mt-6" aria-hidden="true" />
           <H2>22. Your privacy rights</H2>
           <p>Depending upon applicable law, users may have the right to:</p>
           <ul>

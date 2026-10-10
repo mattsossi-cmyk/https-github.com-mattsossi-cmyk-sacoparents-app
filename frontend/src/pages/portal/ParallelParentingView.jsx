@@ -2,6 +2,8 @@ import React, { useState } from "react";
 import { toast } from "sonner";
 
 import { useGuideChat } from "./guide/useGuideChat";
+import { SharingNotice } from "../../components/privacy/SharingNotice";
+import { PpActionButton } from "./parallel/PpActionButton";
 import { PpChecklist } from "./parallel/PpChecklist";
 import { PpStep } from "./parallel/PpStep";
 import { PpSummary } from "./parallel/PpSummary";
@@ -25,6 +27,9 @@ function heroFor(screen, stepIndex, checkIndex, made) {
   if (screen === "summary") return { pill: "Your plan", pct: 100 };
   return { pill: `${made} of ${TOTAL} choices made`, pct: Math.round((made / TOTAL) * 100) };
 }
+
+const actionLabel = (plan) =>
+  plan.step >= STEPS.length ? "VIEW MY PARALLEL PARENTING PLAN" : plan.step > 0 || Object.keys(plan.answers).length ? "CONTINUE MY PARALLEL PARENTING PLAN" : "START MY PARALLEL PARENTING PLAN";
 
 // Full-page Parallel Parenting Option Builder. Screens: welcome, steps 0-5, quick checks ("check:<key>"), summary.
 export function ParallelParentingView({ onClose, onQuickExit, safetyFlag, hidden = false, initialScreen = "welcome" }) {
@@ -153,6 +158,7 @@ export function ParallelParentingView({ onClose, onQuickExit, safetyFlag, hidden
       onQuickExit={onQuickExit}
       hidden={hidden}
       footer="Parallel Parenting Option Builder"
+      banner
     >
       {pp.loadError && (
         <p data-testid="pp-save-error" className="text-xs text-rose-700 bg-rose-50 border border-rose-200 rounded-xl px-3 py-2">
@@ -160,6 +166,12 @@ export function ParallelParentingView({ onClose, onQuickExit, safetyFlag, hidden
         </p>
       )}
       {body}
+      {pp.plan && screen === "welcome" && (
+        <>
+          <SharingNotice area="parallel-parenting" />
+          <PpActionButton label={actionLabel(pp.plan)} onClick={start} />
+        </>
+      )}
     </JourneyPage>
   );
 }

@@ -27,7 +27,8 @@ import {
 } from "lucide-react";
 
 const EFFECTIVE_DATE = "February 21, 2026";
-const LAST_UPDATED = "March 4, 2026";
+const LAST_UPDATED = "June 2026";
+const DELETE_URL = `${process.env.REACT_APP_PARENT_URL}/delete-account`;
 
 /* Data-type rows shared by Apple + Google. Every collected data type
    this app touches lives here; the columns tell the stores exactly
@@ -91,32 +92,70 @@ const DATA_ROWS = [
   },
   {
     key: "device",
-    label: "Device identifiers (session / PWA install)",
+    label: "Account and session identifier",
     purpose:
       "Keep the parent signed in across the web app and PWA, and detect logged-out states.",
     apple: "Identifiers → User ID",
-    google: "App info and performance → Diagnostics (session identifier only)",
+    google: "Personal info → User IDs",
     linkedToUser: true,
     usedForTracking: false,
     optional: false,
   },
   {
-    key: "diagnostics",
-    label: "Crash and performance diagnostics",
-    purpose: "Detect production errors and route them to on-call engineers.",
-    apple: "Diagnostics → Crash Data / Performance Data",
-    google: "App info and performance → Crash logs / Diagnostics",
-    linkedToUser: false,
+    key: "voice",
+    label: "Voice notes",
+    purpose: "Turned into text so the parent doesn't have to type. The audio is not stored.",
+    apple: "User Content → Audio Data",
+    google: "Audio files → Voice or sound recordings",
+    linkedToUser: true,
     usedForTracking: false,
-    optional: false,
+    optional: true,
+    note: "Processed ephemerally: transcribed, then discarded.",
   },
+  {
+    key: "gmail",
+    label: "Gmail messages (only if the parent connects Gmail)",
+    purpose: "Shown in the app so the parent can draft a calmer reply. Messages are read live and not stored.",
+    apple: "User Content → Emails or Text Messages",
+    google: "Messages → Emails",
+    linkedToUser: true,
+    usedForTracking: false,
+    optional: true,
+    note: "Processed ephemerally. The parent can disconnect Gmail at any time.",
+  },
+];
+
+/* Google Play Data Safety, one row per Google data type. Must match DATA_ROWS and the Apple answers below. */
+const GOOGLE_ROWS = [
+  { key: "name", type: "Personal info → Name", required: "Optional", ephemeral: "No", purposes: "App functionality, Account management" },
+  { key: "email", type: "Personal info → Email address", required: "Required", ephemeral: "No", purposes: "App functionality, Account management" },
+  { key: "user-ids", type: "Personal info → User IDs", required: "Required", ephemeral: "No", purposes: "App functionality, Account management, Fraud prevention, security, and compliance" },
+  { key: "other-info", type: "Personal info → Other info (safety screen answers)", required: "Optional", ephemeral: "No", purposes: "App functionality" },
+  { key: "health", type: "Health and fitness → Health info (child health, education and psychological context)", required: "Optional", ephemeral: "No", purposes: "App functionality" },
+  { key: "emails", type: "Messages → Emails (Gmail, only if connected)", required: "Optional", ephemeral: "Yes", purposes: "App functionality" },
+  { key: "voice", type: "Audio files → Voice or sound recordings", required: "Optional", ephemeral: "Yes", purposes: "App functionality" },
+  { key: "ugc", type: "App activity → Other user-generated content", required: "Required", ephemeral: "No", purposes: "App functionality" },
+];
+
+const GOOGLE_NOT_COLLECTED = [
+  "Location (approximate or precise)",
+  "Financial info",
+  "Photos and videos",
+  "Files and docs",
+  "Calendar",
+  "Contacts",
+  "App activity → App interactions, In-app search history, Installed apps, Other actions",
+  "Web browsing",
+  "App info and performance (crash logs, diagnostics, other performance data)",
+  "Device or other IDs (including the advertising ID)",
 ];
 
 const DATA_WE_DO_NOT_COLLECT = [
   "Precise or approximate location.",
   "Contacts, calendar, photos, or files from the parent's device.",
+  "Uploaded child medical, educational, or psychological records or documents. There is no upload feature.",
+  "Product analytics, session recordings, or crash-reporting SDKs.",
   "Advertising identifiers (IDFA / GAID).",
-  "Audio or microphone recordings.",
   "Financial information — the app is free; there is no payment collection.",
   "Purchase history from other apps.",
   "Browsing history outside SA CoParents.",
@@ -356,13 +395,17 @@ export default function AppStorePrivacy() {
           </li>
         </ul>
 
-        {/* Section 6 — Store-console answer sheet */}
-        <H2>6. Store-console quick answers</H2>
+        {/* Section 6 — Google Play Data Safety */}
+        <H2>6. Google Play Data Safety answers</H2>
+        <GoogleDataSafety />
+
+        {/* Section 7 — Store-console answer sheet */}
+        <H2>7. Store-console quick answers</H2>
         <p className="text-[15px] text-[#4B4567] leading-relaxed">
           Copy these answers verbatim into each console when re-submitting
-          the app:
+          the app. Apple and Google answers describe the same data:
         </p>
-        <div className="rounded-2xl border border-[#E5E0EE] bg-[#F8F7FC] p-5 mt-3 text-[14px] text-[#1A1330] leading-relaxed space-y-2">
+        <div className="rounded-2xl border border-[#E5E0EE] bg-[#F8F7FC] p-5 mt-3 text-[14px] text-[#1A1330] leading-relaxed space-y-2" data-testid="app-store-privacy-quick-answers">
           <p className="!m-0">
             <strong>Apple App Privacy → Do you or your third-party partners use data for tracking?</strong>{" "}
             No.
@@ -370,19 +413,25 @@ export default function AppStorePrivacy() {
           <p className="!m-0">
             <strong>Apple App Privacy → Data used to track you:</strong> None.
           </p>
-          <p className="!m-0">
+          <p className="!m-0" data-testid="app-store-privacy-apple-linked">
             <strong>Apple App Privacy → Data linked to you:</strong> Contact
-            Info (Email, Name), User Content, Health &amp; Fitness (self-
-            reported, child-centered), Sensitive Info (safety screen),
-            Identifiers (User ID), Usage Data (Product Interaction).
+            Info (Email Address, Name), User Content (Emails or Text Messages,
+            only if Gmail is connected; Audio Data, voice notes; Other User
+            Content), Health &amp; Fitness (Health, self-reported,
+            child-centered), Sensitive Info (safety screen), Identifiers
+            (User ID).
+          </p>
+          <p className="!m-0" data-testid="app-store-privacy-apple-not-linked">
+            <strong>Apple App Privacy → Data not linked to you:</strong>{" "}
+            None.
           </p>
           <p className="!m-0">
-            <strong>Apple App Privacy → Data not linked to you:</strong>{" "}
-            Diagnostics (Crash / Performance).
+            <strong>Apple App Privacy → Purpose for every data type:</strong>{" "}
+            App Functionality.
           </p>
           <p className="!m-0">
             <strong>Google Play Data Safety → Does your app collect or share any of the required user data types?</strong>{" "}
-            Yes — see the table above.
+            Yes. It collects the types in section 6. It shares none.
           </p>
           <p className="!m-0">
             <strong>Google Play Data Safety → Is all of the user data collected by your app encrypted in transit?</strong>{" "}
@@ -390,17 +439,31 @@ export default function AppStorePrivacy() {
           </p>
           <p className="!m-0">
             <strong>Google Play Data Safety → Do you provide a way for users to request that their data be deleted?</strong>{" "}
-            Yes — in-app at{" "}
+            Yes. In the app at{" "}
             <Link to="/account" className="text-[#2A0F5F] underline">
               /account
             </Link>
+            , and on the web at{" "}
+            <a href={DELETE_URL} className="text-[#2A0F5F] underline break-all" data-testid="app-store-privacy-delete-url">
+              {DELETE_URL}
+            </a>
             .
           </p>
         </div>
 
-        {/* Section 7 — Change log */}
+        {/* Section 8 — Change log */}
         <H2>Change log</H2>
         <ul className="space-y-1 text-[13px] text-[#4B4567] leading-relaxed list-disc pl-5">
+          <li>
+            <strong className="text-[#1A1330]">June 2026</strong> — Added the
+            Google Play Data Safety answers (section 6). Removed product
+            analytics (PostHog) and crash diagnostics, which are no longer
+            collected, and the &ldquo;Usage Data&rdquo; Apple answer that
+            came from them. Added voice notes and optional Gmail messages,
+            both processed ephemerally. Child record folders were removed, so
+            no child records or documents are stored. Account and session
+            identifiers now map to Google &ldquo;User IDs&rdquo;.
+          </li>
           <li>
             <strong className="text-[#1A1330]">March 4, 2026</strong> —
             Initial reconciled Apple + Google disclosure created; matches
@@ -418,6 +481,70 @@ export default function AppStorePrivacy() {
           </a>
         </p>
       </div>
+    </div>
+  );
+}
+
+function YesNo({ v }) {
+  return <span className={v === "Yes" ? "font-semibold text-[#1A1330]" : "text-[#4B4567]"}>{v}</span>;
+}
+
+function GoogleDataSafety() {
+  return (
+    <div data-testid="app-store-privacy-google">
+      <p className="text-[15px] text-[#4B4567] leading-relaxed">
+        In Google Play Console → App content → Data safety, mark each type below
+        as <strong className="text-[#1A1330]">collected</strong> and{" "}
+        <strong className="text-[#1A1330]">not shared</strong>. Leave every
+        other type unselected.
+      </p>
+      <div className="mt-4 overflow-x-auto rounded-2xl border border-[#E5E0EE] bg-white">
+        <table className="w-full text-[13px] text-left" data-testid="app-store-privacy-google-table">
+          <thead className="bg-[#F8F7FC] text-[#1A1330]">
+            <tr>
+              <th className="px-3 py-2 font-medium">Google data type</th>
+              <th className="px-3 py-2 font-medium text-center">Collected</th>
+              <th className="px-3 py-2 font-medium text-center">Shared</th>
+              <th className="px-3 py-2 font-medium text-center">Processed ephemerally</th>
+              <th className="px-3 py-2 font-medium text-center">Required or optional</th>
+              <th className="px-3 py-2 font-medium">Purposes</th>
+            </tr>
+          </thead>
+          <tbody>
+            {GOOGLE_ROWS.map((r) => (
+              <tr key={r.key} className="border-t border-[#EFE9F9] align-top" data-testid={`app-store-privacy-google-row-${r.key}`}>
+                <td className="px-3 py-3 text-[#1A1330] font-medium">{r.type}</td>
+                <td className="px-3 py-3 text-center"><YesNo v="Yes" /></td>
+                <td className="px-3 py-3 text-center"><YesNo v="No" /></td>
+                <td className="px-3 py-3 text-center"><YesNo v={r.ephemeral} /></td>
+                <td className="px-3 py-3 text-center text-[#4B4567]">{r.required}</td>
+                <td className="px-3 py-3 text-[#4B4567] leading-snug">{r.purposes}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+      <h3 className="font-serif text-lg text-[#1A1330] mt-6 mb-2">Not collected (leave unselected)</h3>
+      <ul className="space-y-1 text-[14px] text-[#4B4567] leading-relaxed list-disc pl-5" data-testid="app-store-privacy-google-not-collected">
+        {GOOGLE_NOT_COLLECTED.map((t) => (
+          <li key={t}>{t}</li>
+        ))}
+      </ul>
+      <h3 className="font-serif text-lg text-[#1A1330] mt-6 mb-2">Why &ldquo;Shared&rdquo; is No</h3>
+      <p className="text-[14px] text-[#4B4567] leading-relaxed">
+        Google doesn&rsquo;t count two kinds of transfer as sharing: data sent to
+        service providers that process it for us (hosting, email delivery, AI
+        processing), and data a parent sends on purpose after an in-app
+        disclosure (for example, sending a document to a professional, see{" "}
+        <Link to="/what-professionals-see" className="text-[#2A0F5F] underline">What professionals can see</Link>
+        ). Both are explained in the{" "}
+        <Link to="/privacy" className="text-[#2A0F5F] underline">Privacy Policy</Link>.
+      </p>
+      <p className="text-[13px] text-amber-900 bg-amber-50 border border-amber-200 rounded-xl px-3 py-2 mt-3 leading-relaxed" data-testid="app-store-privacy-google-review">
+        <strong>Attorney review:</strong> confirm whether data SA CoParents Align
+        reads after a parent links their account counts as &ldquo;sharing&rdquo;
+        for Google and Apple.
+      </p>
     </div>
   );
 }

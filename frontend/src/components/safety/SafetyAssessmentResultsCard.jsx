@@ -18,6 +18,7 @@
  *     regenerate AI summaries.
  */
 import React from "react";
+import { ProSeeLink } from "../privacy/ProSeeLink";
 import { Link } from "react-router-dom";
 import {
   CheckCircle2,
@@ -309,6 +310,10 @@ export default function SafetyAssessmentResultsCard({
           bothParents={false}
           testId="safety-results-court-disclaimer"
         />
+        <p className="mb-4 text-[13px] text-[#4B4567]">
+          Your Safety Assessment PDF includes your answers. The court report includes summary findings only.{" "}
+          <ProSeeLink testid="safety-results-pros-see-link" area="safety-check" />
+        </p>
         <div className="flex flex-wrap gap-3">
           <button
             type="button"

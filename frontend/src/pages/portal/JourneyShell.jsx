@@ -1127,6 +1127,7 @@ export function JourneyShell({
           startNew={assessStartNew}
           onCompleted={saHistory.addEntry}
           onEntryUpdate={saHistory.updateEntry}
+          onGoalReached={saHistory.markReached}
           onQuickExit={quickExitAction}
           onOpenBiffCoach={onOpenBiffCoach}
           safetyFlag={safetyFlag}

@@ -3,6 +3,7 @@ import { useLocation, Link } from "react-router-dom";
 import { ScrollText, Check } from "lucide-react";
 import { api } from "../lib/api";
 import { logError } from "../lib/logger";
+import { PrivacyLinks } from "./privacy/PrivacyLinks";
 
 const STORAGE_KEY = "sac_legal_ack_v1";
 const VERSION = "v1";
@@ -14,6 +15,7 @@ const PUBLIC_MARKETING_PATHS = new Set([
   "/",
   "/watch",
   "/privacy",
+  "/what-professionals-see",
   "/terms",
   "/accessibility",
   "/methodology",
@@ -83,6 +85,7 @@ export default function LegalAcknowledgment() {
       location.pathname.startsWith("/shared/") ||
       location.pathname.startsWith("/joint-agreement/shared/") ||
       location.pathname.startsWith("/joint-report/shared/") ||
+      location.pathname.startsWith("/doc/") ||
       location.pathname.startsWith("/onboarding/")
     ) {
       if (open) {
@@ -162,10 +165,16 @@ export default function LegalAcknowledgment() {
           </p>
           <p className="text-[13px] text-[#4B4567] leading-relaxed">
             Full details are in our{" "}
-            <Link to="/terms" className="text-[#3D1A78] underline">Terms of Use</Link>
-            {" "}and{" "}
-            <Link to="/privacy" className="text-[#3D1A78] underline">Privacy Policy</Link>.
+            <Link to="/terms" className="text-[#3D1A78] underline" data-testid="legal-ack-link-terms">Terms of Use</Link>.
           </p>
+          <div data-testid="legal-ack-privacy" className="rounded-2xl border border-[#E5E0EE] bg-[#F8F7FC] p-4 space-y-2">
+            <p className="text-[13px] font-bold text-[#1A1330]">Your privacy</p>
+            <p className="text-[13px] text-[#4B4567] leading-relaxed">
+              What you enter is private to your account. Nothing is shared with your co-parent, a professional or anyone
+              else unless you choose a person and tap Send.
+            </p>
+            <PrivacyLinks tp="legal-ack" />
+          </div>
         </div>
 
         <div className="px-6 pb-6 space-y-5 border-t border-[#E5E0EE] pt-5">

@@ -3,6 +3,7 @@ import { createPortal } from "react-dom";
 import { toast } from "sonner";
 
 import { BiffHistory, BiffMilestones } from "./BiffTab";
+import { SharingNotice } from "../../components/privacy/SharingNotice";
 import { BiffBookLink, BiffSnapshotCard } from "./JourneyDrawers";
 import { BeforeAfterCard } from "./commBuilder/BeforeAfterCard";
 import { DraftCard } from "./commBuilder/DraftCard";
@@ -153,6 +154,7 @@ export function CommunicationBuilderView({ open, focus, onClose, onQuickExit, on
               <BiffMilestones safetyFlagged={greyRock} {...extras} />
               <BiffBookLink />
             </div>
+            <SharingNotice area="communication-builder" />
             <div className="pt-4">
               <button
                 type="button"

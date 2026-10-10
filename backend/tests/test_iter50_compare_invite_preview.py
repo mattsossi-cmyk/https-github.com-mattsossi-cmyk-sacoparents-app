@@ -42,97 +42,11 @@ class TestSendCompareInvitePreview:
         assert "A quick preview" not in kwargs["html"]
         assert "already agree on about" not in kwargs["text"]
 
-    def test_with_pct_renders_badge(self):
-        with self._capture() as m:
-            email_service.send_compare_invite(
-                to_email="p2@example.com",
-                link_url="https://example.com/hub",
-                inviter_name="Sam",
-                product_label="Checkin - Medical Needs",
-                aligned_pct=68,
-            )
-        kwargs = m.call_args.kwargs
-        assert "A quick preview" in kwargs["html"]
-        assert "68% of your answers" in kwargs["html"]
-        assert "You already agree on about 68% of your answers." in kwargs["html"]
-        # Plain text version too
-        assert "68%" in kwargs["text"]
-        # Explicit "no items leak" reassurance
-        assert "no items are shared until you consent" in kwargs["html"].lower()
 
-    def test_pct_zero_still_renders_badge(self):
-        with self._capture() as m:
-            email_service.send_compare_invite(
-                to_email="p2@example.com",
-                link_url="https://example.com/hub",
-                aligned_pct=0,
-            )
-        kwargs = m.call_args.kwargs
-        assert "0% of your answers" in kwargs["html"]
 
-    @pytest.mark.parametrize("raw,expected", [
-        (150, 100),   # clamp high
-        (-5, 0),      # clamp low
-        (73.4, 73),   # float -> int
-    ])
-    def test_pct_normalization(self, raw, expected):
-        with self._capture() as m:
-            email_service.send_compare_invite(
-                to_email="p2@example.com",
-                link_url="https://example.com/hub",
-                aligned_pct=raw,
-            )
-        kwargs = m.call_args.kwargs
-        assert f"{expected}% of your answers" in kwargs["html"], (
-            f"raw={raw} should render as {expected}% — got: {kwargs['html'][:400]}"
-        )
 
-    def test_trend_up_renders_positive_delta(self):
-        with self._capture() as m:
-            email_service.send_compare_invite(
-                to_email="p2@example.com",
-                link_url="https://example.com/hub",
-                aligned_pct=71,
-                previous_aligned_pct=62,
-            )
-        kwargs = m.call_args.kwargs
-        html = kwargs["html"]
-        text = kwargs["text"]
-        assert "up 9 points since your last check-in" in html
-        assert "was 62%" in html
-        # Up arrow character present
-        assert "↑" in html
-        # Plain text version renders too
-        assert "up 9 points" in text
-        assert "62%" in text
 
-    def test_trend_down_renders_negative_delta(self):
-        with self._capture() as m:
-            email_service.send_compare_invite(
-                to_email="p2@example.com",
-                link_url="https://example.com/hub",
-                aligned_pct=54,
-                previous_aligned_pct=68,
-            )
-        kwargs = m.call_args.kwargs
-        html = kwargs["html"]
-        assert "down 14 points since your last check-in" in html
-        assert "was 68%" in html
-        assert "↓" in html
 
-    def test_trend_flat_renders_no_change(self):
-        with self._capture() as m:
-            email_service.send_compare_invite(
-                to_email="p2@example.com",
-                link_url="https://example.com/hub",
-                aligned_pct=70,
-                previous_aligned_pct=70,
-            )
-        kwargs = m.call_args.kwargs
-        html = kwargs["html"]
-        assert "no change since your last check-in" in html
-        assert "was 70%" in html
-        assert "→" in html
 
     def test_trend_without_current_pct_no_delta(self):
         """If we don't know the current pct, we can't render a delta even if
@@ -147,22 +61,6 @@ class TestSendCompareInvitePreview:
         assert "A quick preview" not in kwargs["html"]
         assert "since your last check-in" not in kwargs["html"]
 
-    def test_trend_without_previous_no_delta(self):
-        """First-time compares: current pct present, previous None → we show
-        the preview card but no trend line."""
-        with self._capture() as m:
-            email_service.send_compare_invite(
-                to_email="p2@example.com",
-                link_url="https://example.com/hub",
-                aligned_pct=68,
-                previous_aligned_pct=None,
-            )
-        kwargs = m.call_args.kwargs
-        html = kwargs["html"]
-        assert "68% of your answers" in html
-        assert "since your last check-in" not in html
-        # No arrow either
-        assert "↑" not in html and "↓" not in html and "→" not in html
 
 
 # ---------------------------------------------------------------------------
@@ -235,3 +133,14 @@ class TestPreviewPctSource:
         pct = result.get("summary", {}).get("aligned_pct")
         assert isinstance(pct, int)
         assert pct == 0
+
+
+def test_compare_invite_never_includes_scores_or_product():
+    with patch.object(email_service, "_send") as m:
+        email_service.send_compare_invite(
+            to_email="p2@example.com", link_url="https://example.com/hub", inviter_name="Sam",
+            product_label="Checkin - Medical Needs", aligned_pct=68, previous_aligned_pct=50,
+        )
+    body = m.call_args.kwargs["html"] + m.call_args.kwargs["text"] + m.call_args.kwargs["subject"]
+    assert "68" not in body and "Medical" not in body
+    assert "https://example.com/hub" in body

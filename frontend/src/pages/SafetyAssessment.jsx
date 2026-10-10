@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
+import { ProSeeLink } from "../components/privacy/ProSeeLink";
 import { Link, useNavigate } from "react-router-dom";
 import {
   ArrowLeft,
@@ -558,6 +559,13 @@ export default function SafetyAssessment() {
               <li className="flex items-start gap-2">
                 <CheckCircle2 size={16} className="shrink-0 mt-0.5 text-[#3D1A78]" />
                 <span>You can download or email yourself a PDF copy at the end.</span>
+              </li>
+              <li className="flex items-start gap-2">
+                <CheckCircle2 size={16} className="shrink-0 mt-0.5 text-[#3D1A78]" />
+                <span>
+                  Nothing is sent to anyone unless you choose to.{" "}
+                  <ProSeeLink testid="safety-intro-pros-see-link" area="safety-check" />
+                </span>
               </li>
             </ul>
 

@@ -54,9 +54,9 @@ export default function MediatorEmailDialog({ open, onClose, onSend, sending }) 
         </div>
         <div className="px-6 sm:px-7 py-5 space-y-4">
           <p className="text-sm text-[#4B4567] leading-relaxed">
-            We&rsquo;ll send your mediator a short summary of your recommended
-            pathway with the full PDF attached. They can reply directly to your
-            email address.
+            We&rsquo;ll email your mediator a private link to your recommended
+            pathway. The PDF isn&rsquo;t attached; they open it with a one-time
+            code. They can reply directly to your email address.
           </p>
           <div>
             <label className="block text-[11px] uppercase tracking-[0.18em] text-[#3D1A78] font-bold mb-1">

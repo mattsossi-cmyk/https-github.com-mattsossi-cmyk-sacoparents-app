@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { ProSeeLink } from "./privacy/ProSeeLink";
 import { EyeOff, Eye, Download, Share2, Loader2, Save, Lock, Clock, Trash2, ChevronDown, ChevronRight } from "lucide-react";
 import { toast } from "sonner";
 import { api, API } from "../lib/api";
@@ -220,6 +221,7 @@ export default function ReportShareControls({
             Some readers only need the highlights. Hide any section before you
             download the PDF or generate a share link.
           </p>
+          <ProSeeLink testid={`${testIdPrefix}-pros-see-link`} className="text-[13px] mt-1.5" />
         </div>
         <div className="text-right">
           <div className="text-2xl font-serif text-[#3D1A78]" data-testid={`${testIdPrefix}-visible-count`}>

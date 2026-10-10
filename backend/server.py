@@ -86,6 +86,7 @@ from parallel_parenting_routes import router as parallel_parenting_router  # noq
 from child_needs_routes import router as child_needs_router  # noqa: E402
 from child_needs_share_routes import router as child_needs_share_router  # noqa: E402
 from journey_certificate_routes import router as journey_certificate_router  # noqa: E402
+from secure_doc_routes import router as secure_doc_router  # noqa: E402
 from journey_summary_routes import router as journey_summary_router  # noqa: E402
 from journey_guide_routes import router as journey_guide_router  # noqa: E402
 from foundation_builder_routes import router as foundation_builder_router  # noqa: E402
@@ -249,6 +250,7 @@ api_router.include_router(self_assessment_router)
 api_router.include_router(child_needs_router)
 api_router.include_router(child_needs_share_router)
 api_router.include_router(journey_certificate_router)
+api_router.include_router(secure_doc_router)
 api_router.include_router(journey_summary_router)
 api_router.include_router(journey_guide_router)
 api_router.include_router(foundation_builder_router)
@@ -324,6 +326,20 @@ async def startup_log():
         )
     except Exception:  # noqa: BLE001
         logger.exception("Failed to create deep_dive_compare_snapshots unique index")
+    # Child medical/educational/psychological records are switched off: purge any saved copies.
+    try:
+        res = await app.state.db["portal_state"].update_many(
+            {"align_records.0": {"$exists": True}}, {"$set": {"align_records": []}}
+        )
+        if res.modified_count:
+            logger.info("Purged child alignment records from %d accounts", res.modified_count)
+        res = await app.state.db["portal_pdf_shares"].update_many(
+            {"payload.align_records": {"$exists": True}}, {"$unset": {"payload.align_records": ""}}
+        )
+        if res.modified_count:
+            logger.info("Purged child alignment records from %d share links", res.modified_count)
+    except Exception:  # noqa: BLE001
+        logger.exception("Failed to purge child alignment records")
     # Kick off the post-event survey scheduler. It sleeps internally so it
     # won't run before the DB is warm.
     asyncio.create_task(survey_scheduler_loop(app))

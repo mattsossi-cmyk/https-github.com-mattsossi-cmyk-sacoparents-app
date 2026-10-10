@@ -102,6 +102,12 @@ class SAEntry(BaseModel):
     tips: Dict[str, str] = Field(default_factory=dict)
     goal: str = ""
     scores: Dict[str, Any]
+    reached_at: Optional[str] = None
+
+
+class SAGoalReached(BaseModel):
+    entry_id: str = Field(..., max_length=64)
+    reached: bool = True
 
 
 class SAGoalPractice(BaseModel):
@@ -249,6 +255,25 @@ async def goal_checkin(
         upsert=True,
     )
     return await _goal_practice(db, user.user_id, body.entry_id)
+
+
+@router.post("/goal/reached", response_model=SAEntry)
+async def goal_reached(
+    body: SAGoalReached,
+    user: UserPublic = Depends(get_current_user),
+    db: AsyncIOMotorDatabase = Depends(get_db),
+) -> SAEntry:
+    """Mark a Self-Assessment goal as reached (or undo it)."""
+    q = {"user_id": user.user_id, "id": body.entry_id}
+    doc = await db.self_assessment_history.find_one(q, {"_id": 0, "goal": 1})
+    if not doc:
+        raise HTTPException(404, "Self-Assessment not found.")
+    if not (doc.get("goal") or "").strip():
+        raise HTTPException(422, "This Self-Assessment has no goal.")
+    reached_at = datetime.now(timezone.utc).isoformat() if body.reached else None
+    await db.self_assessment_history.update_one(q, {"$set": {"reached_at": reached_at}})
+    saved = await db.self_assessment_history.find_one(q, {"_id": 0, "user_id": 0})
+    return SAEntry(**saved)
 
 
 _UNSUB_PAGE = """<!doctype html><html><head><meta name="viewport" content="width=device-width,initial-scale=1">

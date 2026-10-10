@@ -14,6 +14,7 @@
  *   POST /api/parent/professional-invitations
  */
 import { useEffect, useMemo, useState } from "react";
+import { ProSeeLink } from "../components/privacy/ProSeeLink";
 import { Link, useNavigate } from "react-router-dom";
 import {
   ArrowLeft, ArrowRight, ShieldCheck, Loader2, CheckCircle2,
@@ -248,6 +249,7 @@ export default function ShareWithProfessional() {
           raw answers, journal, AI Coach conversations, and unselected reports
           stay private.
         </p>
+        <ProSeeLink testid="share-with-pro-pros-see-link" className="text-sm mt-2" />
 
         <Stepper step={step} />
 
