@@ -8913,3 +8913,30 @@ dashboard for sharing SELECTED completed reports with any professional.
 - Individual Journey reorder (founder): Continue button at the top, then the pictures, and accomplishments (`door-self-progress`: 6-of-6 banner,
   5-of-5 ring, Journey Summary, Send to a provider) at the END just before the badges. The "Finish" arrow now targets door-self-progress.
 - Testing agent iter112: backend 7/7 + 5/5 regression, frontend 100%, no issues (tests/test_iter112_journey_cert_and_med_preventive.py).
+
+
+### 2026-06 — Picture done ticks, certificate sharing, Court 2×2 form pictures
+- Live purple ticks: `ChildNeedsForm` `onValuesChange` → ChildNeedsView `live` values. An icon gets a purple tick (`cn-art-done-<icon>`,
+  `ArtPicture tickClass`) once ALL its mapped fields are non-empty on screen, and updates while the parent types.
+- Certificate sharing (`backend/journey_certificate_routes.py`, prefix /api/journey-summary/certificate): GET /recipients (co-parent
+  linked by court case code via court_compare `_case_key`/`_coparent`, hidden if EITHER parent `is_safety_flagged`; plus accepted
+  professionals, deduped by email), POST /send {recipient_id, name} (same 6-step gate via `certificate_bytes`; Resend email
+  `send_journey_certificate` with the PDF attached; reply-to parent), GET /shares. Collection `journey_certificate_shares`.
+  Frontend `selfJourney/CertificateShare.jsx` (`door-self-certificate-share-btn` → tap a person → "Send to X (Role)?" → Send now).
+  "Certificate sent to" list inside the 6-of-6 banner (`door-self-certificate-sent`). No typed addresses.
+- Court page `court/CourtPictureCards.jsx`: 2×2 grid of the Educational / Medical / Psychological form pictures
+  (`court-art-needs-<cat>`; tap the picture or `-btn` → open that form; tap an icon `-panel-<icon>` → open the form and jump to those
+  questions via ChildNeedsView `initialJump`) + Parallel Parenting card.
+- Self-tested (curl + screenshots); see the iter113 testing agent report.
+
+- iter113 testing agent: 11/11 backend + all frontend checks passed, no action items.
+
+### 2026-06 — PostHog removed
+- Deleted the PostHog snippet (session recording on, host us.i.posthog.com) from `frontend/public/index.html`.
+  The dev server only served the new copy after a frontend restart.
+- `AppStorePrivacy.jsx`: removed the "Product-analytics events (PostHog, self-hosted)" row, PostHog from the
+  service-provider list, and the "Turn off product analytics" bullet (no analytics remain).
+- Verified: no "posthog" in the code; browser loads of /, /login and /legal/app-store-privacy made 0 PostHog requests and
+  `window.posthog` is undefined. `assets.emergent.sh/scripts/emergent-main.js` has no PostHog references.
+- Past recordings: support says to email support@emergent.sh (job ID + key prefix phc_xAvL…) about who owns the
+  project and how to delete recordings. Production keeps sending data until the user deploys.

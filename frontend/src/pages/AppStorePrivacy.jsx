@@ -101,18 +101,6 @@ const DATA_ROWS = [
     optional: false,
   },
   {
-    key: "analytics",
-    label: "Product-analytics events (PostHog, self-hosted)",
-    purpose:
-      "Aggregate, de-identified funnel and reliability metrics. No PHI or assessment content is ever emitted.",
-    apple: "Usage Data → Product Interaction",
-    google: "App activity → App interactions",
-    linkedToUser: false,
-    usedForTracking: false,
-    optional: true,
-    note: "Parents can opt out via the account marketing/analytics toggle at any time.",
-  },
-  {
     key: "diagnostics",
     label: "Crash and performance diagnostics",
     purpose: "Detect production errors and route them to on-call engineers.",
@@ -322,7 +310,7 @@ export default function AppStorePrivacy() {
           <li>
             <strong className="text-[#1A1330]">With service providers</strong>{" "}
             necessary to run the app (MongoDB hosting, Resend transactional
-            email, PostHog product analytics, LLM providers). Contracts
+            email, LLM providers). Contracts
             forbid secondary use of user content.
           </li>
           <li>
@@ -340,13 +328,6 @@ export default function AppStorePrivacy() {
               /dashboard
             </Link>{" "}
             → Share management.
-          </li>
-          <li>
-            Turn off product analytics from{" "}
-            <Link to="/account" className="text-[#2A0F5F] underline">
-              /account
-            </Link>
-            .
           </li>
           <li>
             Export the accounting-of-disclosures log (every access to the

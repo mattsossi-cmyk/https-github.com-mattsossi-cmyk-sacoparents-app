@@ -1,0 +1,28 @@
+{
+  "summary": "Iteration 113 — Verified Journey Certificate SHARING flow (recipients + send + shares + safety-flag hiding + download regression), Child Needs picture icon live done-ticks (iconDone keyed off onValuesChange with .every() over mapped fields), and Court Ordered page's new 2×2 picture cards (Educational/Medical/Psychological + Parallel Parenting) with whole-picture + icon-tap deep-links into ChildNeedsView. Backend 11/11 pytest passed in /app/backend/tests/test_iter113_cert_share.py (uses live Resend test inbox + real Mongo portal_state toggles). Frontend verified on preview URL for both journey6@test.com and parent1@test.com (parent1 Submit/Save NOT clicked — no persistent state change).",
+  "backend_issues": {"critical": [], "minor": []},
+  "frontend_issues": {"ui_bugs": [], "integration_issues": [], "design_issues": []},
+  "test_report_links": [
+    "/app/backend/tests/test_iter113_cert_share.py",
+    "/app/test_reports/pytest/iter113.xml"
+  ],
+  "action_items": [],
+  "critical_code_review_comments": [
+    "journey_certificate_routes._recipients correctly hides the 'coparent' entry when EITHER is_safety_flagged(self) or is_safety_flagged(co-parent) is true — single branch guards both sides as spec requires; verified live by toggling portal_state.safety_ack.flagged on both accounts and restoring with $unset.",
+    "send_certificate reuses the same _missing_steps gate via certificate_bytes() so share and download share one validation path (DRY) — blank name → 422, incomplete steps → 422, unknown recipient → 404, unauth → 403.",
+    "CertificateShare.start resets picked/recipients/name on every open and prefills defaultName; the confirmation screen uses title `Send to ${name} (${role_label})?` matching the founder spec exactly ('Send to Casey Six (test co-parent) (Co-parent)?').",
+    "ChildNeedsView.iconDone builds the icon→done map from NEEDS_PAGE_ART[activeKey].items.filter(f.length).map(every nonblank live[field]) — zero-field 'start' icon is correctly excluded so it never shows a stray tick.",
+    "ArtPicture tickClass is passed down ('bg-purple-700' from ChildNeedsView) so Child Needs page ticks are PURPLE while Court/Journey arrows stay green — one component serves both styles.",
+    "CourtPictureCards renders a 1-col grid at <640px (verified: 358px single column at 390w, scrollWidth==clientWidth, no horizontal overflow) and 2-col at ≥640px (verified: 308px 308px at 1920w). JourneyArtCard for PP is intentionally not wrapped as a 'needs picture' — different art shape, intentional."
+  ],
+  "updated_files": [
+    "/app/backend/tests/test_iter113_cert_share.py (new — 11 pytest cases)",
+    "/app/test_reports/pytest/iter113.xml"
+  ],
+  "success_rate": {"backend": "100% (11/11)", "frontend": "100% of required testids and live behaviours verified"},
+  "test_credentials": "parent1@test.com / TestPass123! (unchanged — no Submit clicked), journey6@test.com / TestPass123! (certificate shares written: 1 new 'coparent' row — re-seeded after tests to reset).",
+  "seed_data_creation": "Final `cd /app/backend && python seed_journey_six.py` re-run post-tests; no residual safety flags.",
+  "retest_needed": false,
+  "should_main_agent_self_test": true,
+  "context_for_next_testing_agent": "Mongo .env values are quoted (\"mongodb://localhost:27017\" / \"test_database\") — strip both single/double quotes when parsing /app/backend/.env (fixture now does). Safety flag toggling must set `safety_ack: {flagged: true}` as a nested object (not dotted path) because the stored field can be null and MongoDB refuses to create a subfield in null. parent1 has no co-parent linked to the 'coparent' recipient, so send → 404 (not 422) when using recipient_id='coparent'; test accepts both. The med_prescriptions flash class is cleared after 1800 ms so verify flash within ~1 s of the deep-link click. Court page: use evaluate().click() rather than Playwright .click() for the dashboard hotspot — the arrow is animated (.sa-arrow-nudge) which makes it unstable for auto-wait. Court whole-picture tap uses data-testid court-art-needs-<cat>-open (overlay button inside ArtPicture)."
+}
