@@ -1,0 +1,26 @@
+{
+  "summary": "Iter116 — SA CoParents Align link-from-account + Align read history + 'What professionals can see' attorney-approved wording. All 6 backend tests and all 8 frontend scenarios passed. End state as requested: parent1 LINKED, parent2 UNLINKED.",
+  "backend_issues": {"critical": [], "minor": []},
+  "frontend_issues": {"ui_bugs": [], "integration_issues": [], "design_issues": []},
+  "test_report_links": [
+    "/app/backend/tests/test_iter116_align_link_and_history.py",
+    "/app/test_reports/pytest/iter116.xml"
+  ],
+  "action_items": [],
+  "critical_code_review_comments": [
+    "integration_routes.py `_link_status` emits last_read_at=reads[0].at (newest first) — correct. recent_reads capped to 5 via .limit(5) on sort desc. Good.",
+    "AlignLinkCode polls every 8s only while a code is showing; stops when `code` is cleared on auto-detect. No leaked intervals.",
+    "AlignReadHistory read list keys use `${r.at}-${i}` — safe even if two reads share a timestamp.",
+    "proVisibility.ATTORNEY_REVIEW_PENDING=false is a single-switch; `pros-see-draft-label` guarded correctly, `pros-see-review-*` tags never render (dead code path acceptable for a future re-review toggle)."
+  ],
+  "updated_files": [
+    "/app/backend/tests/test_iter116_align_link_and_history.py"
+  ],
+  "success_rate": {"backend": "100% (6/6)", "frontend": "100% (8/8)"},
+  "test_credentials": "parent1/parent2/journey6@test.com / TestPass123!. INTEGRATION_SHARED_SECRET from /app/backend/.env.",
+  "seed_data_creation": "During tests parent2 was unlinked->minted->s2s verified->6 export reads->unlinked. parent1 kept linked, access log cleared then re-populated with 1 export + 1 pdf read to validate redacted badges. Final DB state: parent1 linked=True, parent2 linked=False (confirmed).",
+  "retest_needed": false,
+  "main_agent_can_self_test": true,
+  "context_for_next_testing_agent": "Backend endpoints verified: GET /api/integrations/align-link (auth), POST /api/link-codes (auth+safety gate), POST /api/integrations/verify-link-code (X-Integration-Key), GET /api/integrations/export-assessments & /foundation-statement.pdf (X-Integration-Key, 403 for safety-flagged on PDF). Frontend verified: AlignLinkCard shows state/last-read; AlignLinkCode mint+15min timer+copy+site link+auto-detect via 8s poll+'New code' label; AlignReadHistory shows up to 5 rows with redacted badges; journey6 blocked panel with safety-screen link; /what-professionals-see has NO draft label and NO review tags, remainder renders (6 assessment cards, Align method, court section). No horizontal overflow at 390x844 or 1920x800. End state: parent1 linked, parent2 unlinked — safe for deploy.",
+  "rca of the issue": "N/A — no issues found."
+}

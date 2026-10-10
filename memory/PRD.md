@@ -8983,3 +8983,11 @@ dashboard for sharing SELECTED completed reports with any professional.
 - `GoalReachedBanner` (selfJourney): once per goal (localStorage `sac_goal_celebrated_<uid>`), confetti + banner on Self Journey.
 - Founder's pasted plan (Vercel/Postgres/RLS migration) NOT actioned: this app runs on Emergent hosting + MongoDB; pending discussion.
 - Known stale test: test_safety_assessment_mediator_email.py::test_metadata expects 10 section_1 questions (now 28).
+
+### 2026-06 — Link From Account, Align Read History, attorney approval (iter116: backend 6/6, frontend 8/8)
+- AlignLinkCard now has `AlignLinkCode` (POST /link-codes {context:'account'}; 15-min code, copy, timer, "type it on
+  sacoparentsalign.com"; polls align-link every 8s and flips to Linked; safety-gate 403 shows message + safety screen link)
+  and `AlignReadHistory` (last 5 reads from align_access_log: date/time, what, note when redacted/blocked).
+- GET /api/integrations/align-link → recent_reads [{at, what, redacted, note}] (max 5, newest first).
+- Attorney approved the professionals page wording: ATTORNEY_REVIEW_PENDING=false (label + tags hidden; flip back to show).
+- Deploy requested by founder after this batch.
