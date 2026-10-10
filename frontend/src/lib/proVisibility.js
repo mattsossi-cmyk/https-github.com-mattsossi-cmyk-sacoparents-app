@@ -4,7 +4,7 @@
 export const PROS_PAGE_PATH = "/what-professionals-see";
 
 // Single switch: set to false once the attorney approves this wording (hides the draft label and review tags).
-export const ATTORNEY_REVIEW_PENDING = true;
+export const ATTORNEY_REVIEW_PENDING = false;
 
 export const SHORT_VERSION = [
   "Nothing in your account goes to a professional until you choose who gets it, choose what to include, and tap Send or Share.",

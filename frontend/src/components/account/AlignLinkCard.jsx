@@ -3,6 +3,8 @@ import { Link2, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 
 import { api } from "../../lib/api";
+import { AlignLinkCode } from "./AlignLinkCode";
+import { AlignReadHistory } from "./AlignReadHistory";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -53,8 +55,10 @@ export default function AlignLinkCard() {
     try {
       const { data } = await api.get("/integrations/align-link");
       setStatus(data);
+      return data;
     } catch {
-      setStatus({ linked: false });
+      setStatus((s) => s || { linked: false, recent_reads: [] });
+      return null;
     }
   }, []);
   useEffect(() => { load(); }, [load]);
@@ -73,7 +77,8 @@ export default function AlignLinkCard() {
   };
 
   return (
-    <div data-testid="align-link-card" className="rounded-2xl border border-[#E5E0EE] bg-white p-4 sm:p-5 flex items-start gap-3">
+    <div data-testid="align-link-card" className="rounded-2xl border border-[#E5E0EE] bg-white p-4 sm:p-5">
+      <div className="flex items-start gap-3">
       <div className="shrink-0 h-9 w-9 rounded-full grid place-items-center bg-[#F5F1FB] text-[#3D1A78]">
         <Link2 size={15} />
       </div>
@@ -91,7 +96,12 @@ export default function AlignLinkCard() {
           )}
         </p>
       </div>
-      {status?.linked && <UnlinkButton busy={busy} onConfirm={unlink} />}
+      </div>
+      <div className="mt-3 flex flex-wrap items-start gap-2 sm:pl-12">
+        <AlignLinkCode onPoll={load} />
+        {status?.linked && <UnlinkButton busy={busy} onConfirm={unlink} />}
+      </div>
+      {status && <AlignReadHistory reads={status.recent_reads || []} />}
     </div>
   );
 }

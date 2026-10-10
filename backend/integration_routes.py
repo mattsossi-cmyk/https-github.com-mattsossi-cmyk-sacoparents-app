@@ -44,7 +44,7 @@ import secrets
 import string
 from datetime import datetime, timezone, timedelta
 from io import BytesIO
-from typing import Any, Dict, Optional
+from typing import Any, Dict, List, Optional
 
 import bcrypt
 from fastapi import APIRouter, Depends, Header, HTTPException, Request
@@ -425,16 +425,50 @@ async def migrate_verified_links(db: AsyncIOMotorDatabase) -> int:
     return n
 
 
+_READ_LABELS = {
+    "export-assessments": "Your Situation Snapshot, Foundation Statement and Special Needs summaries",
+    "foundation-statement.pdf": "Your Foundation Statement PDF",
+}
+
+
+_REDACTED_NOTES = {
+    "export-assessments": "Answers and writing withheld for safety",
+    "foundation-statement.pdf": "Blocked for safety",
+}
+
+
+class AlignRead(BaseModel):
+    at: str
+    what: str
+    redacted: bool
+    note: Optional[str] = None
+
+
 class AlignLinkStatus(BaseModel):
     linked: bool
     linked_at: Optional[str] = None
     last_read_at: Optional[str] = None
+    recent_reads: List[AlignRead] = []
 
 
 async def _link_status(db: AsyncIOMotorDatabase, user_id: str) -> AlignLinkStatus:
     link = await db[_LINKS].find_one({"user_id": user_id, "unlinked_at": None}, {"_id": 0, "linked_at": 1})
-    last = await db[_ACCESS_LOG].find_one({"user_id": user_id}, {"_id": 0, "at": 1}, sort=[("at", -1)])
-    return AlignLinkStatus(linked=bool(link), linked_at=_iso((link or {}).get("linked_at")), last_read_at=_iso((last or {}).get("at")))
+    logs = await db[_ACCESS_LOG].find({"user_id": user_id}, {"_id": 0}).sort("at", -1).limit(5).to_list(5)
+    reads = [
+        AlignRead(
+            at=_iso(r["at"]),
+            what=_READ_LABELS.get(r["endpoint"], r["endpoint"]),
+            redacted=bool(r.get("redacted")),
+            note=_REDACTED_NOTES.get(r["endpoint"]) if r.get("redacted") else None,
+        )
+        for r in logs
+    ]
+    return AlignLinkStatus(
+        linked=bool(link),
+        linked_at=_iso((link or {}).get("linked_at")),
+        last_read_at=reads[0].at if reads else None,
+        recent_reads=reads,
+    )
 
 
 @router.get("/integrations/align-link", response_model=AlignLinkStatus)
