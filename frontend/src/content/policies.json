@@ -43,6 +43,53 @@
       ] }
     ]
   },
+  "security-practices": {
+    "slug": "security-practices",
+    "title": "Security & Privacy Practices",
+    "sections": [
+      { "heading": "What this page is", "paragraphs": [
+        "This page describes the protections SA CoParents Align has in place today. It is written to be accurate rather than reassuring: where a protection depends on our hosting provider, we say so."
+      ] },
+      { "heading": "Private by default", "bullets": [
+        "Each parent's answers, reflections, and safety screening are stored under that parent's own record and are never returned to the co-parent by any screen, report, PDF, or email.",
+        "Joint reports show the generated comparison only. Family-violence screenings are never compared or shared with the other parent.",
+        "Court and professional documents show only that a screening was received, a tier, and a neutral pathway label confirmed by the assigned professional."
+      ] },
+      { "heading": "Who can see what", "bullets": [
+        "Parents see their own information.",
+        "Assigned professionals see individual screening answers on a protected screen. Every view is written to an access log with who viewed, what, and when.",
+        "Judges receive only the frozen court submission a professional chose to send, through a time-limited link and access code.",
+        "Administrators manage approvals and listings; they do not have a screen that shows screening answers."
+      ] },
+      { "heading": "Account security", "bullets": [
+        "Passwords are stored as bcrypt hashes; we never store or email plain-text passwords.",
+        "Sessions use short-lived, HTTP-only, secure cookies (30-minute access, 7-day refresh).",
+        "Sign-in is locked for 15 minutes after 5 failed attempts.",
+        "Password-reset codes are hashed, expire in 15 minutes, and work once."
+      ] },
+      { "heading": "Court submissions", "bullets": [
+        "When a professional submits to a court, the PDF is frozen and its SHA-256 fingerprint is recorded, so the court can confirm the document was not altered.",
+        "Judge access links expire after 30 days and can be re-issued by the professional."
+      ] },
+      { "heading": "Analytics and tracking", "paragraphs": [
+        "We do not run analytics or session-recording scripts in the app. Cookies are used only to keep you signed in."
+      ] },
+      { "heading": "Service providers", "bullets": [
+        "Email delivery (Resend): recipient address, subject, and links. Never screening answers.",
+        "Hosting and database (Emergent): the application and its database run on Emergent's infrastructure.",
+        "Research summaries (Perplexity): only category labels, a joint rating, and a professional's ZIP code. Never names, case numbers, or answers.",
+        "Report drafting assistant (Google Gemini via Emergent): case code, parent and child names, and the professional's draft text. Never screening answers."
+      ] },
+      { "heading": "Your controls", "bullets": [
+        "You can delete your account from your dashboard. Your answers and screening are removed from the case immediately.",
+        "Records already submitted to a court stay with the court.",
+        "A Quick Exit button on safety screens leaves the page immediately and clears it from your browser."
+      ] },
+      { "heading": "Reporting a concern", "paragraphs": [
+        "If you believe information has been exposed or you have found a security problem, email mattsossi@bsossi.com or call 210-224-1667. We will investigate and respond in accordance with applicable law."
+      ] }
+    ]
+  },
   "confidentiality": {
     "slug": "confidentiality",
     "title": "Confidentiality",

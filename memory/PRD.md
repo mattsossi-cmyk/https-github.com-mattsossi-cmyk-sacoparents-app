@@ -975,3 +975,10 @@ Probed 2026-09-02: /api/link-codes, /api/integrations/* on sacoparentsapp.online
 - Fixed tailwind duplicate fontFamily key: font-jakarta now works (Plus Jakarta Sans verified in browser).
 - Tests: iter96 (Version B/C), iter97 (policy pages); 45 passed across safety/privacy suites. Audit structured report delivered in chat (GAP-01..19).
 - PENDING: user confirms deploy; professional notice wording; Joint Report verbatim text decision; PostHog consent decision (GAP-05); CORS_ORIGINS prod value.
+
+## 2026-10-10 07:xx — Owner pause & drafts (PREVIEW ONLY, nothing deployed after job 58042de)
+- Draft policy routes (/privacy, /confidentiality, /sharing-consent) REMOVED from App.js; text preserved un-routed in content/policies.json + PolicyPage.jsx. Approved policy lives at /privacy-policy.
+- Retention Engine PAUSED by owner: retention.py = constants only; no cron wiring, no purge, no judge reminder. Do not build until audit sign-off + owner design approval.
+- New draft "Security & Privacy Practices" page content (policies.json key security-practices) — unrouted, publish only after GAP items addressed and owner approval.
+- Full structured audit report v2 (GAP-01..GAP-20) delivered in chat 2026-10-10; not stored in app.
+- RULE: no deploy of anything without explicit user "deploy".

@@ -64,6 +64,18 @@ def test_noindex_and_routes_removed():
     assert "<PolicyPage" not in app and '<Route path="/privacy-policy" element={<Privacy />} />' in app
 
 
+def test_security_practices_draft_unrouted_and_claims_only_verified_facts():
+    t = _text("security-practices")
+    low = t.lower()
+    assert P["security-practices"]["title"] == "Security & Privacy Practices"
+    assert "encrypt" not in low and "hipaa" not in low and "certified" not in low and "posthog" not in low
+    assert "bcrypt" in low and "sha-256" in low and "access log" in low and "30 days" in t and "15 minutes" in t
+    assert "mattsossi@bsossi.com" in t and "210-224-1667" in t
+    app = open(f"{SRC}/App.js", encoding="utf-8").read()
+    assert "security-practices" not in app
+    assert not re.search(r"\[[A-Za-z][^\]]*\]", json.dumps(P["security-practices"]))
+
+
 def test_pages_not_linked_anywhere():
     hits = []
     for root, _d, files in os.walk(SRC):
