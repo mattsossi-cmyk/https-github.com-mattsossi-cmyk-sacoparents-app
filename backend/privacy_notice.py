@@ -102,4 +102,10 @@ def build_router(db, get_current_user) -> APIRouter:
                         "; ".join(f"{h['version']}@{h['accepted_at']}" for h in x["history"])])
         return Response(buf.getvalue(), media_type="text/csv", headers={"Content-Disposition": "attachment; filename=privacy-notice-acceptances.csv"})
 
+    @r.get("/admin/retention/preview")
+    async def retention_preview(user=Depends(get_current_user)):
+        _admin(user)
+        from retention import preview
+        return await preview(db)
+
     return r

@@ -55,13 +55,9 @@ def test_no_bracketed_placeholders_rendered():
     assert "[" not in raw.replace('": [', "").replace("[\n", "").replace("]", "") or not re.search(r"\[[A-Za-z][^\]]*\]", raw)
 
 
-def test_noindex_and_routes_removed():
+def test_noindex_meta_present():
     page = open(f"{SRC}/pages/PolicyPage.jsx", encoding="utf-8").read()
     assert 'meta.name = "robots"' in page and 'meta.content = "noindex, nofollow"' in page and "font-jakarta" in page and "#3D1A78" in page
-    app = open(f"{SRC}/App.js", encoding="utf-8").read()
-    for slug in ("privacy", "confidentiality", "sharing-consent"):
-        assert f'path="/{slug}"' not in app
-    assert "<PolicyPage" not in app and '<Route path="/privacy-policy" element={<Privacy />} />' in app
 
 
 def test_security_practices_draft_unrouted_and_claims_only_verified_facts():
@@ -71,8 +67,6 @@ def test_security_practices_draft_unrouted_and_claims_only_verified_facts():
     assert "encrypt" not in low and "hipaa" not in low and "certified" not in low and "posthog" not in low
     assert "bcrypt" in low and "sha-256" in low and "access log" in low and "30 days" in t and "15 minutes" in t
     assert "mattsossi@bsossi.com" in t and "210-224-1667" in t
-    app = open(f"{SRC}/App.js", encoding="utf-8").read()
-    assert "security-practices" not in app
     assert not re.search(r"\[[A-Za-z][^\]]*\]", json.dumps(P["security-practices"]))
 
 

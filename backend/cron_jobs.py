@@ -119,6 +119,8 @@ async def cron_follow_up_reminder(request: Request):
     from safety_screening import run_screening_reminders
     asyncio.create_task(run_reassessment_reminders(db, send_email, app_url, EMAIL_FROM_NAME, logger))
     asyncio.create_task(run_screening_reminders(db, send_email, app_url, EMAIL_FROM_NAME, logger))
+    from retention import run_retention
+    asyncio.create_task(run_retention(db, send_email, app_url, EMAIL_FROM_NAME, logger))
     return ack
 
 

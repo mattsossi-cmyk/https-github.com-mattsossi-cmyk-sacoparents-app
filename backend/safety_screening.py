@@ -270,6 +270,21 @@ def build_router(db, get_current_user, get_joint_report_doc, report_role, log_ac
     def _is_pro(doc, user):
         return user.get("role") == "admin" or user["_id"] in (doc.get("professional_id"), doc.get("created_by"))
 
+    @r.put("/joint/reports/{rid}/redactions")
+    async def set_redactions(rid: str, body: dict, user=Depends(get_current_user)):
+        """Professional redacts a parent's free-text answer before the Joint Report is released (GAP-15)."""
+        doc = await get_joint_report_doc(rid, user)
+        if not _is_pro(doc, user):
+            raise HTTPException(status_code=403, detail="Only the assigned professional can redact")
+        role, key, on = body.get("role"), str(body.get("key") or "")[:40], bool(body.get("redacted", True))
+        if role not in ("a", "b") or not key:
+            raise HTTPException(status_code=400, detail="role (a|b) and key required")
+        op = {"$addToSet" if on else "$pull": {f"redactions.{role}": key}}
+        await db.joint_reports.update_one({"id": rid}, op)
+        await log_access(doc, user, f"{'Redacted' if on else 'Un-redacted'} Parent {role.upper()} answer '{key}' in Joint Report", "redaction")
+        fresh = await db.joint_reports.find_one({"id": rid}, {"redactions": 1})
+        return {"redactions": (fresh or {}).get("redactions") or {}}
+
     @r.get("/joint/reports/{rid}/safety-screening")
     async def screening_overview(rid: str, user=Depends(get_current_user)):
         doc = await get_joint_report_doc(rid, user)

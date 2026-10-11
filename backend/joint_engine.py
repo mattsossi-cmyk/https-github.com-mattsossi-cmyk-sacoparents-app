@@ -51,7 +51,11 @@ def _status_for(common):
     return "Needs discussion"
 
 
-def _analyze_answers(ra, rb, child):
+REDACTED = "[Redacted by the reviewing professional before release]"
+
+
+def _analyze_answers(ra, rb, child, redactions=None):
+    red = redactions or {}
     rows, statements, differences = [], [], []
     for key, area, _question in QUESTIONS:
         common = shared_terms(ra.get(key, ""), rb.get(key, ""))
@@ -62,9 +66,11 @@ def _analyze_answers(ra, rb, child):
             )
         else:
             differences.append({
+                "key": key,
                 "area": area,
-                "parent_a": ra.get(key, ""),
-                "parent_b": rb.get(key, ""),
+                "parent_a": REDACTED if key in (red.get("a") or []) else ra.get(key, ""),
+                "parent_b": REDACTED if key in (red.get("b") or []) else rb.get(key, ""),
+                "redacted": {"a": key in (red.get("a") or []), "b": key in (red.get("b") or [])},
                 "reframe": REFRAME_TEMPLATE.replace("{child}", child),
             })
     return rows, statements, differences
@@ -160,7 +166,7 @@ def generate_joint_report(doc: dict) -> dict:
     if imported["a"] or imported["b"]:
         rows, statements, differences = _theme_analysis(_corpus(resp_a), _corpus(resp_b), pa, pb, child)
     else:
-        rows, statements, differences = _analyze_answers(resp_a["answers"], resp_b["answers"], child)
+        rows, statements, differences = _analyze_answers(resp_a["answers"], resp_b["answers"], child, doc.get("redactions"))
 
     return {
         "report_title": "Joint Parenting Alignment Report",

@@ -37,6 +37,15 @@ export default function JointReport() {
   const [error, setError] = useState(null);
   const [view, setView] = useState("compare");
 
+  const toggleRedact = async (role, key, redacted) => {
+    try {
+      await api.put(`/joint/reports/${id}/redactions`, { role, key, redacted });
+      const rr = await api.get(`/joint/reports/${id}/report`);
+      setReport(rr.data);
+      toast.success(redacted ? "Passage redacted for release" : "Passage restored");
+    } catch (e) { toast.error(formatApiError(e)); }
+  };
+
   const load = () => {
     api.get(`/joint/reports/${id}`)
       .then((r) => {
@@ -242,11 +251,13 @@ export default function JointReport() {
                       <div className="grid sm:grid-cols-2 gap-4">
                         <div className="bg-muted/40 rounded-md p-4">
                           <p className="text-xs uppercase tracking-widest text-muted-foreground font-semibold mb-2">{report.parent_a_name}'s Perspective</p>
-                          <p className="text-sm leading-relaxed">{d.parent_a}</p>
+                          <p className={`text-sm leading-relaxed ${d.redacted?.a ? "italic text-muted-foreground" : ""}`}>{d.parent_a}</p>
+                          {detail.is_creator && d.key && <button type="button" onClick={() => toggleRedact("a", d.key, !d.redacted?.a)} className="mt-2 text-xs font-semibold text-brand-purple underline-offset-2 hover:underline" data-testid={`jr-redact-a-${d.key}`}>{d.redacted?.a ? "Restore" : "Redact before release"}</button>}
                         </div>
                         <div className="bg-muted/40 rounded-md p-4">
                           <p className="text-xs uppercase tracking-widest text-muted-foreground font-semibold mb-2">{report.parent_b_name}'s Perspective</p>
-                          <p className="text-sm leading-relaxed">{d.parent_b}</p>
+                          <p className={`text-sm leading-relaxed ${d.redacted?.b ? "italic text-muted-foreground" : ""}`}>{d.parent_b}</p>
+                          {detail.is_creator && d.key && <button type="button" onClick={() => toggleRedact("b", d.key, !d.redacted?.b)} className="mt-2 text-xs font-semibold text-brand-purple underline-offset-2 hover:underline" data-testid={`jr-redact-b-${d.key}`}>{d.redacted?.b ? "Restore" : "Redact before release"}</button>}
                         </div>
                       </div>
                       <p className="mt-3 text-sm italic text-muted-foreground">{d.reframe}</p>

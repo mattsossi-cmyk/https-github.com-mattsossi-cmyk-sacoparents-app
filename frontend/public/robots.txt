@@ -1,0 +1,10 @@
+User-agent: *
+Disallow: /privacy
+Disallow: /confidentiality
+Disallow: /sharing-consent
+Disallow: /security-practices
+Disallow: /privacy-notice
+Disallow: /dashboard
+Disallow: /joint/
+Disallow: /cases/
+Disallow: /court

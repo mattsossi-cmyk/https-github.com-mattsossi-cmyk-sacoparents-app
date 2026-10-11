@@ -19,6 +19,7 @@ import JointReport from "@/pages/JointReport";
 import Hub from "@/pages/Hub";
 import CompleteReport from "@/pages/CompleteReport";
 import Privacy from "@/pages/Privacy";
+import PolicyPage from "@/pages/PolicyPage";
 import SampleReport from "@/pages/SampleReport";
 import Samples from "@/pages/Samples";
 import SampleLegalLensReport from "@/pages/SampleLegalLensReport";
@@ -93,7 +94,11 @@ function App() {
             <Route path="/foundation" element={<Protected><FoundationEditor /></Protected>} />
             <Route path="/hub/complete" element={<Protected><CompleteReport /></Protected>} />
             <Route path="/privacy-policy" element={<Privacy />} />
-            {/* Draft policy pages (frontend/src/content/policies.json + pages/PolicyPage.jsx) are intentionally NOT routed until the owner confirms them final. */}
+            {/* Approved policy pages (Version 1.0) — routed but intentionally UNLINKED and noindex (robots.txt + meta) until the owner says "link them". */}
+            <Route path="/privacy" element={<PolicyPage slug="privacy" />} />
+            <Route path="/confidentiality" element={<PolicyPage slug="confidentiality" />} />
+            <Route path="/sharing-consent" element={<PolicyPage slug="sharing-consent" />} />
+            <Route path="/security-practices" element={<PolicyPage slug="security-practices" />} />
             <Route path="/sample-mediation" element={<SampleReport fixedKey="mediation" />} />
             <Route path="/samples" element={<Samples />} />
             <Route path="/samples/professional-report" element={<Navigate to="/samples/legal-lens-report" replace />} />

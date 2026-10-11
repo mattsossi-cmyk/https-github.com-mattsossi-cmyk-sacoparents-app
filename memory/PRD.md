@@ -992,3 +992,10 @@ Probed 2026-09-02: /api/link-codes, /api/integrations/* on sacoparentsapp.online
 ## 2026-10-10 08:xx — Professional Dashboard redesign (PREVIEW ONLY, not deployed)
 - ProHero now: one-message headline ("SA CoParents Align helps professionals understand each parent's perspective…"), five workflow action cards with live counts (Invite Parents · Review Assessments · Joint Report · Legal Lens Review · Court Report) + Judge Portal & Referrals card (pending referral count). Counts computed in Dashboard.jsx heroCounts from case_status. Tour step text updated. Old PrimaryTiles remain under "More tools".
 - Deferred (owner skipped for now): hard "Approve for release" gate, Judge's Overview page 1, Safety-review badge on case rows.
+
+## 2026-10-11 — Owner decisions implemented (PREVIEW ONLY, not deployed)
+- Prod secrets check (names only): CORS_ORIGINS exact prod origin (GAP-09 closed), AUTO_APPROVE_EMAILS unset (GAP-16 closed), SACOPARENTS_APP_URL=https://sacoparentsapp.online. 10-10 deploys were owner Re-publish (GAP-21 closed).
+- Retention Engine BUILT per owner: raw answers+flags purged 90d after case close (keep tier/version/receipt); frozen court submissions deleted entirely at 6 months (pdfs, packet, submission entry; referral→expired); judge reminder 30d before if unopened, once. Runs via follow-up-reminder daily cron. Admin GET /api/admin/retention/preview. Tests iter98.
+- GAP-15: Joint Report free text kept; disclosed in invitation email + Sharing & Consent page; professional can redact per answer (PUT /joint/reports/{rid}/redactions, UI "Redact before release", access-logged kind=redaction).
+- Policy pages APPROVED & ROUTED (/privacy, /confidentiality, /sharing-consent, /security-practices) but UNLINKED; robots.txt Disallow + meta noindex. Still show "Version 1.0 (draft)" badge — ask owner whether to flip status to "final" when linking.
+- Pending: owner "deploy"; owner "link them"; professional notice wording.
