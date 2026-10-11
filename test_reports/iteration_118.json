@@ -1,0 +1,34 @@
+{
+  "summary": "Iter 118 (SA CoParents): tested (1) full account deletion with purge + shared-record scrub + compliance anonymisation, (2) Professional Sets Ticks via POST /api/integrations/court-keys + joint_alignment_cases auto-tick, (3) Requested Checklist PDF. Backend 9/9 pass. Frontend Court page auto-ticks, pro-notes, untick/retick, and PDF download all work; /delete-account page copy + full deletion flow (DELETE confirm -> toast -> redirect to / -> login returns 401) work.",
+  "backend_issues": {"critical": [], "minor": []},
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": [
+      {"screen": "/delete-account post-delete", "issues": [
+        "After the deletion toast + navigate('/'), the home page's components (foundation_statement, milestone_logs, biff_logs autosave hooks) immediately rehydrate localStorage with their default empty state, so Object.keys(localStorage) is not strictly 0 after redirect. The actual data IS cleared at the time of deletion (window.localStorage.clear() is called), and no PII survives, but the keys repopulate as empty fresh-session defaults. Low priority / cosmetic only — if the spec strictly requires localStorage to be empty on the home page, the autosave hooks should skip writes until a user signs in."]
+      }
+    ]
+  },
+  "test_report_links": [
+    "/app/backend/tests/test_iter118_account_purge.py",
+    "/app/test_reports/pytest/iter118.xml"
+  ],
+  "action_items": [
+    "Optional / low priority: suppress home-page autosave hooks' first-write of empty defaults so localStorage stays strictly empty after /delete-account. Currently cleared then immediately rehydrated with empty-state keys (sacoparents_foundation_statement, sacoparents_milestone_logs, sacoparents_biff_logs)."
+  ],
+  "critical_code_review_comments": [
+    "account_purge.py: UID_FIELDS + EMAIL_FIELDS list is manual — long-term, consider a per-collection whitelist of owner fields; today's blanket scan plus SKIP list is pragmatic but any new collection added to the app that stores user_id under a different field name would silently leak. A unit test enumerating backend collections and asserting UID_FIELDS covers each would be cheap insurance.",
+    "account_purge._scrub_shared array_filter uses `{'p.user_id': uid}` which is correct for `arrayFilters=[{'p.user_id': uid}]`. Confirmed scrubs only the deleting parent's slot; co-parent slot untouched (verified).",
+    "integration_routes.CourtKeyUpsert: Literal[...] rejects unknown requested keys with 422 — good. The X-Integration-Key is constant-time compared via match_integration_key.",
+    "court_checklist._sync_professional_requests uses `applied` set so once a source is seen, re-syncs don't re-add removed ticks — verified end-to-end (untick after auto-tick sticks).",
+    "DeleteAccount.jsx: localStorage.clear() happens before navigate('/'), but the home page's autosave useEffects immediately write empty defaults back. Not a security/data issue, just a UX purity nit."
+  ],
+  "updated_files": ["/app/backend/tests/test_iter118_account_purge.py"],
+  "success_rate": {"backend": "100% (9/9)", "frontend": "100% on all tested flows"},
+  "test_credentials": "Throwaway users registered iter118_* / iter118fe_* / iter118ct_* / iter118d_* / iter118del_* — all deleted via DELETE /api/auth/account at end. Seeded parent1/parent2/journey6 untouched. INTEGRATION_SHARED_SECRET read from /app/backend/.env, never printed.",
+  "seed_data_creation": "None left behind. Residue from in-flight interrupts (2 court keys, 1 joint case, 1 agreement, 3 users) cleaned up post-run via admin script.",
+  "retest_needed": false,
+  "main_agent_can_self_test": true,
+  "context_for_next_testing_agent": "Backend tests at /app/backend/tests/test_iter118_account_purge.py cover: purge full-scan + shared-record anonymisation + compliance scrub + GridFS cleanup; court-keys 401/422/200 + auto-tick + 'applied once' semantics; joint-case auto-tick required-only and assessment_type fallback; checklist PDF ticks vs no-ticks + JSON card unchanged. Run with: `cd /app/backend && set -a && source .env && set +a && export REACT_APP_BACKEND_URL=$(grep REACT_APP_BACKEND_URL /app/frontend/.env | cut -d= -f2) && pytest tests/test_iter118_account_purge.py -v`. Only remaining nit is cosmetic localStorage repopulation after delete redirect."
+}

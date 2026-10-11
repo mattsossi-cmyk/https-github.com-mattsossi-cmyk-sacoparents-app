@@ -9005,6 +9005,22 @@ dashboard for sharing SELECTED completed reports with any professional.
   localStorage 'sac_court_requested' when signed out). Hero pill: "X of Y requested done" (or "N of 7 done" with no ticks).
 - Court accept → opens first ticked unfinished option, else scrolls to the menu. All "Step N" wording on the Court page replaced by
   names (Foundation Statement, Co-Parenting Assessment...); court artwork keeps its printed numbers. Individual Journey keeps arrows.
-- OPEN ISSUE (flagged to founder): DELETE /api/auth/account only deletes users, user_sessions, prep_data, summaries, agreements,
-  improvement_plans, mediator_emails, devices — portal_state, self_assessment_history, child_needs_assessments, safety_assessments,
-  foundation_builder, cp_report_history, align_links, court_requested, secure docs etc. are NOT deleted.
+- (Account deletion gap fixed in the next batch.)
+
+### 2026-06 — Complete account deletion, professional ticks, requested checklist PDF (iter118: backend 9/9, frontend 100%)
+- `backend/account_purge.py` `purge_account()` (called by DELETE /api/auth/account): walks every collection and deletes docs whose
+  UID_FIELDS / EMAIL_FIELDS match (recipient `email` ignored for child_needs_shares + journey_certificate_shares); SKIP = global/config
+  collections. COMPLIANCE (phi_access_log, legal_acknowledgments, hb300_acknowledgements, hb300_access_requests) are kept with ids →
+  `deleted_<sha256[:16]>`, emails → null, name/ip/user_agent unset. Shared: joint_alignment_cases parent slot scrubbed
+  (name "A parent deleted their account", email "", user_id/token null, account_deleted_at); professional fields scrubbed if the user
+  was the professional; court_agreements $pull marked_by; deep-dive compare snapshots for their shares deleted; secure documents +
+  GridFS files (bucket secure_doc_files) deleted; users.invited_by_user_id unset; record in `account_deletions` {anon_id, deleted_at}.
+  POST /portal/share now stores user_id when signed in (older anonymous links can't be attributed). DeleteAccount page copy updated
+  and it clears localStorage/sessionStorage (home page re-creates empty default keys — no data, cosmetic).
+- Professional ticks: GET /api/court-path/requested runs `_sync_professional_requests` — once per source ("court:<case_id>",
+  "case:<case_id>") adds keys to keys + pro_keys (+ pro_name). Sources: portal_court_keys.requested for the parent's court_key, and
+  joint_alignment_cases (required assigned_steps; fallback primary type; CASE_STEP_TO_KEY). Response {keys, professional_keys,
+  professional_name}. New Align endpoint POST /api/integrations/court-keys {key, case_id, mediator_name, expires_at?, requested[]}.
+  CourtMenu `ProNote`: "Set by <name>" when ticked / "Your professional asked for this" when unticked.
+- Checklist PDF: with ticks → case + safety + only ticked assessments (Edu/Med/Psych separate, Parallel Parenting Plan) + header note;
+  no ticks → old full list. JSON checklist for the Court card unchanged.
