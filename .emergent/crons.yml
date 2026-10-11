@@ -23,7 +23,7 @@ crons:
     # Cron endpoints must ack 2xx immediately; enqueue/background the actual work.
     enabled: true
   - name: follow-up-reminder
-    description: "Daily 8am Central: professional follow-up dates, 7-day safety-screening nudge, and the retention run (90-day raw-answer purge, 6-month court submission deletion, 30-day judge pre-deletion reminder)"
+    description: "Daily 8am Central: professional follow-up/reassessment dates, plus a 7-day nudge to parents whose private safety screening is not yet received"
     cron: "0 8 * * *"
     timezone: "America/Chicago"
     endpoint: "{{BASE_URL}}/api/cron/follow-up-reminder"

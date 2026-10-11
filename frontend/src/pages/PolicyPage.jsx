@@ -45,7 +45,7 @@ export default function PolicyPage({ slug }) {
       <main id="policy-main" className="mx-auto max-w-3xl px-4 py-10 sm:px-6" tabIndex={-1}>
         <p className="text-xs font-bold uppercase tracking-widest" style={{ color: BRAND }}>SA CoParents</p>
         <h1 className="mt-1 text-4xl font-bold tracking-tight sm:text-5xl" style={{ color: BRAND }} data-testid="policy-title">{p.title}</h1>
-        <p className="mt-2 inline-block rounded-md border border-amber-300 bg-amber-50 px-2.5 py-1 text-xs font-semibold text-amber-900" data-testid="policy-version">Version {POLICY_VERSION} ({POLICY_STATUS})</p>
+        <p className="mt-2 inline-block rounded-md border border-[#3D1A78]/20 bg-white px-2.5 py-1 text-xs font-semibold text-[#3D1A78]" data-testid="policy-version">Version {POLICY_VERSION}{POLICY_STATUS !== "final" ? ` (${POLICY_STATUS})` : ""}</p>
         <div className="mt-8 space-y-8">{p.sections.map((s, i) => <Section key={s.heading} s={s} slug={slug} i={i} />)}</div>
       </main>
     </div>

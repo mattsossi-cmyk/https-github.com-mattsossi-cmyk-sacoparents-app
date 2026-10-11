@@ -8,11 +8,21 @@ Runs once a day from the follow-up-reminder cron (see cron_jobs.py). Nothing run
 """
 from datetime import datetime, timedelta, timezone
 from html import escape
+import os
 
+RETENTION_ENGINE_ENABLED = os.environ.get("RETENTION_ENGINE_ENABLED", "false").lower() == "true"  # OFF by default (owner decision 2026-10-11)
 RAW_SCREENING_RETENTION_DAYS = 90
 COURT_SUBMISSION_RETENTION_MONTHS = 6
 JUDGE_REMINDER_LEAD_DAYS = 30
 PURGED_SCREENING_FIELDS = ("responses", "flags", "pathway_suggested", "skipped", "answered_count", "skipped_count")
+
+class RetentionDisabled(RuntimeError):
+    """Raised when any purge/reminder is attempted while RETENTION_ENGINE_ENABLED is false."""
+
+
+def _require_enabled():
+    if not RETENTION_ENGINE_ENABLED:
+        raise RetentionDisabled("Retention engine is switched off (RETENTION_ENGINE_ENABLED=false)")
 
 
 def _iso(dt: datetime) -> str:
@@ -39,6 +49,7 @@ def court_purge_at(created_at: str) -> datetime | None:
 
 
 async def purge_screening_answers(db, now: datetime) -> int:
+    _require_enabled()
     cutoff = _iso(now - timedelta(days=RAW_SCREENING_RETENTION_DAYS))
     n = 0
     async for doc in db.joint_reports.find({"closed_at": {"$gt": "", "$lte": cutoff}, "safety_screenings": {"$exists": True}}, {"id": 1, "safety_screenings": 1}):
@@ -54,6 +65,7 @@ async def purge_screening_answers(db, now: datetime) -> int:
 
 
 async def purge_court_submissions(db, now: datetime) -> int:
+    _require_enabled()
     n = 0
     async for p in db.court_packets.find({"frozen": True}, {"id": 1, "created_at": 1, "report_id": 1, "court_referral_id": 1}):
         pa = court_purge_at(p.get("created_at") or "")
@@ -70,6 +82,7 @@ async def purge_court_submissions(db, now: datetime) -> int:
 
 
 async def remind_judges(db, send_email, app_url, from_name: str, now: datetime, logger) -> int:
+    _require_enabled()
     sent = 0
     q = {"frozen": True, "purge_reminder_sent_at": {"$exists": False}, "judge_email": {"$nin": [None, ""]}, "$or": [{"opened_count": {"$exists": False}}, {"opened_count": 0}]}
     async for p in db.court_packets.find(q, {"id": 1, "created_at": 1, "judge_email": 1, "judge_name": 1, "cause_number": 1, "court_name": 1, "professional_name": 1, "report_id": 1}):
@@ -95,6 +108,7 @@ async def remind_judges(db, send_email, app_url, from_name: str, now: datetime, 
 
 
 async def run_retention(db, send_email, app_url, from_name: str, logger) -> dict:
+    _require_enabled()
     now = datetime.now(timezone.utc)
     out = {"screening_slots_purged": await purge_screening_answers(db, now), "court_submissions_deleted": await purge_court_submissions(db, now),
            "judge_reminders_sent": await remind_judges(db, send_email, app_url, from_name, now, logger), "at": _iso(now)}
@@ -104,6 +118,7 @@ async def run_retention(db, send_email, app_url, from_name: str, logger) -> dict
 
 
 async def preview(db) -> dict:
+    """Read-only report; never deletes. Reports enabled=false while switched off."""
     now = datetime.now(timezone.utc)
     cutoff = _iso(now - timedelta(days=RAW_SCREENING_RETENTION_DAYS))
     due_scr = 0
@@ -117,6 +132,6 @@ async def preview(db) -> dict:
         due_pdf += pa <= now
         rem += (now < pa <= now + timedelta(days=JUDGE_REMINDER_LEAD_DAYS)) and not (p.get("opened_count") or 0) and not p.get("purge_reminder_sent_at")
     last = await db.retention_runs.find_one({}, {"_id": 0}, sort=[("at", -1)])
-    return {"rules": {"raw_screening_retention_days": RAW_SCREENING_RETENTION_DAYS, "court_submission_retention_months": COURT_SUBMISSION_RETENTION_MONTHS, "judge_reminder_lead_days": JUDGE_REMINDER_LEAD_DAYS,
+    return {"enabled": RETENTION_ENGINE_ENABLED, "rules": {"raw_screening_retention_days": RAW_SCREENING_RETENTION_DAYS, "court_submission_retention_months": COURT_SUBMISSION_RETENTION_MONTHS, "judge_reminder_lead_days": JUDGE_REMINDER_LEAD_DAYS,
                       "screening_fields_purged": list(PURGED_SCREENING_FIELDS), "screening_fields_kept": ["tier", "version", "completed_at", "received"]},
             "due_now": {"screening_slots": due_scr, "court_submissions": due_pdf, "judge_reminders": rem}, "last_run": last}

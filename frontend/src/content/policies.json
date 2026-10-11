@@ -1,6 +1,6 @@
 {
   "version": "1.0",
-  "status": "draft",
+  "status": "final",
   "privacy": {
     "slug": "privacy",
     "title": "Privacy Policy",
@@ -126,8 +126,7 @@
         "You can stop sharing going forward at any time."
       ] },
       { "heading": "Joint and court-ordered participation", "paragraphs": [
-        "If a court or professional requires your participation, separate rules apply. We'll tell you what is required before you start.",
-        "In a Joint Alignment Report, where your perspectives differ, each parent's written answer to that question is shown side by side, so both parents see the same report. The reviewing professional may redact a passage before the report is released. Your private safety screening, reflections, and journal are never shown to your co-parent."
+        "If a court or professional requires your participation, separate rules apply. We'll tell you what is required before you start."
       ] },
       { "heading": "Professionals' reports", "paragraphs": [
         "A professional may build a report from what you authorize. A frozen court submission can't be changed afterward."

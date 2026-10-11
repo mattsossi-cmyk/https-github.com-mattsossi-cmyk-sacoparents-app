@@ -52,6 +52,25 @@ NOW = datetime(2026, 10, 11, 12, 0, tzinfo=timezone.utc)
 LOG = logging.getLogger("t")
 
 
+def test_engine_switched_off_by_default_and_cannot_run():
+    import pytest
+    assert retention.RETENTION_ENGINE_ENABLED is False
+    db = _DB(joint_reports=_Coll([{"id": "r1", "closed_at": "2020-01-01T00:00:00+00:00", "safety_screenings": {"a": {"responses": {"a1": "x"}}}}]),
+             court_packets=_Coll([{"id": "p1", "frozen": True, "created_at": "2020-01-01T00:00:00+00:00", "judge_email": "j@x", "opened_count": 0}]))
+    async def send_email(**kw): raise AssertionError("must not send")
+    for coro in (retention.purge_screening_answers(db, NOW), retention.purge_court_submissions(db, NOW),
+                 retention.remind_judges(db, send_email, lambda: "x", "SA", NOW, LOG), retention.run_retention(db, send_email, lambda: "x", "SA", LOG)):
+        with pytest.raises(retention.RetentionDisabled):
+            asyncio.run(coro)
+    assert db.joint_reports.ops == [] and db.court_packets.ops == [] and db.court_frozen_pdfs.ops == [] and db.retention_runs.ops == []
+    pv = asyncio.run(retention.preview(db))
+    assert pv["enabled"] is False and db.joint_reports.ops == []
+
+
+def _enabled(monkeypatch):
+    monkeypatch.setattr(retention, "RETENTION_ENGINE_ENABLED", True)
+
+
 def test_constants_match_owner_decisions():
     assert retention.RAW_SCREENING_RETENTION_DAYS == 90 and retention.COURT_SUBMISSION_RETENTION_MONTHS == 6 and retention.JUDGE_REMINDER_LEAD_DAYS == 30
     assert "responses" in retention.PURGED_SCREENING_FIELDS and "flags" in retention.PURGED_SCREENING_FIELDS and "tier" not in retention.PURGED_SCREENING_FIELDS and "version" not in retention.PURGED_SCREENING_FIELDS
@@ -63,7 +82,8 @@ def test_court_purge_at_month_math():
     assert retention.court_purge_at("garbage") is None
 
 
-def test_screening_purge_keeps_tier_version_receipt():
+def test_screening_purge_keeps_tier_version_receipt(monkeypatch):
+    _enabled(monkeypatch)
     old = (NOW - timedelta(days=91)).isoformat()
     recent = (NOW - timedelta(days=10)).isoformat()
     db = _DB(joint_reports=_Coll([
@@ -80,7 +100,8 @@ def test_screening_purge_keeps_tier_version_receipt():
     assert op["$set"] == {"safety_screenings.a.purged_at": NOW.isoformat()}
 
 
-def test_court_submission_deleted_entirely_after_six_months():
+def test_court_submission_deleted_entirely_after_six_months(monkeypatch):
+    _enabled(monkeypatch)
     due = (NOW - timedelta(days=200)).isoformat()
     fresh = (NOW - timedelta(days=100)).isoformat()
     db = _DB(court_packets=_Coll([{"id": "p1", "frozen": True, "created_at": due, "report_id": "r1", "court_referral_id": "ref1"},
@@ -93,7 +114,8 @@ def test_court_submission_deleted_entirely_after_six_months():
     assert not any(o[1] == {"id": "p2"} for o in db.court_packets.ops)
 
 
-def test_judge_reminder_30_days_before_only_if_unopened_once():
+def test_judge_reminder_30_days_before_only_if_unopened_once(monkeypatch):
+    _enabled(monkeypatch)
     soon = (NOW - timedelta(days=183) + timedelta(days=20)).isoformat()   # purges in ~20 days (≈6 months - 20d)
     far = (NOW - timedelta(days=90)).isoformat()
     db = _DB(court_packets=_Coll([
@@ -109,7 +131,8 @@ def test_judge_reminder_30_days_before_only_if_unopened_once():
     assert "a1" not in sent[0]["html"] and db.court_packets.ops[0][1] == {"id": "p1"}
 
 
-def test_run_and_preview_record_results():
+def test_run_and_preview_record_results(monkeypatch):
+    _enabled(monkeypatch)
     db = _DB()
     async def send_email(**kw): pass
     out = asyncio.run(retention.run_retention(db, send_email, lambda: "https://x", "SA", LOG))
@@ -118,11 +141,15 @@ def test_run_and_preview_record_results():
     assert pv["rules"]["judge_reminder_lead_days"] == 30 and pv["due_now"] == {"screening_slots": 0, "court_submissions": 0, "judge_reminders": 0}
 
 
-def test_cron_wiring_and_admin_preview_route_exist():
+def test_retention_engine_not_scheduled_and_no_admin_trigger():
     cron = open("/app/backend/cron_jobs.py", encoding="utf-8").read()
-    assert "run_retention(db, send_email, app_url, EMAIL_FROM_NAME, logger)" in cron
-    assert "retention" in open("/app/.emergent/crons.yml", encoding="utf-8").read()
-    assert '"/admin/retention/preview"' in open("/app/backend/privacy_notice.py", encoding="utf-8").read()
+    assert "create_task(run_retention(" not in cron
+    assert "retention" not in open("/app/.emergent/crons.yml", encoding="utf-8").read().lower()
+    import glob
+    for f in glob.glob("/app/backend/*.py"):
+        if f.endswith("retention.py"): continue
+        src = open(f, encoding="utf-8").read()
+        assert "run_retention(" not in src and "purge_screening_answers(" not in src and "purge_court_submissions(" not in src and "/admin/retention" not in src.replace("# Retention admin preview route intentionally removed", ""), f
 
 
 def test_redaction_replaces_only_marked_answer():
@@ -138,22 +165,21 @@ def test_redaction_replaces_only_marked_answer():
     assert "Redact before release" in jr and "detail.is_creator" in jr
 
 
-def test_invitation_and_consent_disclose_verbatim_sharing():
+def test_invitation_and_consent_references_removed():
     jh = open("/app/backend/joint_helpers.py", encoding="utf-8").read()
-    assert "each parent's written answer to that question side by side" in jh and "may redact a passage before the report is released" in jh
+    assert "side by side" not in jh and "redact a passage" not in jh
     import json
     P = json.load(open("/app/frontend/src/content/policies.json", encoding="utf-8"))
     t = " ".join(p for s in P["sharing-consent"]["sections"] for p in s.get("paragraphs", []))
-    assert "shown side by side" in t and "may redact a passage" in t
+    assert "side by side" not in t and "redact" not in t
 
 
-def test_policy_pages_routed_unlinked_and_robots():
+def test_policy_pages_not_routed_and_unlinked():
+    import os
     app = open("/app/frontend/src/App.js", encoding="utf-8").read()
     for slug in ("privacy", "confidentiality", "sharing-consent", "security-practices"):
-        assert f'<Route path="/{slug}" element={{<PolicyPage slug="{slug}" />}} />' in app
-    robots = open("/app/frontend/public/robots.txt", encoding="utf-8").read()
-    for slug in ("privacy", "confidentiality", "sharing-consent", "security-practices"):
-        assert f"Disallow: /{slug}\n" in robots
+        assert f'path="/{slug}"' not in app
+    assert "<PolicyPage" not in app and not os.path.exists("/app/frontend/public/robots.txt")
     import os
     hits = []
     for root, _d, files in os.walk("/app/frontend/src"):

@@ -195,10 +195,6 @@ def _invite_email_content(spec: InviteSpec, token: str) -> tuple[str, str]:
         "<p>Your individual responses are completed privately. Your co-parent will complete their own "
         "assessment separately. The Joint Alignment process is designed to identify areas of shared "
         "understanding, differences in perspective, and issues that may benefit from further discussion.</p>"
-        "<p><strong>What your co-parent will see:</strong> where your perspectives differ, the Joint Alignment Report shows "
-        "each parent's written answer to that question side by side, so both of you see the same report. "
-        "The reviewing professional may redact a passage before the report is released. Your private safety "
-        "screening, reflections, and journal are never shown to your co-parent.</p>"
         f'<p><a href="{link}" style="display:inline-block;background:#5B2A86;color:#ffffff;'
         'padding:12px 24px;text-decoration:none;border-radius:6px">Complete My Assessment</a></p>'
         f"<p>{closing}</p>"

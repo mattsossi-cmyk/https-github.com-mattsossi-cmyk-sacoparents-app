@@ -16,9 +16,9 @@ def _text(key):
 
 
 def test_version_constant_and_draft():
-    assert P["version"] == "1.0" and P["status"] == "draft"
+    assert P["version"] == "1.0" and P["status"] == "final"
     page = open(f"{SRC}/pages/PolicyPage.jsx", encoding="utf-8").read()
-    assert "export const POLICY_VERSION = POLICIES.version" in page and "Version {POLICY_VERSION} ({POLICY_STATUS})" in page
+    assert "export const POLICY_VERSION = POLICIES.version" in page and "Version {POLICY_VERSION}" in page
 
 
 def test_privacy_text():
