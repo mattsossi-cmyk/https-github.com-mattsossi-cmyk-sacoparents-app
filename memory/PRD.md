@@ -51,6 +51,7 @@ Auth: Custom JWT (`auth.py`)
 - Align: `GET /api/integrations/court-keys/{case_id}/progress` (X-Integration-Key, Align-made codes only; in-app codes 404). Setup note: `/app/memory/ALIGN_COURT_CODES_SETUP.md`.
 - Reminders: `requested_reminders.py` (pre-syncs professional ticks from joint cases + court codes; neutral count-only email + unsubscribe; skips safety-flagged / unsubscribed / finished; once per ISO week). Runs inside the daily 9am Central `sa-reassess-reminder` cron, Mondays only (5-cron limit).
 - Testing: iteration_131 backend 14/14, frontend 100%. Not deployed.
+- Follow-up (user-approved): Notice of Confidentiality on Educational/Medical/Psychological forms now reads "…intended only for you and the professionals you choose to send it to." (frontend + backend mirror of child-needs content).
 
 
 ### 2026-06 — Iter271–273 · Self-Assessment v2 (chat-style) + Progress Graph
