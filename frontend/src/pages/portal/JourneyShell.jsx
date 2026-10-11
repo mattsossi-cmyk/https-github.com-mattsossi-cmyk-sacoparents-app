@@ -1182,6 +1182,7 @@ export function JourneyShell({
           onOpenParallel={(screen) => openPp(screen)}
           onOpenChildNeeds={(k, jump) => openChildNeeds("court", k, jump)}
           assessDone={assessDone}
+          ppDone={ppDone}
           onDownloadPdf={onDownloadCourtPdf}
           onOpenBiffHistory={() => onOpenCommBuilder("history")}
           alignUrl={ALIGN_SITE_URL}

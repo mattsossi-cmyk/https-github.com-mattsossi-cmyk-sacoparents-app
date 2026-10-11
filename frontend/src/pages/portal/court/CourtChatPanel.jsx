@@ -31,10 +31,10 @@ function Msg({ m, i, onDraft, tp }) {
       {long && (
         <div className="flex flex-wrap gap-1.5 mt-1.5">
           <button type="button" data-testid={`${tp}-send-step4-${i}`} onClick={() => onDraft({ text: m.text, mode: "statement" })} className={draftBtn}>
-            <i className="fa-solid fa-file-import mr-1"></i>Send to Step 4
+            <i className="fa-solid fa-file-import mr-1"></i>Send to Foundation Statement
           </button>
           <button type="button" data-testid={`${tp}-split-step4-${i}`} onClick={() => onDraft({ text: m.text, mode: "split" })} className={draftBtn}>
-            <i className="fa-solid fa-table-cells-large mr-1"></i>Split into Step 4 boxes
+            <i className="fa-solid fa-table-cells-large mr-1"></i>Split into Foundation Statement boxes
           </button>
         </div>
       )}

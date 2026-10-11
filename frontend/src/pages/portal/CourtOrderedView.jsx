@@ -7,26 +7,27 @@ import { CourtAgreeCard } from "./court/CourtAgreement";
 import { CourtCelebration } from "./court/CourtCelebration";
 import { CourtChatInline, CourtChatPanel } from "./court/CourtChatPanel";
 import { CourtChecklistCard } from "./court/CourtChecklistCard";
-import { PILLARS, STEPS } from "./court/courtContent";
+import { MENU, PILLARS, STEPS } from "./court/courtContent";
 import { CourtJourneyArt } from "./court/CourtJourneyArt";
-import { AcceptCard, PillarCards, StepCards } from "./court/CourtJourneyCards";
+import { AcceptCard, PillarCards } from "./court/CourtJourneyCards";
+import { CourtMenu } from "./court/CourtMenu";
 import { CourtPillarDialog } from "./court/CourtPillarDialog";
 import { CourtStepDialog } from "./court/CourtStepDialog";
 import { CourtModulesCard, CourtTools } from "./court/CourtTools";
 import { useCourtCase } from "./court/useCourtCase";
 import { useCourtChecklist } from "./court/useCourtChecklist";
 import { useCourtCompare } from "./court/useCourtCompare";
+import { useCourtRequested } from "./court/useCourtRequested";
 import { useCourtSummary } from "./court/useCourtSummary";
 import { useGuideChat } from "./guide/useGuideChat";
 import { Hero, PageHeader, SafetyBanner, useLockScroll } from "./selfAssessment/SaChrome";
-import { CourtPictureCards } from "./court/CourtPictureCards";
 
 const BIFF_BOOK_URL = process.env.REACT_APP_BIFF_BOOK_URL;
 const AGREED_MARK = " (agreed): ";
 const openTab = (url) => window.open(url, "_blank", "noopener,noreferrer");
 
 // Full-page Court Ordered path (portal): interactive journey artwork, court tools, and a saved AI chat.
-export function CourtOrderedView({ onBack, onQuickExit, courtKey, mediator, onVerify, modules, onOpenModule, onOpenCard, onOpenChildNeeds, assessDone = {}, fb, onOpenParallel, onDownloadPdf, onOpenBiffHistory, alignUrl, safetyFlag, signedIn, hidden = false }) {
+export function CourtOrderedView({ onBack, onQuickExit, courtKey, mediator, onVerify, modules, onOpenModule, onOpenCard, onOpenChildNeeds, assessDone = {}, ppDone = false, fb, onOpenParallel, onDownloadPdf, onOpenBiffHistory, alignUrl, safetyFlag, signedIn, hidden = false }) {
   const [hints, setHints] = useState(true);
   const [dialog, setDialog] = useState(null);
   const [chatOpen, setChatOpen] = useState(false);
@@ -34,6 +35,7 @@ export function CourtOrderedView({ onBack, onQuickExit, courtKey, mediator, onVe
   const checklist = useCourtChecklist({ modules, courtKey, hidden });
   const summary = useCourtSummary(!hidden);
   const compare = useCourtCompare(!hidden);
+  const requested = useCourtRequested(signedIn);
   const cc = useCourtCase({ courtKey, savedName: checklist.data?.parent_name, onVerify, signedIn, alignUrl, onDownloadPdf });
   const chat = useGuideChat("/court-path/ai/chat", { modules: Object.fromEntries(modules.map((m) => [m.topic, m.status])), safety_flagged: !!safetyFlag });
   useLockScroll(!hidden);
@@ -56,7 +58,7 @@ export function CourtOrderedView({ onBack, onQuickExit, courtKey, mediator, onVe
     setChatOpen(true);
   };
 
-  // "What we agreed" notes -> Step 4 "Agreed co-parenting principles & values"; lines already there are skipped.
+  // "What we agreed" notes -> Foundation Statement "Agreed co-parenting principles & values"; lines already there are skipped.
   const lineOf = (r) => `${r.area}${AGREED_MARK}${r.note}`;
   const step4 = {
     has: (r) => (fb.fields.co_values || "").includes(lineOf(r)),
@@ -64,7 +66,7 @@ export function CourtOrderedView({ onBack, onQuickExit, courtKey, mediator, onVe
       const current = (fb.fields.co_values || "").trim();
       const todo = rows.filter((r) => r.note && !current.includes(lineOf(r)));
       if (!todo.length) {
-        toast.message("These agreements are already in Step 4.");
+        toast.message("These agreements are already in your Foundation Statement.");
         return;
       }
       // An edited note replaces that area's earlier line instead of adding a second one.
@@ -76,15 +78,23 @@ export function CourtOrderedView({ onBack, onQuickExit, courtKey, mediator, onVe
       });
       const merged = lines.join("\n");
       if (merged.length > 3000) {
-        toast.error("Step 4's principles & values box is full. Shorten it in Step 4, then try again.");
+        toast.error("Your Foundation Statement's principles & values box is full. Shorten it there, then try again.");
         return;
       }
       const ok = await fb.updateMany({ co_values: merged });
-      toast.success(`Added ${todo.length} agreement${todo.length > 1 ? "s" : ""} to Step 4`, {
-        description: ok ? "In 'Agreed co-parenting principles & values'." : "Saved on this device. Open Step 4 and tap Save.",
-        action: { label: "Open Step 4", onClick: () => onOpenCard("card4", { builder: true }) },
+      toast.success(`Added ${todo.length} agreement${todo.length > 1 ? "s" : ""} to your Foundation Statement`, {
+        description: ok ? "In 'Agreed co-parenting principles & values'." : "Saved on this device. Open your Foundation Statement and tap Save.",
+        action: { label: "Open Foundation Statement", onClick: () => onOpenCard("card4", { builder: true }) },
       });
     },
+  };
+
+  const CARD_OF = { coparent: "card2", self: "card1", foundation: "card4" };
+  const statusFor = (key) => (CARD_OF[key] ? statusOf(CARD_OF[key]) : (key === "parallel" ? ppDone : assessDone[key]) ? "done" : "todo");
+  const openOption = (key) => {
+    if (CARD_OF[key]) onOpenCard(CARD_OF[key]);
+    else if (key === "parallel") onOpenParallel();
+    else onOpenChildNeeds(key, null);
   };
 
   const confirmAccept = async () => {
@@ -93,13 +103,12 @@ export function CourtOrderedView({ onBack, onQuickExit, courtKey, mediator, onVe
     checklist.load();
     compare.load();
     close();
-    const nextStep = STEPS.find((s) => statusOf(s.card) !== "done");
-    const nextModule = modules.find((m) => m.status !== "completed");
+    const next = MENU.find((o) => requested.keys.includes(o.key) && statusFor(o.key) !== "done");
     toast.success(`Court invite accepted for Case ${caseId}`, {
-      description: nextStep ? `Next: ${nextStep.title}` : nextModule ? `Next: Module ${nextModule.letter}. ${nextModule.title}` : "Everything is complete. Your court-ready PDF is ready.",
+      description: next ? `Next: ${next.title}` : "Tick the assessments your professional asked for, then open them in any order.",
     });
-    if (nextStep) onOpenCard(nextStep.card);
-    else if (nextModule) onOpenModule(nextModule);
+    if (next) openOption(next.key);
+    else document.querySelector('[data-testid="court-menu"]')?.scrollIntoView({ behavior: "smooth", block: "start" });
   };
 
   const resources = [
@@ -112,9 +121,14 @@ export function CourtOrderedView({ onBack, onQuickExit, courtKey, mediator, onVe
     { key: "hotline", icon: "fa-phone", title: "National DV Hotline: 1-800-799-7233", sub: "Free, confidential, 24/7. In danger? Call 911.", onClick: () => (window.location.href = "tel:18007997233") },
   ];
 
-  const doneSteps = STEPS.filter((st) => statusOf(st.card) === "done").length;
-  const nextStep = STEPS.find((st) => statusOf(st.card) !== "done");
-  const pill = nextStep ? <>Step <span data-testid="court-step-num">{nextStep.n}</span> of 4 · {nextStep.short}</> : "All 4 steps complete";
+  const asked = MENU.filter((o) => requested.keys.includes(o.key));
+  const counted = asked.length ? asked : MENU;
+  const doneCount = counted.filter((o) => statusFor(o.key) === "done").length;
+  const pill = (
+    <span data-testid="court-progress-text">
+      <span data-testid="court-progress-done">{doneCount}</span> of {counted.length} {asked.length ? "requested " : ""}done
+    </span>
+  );
   const openPillar = (pillar) => {
     compare.load();
     setDialog({ type: "pillar", pillar });
@@ -132,7 +146,7 @@ export function CourtOrderedView({ onBack, onQuickExit, courtKey, mediator, onVe
           subtitle="You have been directed to participate in the SA CoParents process. Organize your perspective, identify your child's needs, and prepare information that may assist the professionals involved with your family."
           textClassName="hidden lg:block"
           pill={pill}
-          pct={Math.round((doneSteps / 4) * 100)}
+          pct={Math.round((doneCount / counted.length) * 100)}
         />
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
           {/* Phones: picture first, chat last (display: contents). Desktop: one right column with both. */}
@@ -153,11 +167,10 @@ export function CourtOrderedView({ onBack, onQuickExit, courtKey, mediator, onVe
           </div>
           <div className="lg:col-start-1 lg:col-span-7 lg:row-start-1 space-y-6">
             <AcceptCard verified={cc.verified} courtKey={courtKey} onAccept={() => setDialog({ type: "accept" })} />
-            <StepCards statusOf={statusOf} onStep={(step) => setDialog({ type: "step", step })} />
+            <CourtMenu statusFor={statusFor} requested={requested.keys} onToggle={requested.toggle} onOpen={openOption} />
             <CourtAgreeCard compare={compare} onOpen={() => openPillar(PILLARS[1])} />
             <PillarCards onPillar={openPillar} />
             <CourtTools cc={cc} courtKey={courtKey} compare={compare} onCase={() => setDialog({ type: "accept" })} onBiff={onOpenBiffHistory} />
-            <CourtPictureCards done={assessDone} onChildNeeds={onOpenChildNeeds} onParallel={onOpenParallel} />
             <CourtModulesCard modules={modules} onOpenModule={onOpenModule} />
             <CourtChecklistCard checklist={checklist} />
           </div>

@@ -135,7 +135,7 @@ export function AgreeControls({ row, i, compare, step4 }) {
               className={`${small} bg-white border border-emerald-200 text-emerald-800 hover:bg-emerald-100`}
             >
               <i className="fa-solid fa-file-import mr-1"></i>
-              {step4.has(row) ? "In Step 4" : "Add to Step 4"}
+              {step4.has(row) ? "In Foundation Statement" : "Add to Foundation Statement"}
             </button>
           )}
           <button

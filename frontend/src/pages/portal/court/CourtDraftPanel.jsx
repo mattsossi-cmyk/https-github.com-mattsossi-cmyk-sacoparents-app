@@ -4,7 +4,7 @@ import { api } from "../../../lib/api";
 import CONTENT from "../foundationBuilderContent.json";
 
 const LABELS = Object.fromEntries(CONTENT.fields.map((f) => [f.key, f.label]));
-const TITLES = { statement: "Send to Step 4", split: "Split into Step 4 boxes" };
+const TITLES = { statement: "Send to Foundation Statement", split: "Split into Foundation Statement boxes" };
 
 function Preview({ parts }) {
   return (
@@ -23,13 +23,13 @@ function Saved({ ok, onOpenStep4, onClose }) {
   return (
     <div data-testid="court-draft-saved" className="text-center py-6">
       <i className="fa-solid fa-circle-check text-4xl text-[#2fa144]"></i>
-      <p className="mt-3 text-base font-bold text-[#3b1566]">Saved to Step 4</p>
+      <p className="mt-3 text-base font-bold text-[#3b1566]">Saved to your Foundation Statement</p>
       <p className="text-sm text-[#5f6368] mb-5">
-        {ok ? "Your Foundation Statement is updated. You can edit it anytime." : "Saved on this device. We couldn't reach your account, so open Step 4 and tap Save."}
+        {ok ? "Your Foundation Statement is updated. You can edit it anytime." : "Saved on this device. We couldn't reach your account, so open your Foundation Statement and tap Save."}
       </p>
       <div className="flex flex-col sm:flex-row gap-2 justify-center">
         <button type="button" data-testid="court-draft-open-step4" onClick={onOpenStep4} className="bg-[#2fa144] hover:bg-[#268537] text-white font-bold text-sm px-5 py-2.5 rounded-lg transition-colors">
-          Open Step 4 <i className="fa-solid fa-arrow-right ml-1.5"></i>
+          Open Foundation Statement <i className="fa-solid fa-arrow-right ml-1.5"></i>
         </button>
         <button type="button" data-testid="court-draft-back" onClick={onClose} className="bg-[#f2ebfc] hover:bg-[#e7dbf8] text-[#3b1566] font-bold text-sm px-5 py-2.5 rounded-lg transition-colors">
           Back to chat
@@ -86,11 +86,11 @@ export function CourtDraftPanel({ draft, fb, onClose, onOpenStep4 }) {
         ) : error ? (
           <p data-testid="court-draft-error" className="text-sm text-rose-700">{error}</p>
         ) : !parts ? (
-          <p data-testid="court-draft-loading" className="text-sm text-[#5f6368]"><i className="fa-solid fa-spinner fa-spin mr-2"></i>Sorting your draft into the Step 4 boxes…</p>
+          <p data-testid="court-draft-loading" className="text-sm text-[#5f6368]"><i className="fa-solid fa-spinner fa-spin mr-2"></i>Sorting your draft into the Foundation Statement boxes…</p>
         ) : (
           <>
             <p className="text-xs text-[#5f6368] mb-3">
-              {hasExisting ? "Some of these boxes already have text. Replace it, or add this below what's there." : "This will be added to your Foundation Statement (Step 4)."}
+              {hasExisting ? "Some of these boxes already have text. Replace it, or add this below what's there." : "This will be added to your Foundation Statement."}
             </p>
             <Preview parts={filled} />
           </>
@@ -109,7 +109,7 @@ export function CourtDraftPanel({ draft, fb, onClose, onOpenStep4 }) {
             </>
           ) : (
             <button type="button" data-testid="court-draft-add" disabled={saving} onClick={() => apply("add")} className={`${btn} bg-[#2fa144] hover:bg-[#268537] text-white`}>
-              {saving && <i className="fa-solid fa-spinner fa-spin mr-2"></i>}Add to Step 4
+              {saving && <i className="fa-solid fa-spinner fa-spin mr-2"></i>}Add to Foundation Statement
             </button>
           )}
         </div>

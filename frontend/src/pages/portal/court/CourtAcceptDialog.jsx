@@ -52,7 +52,7 @@ export function CourtAcceptDialog({ open, onClose, cc, mediator, courtKey, onCon
           className="w-full bg-[#2fa144] hover:bg-[#268537] disabled:opacity-70 text-white font-bold text-base py-3 px-5 rounded-lg transition-colors flex items-center justify-center gap-2"
         >
           {cc.busy === "accept" && <i className="fa-solid fa-spinner fa-spin"></i>}
-          {cc.verified ? "Save & Continue to My Next Step" : "Confirm & Proceed to Workspace"}
+          {cc.verified ? "Save & Continue" : "Confirm & Proceed to Workspace"}
         </button>
       </form>
     </CourtDialog>

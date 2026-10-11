@@ -1,7 +1,6 @@
 import React from "react";
 
-import { FlowArrow } from "../selfJourney/FlowArrow";
-import { PILLARS, POINTS, STATUS_PILL, STEPS } from "./courtContent";
+import { PILLARS, POINTS } from "./courtContent";
 
 export function AcceptCard({ verified, courtKey, onAccept }) {
   return (
@@ -35,57 +34,6 @@ export function AcceptCard({ verified, courtKey, onAccept }) {
           "Begin your court-ordered co-parenting journey."
         )}
       </p>
-    </section>
-  );
-}
-
-function StepStatus({ n, status }) {
-  const [label, , icon] = STATUS_PILL[status];
-  const tone = status === "done" ? "text-emerald-700" : status === "in_progress" ? "text-amber-700" : "text-slate-500";
-  return (
-    <span data-testid={`court-step-card-${n}-status`} data-status={status} className={`inline-flex items-center gap-1 text-[11px] font-bold ${tone}`}>
-      <i className={`fa-solid ${icon}`}></i>
-      {label}
-    </span>
-  );
-}
-
-export function StepCards({ statusOf, onStep }) {
-  return (
-    <section data-testid="court-step-cards">
-      <h3 className="text-xl sm:text-2xl font-extrabold text-[#3B1C6B]">Your Court-Ordered Journey</h3>
-      <p className="text-sm text-slate-600 mb-4">Follow the steps below to complete your assessments and prepare your information.</p>
-      <div className="space-y-3 sm:space-y-4">
-        {STEPS.map((s) => {
-          const status = statusOf(s.card);
-          return (
-            <React.Fragment key={s.n}>
-            {s.n > 1 && (
-              <FlowArrow testid={`court-flow-arrow-${s.n}`} to={`court-step-card-${s.n}`} label={s.short} step={`${s.n} of ${STEPS.length}`} done={status === "done"} size="sm" />
-            )}
-            <button
-              type="button"
-              data-testid={`court-step-card-${s.n}`}
-              onClick={() => onStep(s)}
-              className={`step-card w-full text-left border rounded-2xl p-3.5 sm:p-5 flex items-start gap-3 sm:gap-4 hover:shadow-md transition-shadow ${s.tone.card}`}
-            >
-              <span className={`relative w-10 h-10 sm:w-12 sm:h-12 rounded-2xl ${s.tone.tile} text-white flex items-center justify-center text-lg sm:text-xl shrink-0 shadow-sm`}>
-                <i className={`fa-solid ${s.icon}`}></i>
-                <span className="absolute -top-2 -left-2 w-6 h-6 rounded-full bg-[#3b1566] text-white text-xs font-extrabold flex items-center justify-center border-2 border-white">{s.n}</span>
-              </span>
-              <span className="flex-1 min-w-0">
-                <span className={`block text-base sm:text-lg font-bold ${s.tone.heading}`}>{s.short}</span>
-                <span className="block text-xs text-slate-600 mt-0.5 sm:mt-1 leading-relaxed">{s.body}</span>
-                <span className="block mt-2">
-                  <StepStatus n={s.n} status={status} />
-                </span>
-              </span>
-              <i className="fa-solid fa-chevron-right text-[#5c2c8e] pt-1"></i>
-            </button>
-            </React.Fragment>
-          );
-        })}
-      </div>
     </section>
   );
 }

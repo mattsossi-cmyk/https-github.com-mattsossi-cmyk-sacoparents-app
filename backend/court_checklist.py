@@ -30,6 +30,15 @@ DISCLAIMER = ("Personal progress summary from SA CoParents. It is not a legal do
               "or proof of compliance with a court order.")
 
 
+REQUESTABLE = ("coparent", "self", "educational", "medical", "psychological", "foundation", "parallel")
+RequestKey = Literal["coparent", "self", "educational", "medical", "psychological", "foundation", "parallel"]
+
+
+class RequestedBody(BaseModel):
+    # Which Court-page options the parent's professional asked them to complete.
+    keys: List[RequestKey] = Field(default_factory=list, max_length=7)
+
+
 class ChecklistBody(BaseModel):
     # Module A/B/C status exactly as the Court page shows it.
     modules: Dict[str, Literal["completed", "in_progress", "not_yet"]] = Field(default_factory=dict)
@@ -237,3 +246,22 @@ async def checklist_pdf(
         media_type="application/pdf",
         headers={"Content-Disposition": 'attachment; filename="SA_CoParents_Court_Checklist.pdf"'},
     )
+
+
+@router.get("/requested")
+async def get_requested(user: UserPublic = Depends(get_current_user), db: AsyncIOMotorDatabase = Depends(get_db)) -> Dict[str, List[str]]:
+    doc = await db.court_requested.find_one({"user_id": user.user_id}, {"_id": 0, "keys": 1})
+    return {"keys": (doc or {}).get("keys") or []}
+
+
+@router.put("/requested")
+async def put_requested(
+    body: RequestedBody, user: UserPublic = Depends(get_current_user), db: AsyncIOMotorDatabase = Depends(get_db)
+) -> Dict[str, List[str]]:
+    keys = [k for k in REQUESTABLE if k in body.keys]
+    await db.court_requested.update_one(
+        {"user_id": user.user_id},
+        {"$set": {"keys": keys, "updated_at": datetime.now(timezone.utc).isoformat()}},
+        upsert=True,
+    )
+    return {"keys": keys}

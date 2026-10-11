@@ -9,9 +9,9 @@ const COPY = {
   safety_off: "Side-by-side comparison is turned off to keep you safe. Your results stay private to you.",
 };
 const EMPTY = {
-  alignment: "This appears once you and your co-parent both finish Step 1 or Step 2.",
-  difference: "This appears once you and your co-parent both finish Step 1 or Step 2.",
-  child: "This appears once you and your co-parent both fill in Step 3.",
+  alignment: "This appears once you and your co-parent both finish the Co-Parenting Assessment or Self-Assessment.",
+  difference: "This appears once you and your co-parent both finish the Co-Parenting Assessment or Self-Assessment.",
+  child: "This appears once you and your co-parent both fill in a child's needs assessment.",
 };
 
 function ShareSwitch({ compare }) {
@@ -126,7 +126,7 @@ function AddAllToStep4({ rows, step4 }) {
       className="mb-3 text-xs font-bold px-3.5 py-2 rounded-full bg-white border border-emerald-300 text-emerald-800 hover:bg-emerald-50 disabled:opacity-60 transition-colors"
     >
       <i className="fa-solid fa-file-import mr-1.5"></i>
-      {left ? `Add all agreements to Step 4 (${left})` : "All agreements are in Step 4"}
+      {left ? `Add all agreements to your Foundation Statement (${left})` : "All agreements are in your Foundation Statement"}
     </button>
   );
 }

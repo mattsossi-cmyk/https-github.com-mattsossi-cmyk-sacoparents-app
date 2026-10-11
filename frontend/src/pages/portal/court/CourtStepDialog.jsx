@@ -7,7 +7,7 @@ export function CourtStepDialog({ step, item, onClose, onOpen, onAskAi }) {
   if (!step) return null;
   const status = item?.status || "loading";
   const [label, tone, icon] = STATUS_PILL[status];
-  const note = item ? (status === "done" ? item.detail : item.detail || "You haven't started this step yet.") : "";
+  const note = item ? (status === "done" ? item.detail : item.detail || "You haven't started this yet.") : "";
   return (
     <CourtDialog open onClose={onClose} testid="court-step-dialog" title={step.title} desc={step.body}>
       <div data-testid="court-step-dialog-progress" className="bg-[#f2ebfc] border border-[#e7dbf8] rounded-xl px-4 py-3 mb-5">
@@ -25,7 +25,7 @@ export function CourtStepDialog({ step, item, onClose, onOpen, onAskAi }) {
           onClick={onOpen}
           className="flex-1 bg-[#2fa144] hover:bg-[#268537] text-white font-bold py-3 px-5 rounded-lg transition-colors"
         >
-          {status === "done" ? `Review Step ${step.n}` : status === "in_progress" ? `Continue Step ${step.n}` : `Start Step ${step.n}`}
+          {status === "done" ? "Review" : status === "in_progress" ? "Continue" : "Start"}
           <i className="fa-solid fa-arrow-right ml-2"></i>
         </button>
         <button

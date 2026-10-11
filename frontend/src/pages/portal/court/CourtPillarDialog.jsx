@@ -55,7 +55,7 @@ export function CourtPillarDialog({ pillar, summary, resources, compare, step4, 
         <div data-testid="court-pillar-empty" className="border border-dashed border-[#e7dbf8] rounded-xl px-4 py-3 mb-4">
           <p className="text-sm text-[#5f6368] mb-2">{pillar.empty}</p>
           <button type="button" data-testid="court-pillar-open-step" onClick={() => onOpenStep(pillar.emptyStep)} className="text-sm font-bold text-[#2fa144] hover:underline">
-            Open Step {pillar.emptyStep} <i className="fa-solid fa-arrow-right ml-1"></i>
+            Open {pillar.emptyStep === 3 ? "Child's Specific Needs" : "Co-Parenting Assessment"} <i className="fa-solid fa-arrow-right ml-1"></i>
           </button>
         </div>
       ) : (
