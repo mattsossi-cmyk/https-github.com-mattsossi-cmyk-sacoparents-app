@@ -62,6 +62,8 @@ async def save_my_statement(
     await db.foundation_builder.update_one(
         {"user_id": user.user_id}, {"$set": {**saved.model_dump(), "user_id": user.user_id}}, upsert=True
     )
+    from completion_alerts import schedule_completion_check
+    schedule_completion_check(db, user.user_id)
     return saved
 
 

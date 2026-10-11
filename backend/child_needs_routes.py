@@ -101,6 +101,9 @@ async def save_category(
     if not doc.get("notice_ack_at"):
         update["$set"]["notice_ack_at"] = now
     await db.child_needs_assessments.update_one({"user_id": user.user_id}, update, upsert=True)
+    if not body.draft:
+        from completion_alerts import schedule_completion_check
+        schedule_completion_check(db, user.user_id)
     return await get_my_child_needs(user, db)
 
 

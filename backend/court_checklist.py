@@ -366,6 +366,24 @@ async def unsubscribe_requested_reminders(token: str, db: AsyncIOMotorDatabase =
     ))
 
 
+class RemindersBody(BaseModel):
+    enabled: bool
+
+
+@router.get("/reminders")
+async def get_reminder_setting(user: UserPublic = Depends(get_current_user), db: AsyncIOMotorDatabase = Depends(get_db)) -> Dict[str, Any]:
+    doc = await db.court_requested.find_one({"user_id": user.user_id}, {"_id": 0, "reminders_off": 1}) or {}
+    return {"enabled": not doc.get("reminders_off")}
+
+
+@router.put("/reminders")
+async def put_reminder_setting(
+    body: RemindersBody, user: UserPublic = Depends(get_current_user), db: AsyncIOMotorDatabase = Depends(get_db)
+) -> Dict[str, Any]:
+    await db.court_requested.update_one({"user_id": user.user_id}, {"$set": {"reminders_off": not body.enabled}}, upsert=True)
+    return {"enabled": body.enabled}
+
+
 @router.get("/requested")
 async def get_requested(user: UserPublic = Depends(get_current_user), db: AsyncIOMotorDatabase = Depends(get_db)) -> Dict[str, Any]:
     return _requested_shape(await _sync_professional_requests(db, user.user_id))

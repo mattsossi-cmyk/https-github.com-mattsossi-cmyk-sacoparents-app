@@ -5,6 +5,7 @@ import { toast } from "sonner";
 import { api } from "../../lib/api";
 import { logError } from "../../lib/logger";
 import { CourtCodeForm } from "./CourtCodeForm";
+import { ProgressPdfButton } from "./ProgressPdfButton";
 import { RequestedProgress, fmtDay } from "./RequestedProgress";
 
 // "My cases": court codes this professional created, with status-only progress per parent who entered the code.
@@ -76,12 +77,15 @@ const CourtCodeItem = ({ c, onChanged }) => {
           {c.label ? ` · ${c.label}` : ""}
           {c.expires_at && state === "Active" ? ` · until ${fmtDay(c.expires_at)}` : ""}
         </div>
-        {state === "Active" && (
-          <button type="button" onClick={revoke} disabled={busy} data-testid={`court-code-revoke-${c.case_id}`}
-            className="inline-flex items-center gap-1 text-[11px] font-semibold text-[#B02A2A] hover:underline disabled:opacity-60">
-            {busy ? <Loader2 size={11} className="animate-spin" /> : <Trash2 size={11} />} Revoke
-          </button>
-        )}
+        <div className="flex items-center gap-3">
+          <ProgressPdfButton path={`/professional/court-codes/${c.case_id}/progress.pdf`} caseId={c.case_id} testid={`court-code-progress-pdf-${c.case_id}`} />
+          {state === "Active" && (
+            <button type="button" onClick={revoke} disabled={busy} data-testid={`court-code-revoke-${c.case_id}`}
+              className="inline-flex items-center gap-1 text-[11px] font-semibold text-[#B02A2A] hover:underline disabled:opacity-60">
+              {busy ? <Loader2 size={11} className="animate-spin" /> : <Trash2 size={11} />} Revoke
+            </button>
+          )}
+        </div>
       </div>
       {c.parents.length === 0 ? (
         <p className="text-[11px] text-[#857E9C] mt-2" data-testid={`court-code-waiting-${c.case_id}`}>No parent has entered this code yet.</p>

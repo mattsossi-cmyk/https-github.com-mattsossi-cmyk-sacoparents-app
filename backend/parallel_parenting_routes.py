@@ -209,6 +209,8 @@ async def save_plan(
     await db[PLANS].update_one({"user_id": user.user_id}, {"$set": fields}, upsert=True)
     if body.completed:
         await _snapshot(db, user.user_id, "finished")
+        from completion_alerts import schedule_completion_check
+        schedule_completion_check(db, user.user_id)
     return await _plan(db, user.user_id)
 
 

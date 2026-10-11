@@ -297,6 +297,8 @@ async def generate_report(
         )
     except Exception as hist_err:  # pragma: no cover — belt + braces
         logger.warning("cp_report_history append failed: %s", hist_err)
+    from completion_alerts import schedule_completion_check
+    schedule_completion_check(db, user.user_id)
     doc_out.pop("_id", None)
     return doc_out
 

@@ -44,6 +44,7 @@ import ProfessionalDirectoryModal from "../components/professional/ProfessionalD
 import ReminderNoteTemplatePicker from "../components/professional/ReminderNoteTemplatePicker";
 import { CourtCodesPanel } from "../components/professional/CourtCodesPanel";
 import { RequestedProgress } from "../components/professional/RequestedProgress";
+import { ProgressPdfButton } from "../components/professional/ProgressPdfButton";
 import { toast } from "sonner";
 import { api } from "../lib/api";
 import { logError } from "../lib/logger";
@@ -492,7 +493,8 @@ export default function ProfessionalJointAlignmentMine() {
                     </div>
                   </div>
                   {c.status !== "cancelled" && c.status !== "expired" && (
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <ProgressPdfButton path={`/professional/joint-alignment/cases/${c.case_id}/progress.pdf`} caseId={c.case_id} testid={`pj-mine-progress-pdf-${c.case_id}`} />
                       <button
                         type="button"
                         onClick={(e) => openDownload(c.case_id, e.currentTarget)}

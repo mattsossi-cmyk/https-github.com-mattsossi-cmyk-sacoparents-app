@@ -24,6 +24,7 @@ from pydantic import BaseModel, Field, field_validator
 from auth import UserPublic, bearer, get_current_user, get_db
 import self_assessment_pdf
 from self_assessment_reminders import read_unsubscribe_token
+from completion_alerts import schedule_completion_check
 
 CONTENT: Dict[str, Any] = json.loads(
     (Path(__file__).parent / "self_assessment_content.json").read_text(encoding="utf-8")
@@ -201,6 +202,7 @@ async def complete_assessment(
     )
     await db.self_assessment_history.insert_one({**entry.model_dump(), "user_id": user.user_id})
     await db.self_assessment_drafts.delete_one({"user_id": user.user_id})
+    schedule_completion_check(db, user.user_id)
     return entry
 
 

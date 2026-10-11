@@ -84,3 +84,63 @@ def test_reminder_email_is_neutral(monkeypatch):
 def test_unsubscribe_token_roundtrip():
     assert read_unsubscribe_token(make_unsubscribe_token("u1")) == "u1"
     assert read_unsubscribe_token("garbage") is None
+
+
+def test_completion_alert_once_per_parent_and_case(monkeypatch):
+    import completion_alerts
+
+    sent = []
+    monkeypatch.setattr(email_service, "send_completion_alert", lambda **kw: sent.append(kw))
+
+    async def run():
+        client = AsyncIOMotorClient(os.environ["MONGO_URL"])
+        name = f"{os.environ['DB_NAME']}_test_completion_alerts"
+        await client.drop_database(name)
+        db = client[name]
+        try:
+            await db.users.insert_many([{"user_id": "pro", "email": "pro@example.com"}, {"user_id": "pro2", "email": "pro2@example.com"},
+                                        {"user_id": "par", "email": "par@example.com"}, {"user_id": "alignpar", "email": "a@example.com"}])
+            await db.portal_state.insert_many([{"user_id": "par", "court_key": "CC-T1"}, {"user_id": "alignpar", "court_key": "AL-1"}])
+            await db.portal_court_keys.insert_many([
+                {"case_id": "CC-T1", "created_by": "pro", "label": "Smith v Smith", "requested": ["self"]},
+                {"case_id": "AL-1", "requested": ["self"]},  # Align-made: no professional here
+            ])
+            await db.joint_alignment_cases.insert_one({"case_id": "SA-T1", "status": "in_progress", "professional_created_by": "pro2",
+                                                       "assigned_steps": [{"assessment_type": "medical", "required": True}],
+                                                       "parents": [{"user_id": "par"}]})
+            assert await completion_alerts.check_and_alert(db, "par") == 0  # nothing finished yet
+            await db.self_assessment_history.insert_many([{"user_id": u, "completed_at": "2026-06-01T10:00:00+00:00"} for u in ("par", "alignpar")])
+            first = await completion_alerts.check_and_alert(db, "par")
+            again = await completion_alerts.check_and_alert(db, "par")
+            align = await completion_alerts.check_and_alert(db, "alignpar")
+            return first, again, align
+        finally:
+            await client.drop_database(name)
+
+    first, again, align = asyncio.run(run())
+    assert (first, again, align) == (1, 0, 0)  # joint case still waits on Medical
+    assert len(sent) == 1 and {k: sent[0][k] for k in ("to_email", "case_ref", "label")} == {
+        "to_email": "pro@example.com", "case_ref": "CC-T1", "label": "Smith v Smith"}
+    assert sent[0]["cta_url"].endswith("/professional/joint-alignment/mine")
+
+
+def test_completion_email_names_nobody(monkeypatch):
+    out = {}
+    monkeypatch.setattr(email_service, "_send", lambda **kw: out.update(kw))
+    email_service.send_completion_alert(to_email="p@example.com", case_ref="CC-T1", label="Smith", cta_url="https://x/mine")
+    body = out["html"] + out["text"]
+    assert "CC-T1 (Smith)" in body and "https://x/mine" in body
+    for word in ("Self-Assessment", "Medical", "Co-Parenting Assessment", "answer:"):
+        assert word not in body
+
+
+def test_progress_pdf_status_only():
+    from progress_pdf import build_progress_pdf
+
+    pdf = build_progress_pdf({"kind": "Court code", "ref": "CC-T1", "label": "Smith", "state": "Active",
+                              "generated_at": "2026-06-08T14:00:00+00:00",
+                              "parents": [{"name": "Avery", "assessments": [
+                                  {"key": "self", "title": "Self-Assessment", "status": "done", "finished_at": "2026-06-01T10:00:00+00:00"},
+                                  {"key": "medical", "title": "Medical Assessment", "status": "todo", "finished_at": None}]},
+                                  {"name": "Parent 2", "assessments": None}]})
+    assert pdf.startswith(b"%PDF")

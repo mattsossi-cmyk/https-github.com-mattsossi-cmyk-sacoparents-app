@@ -1366,6 +1366,26 @@ def send_requested_reminder(
     )
 
 
+def send_completion_alert(*, to_email: str, case_ref: str, label: str, cta_url: str) -> None:
+    """To the professional: a parent finished everything requested. Case reference + private label only."""
+    ref = f"{case_ref} ({label})" if label else case_ref
+    lead = f"A parent on case {ref} has finished every assessment you asked for."
+    note = "Sign in to see the status in My cases. For privacy, this email doesn't include names or answers."
+    plain = f"Hi,\n\n{lead}\n\n{note}\n\nOpen My cases:\n{cta_url}\n\n— SA CoParents · sacoparentsapp.online\n"
+    body_html = (
+        f'<p style="font-size:15px;line-height:1.55;color:#4B4567;margin:0 0 14px 0;">Hi,</p>'
+        f'<p style="font-size:15px;line-height:1.55;color:#4B4567;margin:0 0 14px 0;">{_html.escape(lead)}</p>'
+        f'<p style="font-size:13px;line-height:1.55;color:#857E9C;margin:0 0 22px 0;">{note}</p>'
+    )
+    _send(
+        to_email=to_email,
+        subject="A parent has finished what you asked for",
+        html=_branded_html(headline="Requested assessments finished", body_html=body_html, cta_label="Open My cases", cta_url=cta_url),
+        text=plain,
+        failure_message="Could not send the completion alert right now.",
+    )
+
+
 def send_joint_alignment_invitation(
     *,
     to_email: str,

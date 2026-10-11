@@ -16,6 +16,7 @@ import { ArrowLeft, User as UserIcon, Shield, Database, FileText } from "lucide-
 import { useAuth } from "../context/AuthContext";
 import MarketingConsentToggle from "../components/account/MarketingConsentToggle";
 import AlignLinkCard from "../components/account/AlignLinkCard";
+import RequestedRemindersSwitch from "../components/account/RequestedRemindersSwitch";
 
 
 function LinkTile({ to, icon, label, desc, testid }) {
@@ -92,6 +93,10 @@ export default function Account() {
         {/* Communication preferences (HB 300 marketing toggle) */}
         <section className="mt-4">
           <MarketingConsentToggle />
+        </section>
+
+        <section className="mt-4">
+          <RequestedRemindersSwitch />
         </section>
 
         <section className="mt-4">
