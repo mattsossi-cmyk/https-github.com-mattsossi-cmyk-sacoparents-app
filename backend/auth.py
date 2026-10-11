@@ -423,29 +423,13 @@ async def delete_account(
     current=Depends(get_current_user),
     db: AsyncIOMotorDatabase = Depends(get_db),
 ):
-    """Permanently delete the authenticated user's account and ALL their data.
+    """Permanently delete the authenticated user's account and ALL their data (see account_purge.py).
 
     Required by Google Play & Apple App Store for in-app account deletion.
-    Wipes: users, user_sessions, prep_data, summaries, agreements,
-    improvement_plans, mediator_emails, devices.
     """
-    user_id = current.user_id
-    collections = (
-        "users",
-        "user_sessions",
-        "prep_data",
-        "summaries",
-        "agreements",
-        "improvement_plans",
-        "mediator_emails",
-        "devices",
-    )
-    deleted = {}
-    for name in collections:
-        result = await db[name].delete_many({"user_id": user_id})
-        deleted[name] = result.deleted_count
-    # Make sure the user document itself is gone (queried by user_id above)
-    await db.users.delete_one({"user_id": user_id})
+    from account_purge import purge_account
+
+    deleted = await purge_account(db, current.user_id, current.email)
 
     response.delete_cookie("session_token", path="/")
     response.delete_cookie(JWT_COOKIE_NAME, path="/")

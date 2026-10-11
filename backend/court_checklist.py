@@ -31,6 +31,9 @@ DISCLAIMER = ("Personal progress summary from SA CoParents. It is not a legal do
 
 
 REQUESTABLE = ("coparent", "self", "educational", "medical", "psychological", "foundation", "parallel")
+# Professional case invite step -> Court page option.
+CASE_STEP_TO_KEY = {"co-parenting": "coparent", "communication": "self", "educational": "educational",
+                    "medical": "medical", "psychological": "psychological"}
 RequestKey = Literal["coparent", "self", "educational", "medical", "psychological", "foundation", "parallel"]
 
 
@@ -56,7 +59,29 @@ def _item(key: str, label: str, status: str, detail: str, hint: str) -> Dict[str
     return {"key": key, "label": label, "status": status, "detail": detail, "hint": hint}
 
 
-async def build_checklist(db: AsyncIOMotorDatabase, user: UserPublic, modules: Dict[str, str]) -> Dict[str, Any]:
+async def _requested_items(db, uid, keys, sa, snaps, cn, fb) -> List[Dict[str, str]]:
+    """One row per assessment the parent ticked as asked for, in Court-menu order."""
+    pp = await db.parallel_parenting_plans.find_one({"user_id": uid}, {"_id": 0, "completed_at": 1, "answers": 1}) or {}
+    cn_at = cn.get("completed_at") or {}
+    hint = "Open it from the menu on your Court page."
+    rows = {
+        "coparent": _item("coparent", "Co-Parenting Assessment", "done" if snaps else "todo",
+                          f"{len(snaps)} saved · latest {_day(snaps[-1])}" if snaps else "", hint),
+        "self": _item("self", "Self-Assessment", "done" if sa else "todo",
+                      f"{len(sa)} completed · latest {_day(sa[0]['completed_at'])}" if sa else "", hint),
+        "foundation": _item("foundation", "Foundation Statement", "done" if fb else "todo",
+                            f"Saved {_day(fb.get('updated_at'))}" if fb and fb.get("updated_at") else "Saved" if fb else "", hint),
+        "parallel": _item("parallel", "Parallel Parenting Plan",
+                          "done" if pp.get("completed_at") else "in_progress" if pp.get("answers") else "todo",
+                          f"Finished {_day(pp['completed_at'])}" if pp.get("completed_at") else "In progress" if pp.get("answers") else "", hint),
+    }
+    for k, name in CN_NAMES.items():
+        rows[k] = _item(k, f"{name} Assessment", "done" if cn_at.get(k) else "todo",
+                        f"Completed {_day(cn_at[k])}" if cn_at.get(k) else "", hint)
+    return [rows[k] for k in REQUESTABLE if k in keys]
+
+
+async def build_checklist(db: AsyncIOMotorDatabase, user: UserPublic, modules: Dict[str, str], requested: Optional[List[str]] = None) -> Dict[str, Any]:
     uid = user.user_id
     ps = await db.portal_state.find_one(
         {"user_id": uid}, {"_id": 0, "court_key": 1, "court_legal_name": 1, "safety_ack": 1, "biff_logs": 1}
@@ -101,8 +126,11 @@ async def build_checklist(db: AsyncIOMotorDatabase, user: UserPublic, modules: D
         _item("biff", "BIFF messages saved", "done" if biff else "todo", f"{len(biff)} saved" if biff else "",
               "Rewrite a message in the Communication Builder and save it."),
     ]
+    if requested:
+        items = items[:2] + await _requested_items(db, uid, requested, sa, snaps, cn, fb)
     return {
         "items": items,
+        "requested_only": bool(requested),
         "done": sum(i["status"] == "done" for i in items),
         "total": len(items),
         "case_ref": case or None,
@@ -157,6 +185,11 @@ def _header(pdf: FPDF, data: Dict[str, Any]) -> None:
     meta = [f"Parent: {data['parent_name'] or '-'}", f"Case: {data['case_ref'] or 'Not entered yet'}",
             f"Prepared: {_day(data['generated_at'])}"]
     pdf.cell(0, 5, _safe("     ".join(meta)), new_x="LMARGIN", new_y="NEXT")
+    if data.get("requested_only"):
+        pdf.set_font("Helvetica", "I", 8.5)
+        pdf.set_text_color(*MUTED)
+        pdf.cell(0, 4.6, "Showing your case, your safety check and the assessments your professional asked for.",
+                 new_x="LMARGIN", new_y="NEXT")
     pdf.ln(2)
     pdf.set_font("Helvetica", "B", 11)
     pdf.set_text_color(*PURPLE)
@@ -240,7 +273,8 @@ async def checklist_pdf(
     user: UserPublic = Depends(get_current_user),
     db: AsyncIOMotorDatabase = Depends(get_db),
 ) -> StreamingResponse:
-    pdf_bytes = build_checklist_pdf(await build_checklist(db, user, body.modules))
+    req = _requested_shape(await _sync_professional_requests(db, user.user_id))["keys"]
+    pdf_bytes = build_checklist_pdf(await build_checklist(db, user, body.modules, req))
     return StreamingResponse(
         BytesIO(pdf_bytes),
         media_type="application/pdf",
@@ -248,20 +282,62 @@ async def checklist_pdf(
     )
 
 
+async def _sync_professional_requests(db: AsyncIOMotorDatabase, uid: str) -> Dict[str, Any]:
+    """Auto-tick what a professional asked for (case invite assigned steps, or a court code's list) once per source."""
+    doc = await db.court_requested.find_one({"user_id": uid}, {"_id": 0}) or {}
+    applied = set(doc.get("applied") or [])
+    found = []  # (source, keys, professional name)
+    ps = await db.portal_state.find_one({"user_id": uid}, {"_id": 0, "court_key": 1}) or {}
+    ck = (ps.get("court_key") or "").strip()
+    if ck and f"court:{ck}" not in applied:
+        kd = await db.portal_court_keys.find_one({"case_id": ck, "revoked_at": None}, {"_id": 0, "requested": 1, "mediator_name": 1})
+        if kd and kd.get("requested"):
+            found.append((f"court:{ck}", kd["requested"], kd.get("mediator_name")))
+    async for case in db.joint_alignment_cases.find(
+        {"parents.user_id": uid, "status": {"$ne": "cancelled"}},
+        {"_id": 0, "case_id": 1, "assigned_steps": 1, "assessment_type": 1, "professional.name": 1},
+    ):
+        if f"case:{case['case_id']}" in applied:
+            continue
+        steps = [s["assessment_type"] for s in case.get("assigned_steps") or [] if s.get("required")] or [case.get("assessment_type")]
+        keys = [CASE_STEP_TO_KEY[t] for t in steps if t in CASE_STEP_TO_KEY]
+        if keys:
+            found.append((f"case:{case['case_id']}", keys, (case.get("professional") or {}).get("name")))
+    if not found:
+        return doc
+    keys = [k for _, ks, _ in found for k in ks if k in REQUESTABLE]
+    await db.court_requested.update_one(
+        {"user_id": uid},
+        {
+            "$addToSet": {"keys": {"$each": keys}, "pro_keys": {"$each": keys}, "applied": {"$each": [src for src, _, _ in found]}},
+            "$set": {"pro_name": found[-1][2] or doc.get("pro_name"), "updated_at": datetime.now(timezone.utc).isoformat()},
+        },
+        upsert=True,
+    )
+    return await db.court_requested.find_one({"user_id": uid}, {"_id": 0}) or {}
+
+
+def _requested_shape(doc: Dict[str, Any]) -> Dict[str, Any]:
+    return {
+        "keys": [k for k in REQUESTABLE if k in (doc.get("keys") or [])],
+        "professional_keys": [k for k in REQUESTABLE if k in (doc.get("pro_keys") or [])],
+        "professional_name": doc.get("pro_name"),
+    }
+
+
 @router.get("/requested")
-async def get_requested(user: UserPublic = Depends(get_current_user), db: AsyncIOMotorDatabase = Depends(get_db)) -> Dict[str, List[str]]:
-    doc = await db.court_requested.find_one({"user_id": user.user_id}, {"_id": 0, "keys": 1})
-    return {"keys": (doc or {}).get("keys") or []}
+async def get_requested(user: UserPublic = Depends(get_current_user), db: AsyncIOMotorDatabase = Depends(get_db)) -> Dict[str, Any]:
+    return _requested_shape(await _sync_professional_requests(db, user.user_id))
 
 
 @router.put("/requested")
 async def put_requested(
     body: RequestedBody, user: UserPublic = Depends(get_current_user), db: AsyncIOMotorDatabase = Depends(get_db)
-) -> Dict[str, List[str]]:
+) -> Dict[str, Any]:
     keys = [k for k in REQUESTABLE if k in body.keys]
     await db.court_requested.update_one(
         {"user_id": user.user_id},
         {"$set": {"keys": keys, "updated_at": datetime.now(timezone.utc).isoformat()}},
         upsert=True,
     )
-    return {"keys": keys}
+    return _requested_shape(await db.court_requested.find_one({"user_id": user.user_id}, {"_id": 0}) or {})

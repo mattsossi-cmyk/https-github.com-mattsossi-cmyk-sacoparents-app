@@ -24,7 +24,21 @@ function AskedTick({ testid, asked, onToggle }) {
   );
 }
 
-function MenuRow({ o, status, asked, onToggle, onOpen }) {
+function ProNote({ testid, asked, name }) {
+  return asked ? (
+    <span data-testid={testid} className="inline-flex items-center gap-1 rounded-full bg-[#f2ebfc] text-[#4a1d7a] px-2 py-0.5 text-[10.5px] font-bold">
+      <i className="fa-solid fa-user-tie" aria-hidden="true"></i>
+      Set by {name || "your professional"}
+    </span>
+  ) : (
+    <span data-testid={testid} className="inline-flex items-center gap-1 text-[11px] font-semibold text-amber-800">
+      <i className="fa-solid fa-circle-info" aria-hidden="true"></i>
+      Your professional asked for this
+    </span>
+  );
+}
+
+function MenuRow({ o, status, asked, pro, proName, onToggle, onOpen }) {
   const tp = `court-menu-${o.key}`;
   return (
     <li data-testid={tp} data-asked={asked ? "true" : "false"} className={`rounded-2xl border bg-white shadow-sm transition-[box-shadow,border-color] hover:shadow-md ${asked ? "border-[#5c2c8e] ring-2 ring-[#5c2c8e]/15" : "border-purple-100"}`}>
@@ -39,7 +53,10 @@ function MenuRow({ o, status, asked, onToggle, onOpen }) {
         <i className="fa-solid fa-chevron-right text-[#5c2c8e] pt-1" aria-hidden="true"></i>
       </button>
       <div className="flex flex-wrap items-center justify-between gap-2 border-t border-purple-50 px-3 sm:px-4 py-1.5">
-        <AskedTick testid={`${tp}-asked`} asked={asked} onToggle={onToggle} />
+        <span className="flex flex-wrap items-center gap-x-2 gap-y-1">
+          <AskedTick testid={`${tp}-asked`} asked={asked} onToggle={onToggle} />
+          {pro && <ProNote testid={`${tp}-pro-note`} asked={asked} name={proName} />}
+        </span>
         <Status testid={`${tp}-status`} status={status} />
       </div>
     </li>
@@ -47,7 +64,7 @@ function MenuRow({ o, status, asked, onToggle, onOpen }) {
 }
 
 // Court page menu: every assessment a professional may ask for, in any order, with an "Asked by my professional" tick.
-export function CourtMenu({ statusFor, requested, onToggle, onOpen }) {
+export function CourtMenu({ statusFor, requested, proKeys = [], proName, onToggle, onOpen }) {
   return (
     <section data-testid="court-menu" className="scroll-mt-6">
       <h3 className="text-xl sm:text-2xl font-extrabold text-[#3B1C6B]">Your Court-Ordered Journey</h3>
@@ -56,7 +73,7 @@ export function CourtMenu({ statusFor, requested, onToggle, onOpen }) {
       </p>
       <ul className="space-y-3">
         {MENU.map((o) => (
-          <MenuRow key={o.key} o={o} status={statusFor(o.key)} asked={requested.includes(o.key)} onToggle={() => onToggle(o.key)} onOpen={() => onOpen(o.key)} />
+          <MenuRow key={o.key} o={o} status={statusFor(o.key)} asked={requested.includes(o.key)} pro={proKeys.includes(o.key)} proName={proName} onToggle={() => onToggle(o.key)} onOpen={() => onOpen(o.key)} />
         ))}
       </ul>
     </section>

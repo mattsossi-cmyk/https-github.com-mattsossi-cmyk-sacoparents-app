@@ -102,8 +102,9 @@ export function CourtOrderedView({ onBack, onQuickExit, courtKey, mediator, onVe
     if (!caseId) return;
     checklist.load();
     compare.load();
+    const asked = await requested.reload();
     close();
-    const next = MENU.find((o) => requested.keys.includes(o.key) && statusFor(o.key) !== "done");
+    const next = MENU.find((o) => asked.includes(o.key) && statusFor(o.key) !== "done");
     toast.success(`Court invite accepted for Case ${caseId}`, {
       description: next ? `Next: ${next.title}` : "Tick the assessments your professional asked for, then open them in any order.",
     });
@@ -167,7 +168,7 @@ export function CourtOrderedView({ onBack, onQuickExit, courtKey, mediator, onVe
           </div>
           <div className="lg:col-start-1 lg:col-span-7 lg:row-start-1 space-y-6">
             <AcceptCard verified={cc.verified} courtKey={courtKey} onAccept={() => setDialog({ type: "accept" })} />
-            <CourtMenu statusFor={statusFor} requested={requested.keys} onToggle={requested.toggle} onOpen={openOption} />
+            <CourtMenu statusFor={statusFor} requested={requested.keys} proKeys={requested.proKeys} proName={requested.proName} onToggle={requested.toggle} onOpen={openOption} />
             <CourtAgreeCard compare={compare} onOpen={() => openPillar(PILLARS[1])} />
             <PillarCards onPillar={openPillar} />
             <CourtTools cc={cc} courtKey={courtKey} compare={compare} onCase={() => setDialog({ type: "accept" })} onBiff={onOpenBiffHistory} />

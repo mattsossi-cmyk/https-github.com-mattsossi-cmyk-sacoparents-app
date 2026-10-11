@@ -44,7 +44,7 @@ import secrets
 import string
 from datetime import datetime, timezone, timedelta
 from io import BytesIO
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Literal, Optional
 
 import bcrypt
 from fastapi import APIRouter, Depends, Header, HTTPException, Request
@@ -494,6 +494,40 @@ def _redact_for_safety(snapshot: Dict[str, Any], foundation: Dict[str, Any], nee
     fs.update(canonical={k: None for k in foundation["canonical"]}, updated_at=foundation.get("updated_at"))
     sn = {k: (v and {"rating_areas": v.get("rating_areas"), "generated_at": v.get("generated_at")}) for k, v in needs.items()}
     return snap, fs, sn
+
+
+class CourtKeyUpsert(BaseModel):
+    key: str = Field(..., min_length=3, max_length=80)
+    case_id: str = Field(..., min_length=1, max_length=80)
+    mediator_name: str = Field("", max_length=200)
+    expires_at: Optional[datetime] = None
+    # Court page options the professional asks the parent to complete (auto-ticked when the parent links the code).
+    requested: List[Literal["coparent", "self", "educational", "medical", "psychological", "foundation", "parallel"]] = Field(default_factory=list, max_length=7)
+
+
+@router.post("/integrations/court-keys")
+async def upsert_court_key(
+    body: CourtKeyUpsert,
+    x_integration_key: Optional[str] = Header(None, alias="X-Integration-Key"),
+    db: AsyncIOMotorDatabase = Depends(get_db),
+):
+    """Server-to-server: Align creates or updates a court code, optionally with the assessments the professional asked for."""
+    _verify_integration_key(x_integration_key)
+    from court_checklist import REQUESTABLE
+    from portal_routes import _hash_key
+
+    key_hash = _hash_key(body.key)
+    requested = [k for k in REQUESTABLE if k in body.requested]
+    await db.portal_court_keys.update_one(
+        {"key_hash": key_hash},
+        {
+            "$set": {"case_id": body.case_id.strip(), "mediator_name": body.mediator_name.strip(),
+                     "expires_at": _iso(body.expires_at), "requested": requested, "updated_at": _iso(_now())},
+            "$setOnInsert": {"key_hash": key_hash, "revoked_at": None, "created_at": _iso(_now())},
+        },
+        upsert=True,
+    )
+    return {"case_id": body.case_id.strip(), "requested": requested}
 
 
 # --------------------------- payload shaping --------------------------- #

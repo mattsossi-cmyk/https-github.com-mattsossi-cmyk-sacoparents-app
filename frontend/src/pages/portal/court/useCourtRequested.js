@@ -8,11 +8,27 @@ const LOCAL_KEY = "sac_court_requested";
 // Which Court-page options the parent ticked as "Asked by my professional" (account when signed in, else this browser).
 export function useCourtRequested(signedIn) {
   const [keys, setKeys] = useState([]);
+  const [pro, setPro] = useState({ keys: [], name: null });
   const ref = useRef([]);
-  const set = (next) => {
+  const set = useCallback((next) => {
     ref.current = next;
     setKeys(next);
-  };
+  }, []);
+
+  const apply = useCallback((data) => {
+    set(data.keys);
+    setPro({ keys: data.professional_keys || [], name: data.professional_name || null });
+  }, [set]);
+  const reload = useCallback(async () => {
+    if (!signedIn) return ref.current;
+    try {
+      const { data } = await api.get("/court-path/requested");
+      apply(data);
+      return data.keys;
+    } catch {
+      return ref.current;
+    }
+  }, [signedIn, apply]);
 
   useEffect(() => {
     if (!signedIn) {
@@ -23,8 +39,8 @@ export function useCourtRequested(signedIn) {
       }
       return;
     }
-    api.get("/court-path/requested").then(({ data }) => set(data.keys)).catch(() => {});
-  }, [signedIn]);
+    reload();
+  }, [signedIn, reload, set]);
 
   const toggle = useCallback(
     async (k) => {
@@ -41,14 +57,14 @@ export function useCourtRequested(signedIn) {
       }
       try {
         const { data } = await api.put("/court-path/requested", { keys: next });
-        set(data.keys);
+        apply(data);
       } catch {
         set(before);
         toast.error("Couldn't save that. Please try again.");
       }
     },
-    [signedIn]
+    [signedIn, set, apply]
   );
 
-  return { keys, toggle };
+  return { keys, toggle, reload, proKeys: pro.keys, proName: pro.name };
 }

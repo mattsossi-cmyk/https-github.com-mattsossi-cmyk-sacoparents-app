@@ -37,6 +37,12 @@ export default function DeleteAccount() {
       } catch (_err) {
         // ignore — account is already gone
       }
+      try {
+        window.localStorage.clear();
+        window.sessionStorage.clear();
+      } catch (_err) {
+        // storage blocked: nothing saved here anyway
+      }
       toast.success("Your account and all data have been permanently deleted.");
       setConfirmOpen(false);
       // small delay so the toast is visible before redirect
@@ -74,16 +80,26 @@ export default function DeleteAccount() {
             What gets deleted
           </h2>
           <ul className="text-[14px] text-[#4B4567] space-y-2 list-disc pl-5">
-            <li>Your account profile (name, email, password, picture)</li>
-            <li>All five preparation modules (Child-Focused Goals, Issues &amp; Concerns, Priority Ranking, Communication Style, Readiness Check)</li>
-            <li>Every AI-generated Mediation Summary, Agreement Draft and Improvement Plan</li>
-            <li>Every email-to-mediator record you've created</li>
-            <li>All active sessions and any registered push-notification device tokens</li>
+            <li>Your account profile (name, email, password, picture), sessions and device tokens</li>
+            <li>Every assessment and its results: Self-Assessment, Co-Parenting, Educational, Medical, Psychological, Special Needs, Safety and Parallel Parenting</li>
+            <li>Your Foundation Statement, agreements, journal, goals, saved messages, checklists and court-page ticks</li>
+            <li>Every Guide (AI) chat, summary, plan and preparation module</li>
+            <li>Documents you sent (they stop opening for the person you sent them to), share links, invitations and your SA CoParents Align link</li>
+            <li>Anything saved in this browser for the app</li>
           </ul>
+          <h3 className="font-semibold text-[#1A1330] text-[14px] mt-5 mb-1.5">Shared records</h3>
+          <p data-testid="delete-account-shared-note" className="text-[13px] text-[#4B4567] leading-relaxed">
+            In a case or comparison you share with your co-parent or a professional, your part is removed and it shows
+            &ldquo;A parent deleted their account&rdquo;. Their own information stays with them.
+          </p>
+          <h3 className="font-semibold text-[#1A1330] text-[14px] mt-4 mb-1.5">What we keep</h3>
+          <p data-testid="delete-account-kept-note" className="text-[13px] text-[#4B4567] leading-relaxed">
+            For legal record-keeping we keep health-information access logs and consent records, with your name,
+            email and account replaced by an anonymous code, plus a note of the date your account was deleted.
+          </p>
           <p className="text-[13px] text-[#857E9C] mt-4 italic">
-            PDFs you previously shared via the &ldquo;Share via text&rdquo; 7-day
-            link cannot be recalled once shared, but the link itself is
-            invalidated within minutes of deletion.
+            Copies someone already downloaded, and anything SA CoParents Align already saved, can&rsquo;t be recalled
+            from here. Ask Align directly to delete what it holds.
           </p>
         </section>
 

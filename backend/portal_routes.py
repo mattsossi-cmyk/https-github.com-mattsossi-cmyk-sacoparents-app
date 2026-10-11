@@ -947,7 +947,9 @@ class SharePayload(BaseModel):
 
 
 @router.post("/share")
-async def create_share_link(body: SharePayload, request: Request) -> Dict[str, Any]:
+async def create_share_link(
+    body: SharePayload, request: Request, user: Optional[UserPublic] = Depends(get_current_user_optional)
+) -> Dict[str, Any]:
     """Persist the payload used to generate a portal PDF and mint a
     signed short URL. Rate limited (shares the BIFF/verify quota).
 
@@ -980,6 +982,7 @@ async def create_share_link(body: SharePayload, request: Request) -> Dict[str, A
             "share_id": share_id,
             "artefact_type": body.artefact_type,
             "payload": {k: v for k, v in body.payload.items() if k != "align_records"},
+            "user_id": user.user_id if user else None,  # lets account deletion remove the link
             "created_at": now.isoformat(),
             "expires_at": expires_at.isoformat(),
             "revoked_at": None,
