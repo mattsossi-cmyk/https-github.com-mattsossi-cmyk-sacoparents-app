@@ -68,8 +68,9 @@ async def check_and_alert(db: AsyncIOMotorDatabase, uid: str) -> int:
                                         cta_url=f"{app}/professional/joint-alignment/mine")
                 status, sent = "sent", sent + 1
             except (EmailNotConfigured, EmailSendError) as exc:
-                status = "failed"
                 logger.warning("completion alert failed for %s: %s", s["ref"], exc)
+                await db.completion_alerts.delete_one({"user_id": uid, "ref": s["ref"]})  # retry on the next save
+                continue
         await db.completion_alerts.update_one({"user_id": uid, "ref": s["ref"]}, {"$set": {"status": status, "sent_at": now}})
     return sent
 

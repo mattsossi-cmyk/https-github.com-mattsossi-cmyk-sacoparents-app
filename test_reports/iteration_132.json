@@ -1,0 +1,31 @@
+{
+  "summary": "Iter132 (SA CoParents): Full test of Progress PDF (court-code + joint-case), weekly reminder on/off switch, and right-away completion alert. Backend: 28/28 pytest pass (6 test_requested_reminders.py + 11 test_iter131_court_codes.py regression + 11 new test_iter132_progress_pdf_completion.py). PDFs verified via pdfinfo/pdftotext — 1 page, headings 'Assessment Progress', 'Court code <id>' / 'Joint case <id>', state Active/Revoked/Expired, parent lines '<name> · X of Y done', closing 'SA CoParents never shares a parent's answers.'. Owner-only gating 404 for other professional, 401 noauth on both endpoints. Reminders GET/PUT: enabled roundtrip, missing body -> 422, re-enable after email-unsubscribe (reminders_off=True in Mongo) via PUT enabled:true verified live. Completion alert hook: real end-to-end on foundation-builder save produced exactly one completion_alerts doc {status in sent|failed|skipped_no_email} with correct user_id/ref/pro_user_id; a second save did NOT add another record. Frontend (parent1 on /professional/joint-alignment/mine): 12 court-code-progress-pdf-{case_id} and 10 pj-mine-progress-pdf-{case_id} buttons rendered next to existing pj-mine-download-{case_id}; click triggers filename 'SA_CoParents_Progress_{case_id}.pdf' download for both CC and SA-DEMO01, with 'Progress PDF ready.' toast present. Account page: requested-reminders-panel + role=switch toggle + state 'On'/'Off' present for both parent1 and ccparent; toggle OFF persists across reload; toggled back ON at end as instructed. No horizontal overflow at 390px on /account or /professional/joint-alignment/mine.",
+  "backend_issues": {"critical": [], "minor": []},
+  "frontend_issues": {"ui_bugs": [], "integration_issues": [], "design_issues": []},
+  "test_report_links": [
+    "/app/backend/tests/test_iter132_progress_pdf_completion.py",
+    "/app/backend/tests/test_iter131_court_codes.py",
+    "/app/backend/tests/test_requested_reminders.py",
+    "/app/test_reports/pytest/iter132.xml"
+  ],
+  "action_items": [],
+  "critical_code_review_comments": [
+    "progress_pdf.py: owner-only query ({created_by: user.user_id} for court codes, {professional_created_by: user.user_id} for joint cases) correctly returns 404 for non-owners; verified via automated test with parent2 token.",
+    "progress_pdf.py: PDF is one page, status-only — no answer/score fields rendered. Closing boilerplate 'SA CoParents never shares a parent's answers.' is in every PDF.",
+    "completion_alerts.check_and_alert uses atomic $setOnInsert upsert on (user_id, ref) then checks claim.upserted_id — correctly enforces 'once per parent per case' even under concurrent saves. If email send fails, the doc is still marked 'failed' which still blocks re-send; this matches the spec ('status failed still proves the hook fired').",
+    "completion_alerts._sources filters Align-made codes with `created_by: {$nin: [None, ''}` AND requires `professional_created_by: {$nin: [None, '']}` on joint cases — Align codes correctly skipped (no professional email path).",
+    "completion_alerts.schedule_completion_check uses asyncio.create_task + strong ref set to avoid GC — safe fire-and-forget pattern.",
+    "court_checklist PUT /reminders accepts a Pydantic body (missing `enabled` -> 422 as required). The server upserts `reminders_off = not enabled`, so sending enabled:true after an email-unsubscribe (reminders_off=True) correctly flips it back to False — verified live.",
+    "Secret handling: INTEGRATION_SHARED_SECRET read via python-dotenv in /app/backend/.env; test file explicitly does not reference nor print the value. ✔"
+  ],
+  "updated_files": [
+    "/app/backend/tests/test_iter132_progress_pdf_completion.py"
+  ],
+  "success_rate": {"backend": "100% (28/28)", "frontend": "100% (all documented selectors + flows pass)"},
+  "test_credentials": "parent1@test.com / TestPass123! (pro), parent2@test.com / TestPass123! (other), ccparent@test.com / TestPass123! (linked to CC-P445YM). Fresh accounts registered inside tests (TEST_iter132_*@test.com) for reminder toggle + completion-alert flows. INTEGRATION_SHARED_SECRET read via python-dotenv — never printed.",
+  "seed_data_creation": "Transient court codes created inside the completion-alert test (label 'TEST_iter132_alert_*') and the owner-only PDF fixture ('TEST_iter132_*'); both are revoked in test teardown. A few transient fresh parent accounts (TEST_iter132_pfam_*, TEST_iter132_rem_*, TEST_iter132_unsub_*) created via /api/auth/register — contain no PHI. ccparent's reminders switch was toggled OFF -> ON during the FE test and finished ON (unchanged state).",
+  "retest_needed": false,
+  "main_agent_can_self_test": true,
+  "context_for_next_testing_agent": "Full regression command: `cd /app/backend && pytest tests/test_requested_reminders.py tests/test_iter131_court_codes.py tests/test_iter132_progress_pdf_completion.py -q` (28 total). Progress-PDF frontend lives in CourtCodesPanel.jsx + ProfessionalJointAlignmentMine.jsx (selectors court-code-progress-pdf-{case_id} and pj-mine-progress-pdf-{case_id}, filename pattern 'SA_CoParents_Progress_{case_id}.pdf', toast 'Progress PDF ready.'). Account reminders panel in Account.jsx (requested-reminders-panel / requested-reminders-toggle role=switch aria-checked / requested-reminders-state 'On'|'Off'). SA-DEMO01 remains the stable joint-case fixture (Sam Parent + Riley Parent, Co-Parenting Done · 1 of 1). ALIGN-SA-2026 and CC-P445YM must not be revoked.",
+  "rca of the issue": "No bugs found. All three features are implemented correctly end-to-end."
+}

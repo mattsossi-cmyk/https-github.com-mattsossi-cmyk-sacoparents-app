@@ -53,6 +53,12 @@ Auth: Custom JWT (`auth.py`)
 - Testing: iteration_131 backend 14/14, frontend 100%. Not deployed.
 - Follow-up (user-approved): Notice of Confidentiality on Educational/Medical/Psychological forms now reads "…intended only for you and the professionals you choose to send it to." (frontend + backend mirror of child-needs content).
 
+### 2026-06 — Iter132 · Progress PDF + right-away completion alert + reminder switch
+- Progress PDF (status only): `progress_pdf.py` — `GET /api/professional/court-codes/{id}/progress.pdf` and `GET /api/professional/joint-alignment/cases/{id}/progress.pdf` (owner only). UI: `ProgressPdfButton.jsx` on court-code rows and joint-case rows in My cases.
+- Completion alert: `completion_alerts.py` fires right after a completion save (self-assessment complete, co-parenting report, child-needs submit, foundation save, parallel plan completed). Emails the in-app professional once per parent per case; names case reference + private label only. Align-made codes skipped. A failed send is retried on the next save.
+- Reminder switch: `GET/PUT /api/court-path/reminders` + `components/account/RequestedRemindersSwitch.jsx` on Account (works both ways, re-enables after email unsubscribe).
+- Testing: iteration_132 backend 28/28, frontend 100%.
+
 
 ### 2026-06 — Iter271–273 · Self-Assessment v2 (chat-style) + Progress Graph
 
