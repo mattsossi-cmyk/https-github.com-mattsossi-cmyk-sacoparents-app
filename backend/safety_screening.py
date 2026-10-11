@@ -195,8 +195,23 @@ def item_view(scr: dict) -> list[dict]:
             for i in _spec_for(ver, scr.get("b_source"))["items"] + __import__("safety_pathway").EXTRA_ITEMS]
 
 
+SAFE_CONTACT_METHODS = ("email", "phone call", "text", "through my professional only", "in person only", "Prefer not to say")
+SAFE_CONTACT_FIELDS = ("method", "address", "safe_times", "voicemail_ok", "code_word")
+
+
+def clean_safe_contact(sc: dict | None) -> dict | None:
+    """Optional, skippable. Professional-only; never in reports, PDFs, exports, invitations, emails or the bridge."""
+    if not isinstance(sc, dict) or not sc:
+        return None
+    out = {k: str(sc.get(k) or "")[:300].strip() for k in SAFE_CONTACT_FIELDS}
+    if out["method"] not in SAFE_CONTACT_METHODS:
+        out["method"] = "Prefer not to say" if out["method"] else ""
+    return out if any(out.values()) else None
+
+
 class SubmitIn(BaseModel):
     responses: dict
+    safe_contact: dict | None = None
 
 
 class AssignIn(BaseModel):
@@ -265,7 +280,8 @@ def build_router(db, get_current_user, get_joint_report_doc, report_role, log_ac
             f"<p>Only the assigned professional can open item-level responses; access is logged. The co-parent and the court see nothing of this.</p>"
             f'<p><a href="{app_url()}/joint/{doc["id"]}/safety-screening/{role}" style="display:inline-block;background:#5B2A86;color:#fff;padding:10px 16px;border-radius:6px;text-decoration:none">Open screening (professional-only)</a></p>'
             f"<p style=\"color:#666;font-size:13px\">{SCALE_NOTE}</p>")
-        await send_email(to=pro["email"], subject=f"Safety screening Tier 3 — Case {code} - {EMAIL_FROM_NAME}", html=html, case_id=doc["id"], kind="safety_tier3_alert", to_role="Professional")
+        from email_utils import MINIMAL_NOTIFICATIONS as _MIN
+        await send_email(to=pro["email"], subject=(f"Priority follow-up — Case {code} - {EMAIL_FROM_NAME}" if _MIN else f"Safety screening Tier 3 — Case {code} - {EMAIL_FROM_NAME}"), html=html, case_id=doc["id"], kind="safety_tier3_alert", to_role="Professional")
 
     def _is_pro(doc, user):
         return user.get("role") == "admin" or user["_id"] in (doc.get("professional_id"), doc.get("created_by"))
@@ -337,6 +353,9 @@ def build_router(db, get_current_user, get_joint_report_doc, report_role, log_ac
         if not version:
             raise HTTPException(status_code=409, detail="Please choose a screening version first")
         rec = build_record(version, body.responses or {})
+        sc = clean_safe_contact(body.safe_contact)
+        if sc:
+            rec["safe_contact"] = sc
         await db.joint_reports.update_one({"id": rid}, {"$set": {f"safety_screenings.{role}": rec, f"safety_flags.{role}": rec["tier"] >= 2}})
         if rec["tier"] == 3:
             try:
@@ -371,6 +390,7 @@ def build_router(db, get_current_user, get_joint_report_doc, report_role, log_ac
         communication = {"received": True, "completed_at": comm.get("completed_at"), "source": comm.get("source"), "flag_for_professional": comm.get("flag_for_professional"), "items": comm_items_view(comm),
                          "note": "Parent's private communication readiness answers — a flag input for you, not a decision."} if comm else {"received": False}
         return {"status": st, "items": item_view(scr), "pathway": pathway, "communication": communication, "scale_note": SCALE_NOTE,
+                "safe_contact": scr.get("safe_contact"),  # professional-only, access-logged screen
                 "source_credit": SOURCES_B.get(scr.get("b_source"), SOURCES["B"]) if scr.get("version") == "B" else SOURCES.get(scr.get("version") or "", ""),
                 "notice": "Parent-reported screening responses, shown to the assigned professional only. Not findings. Never shared with the co-parent, the court, or any report."}
 
@@ -402,7 +422,16 @@ async def run_screening_reminders(db, send_email, app_url, from_name: str, logge
             if not user or not user.get("email"):
                 continue
             code = doc.get("case_code") or doc["id"][:8]
-            html = ('<table role="presentation" width="100%"><tr><td style="padding:24px;font-family:Arial,sans-serif">'
+            from email_utils import MINIMAL_NOTIFICATIONS, NEUTRAL_SUBJECT
+            if MINIMAL_NOTIFICATIONS:
+                html = ('<table role="presentation" width="100%"><tr><td style="padding:24px;font-family:Arial,sans-serif">'
+                        f"<p>Hi {escape(user.get('name') or 'there')},</p>"
+                        "<p>You have an optional step waiting in your SA CoParents account. It takes about five minutes and every question can be skipped.</p>"
+                        f'<p><a href="{app_url()}/joint/{doc["id"]}/safety-hub" style="display:inline-block;background:#5B2A86;color:#fff;padding:10px 16px;border-radius:6px;text-decoration:none">Sign in to continue</a></p>'
+                        f'<p style="font-size:12px;color:#888">Sent by {escape(from_name)}. We never ask for your password by email.</p></td></tr></table>')
+                subject = NEUTRAL_SUBJECT
+            else:
+                html = ('<table role="presentation" width="100%"><tr><td style="padding:24px;font-family:Arial,sans-serif">'
                     f"<p>Hi {escape(user.get('name') or 'there')},</p>"
                     f"<p>A short, private safety screening is still waiting for you on case <strong>{escape(code)}</strong>. It takes about five minutes. "
                     "Every question can be skipped, and your co-parent will never see your answers — only your professional can.</p>"
@@ -410,7 +439,9 @@ async def run_screening_reminders(db, send_email, app_url, from_name: str, logge
                     "<p style=\"color:#666;font-size:13px\">If you are in danger now, call 911 or the National Hotline at 1-800-799-7233 (text START to 88788).</p>"
                     f'<p style="font-size:12px;color:#888">Sent by {escape(from_name)}. We never ask for your password by email.</p></td></tr></table>')
             try:
-                await send_email(to=user["email"], subject=f"A private screening is waiting for you — Case {code} - {from_name}", html=html, case_id=doc["id"], kind="safety_screening_reminder", to_role=f"Parent {role.upper()}")
+                if not MINIMAL_NOTIFICATIONS:
+                    subject = f"A private screening is waiting for you — Case {code} - {from_name}"
+                await send_email(to=user["email"], subject=subject, html=html, case_id=doc["id"], kind="safety_screening_reminder", to_role=f"Parent {role.upper()}")
             except Exception as exc:
                 logger.warning("safety screening reminder failed for %s/%s: %s", doc["id"], role, exc)
                 continue

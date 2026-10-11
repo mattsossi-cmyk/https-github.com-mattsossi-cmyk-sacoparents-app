@@ -27,7 +27,7 @@ from judge_digest import run_judge_digests
 
 
 
-from email_utils import send_email, EMAIL_FROM_NAME
+from email_utils import send_email, EMAIL_FROM_NAME, MINIMAL_NOTIFICATIONS, NEUTRAL_SUBJECT
 from core import db, logger, app_url, _parse_iso, WEBHOOK_CRON_SECRET, INVITE_EXPIRY_DAYS, INVITE_EXPIRING_SOON_DAYS
 
 
@@ -339,6 +339,15 @@ async def run_expiry_digests() -> None:
         await _send_digest(pro_id, rows, now)
 
 
+def _neutral_email_html(name: str, link: str) -> str:
+    """Minimal-content notification: no case details, no subject/assessment/safety wording."""
+    return ('<table role="presentation" width="100%"><tr><td style="padding:24px;font-family:Arial,sans-serif">'
+            f"<p>Hi {escape(name)},</p>"
+            "<p>There is an update waiting for you in your SA CoParents account.</p>"
+            f'<p><a href="{link}" style="display:inline-block;background:#5B2A86;color:#fff;padding:10px 16px;border-radius:6px;text-decoration:none">Sign in to view</a></p>'
+            f'<p style="font-size:12px;color:#888">Sent by {escape(EMAIL_FROM_NAME)}. We never ask for your password by email.</p></td></tr></table>')
+
+
 def _ready_email_html(name: str, child: str, label: str, link: str) -> str:
     return (
         '<table role="presentation" width="100%"><tr><td style="padding:24px;font-family:Arial,sans-serif">'
@@ -373,8 +382,8 @@ async def _send_ready_notifications(doc: dict, now: datetime) -> None:
         try:
             await send_email(
                 to=p["email"],
-                subject=f"Your Joint Report is ready - {EMAIL_FROM_NAME}",
-                html=_ready_email_html(p.get("name") or "there", child, label, link),
+                subject=NEUTRAL_SUBJECT if MINIMAL_NOTIFICATIONS else f"Your Joint Report is ready - {EMAIL_FROM_NAME}",
+                html=_neutral_email_html(p.get("name") or "there", link) if MINIMAL_NOTIFICATIONS else _ready_email_html(p.get("name") or "there", child, label, link),
                 case_id=doc["id"], kind="report_ready", to_role=f"Parent {side.upper()}",
             )
             updates[side] = now.isoformat()
@@ -424,8 +433,8 @@ async def _send_completion_nudge(doc: dict, now: datetime) -> None:
     try:
         await send_email(
             to=other["email"],
-            subject=f"Your co-parent has completed their half - {EMAIL_FROM_NAME}",
-            html=_nudge_email_html(done.get("name") or "Your co-parent", other.get("name") or "there", child, label, link),
+            subject=NEUTRAL_SUBJECT if MINIMAL_NOTIFICATIONS else f"Your co-parent has completed their half - {EMAIL_FROM_NAME}",
+            html=_neutral_email_html(other.get("name") or "there", link) if MINIMAL_NOTIFICATIONS else _nudge_email_html(done.get("name") or "Your co-parent", other.get("name") or "there", child, label, link),
             case_id=doc["id"], kind="completion_nudge", to_role=f"Parent {side.upper()}",
         )
         await db.joint_reports.update_one({"id": doc["id"]}, {"$set": {f"nudges.{side}": now.isoformat()}})

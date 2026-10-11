@@ -27,7 +27,8 @@ from court_workflow import court_stage
 
 
 
-from email_utils import send_email, EMAIL_FROM_NAME
+from email_utils import send_email, EMAIL_FROM_NAME, MINIMAL_NOTIFICATIONS
+from joint_engine import REDACTION_NOTICE
 from core import db, logger, app_url, _parse_iso, invite_link, INVITE_EXPIRY_DAYS
 
 
@@ -176,7 +177,7 @@ class InviteSpec:
 
 def _invite_email_content(spec: InviteSpec, token: str) -> tuple[str, str]:
     link = invite_link(token)
-    subject = "Invitation to Complete Your SA CoParents Assessment"
+    subject = "An invitation from SA CoParents" if MINIMAL_NOTIFICATIONS else "Invitation to Complete Your SA CoParents Assessment"
     closing = (
         "After both parents have completed the requested assessment, SA CoParents Align will prepare "
         "the Joint Alignment Report for the authorized professional."
@@ -184,6 +185,7 @@ def _invite_email_content(spec: InviteSpec, token: str) -> tuple[str, str]:
         "After both parents have completed the requested assessment, SA CoParents Align will prepare "
         "the Joint Alignment Report."
     )
+    closing += f" {REDACTION_NOTICE}"
     html = (
         '<table role="presentation" width="100%"><tr><td style="padding:24px;font-family:Arial,sans-serif">'
         f"<p>Hi {escape(spec.invitee_name or 'there')},</p>"
@@ -232,6 +234,8 @@ async def create_invitation(spec: InviteSpec):
         "status": "pending",
         "created_at": datetime.now(timezone.utc).isoformat(),
     }
+    if (await db.joint_reports.find_one({"id": spec.report_id}, {"joint_paused": 1}) or {}).get("joint_paused"):
+        raise HTTPException(status_code=423, detail="This step isn't available right now. Your professional will follow up.")
     await db.invitations.insert_one(doc)
     try:
         await send_invite_email(spec, token)

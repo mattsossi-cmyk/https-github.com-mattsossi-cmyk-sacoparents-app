@@ -15,6 +15,10 @@ logger = logging.getLogger(__name__)
 EMAIL_BASE_URL = "https://integrations.emergentagent.com"
 EMAIL_KEY = os.environ["EMERGENT_EMAIL_KEY"]
 EMAIL_FROM_NAME = os.environ["EMAIL_FROM_NAME"]
+# Minimal-content notifications (owner decision 2026-10-11): ON by default. Parent-facing subjects/bodies carry no
+# safety/screening/assessment-result wording and no case details; the generic sender name is used.
+MINIMAL_NOTIFICATIONS = os.environ.get("MINIMAL_NOTIFICATIONS", "true").lower() != "false"
+NEUTRAL_SUBJECT = f"A message from {EMAIL_FROM_NAME}"
 EMAIL_REPLY_TO = os.environ.get("EMAIL_REPLY_TO")
 RESEND_API_KEY = os.environ.get("RESEND_API_KEY", "")
 RESEND_FROM_EMAIL = os.environ.get("RESEND_FROM_EMAIL", "")

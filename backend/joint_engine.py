@@ -52,6 +52,8 @@ def _status_for(common):
 
 
 REDACTED = "[Redacted by the reviewing professional before release]"
+# Parent-facing notice (owner may edit). Shown in the invitation email and the Joint Report footer. Neutral: no safety/screening/flag words, no policy link.
+REDACTION_NOTICE = "Your professional may hide an individual written answer from a joint report before it is released."
 
 
 def _analyze_answers(ra, rb, child, redactions=None):
@@ -181,6 +183,7 @@ def generate_joint_report(doc: dict) -> dict:
         "purpose": SAFETY_PURPOSE if doc.get("is_safety") else PURPOSE_TEXT,
         "alignment_statements": _alignment_statements(statements, subject_label, child),
         "differences": differences,
+        "redaction_notice": REDACTION_NOTICE,
         "child_needs": cfg["needs"],
         "alignment_map": rows,
         "conversation": cfg["conversation"],

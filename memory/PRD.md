@@ -1001,3 +1001,12 @@ Probed 2026-09-02: /api/link-codes, /api/integrations/* on sacoparentsapp.online
 - Pending: owner "deploy"; owner "link them"; professional notice wording.
 - 2026-10-11 12:3x — Owner: Retention Engine PAUSED (code kept in retention.py; UN-WIRED from cron; crons.yml restored); deploy on hold pending owner's report; policy pages flipped to status "final" (badge shows "Version 1.0"), still UNLINKED + robots/noindex; 90-day rule keeps tier/version/receipt, purges answers+flags. Tests iter97/98 19 passed.
 - 2026-10-11 14:50 — SWITCH OFF: Retention Engine behind RETENTION_ENGINE_ENABLED=false (every purge/reminder raises RetentionDisabled; not scheduled; admin route removed; tests prove it cannot run). Policy routes REMOVED again (content kept un-routed, status "final"); robots.txt removed; Sharing & Consent + invitation disclosure sentences removed. Redaction tool left as-is (pending owner decision). 25 tests green. Preview only.
+
+## 2026-10-11 15:02–15:08 decisions implemented (PREVIEW ONLY, not deployed)
+- Pause/Resume joint features: backend/joint_pause.py (PUT /joint/reports/{rid}/joint-pause, pro-only, note, access-logged kind=joint_pause, history). Blocks responses, report, PDF, invitation create/resend with 423 + NEUTRAL_MESSAGE; parents get only joint_blocked flag. No notifications. UI: components/JointPauseControl.jsx on JointReport.
+- Safe contact channel: SubmitIn.safe_contact → safety_screenings.{role}.safe_contact (clean_safe_contact); pro-only on /responses screen; excluded from public_record/receipt/spec/PDF/email/import/bridge. UI: components/SafeContactStep.jsx (parent form), SafetyResponses view.
+- Minimal-content notifications: MINIMAL_NOTIFICATIONS env (default on). Changed: invitation subject, report-ready + co-parent-completed (neutral body _neutral_email_html), screening reminder (subject+body), Tier3 pro subject, both-completed pro subject, FV facilitation subject.
+- Redaction notice: joint_engine.REDACTION_NOTICE in invitation closing + report.redaction_notice (JointReport footer).
+- Bridge requester context: integrations.BRIDGE_REQUESTER_CONTEXT (default false); headers X-Requester-{Professional-Id,Case-Id,Parent-Role,App} + body "requester" + query params; 401/403 → 403 DENIED_DETAIL. Contract provisional pending parent-app builder.
+- NOT built (ambiguous): 3(c) separate individual perspective court reports — questions listed to owner.
+- Tests: iter99 (16) + regression → 56 passed.

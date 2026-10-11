@@ -9,6 +9,7 @@ import { Input } from "@/components/ui/input";
 import { ReminderPreviewButton } from "@/components/ReminderPreview";
 import { AgreementDocument } from "@/components/AgreementDocument";
 import { ProWorkspace } from "@/components/ProWorkspace";
+import { JointPauseControl } from "@/components/JointPauseControl";
 import { FoundationStatements } from "@/components/FoundationStatements";
 import { CaseAttachments } from "@/components/FoundationAttachments";
 import { ShareFoundation } from "@/components/ShareFoundation";
@@ -343,6 +344,9 @@ export default function JointReport() {
         )}
         {detail.is_creator && <FoundationStatements rid={id} items={detail.foundation_statements} safetyRoute={detail.safety_route} safetyCaseId={detail.safety_case_id} />}
         {detail.is_creator && <CaseAttachments rid={id} />}
+        {detail.joint_blocked && <div className="mb-6 rounded-lg border border-border bg-secondary/40 p-4 text-sm" role="status" data-testid="joint-blocked-notice">{detail.joint_blocked_message}</div>}
+        {detail.is_creator && <JointPauseControl rid={id} paused={detail.joint_paused} onChange={(p) => setDetail((d) => ({ ...d, joint_paused: p }))} />}
+        {report?.redaction_notice && <p className="mb-4 text-xs text-muted-foreground" data-testid="jr-redaction-notice">{report.redaction_notice}</p>}
         {detail.is_creator && <ProWorkspace rid={id} steps={ready && report && !NO_REPORT.has(detail.kind) ? [...(report.next_steps || []), ...(report.options || [])] : null} outcome={detail.session_outcome} onOutcomeSaved={(o) => setDetail((d) => ({ ...d, session_outcome: o }))} courtReady={!!(ready && report && !NO_REPORT.has(detail.kind))} />}
       </main>
     </div>

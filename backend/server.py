@@ -22,6 +22,7 @@ from report_engine import generate_report
 from joint_data import SUBJECTS, ORDERED_SUBJECT_KEYS, QUESTIONS, CONFIDENTIALITY_NOTICE, SAFETY_SUBJECT_KEYS, AGREEMENT_AREAS, AGREEMENT_SECTIONS, new_case_code
 from agreement_ai import draft_agreement_clauses, answers_signature
 from joint_engine import SAMPLE_SCENARIOS, generate_agreement, sample_mediation_report, sample_report, sample_list
+from joint_pause import assert_joint_open as _assert_joint_open, parent_view as _pause_view
 
 
 from sample_professional_report import sample_judicial_case, sample_professional_report
@@ -29,7 +30,7 @@ from sample_professional_report import sample_judicial_case, sample_professional
 from pdf_report import build_joint_pdf, build_agreement_pdf, build_case_pdf, build_methodology_pdf, build_session_prep_pdf, build_communications_log_pdf, verify_qr_png
 
 from auth_utils import hash_password, verify_password
-from email_utils import send_email, EMAIL_FROM_NAME
+from email_utils import send_email, EMAIL_FROM_NAME, MINIMAL_NOTIFICATIONS
 from starlette.middleware.cors import CORSMiddleware
 from auth import get_current_user, is_pro, require_approved_professional
 from joint_ai import effective_joint_report as generate_joint_report
@@ -418,7 +419,7 @@ async def _notify_mediator(mediator: dict, user: dict, doc: dict, label: str) ->
     try:
         await send_email(
             to=mediator["email"],
-            subject=f"Family violence Joint Report facilitation requested - {EMAIL_FROM_NAME}",
+            subject=(f"Facilitation requested - {EMAIL_FROM_NAME}" if MINIMAL_NOTIFICATIONS else f"Family violence Joint Report facilitation requested - {EMAIL_FROM_NAME}"),
             html=(
                 '<table role="presentation" width="100%"><tr><td style="padding:24px;font-family:Arial,sans-serif">'
                 f"<p>Hi {escape(mediator.get('name') or 'there')},</p>"
@@ -624,7 +625,9 @@ async def _report_professional(doc: dict) -> dict | None:
 async def get_joint_report(rid: str, user=Depends(get_current_user)):
     doc = await get_joint_report_doc(rid, user)
     pend = await db.invitations.find({"report_id": rid, "status": "pending"}, {"_id": 0}).to_list(10)
-    return joint_public(doc, user, pend[0] if pend else None, pending=pend)
+    out = joint_public(doc, user, pend[0] if pend else None, pending=pend)
+    out.update(_pause_view(doc, user.get("role") == "admin" or user["_id"] in (doc.get("professional_id"), doc.get("created_by"))))
+    return out
 
 
 def _foundation_payload(body: JointResponsesIn) -> list:
@@ -683,6 +686,7 @@ async def save_joint_responses(rid: str, body: JointResponsesIn, user=Depends(ge
     role = report_role(doc, user["_id"])
     if role is None:
         raise HTTPException(status_code=403, detail="Only invited parents can submit responses")
+    _assert_joint_open(doc)
     payload = _validated_answers(doc, body)
     existing_foundation = (doc.get("responses", {}).get(role) or {}).get("foundation")
     if existing_foundation and not payload.get("foundation"):
@@ -707,7 +711,7 @@ async def _notify_both_complete(doc: dict) -> None:
     code = doc.get("case_code") or doc["id"][:8]
     try:
         await send_email(
-            to=pro["email"], subject=f"Both parents have completed — Case {code} - {EMAIL_FROM_NAME}",
+            to=pro["email"], subject=(f"Case {code} update - {EMAIL_FROM_NAME}" if MINIMAL_NOTIFICATIONS else f"Both parents have completed — Case {code} - {EMAIL_FROM_NAME}"),
             html=_pro_email_wrap(
                 f"<p>Hi {escape(pro.get('name') or 'there')},</p>"
                 f"<p>Both parents have completed their individual assessments for <strong>{escape(doc.get('child_name') or 'the child')}</strong> "
@@ -735,6 +739,8 @@ async def _log_report_access(doc: dict, user: dict, action: str, kind: str) -> N
 @api.get("/joint/reports/{rid}/report")
 async def get_joint_report_output(rid: str, user=Depends(get_current_user)):
     doc = await get_joint_report_doc(rid, user)
+    if not (user.get("role") == "admin" or user["_id"] in (doc.get("professional_id"), doc.get("created_by"))):
+        _assert_joint_open(doc)
     if not (doc.get("responses", {}).get("a") and doc.get("responses", {}).get("b")):
         raise HTTPException(status_code=400, detail="The Joint Report becomes available when both parents have completed their assessments")
     await _log_report_access(doc, user, "Viewed report on screen", "view")
@@ -771,6 +777,8 @@ async def joint_foundation_pdf(rid: str, side: str, user=Depends(get_current_use
 @api.get("/joint/reports/{rid}/pdf")
 async def joint_report_pdf(rid: str, user=Depends(get_current_user)):
     doc = await get_joint_report_doc(rid, user)
+    if not (user.get("role") == "admin" or user["_id"] in (doc.get("professional_id"), doc.get("created_by"))):
+        _assert_joint_open(doc)
     if not (doc.get("responses", {}).get("a") and doc.get("responses", {}).get("b")):
         raise HTTPException(status_code=400, detail="The Joint Report PDF becomes available when both parents have completed their assessments")
     await _log_report_access(doc, user, "Downloaded PDF", "download")
@@ -1120,6 +1128,8 @@ async def resend_invitation(iid: str, user=Depends(get_current_user)):
         raise HTTPException(status_code=400, detail="This invitation is no longer pending")
     if invite_expired(inv):
         raise HTTPException(status_code=410, detail="This invitation has expired. Reissue a fresh invitation instead.")
+    if (await db.joint_reports.find_one({"id": inv["report_id"]}, {"joint_paused": 1}) or {}).get("joint_paused"):
+        raise HTTPException(status_code=423, detail="This step isn't available right now. Your professional will follow up.")
     try:
         await send_invite_email(InviteSpec(
             report_id=inv["report_id"], role=inv["role"], invitee_name=inv["invitee_name"],
@@ -1880,6 +1890,8 @@ from safety_screening import build_router as _build_safety_router  # noqa: E402
 app.include_router(_build_safety_router(db, get_current_user, get_joint_report_doc, report_role, _log_report_access), prefix="/api")
 from privacy_notice import build_router as _build_privacy_router  # noqa: E402
 app.include_router(_build_privacy_router(db, get_current_user), prefix="/api")
+from joint_pause import build_router as _build_pause_router  # noqa: E402
+app.include_router(_build_pause_router(db, get_current_user, get_joint_report_doc, _log_report_access), prefix="/api")
 from safety_screening import comm_router as _comm_router  # noqa: E402
 app.include_router(_comm_router(db, get_current_user, get_joint_report_doc, report_role), prefix="/api")
 from safety_pathway import build_router as _build_pathway_router  # noqa: E402

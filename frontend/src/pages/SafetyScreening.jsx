@@ -6,6 +6,7 @@ import api, { formatApiError } from "@/lib/api";
 import { BrandLogo } from "@/components/Brand";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
+import { SafeContactStep } from "@/components/SafeContactStep";
 import { QuickExitBar } from "@/components/QuickExit";
 
 const Hotline = ({ resources, externalNote }) => (
@@ -44,6 +45,7 @@ export default function SafetyScreening() {
   const [data, setData] = useState(null);
   const [answers, setAnswers] = useState({});
   const [result, setResult] = useState(null);
+  const [safeContact, setSafeContact] = useState(null);
   const [busy, setBusy] = useState(false);
   useEffect(() => { api.get(`/joint/reports/${id}/safety-screening`).then((r) => setData(r.data)).catch((e) => toast.error(formatApiError(e))); }, [id]);
   if (!data) return <div className="min-h-screen bg-background" data-testid="screening-loading"><QuickExitBar /></div>;
@@ -54,7 +56,7 @@ export default function SafetyScreening() {
   };
   const submit = async () => {
     setBusy(true);
-    try { const { data: res } = await api.put(`/joint/reports/${id}/safety-screening`, { responses: answers }); setResult(res); window.scrollTo(0, 0); } catch (e) { toast.error(formatApiError(e)); } finally { setBusy(false); }
+    try { const { data: res } = await api.put(`/joint/reports/${id}/safety-screening`, { responses: answers, safe_contact: safeContact }); setResult(res); window.scrollTo(0, 0); } catch (e) { toast.error(formatApiError(e)); } finally { setBusy(false); }
   };
   const parts = spec ? [...new Set(spec.items.map((i) => i.part))] : [];
   return (
@@ -103,6 +105,7 @@ export default function SafetyScreening() {
                 {spec.items.filter((i) => i.part === part).map((it) => <Item key={it.id} it={it} scales={spec.scales} value={answers[it.id]} onChange={(v) => setAnswers((a) => ({ ...a, [it.id]: v }))} />)}
               </section>
             ))}
+            <SafeContactStep value={safeContact} onChange={setSafeContact} />
             <p className="text-[11px] text-muted-foreground" data-testid="screening-source">{spec.source} {spec.scale_note}</p>
             <Button onClick={submit} disabled={busy} data-testid="screening-submit-btn">Submit privately</Button>
           </>
