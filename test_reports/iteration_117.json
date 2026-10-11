@@ -1,0 +1,26 @@
+{
+  "summary": "Verified Court page menu refactor (SA CoParents) end-to-end. Backend /api/court-path/requested GET/PUT works correctly (6/6 pytest cases pass, incl. 401 unauth, invalid-key 422, duplicate collapse + order normalisation to REQUESTABLE order, empty clear, persistence via GET-after-PUT). Frontend: court-page root present, old flow arrows/step cards/picture cards fully removed, new court-menu section with exactly 7 rows in order coparent/self/educational/medical/psychological/foundation/parallel; each row exposes -open/-asked/-status testids with role=checkbox+aria-checked and data-status, li has data-asked. Progress pill shows 'N of 7 done' with no ticks and switches to 'X of Y requested done' after ticking (verified '2 of 2 requested done'). Ticks persist across reload. All 7 open buttons route to the correct view (coparent->cp-page, self->self-assessment-page, educational/medical/psychological->cn-page, foundation->foundation view, parallel->pp-page). No 'Step 1-4' wording in court-page body (regex searched, 0 matches). Mobile 390x844: menu renders without horizontal overflow. Regression: door-self-card-biff opens comm-builder-page. journey6 test account restored with empty keys at the end.",
+  "backend_issues": {"critical": [], "minor": []},
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  "test_report_links": [
+    "/app/backend/tests/test_court_requested.py",
+    "/app/test_reports/pytest/court_requested.xml"
+  ],
+  "action_items": [],
+  "critical_code_review_comments": [
+    "backend/court_checklist.py put_requested silently drops unknown keys only after Pydantic validation (Literal) rejects them with 422 — good; duplicates handled by set-ish filter via REQUESTABLE iteration. Looks correct.",
+    "useCourtRequested rollback on PUT failure is implemented; good.",
+    "Not retested (out of scope this iter): accept-dialog 'Save & Continue' wording and CourtStepDialog 'Start/Continue/Review' button labels — dialogs not opened in this run."
+  ],
+  "updated_files": ["/app/backend/tests/test_court_requested.py"],
+  "success_rate": {"backend": "100% (6/6)", "frontend": "100% on all tested flows"},
+  "test_credentials": "journey6@test.com / TestPass123! (verified case J6-CASE-TEST)",
+  "seed_data_creation": "None. journey6 court_requested restored to [] after tests.",
+  "retest_needed": false,
+  "main_agent_can_self_test": true,
+  "context_for_next_testing_agent": "Court menu refactor passes all requirements from review iteration 117. If re-running, use REQUESTABLE order check and remember PUT with duplicates returns in REQUESTABLE order (coparent,self,educational,medical,psychological,foundation,parallel). Menu-open buttons work via JS .click() even when safety bar overlay exists."
+}

@@ -8997,3 +8997,14 @@ dashboard for sharing SELECTED completed reports with any professional.
   other step pictures + "OPEN COMMUNICATION BUILDER" button + "X messages built" count). Picture (testid door-self-card-biff) and
   button (door-self-card-biff-open) both open the full CommunicationBuilderView (onOpenCommBuilder), like the Court path.
   The quick BIFF Coach drawer is still on the bottom-nav "BIFF Tool". Self-tested by screenshot (390 + 1920). Not yet deployed.
+
+### 2026-06 — Court-Ordered page: menu instead of arrows (iter117: backend 6/6, frontend 100%)
+- StepCards (4 numbered cards + FlowArrows) and the 2×2 CourtPictureCards grid replaced by `court/CourtMenu.jsx`: 7 options
+  (MENU in courtContent.js: coparent, self, educational, medical, psychological, foundation, parallel), any order, each with an
+  "Asked by my professional" tick (`useCourtRequested`: GET/PUT /api/court-path/requested → collection court_requested;
+  localStorage 'sac_court_requested' when signed out). Hero pill: "X of Y requested done" (or "N of 7 done" with no ticks).
+- Court accept → opens first ticked unfinished option, else scrolls to the menu. All "Step N" wording on the Court page replaced by
+  names (Foundation Statement, Co-Parenting Assessment...); court artwork keeps its printed numbers. Individual Journey keeps arrows.
+- OPEN ISSUE (flagged to founder): DELETE /api/auth/account only deletes users, user_sessions, prep_data, summaries, agreements,
+  improvement_plans, mediator_emails, devices — portal_state, self_assessment_history, child_needs_assessments, safety_assessments,
+  foundation_builder, cp_report_history, align_links, court_requested, secure docs etc. are NOT deleted.
