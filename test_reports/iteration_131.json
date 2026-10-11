@@ -1,0 +1,36 @@
+{
+  "summary": "Iter131 (SA CoParents): Full test of Court Codes + Align progress endpoint + joint-case requested_progress + weekly requested reminders. Backend: 11/11 new tests in tests/test_iter131_court_codes.py + 3/3 existing tests/test_requested_reminders.py = 14/14 pass. Frontend: Court Codes panel on /professional/joint-alignment/mine fully functional — list, create (7 checkboxes, disabled-until-picked, label, days select), parent note includes SAC-code + 'Accept Your Court-Ordered Invite', copy/done, waiting state, revoke flips state to 'Revoked'. CC-P445YM shows Avery Q Codeparent with coparent/self/medical all 'Not started'. SA-DEMO01 pj-mine-progress rows show 'Requested · 1 of 1 done' and 'Co-Parenting Assessment Done · Oct 7, 2026'. Mobile 390px: no horizontal overflow. UI contains zero 'answer'/'score' word hits anywhere. Align integration doc /app/memory/ALIGN_COURT_CODES_SETUP.md matches API behaviour and never prints the secret. Cron/Monday gate code inspection OK: /app/.emergent/crons.yml sa-reassess-reminder runs daily 09:00 America/Chicago; cron_routes.py line 139–140 gates send_requested_reminders on weekday()==0.",
+  "backend_issues": {"critical": [], "minor": []},
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": [
+      {"screen": "/professional/joint-alignment/mine Court Codes form", "issues": ["Dev-only React hydration warning in console: '<span> cannot be a child of <option>' originates from the visual-editor instrumentation wrapping dynamic text of each <option value={d}>{d} days</option> in CourtCodeForm.jsx line 66 with a style:contents <span>. Harmless in production builds (no visual breakage, dropdown works), but noisy. If you want it clean, render the number as a plain string outside any wrapper (e.g. `{`${d} days`}`) so the instrumentation does not inject a <span> inside <option>."]}
+    ]
+  },
+  "test_report_links": [
+    "/app/backend/tests/test_iter131_court_codes.py",
+    "/app/backend/tests/test_requested_reminders.py",
+    "/app/test_reports/pytest/iter131.xml"
+  ],
+  "action_items": [
+    "(Optional, low priority) Silence the <option>/<span> hydration warning in CourtCodeForm.jsx by rendering option text as a non-wrapped expression."
+  ],
+  "critical_code_review_comments": [
+    "court_codes_routes.create_court_code: generates `code` and only stores `_hash_key(code)` — raw code never persisted. Returned once in response. Correct.",
+    "court_codes_routes.linked_parents + court_checklist.progress_rows: assessments returned only carry `key, title, status (done|in_progress|todo), finished_at`. Verified via Playwright scrape — no 'answer'/'score' words appear on the professional UI.",
+    "integration_routes.court_key_progress: filters `created_by: {$exists: False}` so in-app court codes correctly return 404 via Align — verified by backend test test_inapp_code_returns_404_via_integration.",
+    "requested_reminders.send_requested_reminders: skip order (reminders_off → already_sent → all_done → safety → no_email) is correct; the dedupe write happens AFTER status checks so an all-done or safety-flagged user is never recorded in requested_reminder_sends. Clean.",
+    "cron_routes.py:140 uses `datetime.now(ZoneInfo('America/Chicago')).weekday() == 0` — correct Monday gate; combined with daily 9am Chicago cron this yields exactly Mondays 9am CT.",
+    "ALIGN_COURT_CODES_SETUP.md: no secret value baked in — only placeholder `<INTEGRATION_SHARED_SECRET>`; endpoints and keys match implementation (coparent/self/educational/medical/psychological/foundation/parallel) exactly.",
+    "Minor: integration_routes.CourtKeyUpsert.requested uses `Literal[...]` directly — unknown keys 422 ✔. However requested is `default_factory=list` meaning Align can upsert without any requested — intentional per spec; just worth noting an empty-requested Align code would never trigger weekly reminders for its linked parents, which matches the 'covers every requested item unless finished' rule."
+  ],
+  "updated_files": ["/app/backend/tests/test_iter131_court_codes.py"],
+  "success_rate": {"backend": "100% (14/14)", "frontend": "100% on all tested flows"},
+  "test_credentials": "parent1@test.com / TestPass123! (acts as pro). Fresh parent for verify flow registered as iter131_<ts>@test.com. INTEGRATION_SHARED_SECRET read via python-dotenv from /app/backend/.env; never printed.",
+  "seed_data_creation": "A handful of transient TEST_iter131 / TEST_fe_iter131 / TEST-ALIGN-<ts> court codes created during tests. The FE test's created code was revoked at the end; backend-created codes were revoked where applicable; TEST-ALIGN-<ts> upsert left in portal_court_keys (no parent linked, no PHI).",
+  "retest_needed": false,
+  "main_agent_can_self_test": true,
+  "context_for_next_testing_agent": "Run `cd /app/backend && pytest tests/test_iter131_court_codes.py tests/test_requested_reminders.py -q` (14 total). FE: /professional/joint-alignment/mine Court Codes panel is the surface — selectors documented in CourtCodesPanel.jsx (court-codes-panel, court-code-row-{case_id}, court-code-state-{case_id}, court-code-revoke-{case_id}, court-code-parent-{case_id}-{i}, court-code-progress-{case_id}-{i}, court-code-waiting-{case_id}) and CourtCodeForm.jsx (court-code-toggle/form/pick-{key}/label/days/create/created/value/copy/parent-note/copy-note/done). CC-P445YM is a stable seeded in-app code linked to ccparent@test.com — do not revoke. SA-DEMO01 parent1 side is the stable joint-case fixture that shows coparent Done. INTEGRATION_SHARED_SECRET only in /app/backend/.env.",
+  "rca of the issue": "No bugs found."
+}

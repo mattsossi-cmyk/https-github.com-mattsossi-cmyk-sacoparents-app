@@ -45,6 +45,14 @@ LLM: Claude Sonnet 4.5 via Emergent LLM Key
 Auth: Custom JWT (`auth.py`)
 
 
+### 2026-06 — Iter131 · Court codes + Professional Progress View + weekly requested reminders
+- In-app court codes: `court_codes_routes.py` (`/api/professional/court-codes` POST/GET, `/{case_id}/revoke`). Code `SAC-XXXX-XXXX` shown once (hash only stored), case `CC-XXXXXX`, 30/60/90/180 days, requested keys auto-tick on the parent's Court page.
+- Progress View (status only, never answers): `court_checklist.progress_rows`; `cases-i-created` parents carry `requested_progress` (null until joined). UI in My cases: `components/professional/CourtCodesPanel.jsx`, `CourtCodeForm.jsx`, `RequestedProgress.jsx`.
+- Align: `GET /api/integrations/court-keys/{case_id}/progress` (X-Integration-Key, Align-made codes only; in-app codes 404). Setup note: `/app/memory/ALIGN_COURT_CODES_SETUP.md`.
+- Reminders: `requested_reminders.py` (pre-syncs professional ticks from joint cases + court codes; neutral count-only email + unsubscribe; skips safety-flagged / unsubscribed / finished; once per ISO week). Runs inside the daily 9am Central `sa-reassess-reminder` cron, Mondays only (5-cron limit).
+- Testing: iteration_131 backend 14/14, frontend 100%. Not deployed.
+
+
 ### 2026-06 — Iter271–273 · Self-Assessment v2 (chat-style) + Progress Graph
 
 Founder ask: replace Self Journey Card 1 with a new chat-style Self-Assessment,

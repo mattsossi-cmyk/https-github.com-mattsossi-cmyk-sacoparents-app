@@ -63,7 +63,7 @@ export const CourtCodeForm = ({ onCreated }) => {
         <input value={label} onChange={(e) => setLabel(e.target.value)} maxLength={80} placeholder="Your private reference (optional, never shown to the parent)"
           className="rounded-lg border border-[#E5E0EE] bg-white text-sm px-3 py-2 focus:outline-none focus:border-[#3D1A78]" data-testid="court-code-label" />
         <select value={days} onChange={(e) => setDays(Number(e.target.value))} className="rounded-lg border border-[#E5E0EE] bg-white text-sm px-3 py-2" data-testid="court-code-days">
-          {DAYS.map((d) => <option key={d} value={d}>Valid {d} days</option>)}
+          {DAYS.map((d) => <option key={d} value={d}>{`Valid ${d} days`}</option>)}
         </select>
       </div>
       <button type="submit" disabled={busy || !picked.length} data-testid="court-code-create"
