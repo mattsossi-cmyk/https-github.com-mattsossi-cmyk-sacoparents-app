@@ -8991,3 +8991,9 @@ dashboard for sharing SELECTED completed reports with any professional.
 - GET /api/integrations/align-link → recent_reads [{at, what, redacted, note}] (max 5, newest first).
 - Attorney approved the professionals page wording: ATTORNEY_REVIEW_PENDING=false (label + tags hidden; flip back to show).
 - Deploy requested by founder after this batch.
+
+### 2026-06 — Self Journey step 6 picture card
+- Purple Communication Builder hero card replaced by `selfJourney/CbJourneyCard` (full comm-builder-art picture, same width as the
+  other step pictures + "OPEN COMMUNICATION BUILDER" button + "X messages built" count). Picture (testid door-self-card-biff) and
+  button (door-self-card-biff-open) both open the full CommunicationBuilderView (onOpenCommBuilder), like the Court path.
+  The quick BIFF Coach drawer is still on the bottom-nav "BIFF Tool". Self-tested by screenshot (390 + 1920). Not yet deployed.

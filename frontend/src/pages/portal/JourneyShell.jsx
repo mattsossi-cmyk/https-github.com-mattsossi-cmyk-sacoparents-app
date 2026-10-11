@@ -9,6 +9,7 @@ import { ParallelParentingView } from "./ParallelParentingView";
 import { useSelfAssessmentHistory } from "./selfAssessment/useSelfAssessmentHistory";
 import { GoalBanner } from "./selfAssessment/GoalBanner";
 import { GoalReachedBanner } from "./selfJourney/GoalReachedBanner";
+import { CbJourneyCard } from "./selfJourney/CbJourneyCard";
 import { WelcomeArtwork } from "./WelcomeArtwork";
 import { JourneyArtCard } from "./selfJourney/JourneyArtCard";
 import { ASSESS_ART, ASSESS_ORDER, NEEDS_ART, PP_ART } from "./selfJourney/selfJourneyArt";
@@ -1338,36 +1339,8 @@ export function JourneyShell({
 
         <FlowArrow testid="door-self-flow-arrow-biff" to="door-self-card-biff" label="SA CoParent Communication Builder" step="6 of 6" done={journeySteps[5].done} />
 
-        {/* Communication Builder — the big purple hero card. */}
-        <button
-          type="button"
-          data-testid="door-self-card-biff"
-          onClick={onOpenBiffCoach}
-          className="w-full bg-gradient-to-br from-purple-100 to-purple-200 border-2 border-purple-300 hover:border-purple-700 rounded-2xl p-4 shadow-md hover:shadow-lg transition flex items-center gap-3 text-left"
-        >
-          <div className="shrink-0 w-14 h-14 rounded-full bg-purple-700 text-white flex items-center justify-center">
-            <i className="fa-solid fa-comments text-xl"></i>
-          </div>
-          <div className="min-w-0 flex-1">
-            <div className="text-sm font-extrabold text-purple-900 leading-tight">
-              SA CoParent Communication Builder
-            </div>
-            <p className="text-[11px] text-slate-700 mt-0.5 leading-snug">
-              Get support for clearer, calmer, and more effective
-              co-parent communication. Build messages, learn strategies,
-              reduce misunderstandings.
-            </p>
-            <p
-              data-testid="door-self-biff-count"
-              className="text-[10px] text-purple-800/80 mt-0.5"
-            >
-              {biffCountLabel}.
-            </p>
-          </div>
-          <div className="shrink-0 w-10 h-10 rounded-full bg-purple-700 text-white flex items-center justify-center">
-            <i className="fa-solid fa-chevron-right text-sm"></i>
-          </div>
-        </button>
+        {/* Communication Builder — picture + action button. */}
+        <CbJourneyCard onOpen={() => onOpenCommBuilder()} countLabel={biffCountLabel} done={journeySteps[5].done} />
 
         {allThreeDone && <FlowArrow testid="door-self-flow-arrow-rewards" to="door-self-progress" label="Your progress" step="Finish" />}
 
