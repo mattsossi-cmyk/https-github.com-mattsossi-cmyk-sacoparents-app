@@ -13,8 +13,10 @@ crons:
     method: POST
     enabled: true
   - name: sa-reassess-reminder
-    description: "Daily check: emails parents 6 weeks (and a gentle 8-week follow-up) after their last Self-Assessment"
-    cron: "0 15 * * *"
+    description: "Daily 9am Central: Self-Assessment check-ins; on Mondays also the weekly waiting-assessments reminder"
+    cron: "0 9 * * *"
+    timezone: "America/Chicago"
+    # Cron endpoints must ack 2xx immediately; enqueue/background the actual work.
     endpoint: "{{BASE_URL}}/api/cron/self-assessment-reminders"
     method: POST
     enabled: true

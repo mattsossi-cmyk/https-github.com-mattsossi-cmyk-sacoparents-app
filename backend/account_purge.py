@@ -84,6 +84,9 @@ async def _scrub_shared(db: AsyncIOMotorDatabase, uid: str, email: str, now: str
     if share_ids:
         await db.deep_dive_compare_snapshots.delete_many({"share_id": {"$in": share_ids}})
     await db.users.update_many({"invited_by_user_id": uid}, {"$unset": {"invited_by_user_id": ""}})
+    await db.portal_court_keys.update_many(
+        {"created_by": uid}, {"$set": {"created_by": None, "label": "", "mediator_name": "A professional deleted their account"}}
+    )
 
 
 async def _delete_sent_files(db: AsyncIOMotorDatabase, uid: str) -> None:

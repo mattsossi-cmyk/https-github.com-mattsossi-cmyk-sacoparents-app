@@ -382,6 +382,7 @@ def _case_public_shape(case: Dict[str, Any]) -> Dict[str, Any]:
     for step_idx, step in enumerate(steps):
         at = step["assessment_type"]
         per_parent: List[str] = []
+        done_at: List[Optional[str]] = []
         for p in parents:
             completions = p.get("step_completions") or {}
             step_done = completions.get(at) if isinstance(completions, dict) else None
@@ -390,6 +391,7 @@ def _case_public_shape(case: Dict[str, Any]) -> Dict[str, Any]:
             # in-progress until per-step tracking is used.
             if step_idx == 0 and not step_done and p.get("assessment_completed_at"):
                 step_done = p.get("assessment_completed_at")
+            done_at.append(_iso(step_done) if step_done and not isinstance(step_done, bool) else None)
             if step_done:
                 per_parent.append("completed")
             elif p.get("accepted_at"):
@@ -401,6 +403,7 @@ def _case_public_shape(case: Dict[str, Any]) -> Dict[str, Any]:
             "required": bool(step.get("required", True)),
             "label": _ASSESSMENT_LABELS.get(at, at.replace("-", " ").title()),
             "parent_statuses": per_parent,
+            "parent_completed_at": done_at,
         })
     return {
         "case_id": case["case_id"],
@@ -1669,10 +1672,13 @@ async def list_cases_i_created(
             {"professional.id": current.user_id, "origin": "in_app_professional"},
         ]
     }
+    from court_checklist import case_requested_keys, progress_rows
+
     cursor = db[_CASES_COLL].find(query).sort("created_at", -1).limit(100)
     cases = []
     join_base = _join_base()
     async for case in cursor:
+        req_keys = case_requested_keys(case)
         shape = _case_public_shape(case)
         # Because the caller minted the case, they can see the raw
         # invitation URLs (until expiry). This is what makes the
@@ -1704,6 +1710,8 @@ async def list_cases_i_created(
                     else None
                 ),
                 "token_expires_at": _iso(p.get("token_expires_at")),
+                # Status only (Done / In progress / Not started + date) — never answers. None until the parent joins.
+                "requested_progress": await progress_rows(db, p["user_id"], req_keys) if p.get("user_id") else None,
             }
             for p in (case.get("parents") or [])
         ]

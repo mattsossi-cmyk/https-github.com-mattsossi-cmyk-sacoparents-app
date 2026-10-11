@@ -13,7 +13,9 @@ from __future__ import annotations
 import hmac
 import logging
 import os
+from datetime import datetime
 from typing import Any, Dict, Optional
+from zoneinfo import ZoneInfo
 
 from fastapi import APIRouter, BackgroundTasks, Depends, Header, HTTPException, Request
 
@@ -125,6 +127,7 @@ async def self_assessment_reminders_cron(
     run_id = request.headers.get("X-Webhook-Id") or "manual"
 
     from court_agreement_alerts import flush_all
+    from requested_reminders import send_requested_reminders
     from self_assessment_reminders import send_reassess_reminders
 
     async def _run() -> None:
@@ -133,6 +136,12 @@ async def self_assessment_reminders_cron(
             logger.info("self-assessment-reminders cron run_id=%s stats=%s", run_id, stats)
         except Exception as exc:  # noqa: BLE001
             logger.exception("self-assessment-reminders cron run_id=%s failed: %s", run_id, exc)
+        # Mondays (Central): weekly reminder for requested-but-unfinished Court-page assessments (5-cron limit).
+        if datetime.now(ZoneInfo("America/Chicago")).weekday() == 0:
+            try:
+                logger.info("requested reminders run_id=%s stats=%s", run_id, await send_requested_reminders(db))
+            except Exception as exc:  # noqa: BLE001
+                logger.exception("requested reminders run_id=%s failed: %s", run_id, exc)
         # Daily backstop (app is at the 5-cron limit): send agreement alerts queued inside a 6-hour window.
         try:
             logger.info("agreement alerts flushed run_id=%s sent=%s", run_id, await flush_all(db))

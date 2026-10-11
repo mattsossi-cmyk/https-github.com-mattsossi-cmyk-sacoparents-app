@@ -6,7 +6,7 @@ from io import BytesIO
 from typing import Any, Dict, List, Literal, Optional
 
 from fastapi import APIRouter, Depends
-from fastapi.responses import StreamingResponse
+from fastapi.responses import HTMLResponse, StreamingResponse
 from fpdf import FPDF
 from motor.motor_asyncio import AsyncIOMotorDatabase
 from pydantic import BaseModel, Field
@@ -59,26 +59,53 @@ def _item(key: str, label: str, status: str, detail: str, hint: str) -> Dict[str
     return {"key": key, "label": label, "status": status, "detail": detail, "hint": hint}
 
 
-async def _requested_items(db, uid, keys, sa, snaps, cn, fb) -> List[Dict[str, str]]:
-    """One row per assessment the parent ticked as asked for, in Court-menu order."""
+TITLES = {"coparent": "Co-Parenting Assessment", "self": "Self-Assessment", "educational": "Educational Assessment",
+          "medical": "Medical Assessment", "psychological": "Psychological Assessment",
+          "foundation": "Foundation Statement", "parallel": "Parallel Parenting Plan"}
+
+
+def _st(done_at: Optional[str], started: bool = False) -> Dict[str, Optional[str]]:
+    return {"status": "done" if done_at else "in_progress" if started else "todo", "finished_at": done_at or None}
+
+
+async def assessment_statuses(db: AsyncIOMotorDatabase, uid: str) -> Dict[str, Dict[str, Optional[str]]]:
+    """Done / in progress / not started + finish date for each Court-menu option. Status only, never answers."""
+    sa = await db.self_assessment_history.find({"user_id": uid}, {"_id": 0, "completed_at": 1}).sort("completed_at", -1).to_list(1)
+    cp = await db.cp_report_history.find_one({"_id": uid}, {"snapshots.submitted_at": 1}) or {}
+    cn = await db.child_needs_assessments.find_one({"user_id": uid}, {"_id": 0, "completed_at": 1, "answers": 1}) or {}
+    fb = await db.foundation_builder.find_one({"user_id": uid}, {"_id": 0, "updated_at": 1})
     pp = await db.parallel_parenting_plans.find_one({"user_id": uid}, {"_id": 0, "completed_at": 1, "answers": 1}) or {}
-    cn_at = cn.get("completed_at") or {}
-    hint = "Open it from the menu on your Court page."
-    rows = {
-        "coparent": _item("coparent", "Co-Parenting Assessment", "done" if snaps else "todo",
-                          f"{len(snaps)} saved · latest {_day(snaps[-1])}" if snaps else "", hint),
-        "self": _item("self", "Self-Assessment", "done" if sa else "todo",
-                      f"{len(sa)} completed · latest {_day(sa[0]['completed_at'])}" if sa else "", hint),
-        "foundation": _item("foundation", "Foundation Statement", "done" if fb else "todo",
-                            f"Saved {_day(fb.get('updated_at'))}" if fb and fb.get("updated_at") else "Saved" if fb else "", hint),
-        "parallel": _item("parallel", "Parallel Parenting Plan",
-                          "done" if pp.get("completed_at") else "in_progress" if pp.get("answers") else "todo",
-                          f"Finished {_day(pp['completed_at'])}" if pp.get("completed_at") else "In progress" if pp.get("answers") else "", hint),
+    snaps = sorted(s["submitted_at"] for s in cp.get("snapshots") or [] if s.get("submitted_at"))
+    out = {
+        "coparent": _st(snaps[-1] if snaps else None),
+        "self": _st(sa[0]["completed_at"] if sa else None),
+        "foundation": {"status": "done", "finished_at": fb.get("updated_at")} if fb else _st(None),
+        "parallel": _st(pp.get("completed_at"), bool(pp.get("answers"))),
     }
-    for k, name in CN_NAMES.items():
-        rows[k] = _item(k, f"{name} Assessment", "done" if cn_at.get(k) else "todo",
-                        f"Completed {_day(cn_at[k])}" if cn_at.get(k) else "", hint)
-    return [rows[k] for k in REQUESTABLE if k in keys]
+    cn_at, cn_ans = cn.get("completed_at") or {}, cn.get("answers") or {}
+    for k in CN_NAMES:
+        out[k] = _st(cn_at.get(k), any(str(v).strip() for v in (cn_ans.get(k) or {}).values()))
+    return out
+
+
+async def progress_rows(db: AsyncIOMotorDatabase, uid: Optional[str], keys: List[str]) -> List[Dict[str, Optional[str]]]:
+    """Professional-facing: status + finish date per requested option. Never answers."""
+    st = await assessment_statuses(db, uid) if uid else {}
+    return [{"key": k, "title": TITLES[k], **(st.get(k) or _st(None))} for k in REQUESTABLE if k in keys]
+
+
+def case_requested_keys(case: Dict[str, Any]) -> List[str]:
+    """Court-page options a professional's joint case asks for (required assigned steps, else the case type)."""
+    steps = [s["assessment_type"] for s in case.get("assigned_steps") or [] if s.get("required")] or [case.get("assessment_type")]
+    return [CASE_STEP_TO_KEY[t] for t in steps if t in CASE_STEP_TO_KEY]
+
+
+async def _requested_items(db: AsyncIOMotorDatabase, uid: str, keys: List[str]) -> List[Dict[str, str]]:
+    """One row per assessment the parent ticked as asked for, in Court-menu order."""
+    st = await assessment_statuses(db, uid)
+    detail = lambda s: f"Finished {_day(s['finished_at'])}".strip() if s["status"] == "done" else "In progress" if s["status"] == "in_progress" else ""  # noqa: E731
+    return [_item(k, TITLES[k], st[k]["status"], detail(st[k]), "Open it from the menu on your Court page.")
+            for k in REQUESTABLE if k in keys]
 
 
 async def build_checklist(db: AsyncIOMotorDatabase, user: UserPublic, modules: Dict[str, str], requested: Optional[List[str]] = None) -> Dict[str, Any]:
@@ -127,7 +154,7 @@ async def build_checklist(db: AsyncIOMotorDatabase, user: UserPublic, modules: D
               "Rewrite a message in the Communication Builder and save it."),
     ]
     if requested:
-        items = items[:2] + await _requested_items(db, uid, requested, sa, snaps, cn, fb)
+        items = items[:2] + await _requested_items(db, uid, requested)
     return {
         "items": items,
         "requested_only": bool(requested),
@@ -299,8 +326,7 @@ async def _sync_professional_requests(db: AsyncIOMotorDatabase, uid: str) -> Dic
     ):
         if f"case:{case['case_id']}" in applied:
             continue
-        steps = [s["assessment_type"] for s in case.get("assigned_steps") or [] if s.get("required")] or [case.get("assessment_type")]
-        keys = [CASE_STEP_TO_KEY[t] for t in steps if t in CASE_STEP_TO_KEY]
+        keys = case_requested_keys(case)
         if keys:
             found.append((f"case:{case['case_id']}", keys, (case.get("professional") or {}).get("name")))
     if not found:
@@ -323,6 +349,21 @@ def _requested_shape(doc: Dict[str, Any]) -> Dict[str, Any]:
         "professional_keys": [k for k in REQUESTABLE if k in (doc.get("pro_keys") or [])],
         "professional_name": doc.get("pro_name"),
     }
+
+
+@router.get("/reminders/unsubscribe", response_class=HTMLResponse)
+async def unsubscribe_requested_reminders(token: str, db: AsyncIOMotorDatabase = Depends(get_db)) -> HTMLResponse:
+    from requested_reminders import read_unsubscribe_token
+    from self_assessment_routes import _UNSUB_PAGE
+
+    uid = read_unsubscribe_token(token)
+    if not uid:
+        return HTMLResponse(_UNSUB_PAGE.format(title="Link not valid", body="This unsubscribe link isn't valid."), status_code=400)
+    await db.court_requested.update_one({"user_id": uid}, {"$set": {"reminders_off": True}}, upsert=True)
+    return HTMLResponse(_UNSUB_PAGE.format(
+        title="You're unsubscribed",
+        body="You won't get weekly reminders about waiting assessments anymore. Everything stays saved in your account.",
+    ))
 
 
 @router.get("/requested")

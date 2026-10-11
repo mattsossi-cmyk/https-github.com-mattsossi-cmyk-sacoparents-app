@@ -530,6 +530,26 @@ async def upsert_court_key(
     return {"case_id": body.case_id.strip(), "requested": requested}
 
 
+@router.get("/integrations/court-keys/{case_id}/progress")
+async def court_key_progress(
+    case_id: str,
+    x_integration_key: Optional[str] = Header(None, alias="X-Integration-Key"),
+    db: AsyncIOMotorDatabase = Depends(get_db),
+):
+    """Server-to-server, status only: per parent who entered an Align-made code, Done / In progress / Not started + dates."""
+    _verify_integration_key(x_integration_key)
+    from court_checklist import REQUESTABLE
+    from court_codes_routes import linked_parents
+
+    cid = case_id.strip()
+    # Align-made codes only: codes created inside SA CoParents always carry `created_by`.
+    kd = await db.portal_court_keys.find_one({"case_id": cid, "created_by": {"$exists": False}}, {"_id": 0, "requested": 1, "revoked_at": 1})
+    if not kd:
+        raise HTTPException(status_code=404, detail="Court code not found")
+    keys = [k for k in REQUESTABLE if k in (kd.get("requested") or [])]
+    return {"case_id": cid, "requested": keys, "revoked": bool(kd.get("revoked_at")), "parents": await linked_parents(db, cid, keys)}
+
+
 # --------------------------- payload shaping --------------------------- #
 
 async def _latest_deep_dive_report(

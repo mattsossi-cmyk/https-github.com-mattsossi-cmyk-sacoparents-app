@@ -42,6 +42,8 @@ import WeeklyDigestToggle from "../components/professional/WeeklyDigestToggle";
 import ReminderPreviewModal from "../components/professional/ReminderPreviewModal";
 import ProfessionalDirectoryModal from "../components/professional/ProfessionalDirectoryModal";
 import ReminderNoteTemplatePicker from "../components/professional/ReminderNoteTemplatePicker";
+import { CourtCodesPanel } from "../components/professional/CourtCodesPanel";
+import { RequestedProgress } from "../components/professional/RequestedProgress";
 import { toast } from "sonner";
 import { api } from "../lib/api";
 import { logError } from "../lib/logger";
@@ -366,6 +368,8 @@ export default function ProfessionalJointAlignmentMine() {
         {/* Analytics card — hidden when the caller has no cases yet */}
         <CaseAnalyticsCard />
 
+        <CourtCodesPanel />
+
         {/* Search + status filter */}
         <div
           className="rounded-2xl border border-[#E5E0EE] bg-white p-4 mb-4 space-y-3"
@@ -544,6 +548,7 @@ export default function ProfessionalJointAlignmentMine() {
                           </button>
                         )}
                       </div>
+                      <RequestedProgress rows={p.requested_progress} testid={`pj-mine-progress-${c.case_id}-${pi}`} />
                     </div>
                   ))}
                 </div>

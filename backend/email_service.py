@@ -1330,6 +1330,42 @@ def send_reassess_reminder(
     )
 
 
+def send_requested_reminder(
+    *,
+    to_email: str,
+    waiting: int,
+    cta_url: str,
+    unsubscribe_url: str,
+    first_name: Optional[str] = None,
+) -> None:
+    """Weekly nudge for requested-but-unfinished assessments. Deliberately names nothing (no assessment, no child)."""
+    hello = f"Hi {first_name}," if first_name else "Hi,"
+    what = "1 assessment" if waiting == 1 else f"{waiting} assessments"
+    lead = f"You have {what} waiting for you in SA CoParents."
+    note = "Sign in whenever you're ready to pick up where you left off. Only you can see your answers."
+    plain = (
+        f"{hello}\n\n{lead}\n\n{note}\n\nSign in:\n{cta_url}\n\n"
+        f"Don't want these reminders? Unsubscribe: {unsubscribe_url}\n"
+    )
+    body_html = (
+        f'<p style="font-size:15px;line-height:1.55;color:#4B4567;margin:0 0 14px 0;">{hello}</p>'
+        f'<p style="font-size:15px;line-height:1.55;color:#4B4567;margin:0 0 14px 0;">{lead}</p>'
+        f'<p style="font-size:13px;line-height:1.55;color:#857E9C;margin:0 0 22px 0;">{note}</p>'
+    )
+    html = _branded_html(headline="A gentle reminder", body_html=body_html, cta_label="Sign in", cta_url=cta_url) + (
+        f'<p style="font-family:Arial,sans-serif;font-size:12px;color:#857E9C;text-align:center;margin:12px 0;">'
+        f"Don't want these reminders? "
+        f'<a href="{unsubscribe_url}" style="color:#857E9C;">Unsubscribe</a></p>'
+    )
+    _send(
+        to_email=to_email,
+        subject="A quick reminder from SA CoParents",
+        html=html,
+        text=plain,
+        failure_message="Could not send the reminder right now.",
+    )
+
+
 def send_joint_alignment_invitation(
     *,
     to_email: str,
