@@ -170,6 +170,18 @@ class SubmitIn(BaseModel):
     include_legal_report: bool = False
     include_research_sources: bool = False
     agreement_report_id: str | None = None
+    packet_mode: str | None = None  # "joint" | "individual"; None = default (individual while joint features are paused, else joint)
+
+
+def resolve_packet_mode(doc: dict, requested: str | None) -> str:
+    """Owner rule: paused → individual by default and joint is blocked; resumed → professional may choose either."""
+    paused = bool(doc.get("joint_paused"))
+    mode = requested or ("individual" if paused else "joint")
+    if mode not in ("joint", "individual"):
+        raise HTTPException(status_code=400, detail="packet_mode must be 'joint' or 'individual'")
+    if mode == "joint" and paused:
+        raise HTTPException(status_code=423, detail="This step isn't available right now. Your professional will follow up.")
+    return mode
 
 
 SUMMARY_DISCLAIMER = ("Procedural status summary generated from authorized case-status records only. It does not draw on private parent journals, raw assessment answers, "
@@ -925,6 +937,10 @@ def _submit_routes(c: Ctx) -> APIRouter:
         court = assert_submittable(doc, body)
         bundle = await _build_bundle(db, doc, await pro_profile(user["_id"]), c.app_url, user, body)
         version = len(doc.get("court_submissions") or []) + 1
+        prev = (doc.get("court_submissions") or [{}])[-1].get("packet_mode") or doc.get("court_packet_mode")
+        if prev and prev != bundle["mode"]:
+            await c.log_report_event(rid, f"Court packet format switched from {prev} to {bundle['mode']}", user)
+        await db.joint_reports.update_one({"id": rid}, {"$set": {"court_packet_mode": bundle["mode"]}})
         sub = await _persist_submission(db, _build_submission(rid, user, court, doc, version, bundle), doc, bundle["combined"], bundle["legal_pdf"], bundle["agreement_pdf"])
         await _log_submission(c, rid, user, court, version, sub, bundle)
         await _notify_court(c, user, court, doc, version, bundle["legal_summary"])
@@ -934,11 +950,15 @@ def _submit_routes(c: Ctx) -> APIRouter:
 
 
 async def _build_bundle(db, doc: dict, pro: dict, app_url, user: dict, body: SubmitIn) -> dict:
-    """All PDFs for one submission (statement + joint always; Legal Lens / Agreement only when explicitly selected) and the merged packet."""
+    """All PDFs for one submission (statement + joint OR individual perspective reports; Legal Lens / Agreement only when explicitly selected) and the merged packet."""
+    mode = resolve_packet_mode(doc, body.packet_mode)
     joint_pdf, stmt_pdf, legal_pdf, legal_summary = await _submission_pdfs(db, doc, pro, app_url, body.include_legal_report, body.include_research_sources)
+    if mode == "individual":
+        from pdf_individual import build_individual_reports_pdf
+        joint_pdf = build_individual_reports_pdf(doc, pro)
     agreement_pdf, agreement_card = await _agreement_pdf_bytes(db, doc, user, body.agreement_report_id)
     combined = merge_pdfs([stmt_pdf, joint_pdf] + ([legal_pdf] if legal_pdf else []) + ([agreement_pdf] if agreement_pdf else []))
-    return {"joint_pdf": joint_pdf, "stmt_pdf": stmt_pdf, "legal_pdf": legal_pdf, "legal_summary": legal_summary, "agreement_pdf": agreement_pdf, "agreement_card": agreement_card, "combined": combined}
+    return {"mode": mode, "joint_pdf": joint_pdf, "stmt_pdf": stmt_pdf, "legal_pdf": legal_pdf, "legal_summary": legal_summary, "agreement_pdf": agreement_pdf, "agreement_card": agreement_card, "combined": combined}
 
 
 def _build_submission(rid: str, user: dict, court: dict, doc: dict, version: int, b: dict) -> Submission:
@@ -946,12 +966,14 @@ def _build_submission(rid: str, user: dict, court: dict, doc: dict, version: int
     return Submission(pid=str(uuid.uuid4()), rid=rid, user=user, court=court, st=doc["professional_statement"], version=version, now=_now(),
                       shas={"sha256": _sha(b["combined"]), "joint_sha256": _sha(b["joint_pdf"]), "statement_sha256": _sha(b["stmt_pdf"])},
                       legal_meta={"legal_report_included": bool(legal_pdf), "legal_sha256": _sha(legal_pdf) if legal_pdf else "", "legal_version": version if legal_pdf else None, "legal_summary": b["legal_summary"],
-                                  "agreement_included": bool(agreement_pdf), "agreement_sha256": _sha(agreement_pdf) if agreement_pdf else "", "agreement_card": b["agreement_card"]})
+                                  "agreement_included": bool(agreement_pdf), "agreement_sha256": _sha(agreement_pdf) if agreement_pdf else "", "agreement_card": b["agreement_card"],
+                                  "packet_mode": b.get("mode", "joint"), "packet_label": ("Individual Perspective Reports" if b.get("mode") == "individual" else "Joint Report")})
 
 
 async def _log_submission(c: Ctx, rid: str, user: dict, court: dict, version: int, sub: dict, b: dict) -> None:
     extras = ("" if not b["legal_pdf"] else " + Professional Legal Report") + ("" if not b["agreement_pdf"] else " + Co-Parenting Agreement")
-    await c.log_report_event(rid, f"Submitted Joint Report + Professional Statement{extras} to {court.get('court_name') or 'the court'} (v{version}, SHA-256 {sub['sha256'][:12]}…)", user)
+    main = "Individual Perspective Reports" if b.get("mode") == "individual" else "Joint Report"
+    await c.log_report_event(rid, f"Submitted {main} + Professional Statement{extras} to {court.get('court_name') or 'the court'} (v{version}, SHA-256 {sub['sha256'][:12]}…)", user)
     if b["legal_pdf"]:
         await c.log_report_event(rid, "LEGAL_REPORT_SHARED", user)
 

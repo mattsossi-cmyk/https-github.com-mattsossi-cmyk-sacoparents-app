@@ -17,6 +17,7 @@ import { AlignAssistant } from "@/components/AlignAssistant";
 import { ImportedScreening } from "@/components/ImportedScreening";
 import { SixQuestions, SourceLegend, StatementDivider } from "@/components/ReportFraming";
 import { GrowthProgress } from "@/components/CourtLegalSummary";
+import { AiPrivacyWarning } from "@/components/AiPrivacyWarning";
 import { NeutralityCheck, ChildFocusSuggest, ParallelSummaryHelper, ResearchPanel, ResearchBase } from "@/components/LensAiTools";
 
 const STEPS = REPORT_STEPS;
@@ -134,6 +135,7 @@ export default function LegalLensReport() {
       {(v?.readiness || []).find((x) => x.key === "joint")?.done && <Button variant="outline" size="sm" asChild><a href={`${process.env.REACT_APP_BACKEND_URL}/api/cases/${id}/professional-report/bundle.zip`} download title="Joint Report + Professional Report in one ZIP" data-testid="lens-bundle-btn"><Download className="h-4 w-4 mr-1" /> Download Both (ZIP)</a></Button>}
       <Button size="sm" onClick={() => save("final")} disabled={busy || !rep.signature_name} data-testid="lens-finalize-btn"><FileCheck2 className="h-4 w-4 mr-1" /> Finalize Report</Button>
       <select value={rep.status} onChange={(e) => save(e.target.value)} className="h-9 rounded-md border border-input bg-white px-2 text-sm" data-testid="lens-status-select">{lib.statuses.map((s) => <option key={s} value={s}>{STATUS[s]}</option>)}</select>
+      {top && <AiPrivacyWarning testId="ai-privacy-warning-lens" />}
       {top && <NeutralityCheck id={id} rep={rep} />}
       {top && rep.status !== "final" && rep.status !== "submitted_to_court" && <span className="flex items-center gap-1 rounded-md border border-brand-purple/30 bg-brand-purple/5 px-2" data-testid="lens-ai-block">
         <select value={model} onChange={(e) => setModel(e.target.value)} className="h-7 rounded-md border border-input bg-white px-1 text-xs" data-testid="lens-ai-model-select">{(lib.ai_models || []).map((m) => <option key={m.key} value={m.key}>{m.label}</option>)}</select>

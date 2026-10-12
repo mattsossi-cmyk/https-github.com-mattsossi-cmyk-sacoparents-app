@@ -7,6 +7,7 @@ import { useAuth } from "@/context/AuthContext";
 import { BrandLogo } from "@/components/Brand";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
+import { AiPrivacyWarning } from "@/components/AiPrivacyWarning";
 import { WorkflowGuide } from "@/components/WorkflowGuide";
 import { ListenButton } from "@/components/ListenButton";
 import { FoundationAttachments } from "@/components/FoundationAttachments";
@@ -85,6 +86,7 @@ export default function FoundationEditor() {
         </div>
       </header>
       <main className="max-w-3xl mx-auto px-4 sm:px-6 py-10 text-[#2d2d34]">
+        <AiPrivacyWarning testId="ai-privacy-warning-foundation" />
         <div className="rounded-lg overflow-hidden bg-white shadow-sm border border-border">
           <div className="bg-gradient-to-r from-[#2f174f] to-[#4b2a7b] px-8 py-6 text-white"><p className="text-[10px] uppercase tracking-[2px] opacity-85">SA CoParents Parent Report</p><h1 className="font-display text-3xl font-bold mt-1" data-testid="foundation-editor-title">My Child-Focused Foundation Statement</h1><p className="mt-1 text-sm opacity-90">Written by {user?.name || "you"} · private to you until you share it into a case.</p></div>
           <div className="p-6 sm:p-8 space-y-6">

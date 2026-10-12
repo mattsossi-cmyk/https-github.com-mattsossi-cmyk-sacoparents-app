@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { AiPrivacyWarning } from "@/components/AiPrivacyWarning";
 import { BookOpen, Globe, ScanSearch, ShieldCheck, Sparkles, Tags } from "lucide-react";
 import { toast } from "sonner";
 import api, { formatApiError } from "@/lib/api";
@@ -122,6 +123,7 @@ export function ResearchPanel({ onAddRow, isAdmin = false }) {
         <Button size="sm" variant="outline" onClick={local} disabled={busy || !cfg.configured || !zip} data-testid="lens-research-local-btn"><ScanSearch className="h-4 w-4 mr-1" /> Find near {zip || "ZIP"}</Button>
       </div>
       <div className="flex gap-2">
+        <AiPrivacyWarning testId="ai-privacy-warning-research" />
         <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="e.g. latest Texas parenting-facilitation rules" className="h-8 flex-1 rounded-md border border-input px-2 text-sm" data-testid="lens-research-question" />
         <Button size="sm" variant="outline" onClick={ask} disabled={busy || !cfg.configured || q.length < 3} data-testid="lens-research-ask-btn">{busy ? "Searching…" : "Ask"}</Button>
       </div>

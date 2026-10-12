@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import { AiPrivacyWarning } from "@/components/AiPrivacyWarning";
 import { Link } from "react-router-dom";
 import { toast } from "sonner";
 import { Bot, Send, X, Sparkles, FileText } from "lucide-react";
@@ -98,7 +99,8 @@ export const AlignAssistant = ({ userId, caseId, caseLabel, trigger, open, onOpe
               <Sparkles className="mt-0.5 h-3.5 w-3.5 shrink-0 text-yellow-800" /><span>{chips[chip]}</span>
             </button>
           )}
-          <form onSubmit={(e) => { e.preventDefault(); send(); }} className="flex gap-2 border-t border-border p-3">
+          <div className="border-t border-border px-3 pt-3"><AiPrivacyWarning testId="ai-privacy-warning-assistant" /></div>
+          <form onSubmit={(e) => { e.preventDefault(); send(); }} className="flex gap-2 px-3 pb-3">
             <input value={input} onChange={(e) => setInput(e.target.value)} placeholder={caseId ? "Ask about this case…" : "Select a case above, or ask a general question…"} className="h-10 flex-1 rounded-md border border-input px-3 text-sm" data-testid="assistant-input" />
             <Button type="submit" size="sm" disabled={busy || !input.trim()} className="h-10 bg-brand-purple text-white hover:bg-brand-purple/90" data-testid="assistant-send-btn"><Send className="h-4 w-4" /></Button>
           </form>

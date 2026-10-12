@@ -1010,3 +1010,8 @@ Probed 2026-09-02: /api/link-codes, /api/integrations/* on sacoparentsapp.online
 - Bridge requester context: integrations.BRIDGE_REQUESTER_CONTEXT (default false); headers X-Requester-{Professional-Id,Case-Id,Parent-Role,App} + body "requester" + query params; 401/403 → 403 DENIED_DETAIL. Contract provisional pending parent-app builder.
 - NOT built (ambiguous): 3(c) separate individual perspective court reports — questions listed to owner.
 - Tests: iter99 (16) + regression → 56 passed.
+
+## 2026-10-12 — AI Privacy Warning + Individual Perspective Reports (PREVIEW ONLY)
+- components/AiPrivacyWarning.jsx (exact owner text; full + one-liner). Placed above: AlignAssistant input (Gemini), LensAiTools research question (Perplexity), LegalLensReport top (fields→ai-draft/Jev/Claude), FoundationEditor top (Jev blame-check). Tests iter100.
+- pdf_individual.py: one frozen packet, two per-parent sections (cover, receipt line, perspective areas provided/not provided, pro observations). court_workflow.SubmitIn.packet_mode; resolve_packet_mode (paused→individual default, joint→423); switch logged "Court packet format switched…"; packet_mode/packet_label stored; filename court-packet-*. Tests iter101.
+- No "Communication Builder" UI exists in this app (name appears only in options library text).

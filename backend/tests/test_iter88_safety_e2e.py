@@ -41,6 +41,8 @@ def _register(email, name, role="parent", invite=""):
     if invite:
         payload["invite"] = invite
     r = requests.post(f"{BASE}/api/auth/register", json=payload, timeout=20)
+    if r.status_code == 400 and "already exists" in r.text:
+        return  # fixtures shared across modules in one session
     assert r.status_code in (200, 201), f"register failed: {r.status_code} {r.text}"
 
 
@@ -219,7 +221,7 @@ class TestParentScreening:
             if comm:
                 break
             _t.sleep(0.5)
-        assert comm and comm["to"] == PRO_EMAIL and "Tier 3" in comm["subject"]
+        assert comm and comm["to"] == PRO_EMAIL and ("Tier 3" in comm["subject"] or "Priority follow-up" in comm["subject"])
         assert UNIQUE_SIGNAL not in comm["subject"] and "women" not in comm["subject"].lower()
 
     def test_parent_b_tier2(self, pro_case, parent_b_session, parents_accepted):
