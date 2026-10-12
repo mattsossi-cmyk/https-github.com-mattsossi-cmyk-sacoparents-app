@@ -331,8 +331,32 @@ def _cover_images(pdf: FPDF, images: dict) -> None:
     pdf.set_y(y + 23)
 
 
-def cover_page(pdf: FPDF, pro: dict) -> None:
-    """Page 1 — Professional Contact cover: title band, Professional Information, Purpose cards, Align→Focus→Resolve→Agree."""
+def _cover_signature(pdf: FPDF, pro: dict, final: bool) -> None:
+    """Signature line (uploaded image on finalized reports), date of submission, and the content-origin line."""
+    sig = (pro.get("images") or {}).get("signature")
+    y = pdf.get_y() + 1
+    if sig and final:
+        from io import BytesIO
+        from storage import get_object
+        try:
+            data, _ = get_object(sig)
+            pdf.image(BytesIO(data), x=pdf.l_margin + 2, y=y, w=50, h=14, keep_aspect_ratio=True)
+        except Exception:  # noqa: BLE001
+            pass
+    pdf.set_draw_color(*GRAY)
+    pdf.set_line_width(0.3)
+    pdf.line(pdf.l_margin + 2, y + 15, pdf.l_margin + 80, y + 15)
+    pdf.line(pdf.l_margin + 100, y + 15, pdf.l_margin + 160, y + 15)
+    pdf.set_y(y + 16)
+    pdf.set_font(FONT, "", 8)
+    pdf.set_text_color(*GRAY)
+    pdf.cell(98, 4, _s(f"Professional signature — {pro.get('name') or ''}".rstrip(" —")))
+    pdf.cell(0, 4, _s(f"Date of submission: {pro.get('submission_date') or ''}"), new_x="LMARGIN", new_y="NEXT")
+    pdf.ln(2)
+
+
+def cover_page(pdf: FPDF, pro: dict, origin: dict | None = None, final: bool = False) -> None:
+    """Page 1 — Professional Contact cover: title band, Professional Information, signature/date, content origin, Purpose cards, Align→Focus→Resolve→Agree."""
     brand_header(pdf)
     title_band(pdf, "Professional Alignment Report", "Prepared for: Court • Attorneys • Mediators • Parent Facilitators • Other Authorized Professionals")
     pdf.set_font(FONT, "", 8.5)
@@ -346,7 +370,13 @@ def cover_page(pdf: FPDF, pro: dict) -> None:
         _cover_images(pdf, pro["images"])
         pdf.set_y(max(pdf.get_y(), y0 + 25))
     blank = "_" * 44
-    kv_table(pdf, [("Professional Name", pro.get("name") or blank), ("Email", pro.get("email") or blank), ("Phone", pro.get("phone") or blank), ("Office / Mailing Address", pro.get("address") or f"{blank}\n{blank}")])
+    kv_table(pdf, [("Professional Name", pro.get("name") or blank), ("Title", pro.get("title") or blank), ("Bar Number", pro.get("bar_number") or blank), ("License Number", pro.get("license_number") or blank),
+                   ("Email", pro.get("email") or blank), ("Phone", pro.get("phone") or blank), ("Office / Mailing Address", pro.get("address") or f"{blank}\n{blank}")])
+    _cover_signature(pdf, pro, final)
+    if origin and origin.get("line"):
+        pdf.set_font(FONT, "B", 8.5)
+        pdf.set_text_color(*PURPLE)
+        pdf.cell(0, 5, _s(origin["line"]), new_x="LMARGIN", new_y="NEXT")
     pdf.ln(3)
     _lens_heading(pdf, "Purpose")
     full_card(pdf, "FROM DIFFERENCES TO DIRECTION", ["This report helps professionals understand where the parents align, where perspectives differ, what the child may need, and what options, resources, and resolution pathways may help."], PURPLE_FILL, PURPLE)
@@ -422,7 +452,7 @@ def render_lens_body(pdf: FPDF, v: dict) -> None:
     """Pages 1–6 of the Professional Alignment Report (everything before the certification block)."""
     from lens_data import CHILD_FOCUS_CATEGORIES, CONFLICT_GUIDANCE, PATHWAYS, RISK_CATEGORIES, SCALE_TABLE, SAFETY_PATHWAY
     rep, c, cls, notes = v["report"], v["case"], v["classification"], v["notes"]
-    cover_page(pdf, v.get("professional") or {})
+    cover_page(pdf, v.get("professional") or {}, v.get("content_origin"), rep.get("status") in ("final", "submitted_to_court"))
     how_to_read_page(pdf)
     heading(pdf, 1, "Case & Assessment Overview")
     kv_table(pdf, [("Case / Matter", rep.get("matter_name")), ("Case ID", c.get("case_code")), ("Court / County", rep.get("court_county")), ("Cause Number", rep.get("cause_number")),
