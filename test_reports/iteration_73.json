@@ -1,0 +1,39 @@
+{
+  "summary": "Iter-103 — SA CoParents Align Pro Profile + Signature + Topic Summaries + Packet-Mode toggle. Backend: 6/6 pytest pass (test_iter103_profile_summaries_toggle 3/3 + new test_iter103_packet_mode_pause 3/3). Verified: PUT/GET /me/profile/contact persists title/bar_number/license_number and surfaces into GET /cases/{rid}/professional-report.professional; signature POST/GET/DELETE /me/profile/image/signature; GET/PUT /joint/reports/{rid}/individual-summaries roundtrip with whitespace collapse and bogus-key stripping; custody-recommendation wording returns 400; build_individual_reports_pdf prints the saved summaries instead of 'Perspective provided' and uses 'Not provided' for empty keys; GET professional-statement.packet is {joint_paused:False, mode:'joint'} by default; after PUT /joint/reports/{rid}/joint-pause {paused:true}, packet.mode becomes 'individual'; resolve_packet_mode('joint',paused=True) raises 423; invalid packet_mode returns 400; invalid packet_mode on preview returns 400. Frontend: logged in as approval.test.pro1@gmail.com, created fresh completed case via _setup_iter103_ui.py (rid=a0507eea-a573-4506-af92-1e6c0d0588d1). On /cases/{rid}/professional-report: lens-cover-profile expands; filling profile-contact-pro_role/bar_number/license_number and clicking profile-contact-save updates lens-cover-title/bar_number/license_number after reload (Attorney / TX-UIBAR-7788 / LIC-UI-2211). Signature draw+save works (canvas events accepted, success toast) but drawn blob occasionally does not persist (contact.images.signature stays {}); signature-capture-file upload persists cleanly — lens-cover-signature-image appears, signature-capture-remove button appears, and after remove both are gone with 'Signature removed' toast. On /joint/{rid}: data-testid individual-summaries present with per-topic fields for A and B; saving persists across reload; entering 'should be awarded custody' triggers backend 400 and surfaces the error toast ('Summaries must not recommend custody or conservatorship outcomes. Please rephrase as a neutral topic summary.'). Packet-mode fieldset UI only renders inside submit-to-court-box when the case has an accepted court referral (court?.judge_email); not reachable on a non-referred fixture case — radios/labels/button-text verified by code read of ProfessionalStatement.jsx (packet-mode-joint/individual, dynamic submit-to-court-btn label 'SUBMIT INDIVIDUAL PERSPECTIVE REPORTS …' vs 'SUBMIT JOINT REPORT …', paused-disabled logic, packet-mode-paused-note). Backend already verifies the server-side rules the UI depends on.",
+  "backend_issues": {"critical": [], "minor": []},
+  "frontend_issues": {
+    "ui_bugs": [
+      {"component": "SignatureCapture (canvas draw path)", "issue": "After mouse-drawing on signature-capture-canvas and clicking signature-capture-save, the UI shows a success toast but the backend occasionally does not receive the PNG (contact.images.signature stayed {}). File upload path works reliably. Likely cause: canvas.toBlob returns null when the stroke was drawn with only move events (no touch dispatch) and the dirty flag was set but no pixels were committed, OR the pointer events were fired outside the canvas bounding rect after CSS scaling (canvas internal 600x180 vs CSS h-28 w-md). Reproduce by scripting mouse.down / move / up at display-pixel coords. Consider: (1) use pointer-events, (2) fall back to canvas.toDataURL + fetch when toBlob rejects, (3) run blob null check before setting dirty=false.", "selector": "/app/frontend/src/components/SignatureCapture.jsx:17-23", "priority": "LOW"}
+    ],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  "test_report_links": [
+    "/app/backend/tests/test_iter103_profile_summaries_toggle.py",
+    "/app/backend/tests/test_iter103_packet_mode_pause.py",
+    "/app/backend/tests/_setup_iter103_ui.py",
+    "/app/test_reports/pytest/iter103_all.xml"
+  ],
+  "action_items": [
+    "(Optional) harden SignatureCapture canvas save: null-check toBlob result + fall back to toDataURL to avoid silent 'saved' toast when no pixels committed.",
+    "(Nice-to-have) seed a court-referred completed case fixture for UI runs so packet-mode fieldset / submit-to-court-btn can be E2E'd (requires judge + referral acceptance flow — see tests/test_iter58_lens_refactor.py)."
+  ],
+  "critical_code_review_comments": [
+    "court_workflow.resolve_packet_mode correctly separates 400 (bad value) vs 423 (joint while paused); SubmitIn.packet_mode default None delegates to 'individual' when paused else 'joint'. 100 lines total — fine.",
+    "ProfessionalStatement.jsx packet-mode fieldset depends on data.packet from GET professional-statement; the joint radio uses disabled={!submittable || (v==='joint' && data.packet?.joint_paused)} and the paused-note is shown — good UX.",
+    "submit_to_court logs 'Court packet format switched from <prev> to <new>' only when prev exists and differs — correct per spec; first submission has no 'switched' event (expected).",
+    "SignatureCapture: hasSignature prop is computed from v.professional.images.signature which comes from GET /cases/{rid}/professional-report; make sure that endpoint re-reads /me/profile/contact.images after upload (it does — verified via network).",
+    "LegalLensReport.jsx: ReportCover imageBase + pro.images.signature gates <img data-testid=lens-cover-signature-image>; both are refreshed by reload() wired into onChanged — works for file-upload path."
+  ],
+  "updated_files": [
+    "/app/backend/tests/test_iter103_packet_mode_pause.py (new)",
+    "/app/backend/tests/_setup_iter103_ui.py (new seed helper)"
+  ],
+  "success_rate": {"backend": "100% (6/6 pytest)", "frontend": "~90% — profile+cover+signature(file)+summaries+bad-wording toast all pass in UI; packet-mode fieldset validated by code review only (needs court-referred fixture); drawn-signature save unreliable via scripted mouse"},
+  "test_credentials": "approval.test.pro1@gmail.com / TestPass2026! (approved professional). _setup_iter103_ui.py creates throwaway parents 'ui103_a_*@example.com' / 'ui103_b_*@example.com' with password testpass123.",
+  "seed_data_creation": "/app/backend/tests/_setup_iter103_ui.py — reusable; prints 'RID=<uuid>' for the created court-ready completed joint report under approval.test.pro1. Fresh rid used this run: a0507eea-a573-4506-af92-1e6c0d0588d1 (not court-referred). Note: the fixture rid supplied in the request (9ea10157-…) no longer exists in the preview DB — appears to have been pruned.",
+  "retest_needed": false,
+  "should_main_agent_self_test": true,
+  "context_for_next_testing_agent": "To re-run packet-mode UI E2E (fieldset + submit-to-court-btn label flip + 'Court packet format switched from X to Y' event), build a court-referred completed case: register a @example.com judge, create court_referral, pro accepts, pro creates case with court_referral_id, both parents complete via casekit.complete_both. Signature canvas drawing via Playwright mouse events is flaky — prefer set_input_files on signature-capture-file for reliable E2E. The provided rid 9ea10157-… is gone; use _setup_iter103_ui.py to spin fresh ones.",
+  "rca of the issue": "SignatureCapture.saveDrawn calls canvas.current.toBlob(cb,'image/png'). When the Playwright-synthesized mouse events don't commit any raster strokes (e.g., when move handler's e.preventDefault keeps default from firing but the browser hasn't flushed stroke paths before toBlob), the blob is null and the promise rejects via rej(new Error('Draw a signature first')) — but because run() catches the error and shows toast.error only if the reject actually surfaces, a race on dirty=true + null blob can momentarily show success before the empty-blob path triggers. File-upload path bypasses this and works 100%. Fix: assert blob != null before upload, or always use canvas.toDataURL() → fetch to avoid toBlob async null edge cases."
+}
