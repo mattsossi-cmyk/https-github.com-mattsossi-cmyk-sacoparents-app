@@ -16,8 +16,14 @@ FILENAME_STEM = "court-packet"  # neutral; never reveals the format or any reaso
 
 
 def _areas_for(doc: dict, role: str) -> list[tuple[str, str]]:
+    """Professional's one-line neutral summary per topic when written; otherwise provided / not provided. Never the parent's text."""
     answers = ((doc.get("responses") or {}).get(role) or {}).get("answers") or {}
-    return [(area, "Perspective provided" if str(answers.get(key) or "").strip() else "Not provided") for key, area, _q in QUESTIONS]
+    summaries = ((doc.get("individual_summaries") or {}).get(role) or {})
+    out = []
+    for key, area, _q in QUESTIONS:
+        s = str(summaries.get(key) or "").strip()
+        out.append((area, s or ("Perspective provided" if str(answers.get(key) or "").strip() else "Not provided")))
+    return out
 
 
 def _observations(doc: dict) -> str:
@@ -46,7 +52,7 @@ def _section(pdf, doc: dict, role: str, pro: dict, now: str) -> None:
     pdf.set_font(FONT, "B", 12); pdf.cell(pdf.epw, 9, _s("2. Perspective areas"), new_x="LMARGIN", new_y="NEXT")
     pdf.set_font(FONT, "", 10.5)
     for area, status in _areas_for(doc, role):
-        pdf.cell(pdf.epw, 6.5, _s(f"• {area}: {status}"), new_x="LMARGIN", new_y="NEXT")
+        pdf.set_x(pdf.l_margin); pdf.multi_cell(pdf.epw, 6.5, _s(f"• {area}: {status}"))
     pdf.ln(2)
     pdf.set_font(FONT, "B", 12); pdf.cell(pdf.epw, 9, _s("3. Professional observations"), new_x="LMARGIN", new_y="NEXT")
     pdf.set_font(FONT, "", 10.5); pdf.set_x(pdf.l_margin); pdf.multi_cell(pdf.epw, 6, _s(_observations(doc)))

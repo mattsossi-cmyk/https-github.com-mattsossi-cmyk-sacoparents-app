@@ -13,6 +13,8 @@ import { WorkflowGuide } from "@/components/WorkflowGuide";
 import { SectionGuide, WalkthroughOverview, useWalkthrough } from "@/components/LensWalkthrough";
 import { REPORT_STEPS, ReportPrinciple, ChildFocusList, PathwayPicker, ReportHeader, ReportDisclaimer, AlignmentStatusGrid, LensSec } from "@/components/LensSections";
 import { ReportCover } from "@/components/ReportCover";
+import { ProfileContactForm } from "@/components/ProfileContactForm";
+import { SignatureCapture } from "@/components/SignatureCapture";
 import { AlignAssistant } from "@/components/AlignAssistant";
 import { ImportedScreening } from "@/components/ImportedScreening";
 import { SixQuestions, SourceLegend, StatementDivider } from "@/components/ReportFraming";
@@ -237,6 +239,14 @@ export default function LegalLensReport() {
         <ReportHeader />
         <AlignAssistant userId={user?.id || "anon"} caseId={id} caseLabel={v?.case?.case_code} open={assistantOpen} onOpenChange={setAssistantOpen} onInserted={reload} />
         <ReportCover pro={{ ...(v?.professional || {}), name: rep.cover_name || v?.professional?.name, email: rep.cover_email || v?.professional?.email, phone: rep.cover_phone || v?.professional?.phone, address: rep.cover_address || v?.professional?.address, title: rep.cover_title || v?.professional?.title, bar_number: rep.cover_bar_number || v?.professional?.bar_number, license_number: rep.cover_license_number || v?.professional?.license_number, submission_date: rep.submission_date }} origin={v?.content_origin} testId="lens-cover" imageBase={`${process.env.REACT_APP_BACKEND_URL}/api/me/profile/image`}>
+          <details className="mt-3 rounded-md border border-dashed border-border p-3" data-testid="lens-cover-profile">
+            <summary className="cursor-pointer text-xs font-semibold text-brand-purple">My profile details (fills every report cover automatically)</summary>
+            <div className="mt-3"><ProfileContactForm onSaved={reload} /></div>
+          </details>
+          <details className="mt-3 rounded-md border border-dashed border-border p-3" data-testid="lens-cover-signature-capture">
+            <summary className="cursor-pointer text-xs font-semibold text-brand-purple">Signature (draw or upload)</summary>
+            <div className="mt-3"><SignatureCapture hasSignature={!!v?.professional?.images?.signature} onChanged={reload} /></div>
+          </details>
           <details className="mt-3 rounded-md border border-dashed border-border p-3" data-testid="lens-cover-override">
             <summary className="cursor-pointer text-xs font-semibold text-brand-purple">Cover details for this report (profile values are used when blank)</summary>
             <div className="mt-3 grid gap-3 sm:grid-cols-2">{[["cover_name", "Professional Name"], ["cover_title", "Title"], ["cover_bar_number", "Bar Number"], ["cover_license_number", "License Number"], ["cover_email", "Email"], ["cover_phone", "Phone"], ["submission_date", "Date of submission"], ["cover_address", "Office / Mailing Address"]].map(([k, l]) => <Field key={k} label={l} value={rep[k]} onChange={(val) => set(k, val)} id={k} big={k === "cover_address"} />)}</div>

@@ -165,6 +165,25 @@ class CourtMessageIn(BaseModel):
     text: str
 
 
+class IndividualSummariesIn(BaseModel):
+    a: dict[str, str] = {}
+    b: dict[str, str] = {}
+
+
+def clean_summaries(body: IndividualSummariesIn) -> dict:
+    """One neutral line per topic, per parent; blocks custody wording like the statement does."""
+    from joint_data import QUESTIONS
+    keys = {k for k, _a, _q in QUESTIONS}
+    out = {}
+    for role in ("a", "b"):
+        vals = {k: " ".join(str(v or "").split())[:240] for k, v in getattr(body, role).items() if k in keys}
+        for v in vals.values():
+            if BANNED_STATEMENT_RE.search(v):
+                raise HTTPException(status_code=400, detail="Summaries must not recommend custody or conservatorship outcomes. Please rephrase as a neutral topic summary.")
+        out[role] = {k: v for k, v in vals.items() if v}
+    return out
+
+
 class SubmitIn(BaseModel):
     attest: bool = False
     include_legal_report: bool = False
@@ -794,7 +813,9 @@ def _findings_block(doc: dict) -> dict:
 
 
 def _court_block(doc: dict) -> dict:
-    return {"court": doc.get("court"), "stage": court_stage(doc), "submissions": doc.get("court_submissions") or []}
+    paused = bool(doc.get("joint_paused"))
+    return {"court": doc.get("court"), "stage": court_stage(doc), "submissions": doc.get("court_submissions") or [],
+            "packet": {"joint_paused": paused, "mode": "individual" if paused else (doc.get("court_packet_mode") or "joint")}}
 
 
 def _statement_pdf_bytes(doc: dict, pro: dict, compare: dict | None = None) -> bytes:
@@ -904,6 +925,22 @@ def _statement_routes(c: Ctx) -> APIRouter:
         await db.joint_reports.update_one({"id": rid}, {"$set": {"professional_statement": st}})
         await c.log_report_event(rid, f"Professional Statement {'marked ready' if st['status'] == 'ready' else 'draft saved'} (v{st['version']})", user)
         return {"statement": st, "stage": court_stage({**doc, "professional_statement": st})}
+
+    @r.get("/joint/reports/{rid}/individual-summaries")
+    async def get_individual_summaries(rid: str, user=Depends(get_current_user)):
+        from joint_data import QUESTIONS
+        doc = await _own_case(db, rid, user)
+        parts = doc.get("participants") or {}
+        return {"topics": [{"key": k, "area": a} for k, a, _q in QUESTIONS], "summaries": doc.get("individual_summaries") or {"a": {}, "b": {}},
+                "parents": {r: (parts.get(r) or {}).get("name") or f"Parent {r.upper()}" for r in ("a", "b")}}
+
+    @r.put("/joint/reports/{rid}/individual-summaries")
+    async def save_individual_summaries(rid: str, body: IndividualSummariesIn, user=Depends(get_current_user)):
+        doc = await _own_case(db, rid, user)
+        summaries = clean_summaries(body)
+        await db.joint_reports.update_one({"id": doc["id"]}, {"$set": {"individual_summaries": summaries}})
+        await c.log_report_event(rid, "Individual Perspective Report topic summaries saved", user)
+        return {"summaries": summaries}
 
     @r.get("/joint/reports/{rid}/professional-statement.pdf")
     async def statement_pdf(rid: str, user=Depends(get_current_user)):

@@ -20,6 +20,12 @@ class ContactIn(BaseModel):
     city: str = ""
     state: str = ""
     zip: str = ""
+    pro_role: str = ""
+    bar_number: str = ""
+    license_number: str = ""
+
+
+CONTACT_KEYS = tuple(ContactIn.model_fields)
 
 
 def _pro(user):
@@ -35,6 +41,12 @@ def _slot(slot: str) -> str:
 
 def build_router(get_current_user) -> APIRouter:
     r = APIRouter(prefix="/me/profile")
+
+    @r.get("/contact")
+    async def get_contact(user=Depends(get_current_user)):
+        _pro(user)
+        p = user.get("profile") or {}
+        return {k: p.get(k, "") for k in CONTACT_KEYS} | {"images": {k: bool(v) for k, v in (p.get("images") or {}).items()}}
 
     @r.put("/contact")
     async def set_contact(body: ContactIn, user=Depends(get_current_user)):

@@ -9,6 +9,7 @@ import { CaseProgress } from "@/components/CaseProgress";
 import { FrameworkPanel } from "@/components/FrameworkPanel";
 import { ScoreTrendChart } from "@/components/ScoreTrendChart";
 import { ReassessmentCompare } from "@/components/ReassessmentCompare";
+import { IndividualSummaries } from "@/components/IndividualSummaries";
 
 const FIELDS = [
   ["role_basis", "Role and basis of involvement", "How you came to facilitate this matter (court referral, appointment, parties' agreement) and your professional role.", "1. Case, role & process"],
@@ -34,10 +35,12 @@ export function ProfessionalStatement({ rid, canSubmit, onStageChange }) {
   const [agreementId, setAgreementId] = useState("");
   const [packetUrl, setPacketUrl] = useState(null);
   const [previewing, setPreviewing] = useState(false);
+  const [mode, setMode] = useState(null);
+  const packetMode = mode || data?.packet?.mode || "joint";
   const previewPacket = async () => {
     setPreviewing(true);
     try {
-      const r = await api.post(`/joint/reports/${rid}/court-packet-preview`, { include_legal_report: includeLegal, include_research_sources: includeLegal && includeSources, agreement_report_id: agreementId || null }, { responseType: "blob" });
+      const r = await api.post(`/joint/reports/${rid}/court-packet-preview`, { include_legal_report: includeLegal, include_research_sources: includeLegal && includeSources, agreement_report_id: agreementId || null, packet_mode: packetMode }, { responseType: "blob" });
       if (packetUrl) URL.revokeObjectURL(packetUrl);
       setPacketUrl(URL.createObjectURL(r.data));
       toast.success("Preview built — this is exactly what the court will receive. Nothing has been submitted.");
@@ -57,10 +60,10 @@ export function ProfessionalStatement({ rid, canSubmit, onStageChange }) {
     finally { setBusy(false); }
   };
   const submit = async () => {
-    if (!window.confirm("Submit the Joint Report and Professional Statement to the court? Both documents will be locked, timestamped and placed in the Judge Portal.")) return;
+    if (!window.confirm(`Submit the ${packetMode === "individual" ? "Individual Perspective Reports" : "Joint Report"} and Professional Statement to the court? Both documents will be locked, timestamped and placed in the Judge Portal.`)) return;
     setBusy(true);
     try {
-      const { data: d } = await api.post(`/joint/reports/${rid}/submit-to-court`, { attest, include_legal_report: includeLegal, include_research_sources: includeLegal && includeSources, agreement_report_id: agreementId || null });
+      const { data: d } = await api.post(`/joint/reports/${rid}/submit-to-court`, { attest, include_legal_report: includeLegal, include_research_sources: includeLegal && includeSources, agreement_report_id: agreementId || null, packet_mode: packetMode });
       toast.success(`Submitted to court — version ${d.submission.version} locked`);
       setAttest(false); load();
     } catch (e) { toast.error(formatApiError(e)); }
@@ -123,6 +126,7 @@ export function ProfessionalStatement({ rid, canSubmit, onStageChange }) {
           </div>
         ))}
       </div>
+      <IndividualSummaries rid={rid} />
       <div className="mt-4 flex flex-wrap items-center gap-2">
         <Button size="sm" variant="outline" onClick={() => save("draft")} disabled={busy} data-testid="statement-save-draft-btn">Save draft</Button>
         <Button size="sm" onClick={() => save("ready")} disabled={busy} data-testid="statement-mark-ready-btn">{ready ? "Update & keep ready" : "Mark statement ready"}</Button>
@@ -132,6 +136,19 @@ export function ProfessionalStatement({ rid, canSubmit, onStageChange }) {
 
       {court?.judge_email ? (
         <div className="mt-8 rounded-xl border-2 border-brand-purple/30 bg-brand-purple/5 p-5" data-testid="submit-to-court-box">
+          <fieldset className="mb-3 rounded-md border border-border bg-white p-3 text-sm" data-testid="packet-mode">
+            <legend className="px-1 text-xs font-bold uppercase tracking-widest text-brand-purple">Packet format</legend>
+            <div className="flex flex-wrap gap-4">
+              {[["joint", "Joint Report", "One combined report comparing both parents' perspectives."], ["individual", "Individual Perspective Reports", "Two separate per-parent sections in one packet; neither references the other parent."]].map(([v, l, h]) => (
+                <label key={v} className={`flex flex-1 cursor-pointer items-start gap-2 rounded-md border p-2 ${packetMode === v ? "border-brand-purple bg-brand-purple/5" : "border-border"} ${v === "joint" && data.packet?.joint_paused ? "opacity-50" : ""}`}>
+                  <input type="radio" name="packet_mode" value={v} checked={packetMode === v} disabled={!submittable || (v === "joint" && data.packet?.joint_paused)} onChange={() => setMode(v)} className="mt-1" data-testid={`packet-mode-${v}`} />
+                  <span><span className="font-medium">{l}</span><span className="block text-xs text-muted-foreground">{h}</span></span>
+                </label>
+              ))}
+            </div>
+            {data.packet?.joint_paused && <p className="mt-2 text-xs text-muted-foreground" data-testid="packet-mode-paused-note">Joint features are paused for this case, so the Individual format is used. You can switch back after resuming.</p>}
+            <p className="mt-2 text-xs text-muted-foreground">Changing the format between submissions is recorded in the case log.</p>
+          </fieldset>
           {["final", "submitted_to_court"].includes(data.legal_lens?.status) && (
             <label className="mb-3 flex items-start gap-2 text-sm cursor-pointer rounded-md border border-border bg-white p-3" data-testid="submit-include-legal-label">
               <input type="checkbox" checked={includeLegal} onChange={(e) => setIncludeLegal(e.target.checked)} className="mt-1" disabled={!submittable} data-testid="submit-include-legal" />
@@ -174,7 +191,7 @@ export function ProfessionalStatement({ rid, canSubmit, onStageChange }) {
           </div>
           {packetUrl && <iframe title="Court packet preview" src={packetUrl} className="mt-3 h-[70vh] w-full rounded-lg border border-border" data-testid="court-packet-preview-frame" />}
           <Button onClick={submit} disabled={!submittable || !attest || busy} className="mt-4 w-full h-14 text-base font-bold tracking-wide bg-brand-purple hover:bg-brand-purple/90 text-white" data-testid="submit-to-court-btn">
-            <Lock className="h-5 w-5 mr-2" /> {busy ? "Submitting…" : "SUBMIT JOINT REPORT + PROFESSIONAL STATEMENT TO COURT"}
+            <Lock className="h-5 w-5 mr-2" /> {busy ? "Submitting…" : `SUBMIT ${packetMode === "individual" ? "INDIVIDUAL PERSPECTIVE REPORTS" : "JOINT REPORT"} + PROFESSIONAL STATEMENT TO COURT`}
           </Button>
           {!submittable && <p className="mt-2 text-xs text-muted-foreground" data-testid="submit-blocked-reason">{!canSubmit ? "Both parents must complete their assessments first." : !ready ? "Mark the Professional Statement ready to enable submission." : ""}</p>}
           {subs.length > 0 && <div className="mt-4 space-y-4"><ReassessmentCompare history={data.level_history || []} /><ScoreTrendChart history={data.level_history || []} /></div>}
