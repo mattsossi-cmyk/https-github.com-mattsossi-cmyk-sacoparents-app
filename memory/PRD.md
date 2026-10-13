@@ -59,6 +59,11 @@ Auth: Custom JWT (`auth.py`)
 - Reminder switch: `GET/PUT /api/court-path/reminders` + `components/account/RequestedRemindersSwitch.jsx` on Account (works both ways, re-enables after email unsubscribe).
 - Testing: iteration_132 backend 28/28, frontend 100%.
 
+### 2026-06 — Iter133 · Parent completion summary
+- `GET /api/court-path/completion-summary.pdf` (progress_pdf.parent_router): one page, "You've finished what your professional asked for.", case + professional name, each requested item Done · date; no answers; 409 until every requested item is done.
+- UI: `pages/portal/court/CourtCompleteCard.jsx` above the Court menu when all requested items are done (signed-in parents).
+- Testing: iteration_133 backend + frontend 100%. Not deployed yet (previous deploy queued before this feature).
+
 
 ### 2026-06 — Iter271–273 · Self-Assessment v2 (chat-style) + Progress Graph
 
