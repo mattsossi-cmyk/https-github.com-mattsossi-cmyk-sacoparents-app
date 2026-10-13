@@ -17,6 +17,7 @@ from court_codes_routes import linked_parents
 from models import UserPublic
 
 router = APIRouter(prefix="/professional", tags=["progress-pdf"])
+parent_router = APIRouter(prefix="/court-path", tags=["progress-pdf"])
 
 _LABEL = {"done": "Done", "in_progress": "In progress", "todo": "Not started"}
 
@@ -27,18 +28,19 @@ def _header(pdf: FPDF, d: Dict[str, Any]) -> None:
     pdf.set_xy(16, 6.5)
     pdf.set_font("Helvetica", "B", 16)
     pdf.set_text_color(255, 255, 255)
-    pdf.cell(0, 7, "Assessment Progress", new_x="LMARGIN", new_y="NEXT")
+    pdf.cell(0, 7, d.get("title", "Assessment Progress"), new_x="LMARGIN", new_y="NEXT")
     pdf.set_x(16)
     pdf.set_font("Helvetica", "", 8.5)
     pdf.set_text_color(221, 214, 254)
-    pdf.cell(0, 5, _safe("SA CoParents  ·  Status only: never answers"))
+    pdf.cell(0, 5, _safe(d.get("tagline", "SA CoParents  ·  Status only: never answers")))
     pdf.set_xy(16, 31)
     pdf.set_font("Helvetica", "B", 11)
     pdf.set_text_color(*INK)
-    pdf.cell(0, 6, _safe(f"{d['kind']} {d['ref']}" + (f"  ·  {d['label']}" if d["label"] else "")), new_x="LMARGIN", new_y="NEXT")
+    heading = d.get("heading") or f"{d['kind']} {d['ref']}" + (f"  ·  {d['label']}" if d["label"] else "")
+    pdf.cell(0, 6, _safe(heading), new_x="LMARGIN", new_y="NEXT")
     pdf.set_font("Helvetica", "", 9)
     pdf.set_text_color(*MUTED)
-    pdf.cell(0, 5, _safe(f"{d['state']}     Prepared {_day(d['generated_at'])}"), new_x="LMARGIN", new_y="NEXT")
+    pdf.cell(0, 5, _safe(f"{d['state']}     Prepared {_day(d['generated_at'])}".strip()), new_x="LMARGIN", new_y="NEXT")
     pdf.ln(3)
 
 
@@ -84,14 +86,15 @@ def build_progress_pdf(d: Dict[str, Any]) -> bytes:
         _parent(pdf, p)
     pdf.set_font("Helvetica", "I", 8.5)
     pdf.set_text_color(*MUTED)
-    pdf.multi_cell(0, 4.6, _safe("This page shows only whether each assessment you asked for is done, in progress or not "
-                                 "started. SA CoParents never shares a parent's answers."))
+    pdf.multi_cell(0, 4.6, _safe(d.get("closing", "This page shows only whether each assessment you asked for is done, in "
+                                             "progress or not started. SA CoParents never shares a parent's answers.")))
     return bytes(pdf.output())
 
 
 def _pdf_response(d: Dict[str, Any]) -> StreamingResponse:
+    name = d.get("filename") or f"SA_CoParents_Progress_{d['ref']}.pdf"
     return StreamingResponse(BytesIO(build_progress_pdf(d)), media_type="application/pdf",
-                             headers={"Content-Disposition": f'attachment; filename="SA_CoParents_Progress_{d["ref"]}.pdf"'})
+                             headers={"Content-Disposition": f'attachment; filename="{name}"'})
 
 
 def _now() -> str:
@@ -128,4 +131,28 @@ async def joint_case_progress_pdf(case_id: str, user: UserPublic = Depends(get_c
     return _pdf_response({
         "kind": "Joint case", "ref": case_id, "label": case.get("align_case_reference") or "", "generated_at": _now(),
         "state": (case.get("status") or "").replace("_", " ").capitalize(), "parents": parents,
+    })
+
+
+@parent_router.get("/completion-summary.pdf")
+async def completion_summary_pdf(user: UserPublic = Depends(get_current_user),
+                                 db: AsyncIOMotorDatabase = Depends(get_db)) -> StreamingResponse:
+    """Parent's own one-page "You've finished what your professional asked for" summary. Dates only, never answers."""
+    from court_checklist import _sync_professional_requests
+
+    req = await _sync_professional_requests(db, user.user_id)
+    keys = [k for k in REQUESTABLE if k in (req.get("keys") or [])]
+    rows = await progress_rows(db, user.user_id, keys)
+    if not rows or any(r["status"] != "done" for r in rows):
+        raise HTTPException(status_code=409, detail="Your summary unlocks once everything your professional asked for is finished.")
+    ps = await db.portal_state.find_one({"user_id": user.user_id}, {"_id": 0, "court_key": 1, "court_legal_name": 1}) or {}
+    name = (ps.get("court_legal_name") or "").strip() or user.name or "Parent"
+    bits = [f"Case {ps['court_key']}" if ps.get("court_key") else "", f"Professional: {req['pro_name']}" if req.get("pro_name") else ""]
+    return _pdf_response({
+        "title": "Completion Summary", "tagline": "SA CoParents  ·  Requested assessments finished",
+        "heading": "You've finished what your professional asked for.", "ref": "", "label": "", "kind": "",
+        "state": "  ·  ".join(b for b in bits if b), "generated_at": _now(), "filename": "SA_CoParents_Completion_Summary.pdf",
+        "parents": [{"name": name, "assessments": rows}],
+        "closing": "This summary confirms only that each requested assessment is finished, with the date. It does not include "
+                   "any of your answers. You can share it with your professional if you'd like.",
     })

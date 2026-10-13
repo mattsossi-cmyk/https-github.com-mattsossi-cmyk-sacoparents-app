@@ -11,6 +11,7 @@ import { MENU, PILLARS, STEPS } from "./court/courtContent";
 import { CourtJourneyArt } from "./court/CourtJourneyArt";
 import { AcceptCard, PillarCards } from "./court/CourtJourneyCards";
 import { CourtMenu } from "./court/CourtMenu";
+import { CourtCompleteCard } from "./court/CourtCompleteCard";
 import { CourtPillarDialog } from "./court/CourtPillarDialog";
 import { CourtStepDialog } from "./court/CourtStepDialog";
 import { CourtModulesCard, CourtTools } from "./court/CourtTools";
@@ -168,6 +169,7 @@ export function CourtOrderedView({ onBack, onQuickExit, courtKey, mediator, onVe
           </div>
           <div className="lg:col-start-1 lg:col-span-7 lg:row-start-1 space-y-6">
             <AcceptCard verified={cc.verified} courtKey={courtKey} onAccept={() => setDialog({ type: "accept" })} />
+            {signedIn && asked.length > 0 && doneCount === asked.length && <CourtCompleteCard count={asked.length} />}
             <CourtMenu statusFor={statusFor} requested={requested.keys} proKeys={requested.proKeys} proName={requested.proName} onToggle={requested.toggle} onOpen={openOption} />
             <CourtAgreeCard compare={compare} onOpen={() => openPillar(PILLARS[1])} />
             <PillarCards onPillar={openPillar} />
