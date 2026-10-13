@@ -72,4 +72,18 @@ def build_router(db, get_current_user) -> APIRouter:
         rows.sort(key=lambda x: (x["current"], x["accepted_at"] or ""), reverse=True)
         return {"current_version": PROFESSIONAL_NOTICE_VERSION, "total": len(rows), "accepted_current": sum(1 for x in rows if x["current"]), "rows": rows}
 
+    @r.get("/admin/professional-notice/acceptances.csv")
+    async def acceptance_log_csv(user=Depends(get_current_user)):
+        import csv
+        import io
+        from fastapi import Response
+        data = await acceptance_log(user)
+        buf = io.StringIO()
+        w = csv.writer(buf)
+        w.writerow(["name", "email", "role", "accepted_version", "accepted_at", "current_version", "history"])
+        for x in data["rows"]:
+            w.writerow([x["name"], x["email"], x["role"], x["accepted_version"] or "", x["accepted_at"] or "", "yes" if x["current"] else "no",
+                        "; ".join(f"{h['version']}@{h['accepted_at']}" for h in x["history"])])
+        return Response(buf.getvalue(), media_type="text/csv", headers={"Content-Disposition": "attachment; filename=professional-notice-acceptances.csv"})
+
     return r

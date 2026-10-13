@@ -509,7 +509,12 @@ export default function Dashboard() {
             <TabsContent value="listings"><AdminListings /></TabsContent>
             <TabsContent value="judges"><AdminJudges /></TabsContent>
             <TabsContent value="providers"><AdminProviders /></TabsContent>
-            <TabsContent value="acceptance"><AdminAcceptanceLog /></TabsContent>
+            <TabsContent value="acceptance">
+              <h3 className="mb-3 text-base font-bold md:text-lg" data-testid="privacy-log-heading">Privacy Notification — parents and professionals</h3>
+              <AdminAcceptanceLog />
+              <h3 className="mb-3 mt-10 text-base font-bold md:text-lg" data-testid="pro-notice-log-heading">Professional Notice, Confidentiality &amp; Safety Warning — professionals</h3>
+              <AdminAcceptanceLog endpoint="/admin/professional-notice/acceptances" filename="professional-notice-acceptances.csv" label="professional notice" testId="admin-pro-notice-log" />
+            </TabsContent>
           </Tabs>
         )}
 

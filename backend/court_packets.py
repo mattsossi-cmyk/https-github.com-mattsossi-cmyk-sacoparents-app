@@ -427,7 +427,8 @@ def _judge_routes(svc: PacketService, get_current_user) -> APIRouter:
         for p in docs:
             primary = await db.joint_reports.find_one({"id": p["report_id"]}, {"_id": 0, "case_code": 1, "subject_label": 1}) or {}
             out.append({**public(p), "state": state(p), "professional_name": p.get("professional_name"), "case_code": primary.get("case_code"),
-                        "subject_label": primary.get("subject_label"), "report_count": len(p.get("report_ids") or [])})
+                        "subject_label": primary.get("subject_label"), "report_count": len(p.get("report_ids") or []),
+                        "packet_label": p.get("packet_label") or ("Joint Report" if p.get("frozen") else None)})
         return {"approved": True, "packets": out}
 
     @r.get("/court-dashboard/packets/{pid}")

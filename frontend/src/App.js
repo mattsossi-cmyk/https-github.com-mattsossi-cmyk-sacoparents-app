@@ -64,7 +64,7 @@ function Protected({ children }) {
     sessionStorage.setItem("post-pro-notice-redirect", window.location.pathname + window.location.search);
     return <Navigate to="/professional-notice" replace />;
   }
-  if (user.role === "judge" && !/^\/(court-dashboard|court\/case\/)/.test(window.location.pathname)) return <Navigate to="/court-dashboard" replace />;
+  if (user.role === "judge" && !/^\/(court-dashboard|court\/case\/|privacy-notice)/.test(window.location.pathname)) return <Navigate to="/court-dashboard" replace />;
   return children;
 }
 

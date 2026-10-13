@@ -1036,3 +1036,11 @@ Probed 2026-09-02: /api/link-codes, /api/integrations/* on sacoparentsapp.online
 - Signature hardening: pointer events + capture, ink check, white-background PNG, post-upload verification GET /me/profile/contact; drawn save verified end-to-end in browser.
 - Resend: one authorized delivery test sent to mattsossi@bsossi.com via provider=resend (accepted, id returned). Delivery to inbox not yet confirmed by owner.
 - Parent-app contract draft written to /app/PARENT_APP_REQUESTER_CONTEXT_CONTRACT.md for review; BRIDGE_REQUESTER_CONTEXT stays OFF.
+
+## 2026-10-13 — Four more follow-ups (owner approved 'YES, A'; PREVIEW ONLY, not deployed)
+- Notice Admin View: AdminAcceptanceLog.jsx parametrized; Dashboard Acceptance Log tab shows Privacy log + Professional Notice log (testid admin-pro-notice-log) with CSV at GET /api/admin/professional-notice/acceptances.csv.
+- Court Submission Receipt: SubmissionReceipt.jsx shown after submit and via 'Receipt' link per version — date, packet format, version, court, submitted by, packet/report/statement SHA-256.
+- Judge Packet Label: packet_label added to /court-dashboard/cases/{ref} submissions and /court-dashboard/packets; shown in CourtCaseCard + CourtDashboard rows ('Individual Perspective Reports' / 'Joint Report').
+- Summary Neutrality Check: PUT individual-summaries runs jev.neutrality_check on every line; flags -> 400 'Neutrality check — please rephrase…' (blocking, per owner); Jev outage -> 503.
+- BUG FIX (pre-existing): judges hit a redirect loop (blank page) at /privacy-notice because the judge guard did not allow that path; App.js guard now allows /privacy-notice.
+- Tests: tests/test_iter105_neutrality_receipt.py 2/2; UI verified for receipt, judge label, admin log.

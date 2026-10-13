@@ -17,7 +17,7 @@ export const IndividualSummaries = ({ rid, testId = "individual-summaries" }) =>
   return (
     <div className="mt-6 rounded-lg border border-border bg-secondary/30 p-4" data-testid={testId}>
       <p className="text-sm font-semibold">Individual Perspective Reports — topic summaries</p>
-      <p className="mt-1 text-xs text-muted-foreground">Optional. Write one neutral line per topic for each parent. Used only in the Individual Perspective Reports packet format; where blank, the report prints "Perspective provided" or "Not provided". Each parent's section never references the other parent.</p>
+      <p className="mt-1 text-xs text-muted-foreground">Optional. Write one neutral line per topic for each parent. Each line is run through the neutrality check before saving; blame or custody-recommendation language must be rephrased. Used only in the Individual Perspective Reports packet format; where blank, the report prints "Perspective provided" or "Not provided". Each parent's section never references the other parent.</p>
       <div className="mt-3 grid gap-4 md:grid-cols-2">
         {["a", "b"].map((role) => (
           <div key={role} data-testid={`${testId}-${role}`}>

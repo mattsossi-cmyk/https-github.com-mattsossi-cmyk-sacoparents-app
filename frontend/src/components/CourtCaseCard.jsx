@@ -70,7 +70,7 @@ export function CourtCaseCard({ x, packets, onOpenPacket, onUpdate }) {
         <Field label="Final Joint Reports & Professional Statements" testId={`court-field-submissions-${x.id}`}>
           {mine.length === 0 ? <span className="text-muted-foreground">{submitted ? "Submitted — see Court Packets below." : "Nothing submitted yet."}</span> : (
             <ul className="space-y-1">{mine.map((p) => (
-              <li key={p.id} className="flex items-center gap-2"><span>{p.subject_label} · {p.created_at?.slice(0, 10)}</span><button type="button" onClick={() => onOpenPacket(p)} className="text-xs text-primary hover:underline" data-testid={`court-open-submission-${p.id}`}>Open</button></li>
+              <li key={p.id} className="flex items-center gap-2"><span>{p.subject_label} · <span className="font-medium" data-testid={`court-packet-label-${p.id}`}>{p.packet_label || "Joint Report"}</span> · {p.created_at?.slice(0, 10)}</span><button type="button" onClick={() => onOpenPacket(p)} className="text-xs text-primary hover:underline" data-testid={`court-open-submission-${p.id}`}>Open</button></li>
             ))}</ul>
           )}
         </Field>

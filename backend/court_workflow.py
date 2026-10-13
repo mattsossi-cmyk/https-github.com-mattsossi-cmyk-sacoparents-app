@@ -398,7 +398,8 @@ def judicial_case_payload(x: dict, case: dict | None, packets: list, referral_pu
     return {"referral": referral_public(x), "case_code": x.get("case_code") or (case or {}).get("case_code"), "stage": stage, "checklist": _case_checklist(x, stage, done),
             "parents_invited": 2 if case else 0, "parents_participating": sum(done), "status_summary": x.get("status_summary"), "counts": counts,
             "reports": reports, "statement": statement, "level_history": level_history(packets),
-            "submissions": [{"version": p["submission_version"], "packet_id": p["id"], "at": p["created_at"], "sha256": p.get("sha256"), "superseded": p.get("superseded", False)} for p in packets],
+            "submissions": [{"version": p["submission_version"], "packet_id": p["id"], "at": p["created_at"], "sha256": p.get("sha256"), "superseded": p.get("superseded", False),
+                             "packet_label": p.get("packet_label") or "Joint Report"} for p in packets],
             "communication_summary": x.get("communication_summary"), "disclaimer": SUMMARY_DISCLAIMER}
 
 
@@ -938,8 +939,21 @@ def _statement_routes(c: Ctx) -> APIRouter:
     async def save_individual_summaries(rid: str, body: IndividualSummariesIn, user=Depends(get_current_user)):
         doc = await _own_case(db, rid, user)
         summaries = clean_summaries(body)
+        fields = {f"{role}:{k}": v for role, vals in summaries.items() for k, v in vals.items()}
+        if fields:
+            import jev
+            try:
+                flags = await jev.neutrality_check(fields)
+            except Exception:  # noqa: BLE001
+                raise HTTPException(status_code=503, detail="The neutrality check is temporarily unavailable. Please try saving again in a moment.")
+            if flags:
+                from joint_data import QUESTIONS
+                names = {x: (doc.get("participants") or {}).get(x, {}).get("name") or f"Parent {x.upper()}" for x in ("a", "b")}
+                areas = {k: a for k, a, _q in QUESTIONS}
+                lines = [f"{names[f['field'].split(':')[0]]} — {areas.get(f['field'].split(':')[1], f['field'])}: \"{f['sentence']}\" ({f['issue'].replace('_', ' ')})" for f in flags]
+                raise HTTPException(status_code=400, detail="Neutrality check — please rephrase before saving: " + " | ".join(lines))
         await db.joint_reports.update_one({"id": doc["id"]}, {"$set": {"individual_summaries": summaries}})
-        await c.log_report_event(rid, "Individual Perspective Report topic summaries saved", user)
+        await c.log_report_event(rid, "Individual Perspective Report topic summaries saved (neutrality check passed)", user)
         return {"summaries": summaries}
 
     @r.get("/joint/reports/{rid}/professional-statement.pdf")

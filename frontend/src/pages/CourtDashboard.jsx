@@ -38,7 +38,7 @@ function PacketsList({ data, email, onOpen }) {
         return (
           <li key={p.id} className="flex flex-wrap items-center justify-between gap-3 px-5 py-4" data-testid={`court-dash-packet-${p.id}`}>
             <div className="min-w-0">
-              <p className="font-semibold">{p.cause_number ? `Cause No. ${p.cause_number}` : p.court_name || "Court Packet"} <span className="ml-2 text-sm font-normal text-muted-foreground">{p.subject_label}{p.case_code ? ` · ${p.case_code}` : ""}</span></p>
+              <p className="font-semibold">{p.cause_number ? `Cause No. ${p.cause_number}` : p.court_name || "Court Packet"} <span className="ml-2 text-sm font-normal text-muted-foreground">{p.subject_label}{p.case_code ? ` · ${p.case_code}` : ""} · {p.packet_label || "Joint Report"}</span></p>
               <p className="text-xs text-muted-foreground mt-0.5">From {p.professional_name} · sent {p.created_at?.slice(0, 10)} · {p.report_count} report{p.report_count === 1 ? "" : "s"} · {dead ? p.state : `expires ${p.expires_at?.slice(0, 10)}`}</p>
             </div>
             <div className="flex items-center gap-2">

@@ -10,6 +10,7 @@ import { FrameworkPanel } from "@/components/FrameworkPanel";
 import { ScoreTrendChart } from "@/components/ScoreTrendChart";
 import { ReassessmentCompare } from "@/components/ReassessmentCompare";
 import { IndividualSummaries } from "@/components/IndividualSummaries";
+import { SubmissionReceipt } from "@/components/SubmissionReceipt";
 
 const FIELDS = [
   ["role_basis", "Role and basis of involvement", "How you came to facilitate this matter (court referral, appointment, parties' agreement) and your professional role.", "1. Case, role & process"],
@@ -36,6 +37,7 @@ export function ProfessionalStatement({ rid, canSubmit, onStageChange }) {
   const [packetUrl, setPacketUrl] = useState(null);
   const [previewing, setPreviewing] = useState(false);
   const [mode, setMode] = useState(null);
+  const [receipt, setReceipt] = useState(null);
   const packetMode = mode || data?.packet?.mode || "joint";
   const previewPacket = async () => {
     setPreviewing(true);
@@ -65,6 +67,7 @@ export function ProfessionalStatement({ rid, canSubmit, onStageChange }) {
     try {
       const { data: d } = await api.post(`/joint/reports/${rid}/submit-to-court`, { attest, include_legal_report: includeLegal, include_research_sources: includeLegal && includeSources, agreement_report_id: agreementId || null, packet_mode: packetMode });
       toast.success(`Submitted to court — version ${d.submission.version} locked`);
+      setReceipt(d.submission); setMode(null);
       setAttest(false); load();
     } catch (e) { toast.error(formatApiError(e)); }
     finally { setBusy(false); }
@@ -194,10 +197,11 @@ export function ProfessionalStatement({ rid, canSubmit, onStageChange }) {
             <Lock className="h-5 w-5 mr-2" /> {busy ? "Submitting…" : `SUBMIT ${packetMode === "individual" ? "INDIVIDUAL PERSPECTIVE REPORTS" : "JOINT REPORT"} + PROFESSIONAL STATEMENT TO COURT`}
           </Button>
           {!submittable && <p className="mt-2 text-xs text-muted-foreground" data-testid="submit-blocked-reason">{!canSubmit ? "Both parents must complete their assessments first." : !ready ? "Mark the Professional Statement ready to enable submission." : ""}</p>}
+          <SubmissionReceipt sub={receipt} onClose={() => setReceipt(null)} />
           {subs.length > 0 && <div className="mt-4 space-y-4"><ReassessmentCompare history={data.level_history || []} /><ScoreTrendChart history={data.level_history || []} /></div>}
           {subs.length > 0 && (
             <ul className="mt-4 space-y-1.5 text-sm" data-testid="court-submissions-list">
-              {subs.map((s) => <li key={s.version} className="flex flex-wrap items-center gap-2 rounded-md bg-white px-3 py-2 border border-border"><ShieldCheck className="h-4 w-4 text-align-green" /><span className="font-semibold">Version {s.version}</span><span className="text-muted-foreground">submitted {s.submitted_at?.slice(0, 16).replace("T", " ")} to {s.court_name || "court"}</span>{s.level_score && <span className="rounded-full bg-brand-purple/10 px-2 py-0.5 text-xs font-semibold text-brand-purple" data-testid={`submission-level-${s.version}`}>Level {s.level_score}/10</span>}<code className="ml-auto text-[11px] text-muted-foreground">SHA-256 {s.sha256?.slice(0, 16)}…</code></li>)}
+              {subs.map((s) => <li key={s.version} className="flex flex-wrap items-center gap-2 rounded-md bg-white px-3 py-2 border border-border"><ShieldCheck className="h-4 w-4 text-align-green" /><span className="font-semibold">Version {s.version}</span><span className="rounded-full bg-secondary px-2 py-0.5 text-xs" data-testid={`submission-format-${s.version}`}>{s.packet_label || "Joint Report"}</span><span className="text-muted-foreground">submitted {s.submitted_at?.slice(0, 16).replace("T", " ")} to {s.court_name || "court"}</span>{s.level_score && <span className="rounded-full bg-brand-purple/10 px-2 py-0.5 text-xs font-semibold text-brand-purple" data-testid={`submission-level-${s.version}`}>Level {s.level_score}/10</span>}<button type="button" onClick={() => setReceipt(s)} className="text-xs text-primary hover:underline" data-testid={`submission-receipt-btn-${s.version}`}>Receipt</button><code className="ml-auto text-[11px] text-muted-foreground">SHA-256 {s.sha256?.slice(0, 16)}…</code></li>)}
             </ul>
           )}
         </div>
