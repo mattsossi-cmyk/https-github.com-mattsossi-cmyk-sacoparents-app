@@ -12,7 +12,9 @@ import JointAssessment from "@/pages/JointAssessment";
 import SafetyScreening from "@/pages/SafetyScreening";
 import SafetyHub from "@/pages/SafetyHub";
 import PrivacyNotice from "@/pages/PrivacyNotice";
+import ProfessionalNotice from "@/pages/ProfessionalNotice";
 export const PRIVACY_NOTICE_VERSION = "2026-10-10.2";
+export const PROFESSIONAL_NOTICE_VERSION = "2026-10-13.1";
 import CommunicationReadiness from "@/pages/CommunicationReadiness";
 import SafetyResponses from "@/pages/SafetyResponses";
 import JointReport from "@/pages/JointReport";
@@ -58,6 +60,10 @@ function Protected({ children }) {
     sessionStorage.setItem("post-privacy-redirect", window.location.pathname + window.location.search);
     return <Navigate to="/privacy-notice" replace />;
   }
+  if (user.role === "professional" && user.professional_notice_version !== PROFESSIONAL_NOTICE_VERSION && window.location.pathname !== "/professional-notice") {
+    sessionStorage.setItem("post-pro-notice-redirect", window.location.pathname + window.location.search);
+    return <Navigate to="/professional-notice" replace />;
+  }
   if (user.role === "judge" && !/^\/(court-dashboard|court\/case\/)/.test(window.location.pathname)) return <Navigate to="/court-dashboard" replace />;
   return children;
 }
@@ -80,6 +86,7 @@ function App() {
             <Route path="/joint/:id/assess" element={<Protected><JointAssessment /></Protected>} />
             <Route path="/joint/:id/safety" element={<Protected><SafetyHub /></Protected>} />
             <Route path="/privacy-notice" element={<Protected><PrivacyNotice /></Protected>} />
+            <Route path="/professional-notice" element={<Protected><ProfessionalNotice /></Protected>} />
             <Route path="/joint/:id/communication-readiness" element={<Protected><CommunicationReadiness /></Protected>} />
             <Route path="/joint/:id/safety-screening" element={<Protected><SafetyScreening /></Protected>} />
             <Route path="/joint/:id/safety-screening/:role" element={<Protected><SafetyResponses /></Protected>} />
