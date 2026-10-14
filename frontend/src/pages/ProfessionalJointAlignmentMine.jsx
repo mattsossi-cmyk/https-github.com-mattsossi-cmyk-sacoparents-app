@@ -45,6 +45,7 @@ import ReminderNoteTemplatePicker from "../components/professional/ReminderNoteT
 import { CourtCodesPanel } from "../components/professional/CourtCodesPanel";
 import { RequestedProgress } from "../components/professional/RequestedProgress";
 import { ProgressPdfButton } from "../components/professional/ProgressPdfButton";
+import { NudgeButton } from "../components/professional/NudgeButton";
 import { toast } from "sonner";
 import { api } from "../lib/api";
 import { logError } from "../lib/logger";
@@ -551,6 +552,7 @@ export default function ProfessionalJointAlignmentMine() {
                         )}
                       </div>
                       <RequestedProgress rows={p.requested_progress} testid={`pj-mine-progress-${c.case_id}-${pi}`} />
+                      <NudgeButton caseRef={c.case_id} pid={p.nudge_pid} nextAt={p.nudge_next_at} rows={p.requested_progress} testid={`pj-mine-nudge-${c.case_id}-${pi}`} />
                     </div>
                   ))}
                 </div>

@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { toast } from "sonner";
 
 import { api } from "../../../lib/api";
+import { CourtSendSummary } from "./CourtSendSummary";
 
 // Shown once everything the parent was asked for is done: a one-page, answers-free summary they can download.
 export function CourtCompleteCard({ count }) {
@@ -45,6 +46,7 @@ export function CourtCompleteCard({ count }) {
             className="mt-3 inline-flex items-center gap-2 rounded-full bg-emerald-700 hover:bg-emerald-800 text-white px-4 py-2 text-sm font-bold transition-colors disabled:opacity-60">
             <i className={`fa-solid ${busy ? "fa-spinner fa-spin" : "fa-file-arrow-down"}`} aria-hidden /> Download your summary
           </button>
+          <CourtSendSummary />
         </div>
       </div>
     </section>

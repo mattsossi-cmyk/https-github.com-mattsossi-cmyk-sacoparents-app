@@ -1673,6 +1673,7 @@ async def list_cases_i_created(
         ]
     }
     from court_checklist import case_requested_keys, progress_rows
+    from professional_nudges import nudge_next_at, nudge_pid
 
     cursor = db[_CASES_COLL].find(query).sort("created_at", -1).limit(100)
     cases = []
@@ -1712,6 +1713,8 @@ async def list_cases_i_created(
                 "token_expires_at": _iso(p.get("token_expires_at")),
                 # Status only (Done / In progress / Not started + date) — never answers. None until the parent joins.
                 "requested_progress": await progress_rows(db, p["user_id"], req_keys) if p.get("user_id") else None,
+                "nudge_pid": nudge_pid(case["case_id"], p["user_id"]) if p.get("user_id") else None,
+                "nudge_next_at": await nudge_next_at(db, case["case_id"], p["user_id"]) if p.get("user_id") else None,
             }
             for p in (case.get("parents") or [])
         ]

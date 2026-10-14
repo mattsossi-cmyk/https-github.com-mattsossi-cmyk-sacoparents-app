@@ -1337,11 +1337,13 @@ def send_requested_reminder(
     cta_url: str,
     unsubscribe_url: str,
     first_name: Optional[str] = None,
+    from_professional: bool = False,
 ) -> None:
-    """Weekly nudge for requested-but-unfinished assessments. Deliberately names nothing (no assessment, no child)."""
+    """Weekly (or professional-sent) nudge for requested-but-unfinished assessments. Names nothing (no assessment, no child)."""
     hello = f"Hi {first_name}," if first_name else "Hi,"
     what = "1 assessment" if waiting == 1 else f"{waiting} assessments"
-    lead = f"You have {what} waiting for you in SA CoParents."
+    lead = (f"Your professional sent you a gentle reminder: you have {what} waiting for you." if from_professional
+            else f"You have {what} waiting for you in SA CoParents.")
     note = "Sign in whenever you're ready to pick up where you left off. Only you can see your answers."
     plain = (
         f"{hello}\n\n{lead}\n\n{note}\n\nSign in:\n{cta_url}\n\n"
@@ -1359,10 +1361,22 @@ def send_requested_reminder(
     )
     _send(
         to_email=to_email,
-        subject="A quick reminder from SA CoParents",
+        subject="A gentle reminder from your professional" if from_professional else "A quick reminder from SA CoParents",
         html=html,
         text=plain,
         failure_message="Could not send the reminder right now.",
+    )
+
+
+def send_completion_summary(*, to_email: str, pdf_bytes: bytes) -> None:
+    """Parent → professional. `_send` turns the attachment into the secure link + one-time-code flow (never attached)."""
+    _send(
+        to_email=to_email,
+        subject="Completion summary",
+        html="",
+        text="",
+        attachments=[("SA_CoParents_Completion_Summary.pdf", pdf_bytes)],
+        failure_message="We couldn't send your summary right now. Please try again in a moment.",
     )
 
 

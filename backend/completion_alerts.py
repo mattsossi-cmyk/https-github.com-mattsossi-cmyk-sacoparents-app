@@ -28,14 +28,17 @@ async def _sources(db: AsyncIOMotorDatabase, uid: str) -> List[Dict[str, Any]]:
         kd = await db.portal_court_keys.find_one({"case_id": ck, "created_by": {"$nin": [None, ""]}},
                                                  {"_id": 0, "requested": 1, "label": 1, "created_by": 1})
         if kd:
-            out.append({"ref": ck, "label": kd.get("label") or "", "pro": kd["created_by"],
-                        "keys": [k for k in REQUESTABLE if k in (kd.get("requested") or [])]})
+            out.append({"ref": ck, "label": kd.get("label") or "", "pro": kd["created_by"], "name": kd.get("mediator_name") or "",
+                        "fallback_email": "", "keys": [k for k in REQUESTABLE if k in (kd.get("requested") or [])]})
     async for case in db.joint_alignment_cases.find(
         {"parents.user_id": uid, "status": {"$ne": "cancelled"}, "professional_created_by": {"$nin": [None, ""]}},
-        {"_id": 0, "case_id": 1, "assigned_steps": 1, "assessment_type": 1, "align_case_reference": 1, "professional_created_by": 1},
+        {"_id": 0, "case_id": 1, "assigned_steps": 1, "assessment_type": 1, "align_case_reference": 1, "professional_created_by": 1,
+         "professional": 1},
     ):
-        out.append({"ref": case["case_id"], "label": case.get("align_case_reference") or "",
-                    "pro": case["professional_created_by"], "keys": case_requested_keys(case)})
+        pro = case.get("professional") or {}
+        out.append({"ref": case["case_id"], "label": case.get("align_case_reference") or "", "name": pro.get("name") or "",
+                    "pro": case["professional_created_by"], "fallback_email": pro.get("email") or "",
+                    "keys": case_requested_keys(case)})
     return out
 
 
@@ -62,7 +65,9 @@ async def check_and_alert(db: AsyncIOMotorDatabase, uid: str) -> int:
             continue  # already alerted for this parent + case
         pro = await db.users.find_one({"user_id": s["pro"]}, {"_id": 0, "email": 1, "email_bounced": 1, "email_complained": 1}) or {}
         status = "skipped_no_email"
-        if pro.get("email") and not pro.get("email_bounced") and not pro.get("email_complained"):
+        if await db.professional_prefs.find_one({"user_id": s["pro"], "completion_alerts_off": True}, {"_id": 1}):
+            status = "skipped_opted_out"
+        elif pro.get("email") and not pro.get("email_bounced") and not pro.get("email_complained"):
             try:
                 await asyncio.to_thread(send_completion_alert, to_email=pro["email"], case_ref=s["ref"], label=s["label"],
                                         cta_url=f"{app}/professional/joint-alignment/mine")

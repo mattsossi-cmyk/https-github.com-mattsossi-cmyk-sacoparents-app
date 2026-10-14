@@ -17,6 +17,7 @@ import { useAuth } from "../context/AuthContext";
 import MarketingConsentToggle from "../components/account/MarketingConsentToggle";
 import AlignLinkCard from "../components/account/AlignLinkCard";
 import RequestedRemindersSwitch from "../components/account/RequestedRemindersSwitch";
+import CompletionAlertsSwitch from "../components/account/CompletionAlertsSwitch";
 
 
 function LinkTile({ to, icon, label, desc, testid }) {
@@ -95,9 +96,8 @@ export default function Account() {
           <MarketingConsentToggle />
         </section>
 
-        <section className="mt-4">
-          <RequestedRemindersSwitch />
-        </section>
+        <RequestedRemindersSwitch />
+        <CompletionAlertsSwitch />
 
         <section className="mt-4">
           <AlignLinkCard />

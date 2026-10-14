@@ -5,6 +5,7 @@ import { toast } from "sonner";
 import { api } from "../../lib/api";
 import { logError } from "../../lib/logger";
 import { CourtCodeForm } from "./CourtCodeForm";
+import { NudgeButton } from "./NudgeButton";
 import { ProgressPdfButton } from "./ProgressPdfButton";
 import { RequestedProgress, fmtDay } from "./RequestedProgress";
 
@@ -95,6 +96,7 @@ const CourtCodeItem = ({ c, onChanged }) => {
             <div key={i} className="rounded-lg border border-[#E5E0EE] bg-white p-2.5" data-testid={`court-code-parent-${c.case_id}-${i}`}>
               <div className="text-sm text-[#1A1330] truncate">{p.name}</div>
               <RequestedProgress rows={p.assessments} testid={`court-code-progress-${c.case_id}-${i}`} />
+              <NudgeButton caseRef={c.case_id} pid={p.pid} nextAt={p.nudge_next_at} rows={p.assessments} testid={`court-code-nudge-${c.case_id}-${i}`} />
             </div>
           ))}
         </div>

@@ -82,8 +82,9 @@ from self_assessment_ai import router as self_assessment_ai_router  # noqa: E402
 from court_path_ai import router as court_path_ai_router  # noqa: E402
 from court_checklist import router as court_checklist_router  # noqa: E402
 from court_codes_routes import router as court_codes_router  # noqa: E402
-from progress_pdf import parent_router as completion_summary_router  # noqa: E402
+from completion_summary_routes import router as completion_summary_router  # noqa: E402
 from progress_pdf import router as progress_pdf_router  # noqa: E402
+from professional_nudges import router as professional_nudges_router  # noqa: E402
 from court_compare import router as court_compare_router  # noqa: E402
 from parallel_parenting_routes import router as parallel_parenting_router  # noqa: E402
 from child_needs_routes import router as child_needs_router  # noqa: E402
@@ -250,6 +251,7 @@ api_router.include_router(court_checklist_router)
 api_router.include_router(court_codes_router)
 api_router.include_router(progress_pdf_router)
 api_router.include_router(completion_summary_router)
+api_router.include_router(professional_nudges_router)
 api_router.include_router(court_compare_router)
 api_router.include_router(parallel_parenting_router)
 api_router.include_router(self_assessment_router)

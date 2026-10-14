@@ -1,0 +1,118 @@
+"""Professional tools: a one-tap gentle nudge to one parent, and the completion-alert on/off preference.
+
+The nudge names no assessment. It's never sent to safety-flagged parents or parents who turned reminders off, but the
+professional always gets the same answer so neither state is revealed. Once every 7 days per parent per case.
+"""
+from __future__ import annotations
+
+import asyncio
+import hashlib
+import logging
+from datetime import datetime, timedelta, timezone
+from typing import Any, Dict, List, Optional, Tuple
+
+from fastapi import APIRouter, Depends, HTTPException
+from motor.motor_asyncio import AsyncIOMotorDatabase
+from pydantic import BaseModel, Field
+
+from auth import get_current_user, get_db
+from court_checklist import REQUESTABLE, case_requested_keys, progress_rows
+from models import UserPublic
+
+logger = logging.getLogger(__name__)
+router = APIRouter(prefix="/professional", tags=["professional-tools"])
+
+NUDGE_EVERY = timedelta(days=7)
+
+
+def nudge_pid(ref: str, uid: str) -> str:
+    """Opaque per-parent id for the UI, so user ids never leave the server."""
+    return hashlib.sha256(f"nudge:{ref}:{uid}".encode()).hexdigest()[:12]
+
+
+async def nudge_next_at(db: AsyncIOMotorDatabase, ref: str, uid: str) -> Optional[str]:
+    last = await db.professional_nudges.find_one({"ref": ref, "user_id": uid}, {"_id": 0, "sent_at": 1}, sort=[("sent_at", -1)])
+    if not last:
+        return None
+    nxt = datetime.fromisoformat(last["sent_at"]) + NUDGE_EVERY
+    return nxt.isoformat() if nxt > datetime.now(timezone.utc) else None
+
+
+async def _owned(db: AsyncIOMotorDatabase, ref: str, pro_uid: str) -> Tuple[List[str], List[str]]:
+    """(parent user ids, requested keys) for a court code or joint case this professional created."""
+    kd = await db.portal_court_keys.find_one({"case_id": ref, "created_by": pro_uid}, {"_id": 0, "requested": 1})
+    if kd:
+        uids = await db.portal_state.distinct("user_id", {"court_key": ref})
+        return uids, [k for k in REQUESTABLE if k in (kd.get("requested") or [])]
+    case = await db.joint_alignment_cases.find_one({"case_id": ref, "professional_created_by": pro_uid}, {"_id": 0})
+    if case:
+        return [p["user_id"] for p in case.get("parents") or [] if p.get("user_id")], case_requested_keys(case)
+    raise HTTPException(status_code=404, detail="Case not found.")
+
+
+class NudgeBody(BaseModel):
+    ref: str = Field(..., min_length=1, max_length=80)
+    pid: str = Field(..., min_length=6, max_length=40)
+
+
+@router.post("/nudges")
+async def send_nudge(body: NudgeBody, user: UserPublic = Depends(get_current_user),
+                     db: AsyncIOMotorDatabase = Depends(get_db)) -> Dict[str, Any]:
+    from email_service import EmailNotConfigured, EmailSendError, send_requested_reminder
+    from requested_reminders import _links
+    from self_assessment_reminders import is_safety_flagged
+
+    uids, keys = await _owned(db, body.ref, user.user_id)
+    uid = next((u for u in uids if nudge_pid(body.ref, u) == body.pid), None)
+    if not uid:
+        raise HTTPException(status_code=404, detail="Parent not found on this case.")
+    waiting = sum(r["status"] != "done" for r in await progress_rows(db, uid, keys))
+    if not waiting:
+        raise HTTPException(status_code=409, detail="This parent has already finished everything you asked for.")
+    if await nudge_next_at(db, body.ref, uid):
+        raise HTTPException(status_code=429, detail="You've nudged this parent in the last 7 days.")
+    now = datetime.now(timezone.utc)
+    status = "sent"
+    req = await db.court_requested.find_one({"user_id": uid}, {"_id": 0, "reminders_off": 1}) or {}
+    parent = await db.users.find_one({"user_id": uid}, {"_id": 0, "email": 1, "name": 1, "email_bounced": 1}) or {}
+    if req.get("reminders_off"):
+        status = "suppressed_unsubscribed"
+    elif await is_safety_flagged(db, uid):
+        status = "suppressed_safety"
+    elif not parent.get("email") or parent.get("email_bounced"):
+        status = "suppressed_no_email"
+    else:
+        links = _links(uid)
+        try:
+            await asyncio.to_thread(send_requested_reminder, to_email=parent["email"], waiting=waiting, cta_url=links["cta"],
+                                    unsubscribe_url=links["unsubscribe"], from_professional=True,
+                                    first_name=(parent.get("name") or "").split(" ")[0] or None)
+        except (EmailNotConfigured, EmailSendError) as exc:
+            logger.warning("nudge send failed for %s: %s", body.ref, exc)
+            raise HTTPException(status_code=502, detail="We couldn't send the nudge right now. Please try again shortly.")
+    await db.professional_nudges.insert_one({"ref": body.ref, "user_id": uid, "pro_user_id": user.user_id,
+                                             "status": status, "sent_at": now.isoformat()})
+    # Same reply whatever happened, so a parent's safety flag or opt-out is never revealed.
+    return {"ok": True, "next_at": (now + NUDGE_EVERY).isoformat()}
+
+
+class AlertPrefBody(BaseModel):
+    enabled: bool
+
+
+async def _is_creator(db: AsyncIOMotorDatabase, uid: str) -> bool:
+    return bool(await db.portal_court_keys.find_one({"created_by": uid}, {"_id": 1})
+                or await db.joint_alignment_cases.find_one({"professional_created_by": uid}, {"_id": 1}))
+
+
+@router.get("/completion-alerts")
+async def get_alert_pref(user: UserPublic = Depends(get_current_user), db: AsyncIOMotorDatabase = Depends(get_db)) -> Dict[str, Any]:
+    pref = await db.professional_prefs.find_one({"user_id": user.user_id}, {"_id": 0, "completion_alerts_off": 1}) or {}
+    return {"eligible": await _is_creator(db, user.user_id), "enabled": not pref.get("completion_alerts_off")}
+
+
+@router.put("/completion-alerts")
+async def put_alert_pref(body: AlertPrefBody, user: UserPublic = Depends(get_current_user),
+                         db: AsyncIOMotorDatabase = Depends(get_db)) -> Dict[str, Any]:
+    await db.professional_prefs.update_one({"user_id": user.user_id}, {"$set": {"completion_alerts_off": not body.enabled}}, upsert=True)
+    return {"eligible": await _is_creator(db, user.user_id), "enabled": body.enabled}

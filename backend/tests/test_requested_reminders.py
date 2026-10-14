@@ -144,3 +144,42 @@ def test_progress_pdf_status_only():
                                   {"key": "medical", "title": "Medical Assessment", "status": "todo", "finished_at": None}]},
                                   {"name": "Parent 2", "assessments": None}]})
     assert pdf.startswith(b"%PDF")
+
+
+def test_completion_alert_respects_professional_opt_out(monkeypatch):
+    import completion_alerts
+
+    sent = []
+    monkeypatch.setattr(email_service, "send_completion_alert", lambda **kw: sent.append(kw))
+
+    async def run():
+        client = AsyncIOMotorClient(os.environ["MONGO_URL"])
+        name = f"{os.environ['DB_NAME']}_test_completion_optout"
+        await client.drop_database(name)
+        db = client[name]
+        try:
+            await db.users.insert_many([{"user_id": "pro", "email": "pro@example.com"}, {"user_id": "par", "email": "par@example.com"}])
+            await db.portal_state.insert_one({"user_id": "par", "court_key": "CC-T2"})
+            await db.portal_court_keys.insert_one({"case_id": "CC-T2", "created_by": "pro", "requested": ["self"]})
+            await db.professional_prefs.insert_one({"user_id": "pro", "completion_alerts_off": True})
+            await db.self_assessment_history.insert_one({"user_id": "par", "completed_at": "2026-06-01T10:00:00+00:00"})
+            n = await completion_alerts.check_and_alert(db, "par")
+            rec = await db.completion_alerts.find_one({"ref": "CC-T2"}, {"_id": 0, "status": 1})
+            return n, rec
+        finally:
+            await client.drop_database(name)
+
+    n, rec = asyncio.run(run())
+    assert n == 0 and sent == [] and rec == {"status": "skipped_opted_out"}
+
+
+def test_professional_nudge_email_is_neutral(monkeypatch):
+    out = {}
+    monkeypatch.setattr(email_service, "_send", lambda **kw: out.update(kw))
+    email_service.send_requested_reminder(to_email="a@example.com", waiting=3, cta_url="https://x/login",
+                                          unsubscribe_url="https://x/unsub", from_professional=True)
+    body = out["html"] + out["text"]
+    assert "Your professional sent you a gentle reminder: you have 3 assessments waiting for you." in body
+    assert "https://x/unsub" in body and out["subject"] == "A gentle reminder from your professional"
+    for word in ("Self-Assessment", "Medical", "Educational", "Psychological", "Foundation", "Parallel"):
+        assert word not in body
