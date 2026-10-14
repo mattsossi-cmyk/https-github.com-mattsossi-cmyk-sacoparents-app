@@ -124,41 +124,41 @@ class TestNeutralNotifications:
         assert all(w not in low for w in FORBIDDEN) and "policy" not in low and "http" not in low
 
 
-# ---------------- Bridge requester context ----------------
-class TestBridgeRequesterContext:
+# ---------------- Parent-app link contract (replaces the provisional requester context) ----------------
+class TestParentAppContract:
     def test_flag_off_by_default_sends_only_shared_key(self, monkeypatch):
-        monkeypatch.setattr(integrations, "BRIDGE_REQUESTER_CONTEXT", False)
-        h = integrations.requester_headers({"professional_id": "p1", "case_id": "c1", "parent_role": "a"})
-        assert set(h) == {"X-Integration-Key"} and integrations.requester_json({"professional_id": "p1"}) == {}
+        import parent_app_contract as pac
+        monkeypatch.setattr(pac, "PARENT_APP_LINK_CONTRACT", False)
+        assert set(pac.contract_headers("p1", "c1")) == {"X-Integration-Key"}
 
-    def test_flag_on_sends_identifiers_only(self, monkeypatch):
-        monkeypatch.setattr(integrations, "BRIDGE_REQUESTER_CONTEXT", True)
-        ctx = {"professional_id": "p1", "case_id": "c1", "parent_role": "a"}
-        h = integrations.requester_headers(ctx)
-        assert h["X-Requester-Professional-Id"] == "p1" and h["X-Requester-Case-Id"] == "c1" and h["X-Requester-Parent-Role"] == "a" and h["X-Requester-App"] == "sacoparentsalign.com"
-        assert "X-Integration-Key" in h and len(h) == 5
-        j = integrations.requester_json(ctx)
-        assert j == {"requester": {"app": "sacoparentsalign.com", "professional_id": "p1", "case_id": "c1", "parent_role": "a"}}
-        assert not any(k in str(j).lower() for k in ("email", "name", "answer", "response"))
+    def test_flag_on_sends_contract_headers_only(self, monkeypatch):
+        import parent_app_contract as pac
+        monkeypatch.setattr(pac, "PARENT_APP_LINK_CONTRACT", True)
+        h = pac.contract_headers("p1", "c1")
+        assert h["X-Professional-Id"] == "p1" and h["X-Case-Id"] == "c1" and "X-Integration-Key" in h and len(h) == 3
+        assert pac.contract_headers("p1", "c1", "pro@x")["X-Professional-Email"] == "pro@x"
 
     def test_denial_from_parent_app_is_graceful(self, monkeypatch):
         import asyncio
         import httpx
+        import parent_app_contract as pac
         from fastapi import HTTPException
 
         class FakeClient:
             def __init__(self, *a, **k): pass
             async def __aenter__(self): return self
             async def __aexit__(self, *a): return False
-            async def get(self, url, headers=None, params=None): return httpx.Response(403, json={"detail": "unlinked"})
-        monkeypatch.setattr(integrations.httpx, "AsyncClient", FakeClient)
+            async def request(self, m, url, **k): return httpx.Response(404, json={"detail": "Not found"})
+        monkeypatch.setattr(pac.httpx, "AsyncClient", FakeClient)
+        monkeypatch.setattr(pac, "PARENT_APP_LINK_CONTRACT", True)
         with pytest.raises(HTTPException) as ei:
-            asyncio.run(integrations.fetch_external_export("p@x", {"professional_id": "p1", "case_id": "c1"}))
-        assert ei.value.status_code == 403 and ei.value.detail == integrations.DENIED_DETAIL
-        assert "secret" not in ei.value.detail.lower()
+            asyncio.run(pac.export_assessments("p@x", "p1", "c1"))
+        assert ei.value.status_code == 404 and ei.value.detail == integrations.DENIED_DETAIL
+        assert not any(w in ei.value.detail.lower() for w in ("secret", "safety", "screening", "flag"))
 
     def test_secret_only_from_env_and_never_logged(self):
-        src = open("/app/backend/integrations.py", encoding="utf-8").read()
-        assert 'INTEGRATION_SECRET' in src and "logger.info(f\"{INTEGRATION_SECRET" not in src and "print(INTEGRATION_SECRET" not in src
+        for path in ("/app/backend/integrations.py", "/app/backend/parent_app_contract.py"):
+            src = open(path, encoding="utf-8").read()
+            assert "logger.info(f\"{INTEGRATION_SECRET" not in src and "print(INTEGRATION_SECRET" not in src
         core = open("/app/backend/core.py", encoding="utf-8").read()
         assert 'os.environ["INTEGRATION_SHARED_SECRET"]' in core or "os.environ.get(\"INTEGRATION_SHARED_SECRET\"" in core

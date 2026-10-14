@@ -1,81 +1,56 @@
-# SA CoParents App ↔ SA CoParents Align — Requester-Context Contract (for review)
+# SA CoParents App ↔ SA CoParents Align — Link Contract (2026-10-14)
 
-Status: **DRAFT — flag `BRIDGE_REQUESTER_CONTEXT` is OFF.** Nothing below is enabled until both builders confirm and the tests in §7 pass.
-Source of truth for Align's side: `backend/integrations.py`. Secret values are never written in this file.
+Status: implemented in Align behind **`PARENT_APP_LINK_CONTRACT`** (default `false` = legacy behaviour unchanged). Align code: `backend/parent_app_contract.py`, `backend/bridge_views.py`, `backend/integrations.py`. Secret values are never written here, in logs, or in error messages.
 
-## 1. Authentication (current, both directions)
-| Item | Value |
+## 1. Headers Align sends on every call to the parent app (flag ON)
+| Header | Value |
 |---|---|
-| Scheme | Static shared key, one per environment |
-| Header | `X-Integration-Key: <INTEGRATION_SHARED_SECRET>` |
-| Verification (Align inbound) | constant-time compare (`secrets.compare_digest`); mismatch → `401 {"detail":"Invalid integration key"}` |
-| Env var (Align) | `INTEGRATION_SHARED_SECRET` (rotation: both apps together) |
-| Transport | HTTPS only; Align calls `SACOPARENTS_APP_URL = https://sacoparentsapp.online` |
+| `X-Integration-Key` | shared secret from env `INTEGRATION_SHARED_SECRET` (never logged) |
+| `X-Professional-Id` | Align's stable professional user id (assigned professional / creator of the case) |
+| `X-Case-Id` | Align `joint_reports.id` (omitted only on `aggregate`, where `case_id` is a query param) |
+| `X-Professional-Email` | optional, legacy invitation matches only — **not sent today** (no legacy path wired) |
 
-Open dependency: the parent app must also verify this header on `verify-link-code` and `export-assessments` and MUST reply `401/403` (not 200) when the requester is not authorized for that parent/case. Align maps any 401/403 to the neutral message in §5.
+Flag OFF: only `X-Integration-Key` (current production behaviour).
 
-## 2. Requester context Align will send when the flag is ON
-Headers (added to every outbound call):
-```
-X-Requester-App: sacoparentsalign.com
-X-Requester-Professional-Id: <Align user id of the assigned professional>   (omitted if not a professional)
-X-Requester-Case-Id: <Align joint_reports.id>                                 (omitted at link stage)
-X-Requester-Parent-Role: a | b                                                (omitted at link stage)
-```
-Nothing else is added: no names, no answers, no child details, no safety data.
-
-## 3. Outbound calls (Align → Parent app)
-### 3a. `POST {SACOPARENTS_APP_URL}/api/integrations/verify-link-code`
-Request body:
-```json
-{ "code": "ABCD1234",
-  "requester": { "app": "sacoparentsalign.com", "professional_id": "<id>" } }   // "requester" only when flag ON
-```
-Expected response `200`: `{ "email": "parent@domain" }` (email is the only field Align reads).
-Other: `401/403` → Align `403` neutral; any other non-200 → Align `400 Invalid or expired link code`.
-
-### 3b. `GET {SACOPARENTS_APP_URL}/api/integrations/export-assessments`
-Query: `email=<linked parent email>` plus, when flag ON: `professional_id`, `case_id`, `parent_role`.
-Expected response `200`:
-```json
-{ "assessments": [ { "assessment_id": "...", "type": "...", "completed_at": "...", "responses": {...} } ],
-  "statements":  [ ... ] }
-```
-`404` → Align `404 No completed assessments found…`; `401/403` → neutral `403`; other → `502`.
-
-## 4. Inbound calls (Parent app → Align) — header `X-Integration-Key` required
-| Route | Request | Response |
+## 2. Endpoints Align calls
+| Call | Request | 200 response Align expects |
 |---|---|---|
-| `GET /api/integrations/safety-screening-spec` | — | canonical Version A/B/C spec (wording, tiers) |
-| `GET /api/integrations/case-invite/{token}` | path token | `{case_id, report_id, assessment_type, child_name, parent_role, parent_name, parent_email, professional_name, requested_by, invitation_status, case_status}`; `404` invalid, `410` expired |
-| `POST /api/integrations/case-update` | `{token, status, assessment_id?, responses?}` | `{ok, case_status}`; every write is logged (`access_events.kind="integration_write"`, no PII) and an admin alert email is sent |
+| `POST /api/integrations/verify-link-code` | body `{code, professional_id, case_id}` (flag OFF: `{code}`) | `{email}` |
+| `GET /api/integrations/export-assessments?email=` | headers above | `{access_scope: "case" \| "legacy_unscoped", assessments:[…], statements:[…], safety_flags}` — on `legacy_unscoped` Align discards any `responses` and sets `safety_flags=null` even if present |
+| `GET /api/integrations/safe-contact?email=` | headers above | `{access_scope:"case", safe_contact:{…}\|null}` — displayed live on the professional-only, access-logged screening-responses page; never stored, never in reports/PDFs/emails/exports |
+| `POST /api/integrations/screening/assign` | body `{email, version: "A"\|"B"\|"C"}` | any 200 — fired after the professional assigns a version in Align; failures are logged, Align's own assignment still stands |
+| `GET /api/integrations/aggregate?case_id=` | `X-Integration-Key`, `X-Professional-Id` | ratings only |
 
-## 5. Neutral denial (Align → user)
-`403 {"detail": "The SA CoParents service did not release this parent's data for this case. Ask the parent to confirm the link with you, then try again."}`
-
-## 6. Identity, membership and permission checks
-| Check | Align | Parent app (to confirm) |
+## 3. Refusals → what the Align user sees (neutral; no safety/screening/flag words)
+| Parent app | Align | User-facing text |
 |---|---|---|
-| Parent identity | Align JWT session; link stored in `account_links{user_id, external_email}` | Link code issued to a signed-in parent; must bind code → parent account |
-| Professional identity | `X-Requester-Professional-Id` = Align user with role professional/admin | Must verify the parent has confirmed *this* professional (consent record) |
-| Case membership | Import route checks the caller's role on `joint_reports` (`report_role`) | Must verify `case_id` ↔ parent ↔ professional mapping before releasing data |
-| Other parent isolation | Imported responses are stored under `responses.<role>` only; the other parent never reads them | Must never return Parent A's data for a `parent_role=b` request |
-| Safety-sensitive cases | Safety screenings are never exported over the bridge in either direction; safe-contact data never leaves Align | Confirm no family-violence/safety data is included in `export-assessments` |
-| Separation of layers | Raw imports → `responses`; AI summaries → joint engine; court output only after professional review (court submission gate) | — |
-| Audit | `access_events` on every bridge write; report access log on every read | Must log every release with requester identifiers |
+| 401 invalid key | 502 | "The SA CoParents connection is not set up correctly. Please contact support." |
+| 503 not configured | 503 | "The SA CoParents connection is not available right now. Please try again later." |
+| 400 missing ids | 502 | same as 401 (configuration error; logged server-side without the secret) |
+| 404 "Not found" (unknown email / unlinked / wrong case or professional / legacy parent asking for safe contact or raw answers) | 404 | "The SA CoParents service did not release information for this link. Ask the parent to confirm the link for this case, then try again." |
+| 404 "No completed assessments found" | 404 | "No completed assessments were found for the linked SA CoParents account." |
+| 404 "Invalid or expired link code" | 400 | "Invalid or expired link code" |
+| network / other | 502 | "Could not reach the SA CoParents service. Try again later." |
 
-## 7. Required tests before enabling the flag
-1. Valid key + valid requester → 200 and data for the correct parent only.
-2. Valid key, requester professional not confirmed by parent → 401/403 → Align shows neutral 403.
-3. Valid key, `parent_role` mismatch → 401/403.
-4. Missing/invalid key → 401 both directions.
-5. `case-update` with `responses` → `access_events` record + admin alert; no answer content in the alert.
-6. Safety screening / safe-contact fields absent from every bridge payload (schema assertion).
-7. Flag OFF regression: current behaviour unchanged (`test_iter99_pause_safecontact_bridge.py`).
+Linking without a case while the flag is ON → 400 "Link your SA CoParents account from inside the case your professional invited you to."
 
-## 8. Outstanding items for the parent-app builder
-- Confirm header names in §2 or publish alternatives (Align changes them in one place: `REQUESTER_HEADERS`).
-- Publish the consent model: how a parent confirms a professional, and how long that authorization lasts.
-- Publish exact JSON schemas for `verify-link-code` and `export-assessments` responses.
-- Confirm rate limiting / IP allow-list on the parent-app side (Align has a single static key today).
-- Agree a joint rotation procedure for `INTEGRATION_SHARED_SECRET`.
+## 4. Align inbound (parent app → Align), header `X-Integration-Key`
+- `GET /api/integrations/case-invite/{token}` now also returns **`professional_id`** so new invitation links are tied to that professional.
+- `POST /api/integrations/case-update`, `GET /api/integrations/safety-screening-spec` unchanged.
+
+## 5. Tests
+`backend/tests/test_iter106_parent_app_contract.py` (every refusal code, flag off/on, scope stripping, headers/body per endpoint, invite `professional_id`, bridge views hidden when flag off) + `test_iter99` bridge section updated. 29/29 passing.
+
+## 6. Depends on the parent-app side being live
+1. `verify-link-code` accepting `{professional_id, case_id}` and the two headers (otherwise linking fails with the neutral 400/404).
+2. `export-assessments` returning `access_scope`; until then Align (flag ON) treats a missing scope as `legacy_unscoped` → summary only, no safety data imported.
+3. `safe-contact`, `screening/assign`, `aggregate` endpoints existing (Align shows the neutral "not available / not released" messages until they do).
+4. Both apps on the **same** `INTEGRATION_SHARED_SECRET` (rotation must be coordinated).
+5. The parent app must bind link codes to the signed-in parent and verify parent↔case↔professional before releasing anything.
+
+## 7. Fields Align still needs from the parent-app builder
+- **`safe_contact` object**: Align currently renders `method`, `address`, `safe_times`, `voicemail_ok`, `code_word` if present. Please confirm exact keys, value types (free text vs enum), and whether `null` vs omitted means "prefer not to say".
+- **Full `export-assessments` response**: exact shape of `assessments[]` (`assessment_id`, `type`/`title`, `completed_at`, `responses` key→value), `statements[]`, `safety_flags` (Align's importer expects `tier`, `concern_count`, `version`, `completed_at` and item responses — see `backend/safety_import.py`), `communication_readiness` if provided, and whether summaries appear under `summary` on `legacy_unscoped`.
+- **`aggregate` response**: the exact `ratings` keys/scales so Align can label them.
+- **`screening/assign` response** body and whether re-assigning a different version is allowed.
+- Rate limits / IP allow-list, and the agreed secret-rotation procedure.

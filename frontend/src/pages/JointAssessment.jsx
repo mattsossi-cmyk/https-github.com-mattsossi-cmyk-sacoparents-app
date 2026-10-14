@@ -29,7 +29,7 @@ export default function JointAssessment() {
   const doLink = async () => {
     setBusy(true);
     try {
-      const { data } = await api.post("/external/link", { code: linkCode });
+      const { data } = await api.post("/external/link", { code: linkCode, report_id: id });
       setLink({ linked: true, external_email: data.external_email });
       toast.success("Accounts linked");
     } catch (e) {

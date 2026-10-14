@@ -5,6 +5,7 @@ import { ArrowLeft, Lock } from "lucide-react";
 import api, { formatApiError } from "@/lib/api";
 import { BrandLogo } from "@/components/Brand";
 import { PathwayDecision } from "@/components/PathwayDecision";
+import { BridgeSafeContact } from "@/components/BridgeSafeContact";
 
 export default function SafetyResponses() {
   const { id, role } = useParams();
@@ -35,6 +36,7 @@ export default function SafetyResponses() {
             <ul className="space-y-2" data-testid="screening-responses-list">
               {d.items.map((it, i) => <li key={it.id || i} className={`rounded-md border p-3 text-sm ${it.flag ? "border-amber-300 bg-amber-50" : "border-border bg-white"}`} data-testid={`screening-response-${it.id || i}`}>{it.part && <p className="text-[10px] uppercase tracking-wide text-muted-foreground">{it.part}</p>}<p className="font-medium">{it.question}</p><p className="mt-1 text-brand-purple" data-testid={`screening-response-${it.id || i}-answer`}>{it.answer}</p></li>)}
             </ul>
+            <BridgeSafeContact rid={id} role={role} />
             {d.safe_contact && (
               <div className="rounded-md border border-brand-purple/30 bg-brand-purple/5 p-3 text-sm" data-testid="screening-safe-contact-view">
                 <p className="text-[10px] uppercase tracking-wide text-muted-foreground">Safe way to reach this parent · professional-only, never in reports</p>

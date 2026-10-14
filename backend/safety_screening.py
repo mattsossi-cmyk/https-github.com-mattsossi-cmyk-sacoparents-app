@@ -341,6 +341,16 @@ def build_router(db, get_current_user, get_joint_report_doc, report_role, log_ac
         if body.role not in ("a", "b") or body.version not in VERSIONS:
             raise HTTPException(status_code=400, detail="Invalid role or version")
         await db.joint_reports.update_one({"id": rid}, {"$set": {f"safety_version.{body.role}": body.version}})
+        from parent_app_contract import PARENT_APP_LINK_CONTRACT, assign_screening_version, case_context
+        if PARENT_APP_LINK_CONTRACT:
+            parent_uid = ((doc.get("participants") or {}).get(body.role) or {}).get("user_id")
+            link = await db.account_links.find_one({"user_id": parent_uid}) if parent_uid else None
+            if link:
+                try:
+                    await assign_screening_version(link["external_email"], body.version, *case_context(doc))
+                except HTTPException as e:
+                    from core import logger
+                    logger.warning("parent-app screening/assign not applied for case %s: %s", rid, e.status_code)
         return _status(await get_joint_report_doc(rid, user))
 
     @r.put("/joint/reports/{rid}/safety-screening")

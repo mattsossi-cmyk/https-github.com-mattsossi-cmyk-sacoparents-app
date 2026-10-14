@@ -1892,6 +1892,8 @@ from privacy_notice import build_router as _build_privacy_router  # noqa: E402
 app.include_router(_build_privacy_router(db, get_current_user), prefix="/api")
 from professional_notice import build_router as _build_pro_notice_router  # noqa: E402
 app.include_router(_build_pro_notice_router(db, get_current_user), prefix="/api")
+from bridge_views import build_router as _build_bridge_views  # noqa: E402
+app.include_router(_build_bridge_views(_log_report_access), prefix="/api")
 from joint_pause import build_router as _build_pause_router  # noqa: E402
 app.include_router(_build_pause_router(db, get_current_user, get_joint_report_doc, _log_report_access), prefix="/api")
 from safety_screening import comm_router as _comm_router  # noqa: E402

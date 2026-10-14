@@ -15,7 +15,7 @@ from html import escape
 
 
 
-import httpx
+import httpx  # noqa: F401  (patched by tests)
 from fastapi import APIRouter, HTTPException, Request, Response, Depends
 from pydantic import BaseModel
 
@@ -31,43 +31,12 @@ from pdf_report import build_complete_pdf
 from complete_engine import build_complete_report
 
 from email_utils import send_email, EMAIL_FROM_NAME
-from core import db, logger, app_url, EXTERNAL_APP_URL, INTEGRATION_SECRET
+from core import db, logger, app_url, INTEGRATION_SECRET
 
-# --- Requester context for parent-app calls (GAP-15 lockdown on the parent-app side) -------------------------------
-# OFF by default: current behaviour (shared key only). When ON, every outbound call also carries WHO is asking.
-# Field/header names below are PROVISIONAL until the parent-app builder publishes the contract; change them here only.
-BRIDGE_REQUESTER_CONTEXT = os.environ.get("BRIDGE_REQUESTER_CONTEXT", "false").lower() == "true"
-REQUESTER_HEADERS = {"professional_id": "X-Requester-Professional-Id", "case_id": "X-Requester-Case-Id", "parent_role": "X-Requester-Parent-Role", "app": "X-Requester-App"}
-REQUESTER_APP = "sacoparentsalign.com"
-DENIED_DETAIL = "The SA CoParents service did not release this parent's data for this case. Ask the parent to confirm the link with you, then try again."
-
-
-def requester_headers(ctx: dict | None) -> dict:
-    """Shared secret always; identifiers only when the flag is on. Never logs or echoes the secret."""
-    h = {"X-Integration-Key": INTEGRATION_SECRET}
-    if BRIDGE_REQUESTER_CONTEXT and ctx:
-        h[REQUESTER_HEADERS["app"]] = REQUESTER_APP
-        for k in ("professional_id", "case_id", "parent_role"):
-            if ctx.get(k):
-                h[REQUESTER_HEADERS[k]] = str(ctx[k])
-    return h
-
-
-def requester_json(ctx: dict | None) -> dict:
-    """Same identifiers as a body fragment (for POST calls) — identifiers only, never answers or names."""
-    if not (BRIDGE_REQUESTER_CONTEXT and ctx):
-        return {}
-    return {"requester": {"app": REQUESTER_APP, **{k: str(ctx[k]) for k in ("professional_id", "case_id", "parent_role") if ctx.get(k)}}}
-
-
-async def requester_context_for(doc: dict | None, role: str | None = None) -> dict | None:
-    if not doc:
-        return None
-    return {"professional_id": doc.get("professional_id") or doc.get("created_by"), "case_id": doc.get("id"), "parent_role": role}
-
-
-def _denied(resp) -> bool:
-    return resp.status_code in (401, 403)
+# --- Parent-app link contract (2026-10-14). Flag PARENT_APP_LINK_CONTRACT defaults OFF = current behaviour. -----------
+from parent_app_contract import (case_context, verify_link_code as _verify_link_code,  # noqa: E402
+                                 export_assessments as _export_assessments)
+DENIED_DETAIL = "The SA CoParents service did not release information for this link. Ask the parent to confirm the link for this case, then try again."
 from auth import get_current_user
 from joint_helpers import get_joint_report_doc, report_role, invite_expired, joint_public
 
@@ -126,6 +95,7 @@ async def integration_case_invite(token: str, request: Request):
         "parent_name": inv.get("invitee_name", ""),
         "parent_email": inv["invitee_email"],
         "professional_name": report.get("professional_name"),
+        "professional_id": report.get("professional_id") or report.get("created_by"),
         "requested_by": inv.get("inviter_name", ""),
         "invitation_status": inv["status"],
         "case_status": report["status"],
@@ -216,33 +186,20 @@ async def integration_case_update(body: CaseUpdateIn, request: Request):
 
 class LinkIn(BaseModel):
     code: str
+    report_id: str | None = None
 
 
 @router.post("/external/link")
 async def link_external_account(body: LinkIn, user=Depends(get_current_user)):
     code = body.code.strip().upper()
-    try:
-        async with httpx.AsyncClient(timeout=30) as client_http:
-            ctx = {"professional_id": user["_id"] if user.get("role") in ("professional", "admin") else None, "case_id": None, "parent_role": None}
-            resp = await client_http.post(
-                f"{EXTERNAL_APP_URL}/api/integrations/verify-link-code",
-                headers=requester_headers(ctx),
-                json={"code": code, **requester_json(ctx)},
-            )
-    except Exception as e:
-        logger.error(f"External link verify error: {e}")
-        raise HTTPException(status_code=502, detail="Could not reach the SA CoParents service. Try again later.")
-    if _denied(resp):
-        raise HTTPException(status_code=403, detail=DENIED_DETAIL)
-    if resp.status_code != 200:
-        raise HTTPException(status_code=400, detail="Invalid or expired link code")
-    data = resp.json()
-    ext_email = (data.get("email") or "").lower()
-    if not ext_email:
-        raise HTTPException(status_code=502, detail="Unexpected response from the SA CoParents service")
+    professional_id, case_id = None, None
+    if body.report_id:
+        doc = await get_joint_report_doc(body.report_id, user)
+        professional_id, case_id = case_context(doc)
+    ext_email = await _verify_link_code(code, professional_id, case_id)
     await db.account_links.update_one(
         {"user_id": user["_id"]},
-        {"$set": {"external_email": ext_email, "linked_at": datetime.now(timezone.utc).isoformat()}},
+        {"$set": {"external_email": ext_email, "linked_at": datetime.now(timezone.utc).isoformat(), "case_id": case_id, "professional_id": professional_id}},
         upsert=True,
     )
     return {"ok": True, "external_email": ext_email}
@@ -263,26 +220,8 @@ async def unlink_external_account(user=Depends(get_current_user)):
 
 
 async def fetch_external_export(email: str, ctx: dict | None = None):
-    try:
-        async with httpx.AsyncClient(timeout=30) as client_http:
-            params = {"email": email}
-            if BRIDGE_REQUESTER_CONTEXT and ctx:
-                params.update({k: str(ctx[k]) for k in ("professional_id", "case_id", "parent_role") if ctx.get(k)})
-            resp = await client_http.get(
-                f"{EXTERNAL_APP_URL}/api/integrations/export-assessments",
-                headers=requester_headers(ctx),
-                params=params,
-            )
-    except Exception as e:
-        logger.error(f"External export error: {e}")
-        raise HTTPException(status_code=502, detail="Could not reach the SA CoParents service. Try again later.")
-    if _denied(resp):
-        raise HTTPException(status_code=403, detail=DENIED_DETAIL)
-    if resp.status_code == 404:
-        raise HTTPException(status_code=404, detail="No completed assessments found on your sacoparentsapp.online account")
-    if resp.status_code != 200:
-        raise HTTPException(status_code=502, detail="Could not retrieve your assessments from SA CoParents")
-    return resp.json()
+    pid, cid = (ctx or {}).get("professional_id"), (ctx or {}).get("case_id")
+    return await _export_assessments(email, pid, cid)
 
 
 @router.get("/external/assessments")
@@ -290,8 +229,8 @@ async def get_external_assessments(user=Depends(get_current_user)):
     link = await db.account_links.find_one({"user_id": user["_id"]})
     if not link:
         raise HTTPException(status_code=400, detail="Link your sacoparentsapp.online account first")
-    payload = await fetch_external_export(link["external_email"])
-    return {"assessments": payload.get("assessments", []), "statements": payload.get("statements", [])}
+    payload = await fetch_external_export(link["external_email"], {"professional_id": link.get("professional_id"), "case_id": link.get("case_id")})
+    return {"assessments": payload.get("assessments", []), "statements": payload.get("statements", []), "access_scope": payload.get("access_scope")}
 
 
 @router.post("/joint/reports/{rid}/import")
@@ -303,9 +242,9 @@ async def import_external_assessment(rid: str, user=Depends(get_current_user)):
     link = await db.account_links.find_one({"user_id": user["_id"]})
     if not link:
         raise HTTPException(status_code=400, detail="Link your sacoparentsapp.online account first")
-    payload = await fetch_external_export(link["external_email"], await requester_context_for(doc, role))
+    payload = await fetch_external_export(link["external_email"], {"professional_id": case_context(doc)[0], "case_id": doc["id"]})
     from safety_import import extract_safety_screening
-    screening = extract_safety_screening(payload)
+    screening = extract_safety_screening(payload) if payload.get("access_scope") == "case" else None
     updates = {
         f"responses.{role}": {
             "answers": {},
