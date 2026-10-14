@@ -363,6 +363,31 @@ async def personal_growth(
 
 
 # ============ Admin analytics ============
+@router.get("/admin/account-counts")
+async def admin_account_counts(request: Request, _admin: UserPublic = Depends(require_admin)):
+    """Counts only (no names/emails). There's no role field: a "professional" is any account that has
+    created an in-app court code or joint case; every other signed-up account counts as a parent."""
+    db = request.app.state.db
+    real = {"is_guest": {"$ne": True}}
+    iso_30d = _iso(_now() - timedelta(days=30))
+    pro_ids = set(await db.portal_court_keys.distinct("created_by", {"created_by": {"$nin": [None, ""]}}))
+    pro_ids |= set(await db.joint_alignment_cases.distinct("professional_created_by", {"professional_created_by": {"$nin": [None, ""]}}))
+    total = await db.users.count_documents(real)
+    professionals = await db.users.count_documents({**real, "user_id": {"$in": list(pro_ids)}})
+    new_30d = await db.users.count_documents({**real, "created_at": {"$gte": iso_30d}})
+    new_pros_30d = await db.users.count_documents({**real, "created_at": {"$gte": iso_30d}, "user_id": {"$in": list(pro_ids)}})
+    return {
+        "total": total,
+        "parents": total - professionals,
+        "professionals": professionals,
+        "created_last_30_days": new_30d,
+        "created_last_30_days_parents": new_30d - new_pros_30d,
+        "created_last_30_days_professionals": new_pros_30d,
+        "guest_sessions": await db.users.count_documents({"is_guest": True}),
+        "generated_at": _iso(_now()),
+    }
+
+
 @router.get("/admin/overview")
 async def admin_overview(
     request: Request,

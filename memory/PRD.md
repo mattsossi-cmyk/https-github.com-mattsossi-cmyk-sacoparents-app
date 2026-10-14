@@ -82,6 +82,11 @@ Auth: Custom JWT (`auth.py`)
 - Monday digest: `professional_digest.py` (counts only over non-archived codes + active cases; once per ISO week; skipped when off / empty / unchanged since last sent). `GET/PUT /api/professional/digest`, `GET /api/professional/digest/unsubscribe?token=`. Runs in the existing daily 9am Central cron, Monday gate. UI `ProfessionalDigestSwitch.jsx` on Account (creators only).
 - Testing: iteration_136 backend + frontend 100%.
 
+### 2026-06 — Admin account counts (preview only, not deployed)
+- `GET /api/analytics/admin/account-counts` (require_admin / ADMIN_EMAILS): total, parents, professionals, created_last_30_days (+ split), guest_sessions. Counts only. No role field exists: "professional" = account that created an in-app court code or joint case.
+- UI `/admin/accounts` → `pages/AdminAccountCounts.jsx` (no DomainGuard, so it works on sacoparentsapp.online). Self-tested: admin 200, non-admin 403, no auth 401; desktop + 390px no overflow.
+- User asked to never publish without an explicit "deploy" in that message.
+
 
 ### 2026-06 — Iter271–273 · Self-Assessment v2 (chat-style) + Progress Graph
 
