@@ -64,6 +64,12 @@ Auth: Custom JWT (`auth.py`)
 - UI: `pages/portal/court/CourtCompleteCard.jsx` above the Court menu when all requested items are done (signed-in parents).
 - Testing: iteration_133 backend + frontend 100%. Not deployed yet (previous deploy queued before this feature).
 
+### 2026-06 — Iter134 · Share summary with professional + Alert Preferences + Gentle Nudge
+- Share: `completion_summary_routes.py` — `GET /api/court-path/completion-summary/recipients` ({professionals:[{ref,name}], can_type_email}; never emails), `POST .../send` {ref}|{email} → secure link + one-time code via `email_service.send_completion_summary` (attachment intercepted by `_send`). 5 sends/day. UI `pages/portal/court/CourtSendSummary.jsx` in the completion card. Typed email only for Align-made codes / no known professional.
+- Alert Preferences: `GET/PUT /api/professional/completion-alerts` ({eligible, enabled}; stored in `professional_prefs`); `completion_alerts` honours opt-out (`skipped_opted_out`). UI `components/account/CompletionAlertsSwitch.jsx` (shared `AccountSwitch.jsx`), shown only to code/case creators.
+- Gentle Nudge: `professional_nudges.py` `POST /api/professional/nudges` {ref, pid} (opaque pid; owner only; 7-day limit; 409 when all done). Suppressed silently for safety-flagged / unsubscribed parents with the same reply. UI `components/professional/NudgeButton.jsx` on court-code and joint-case parent cards.
+- Testing: iteration_134 backend 16/16 + frontend 100%.
+
 
 ### 2026-06 — Iter271–273 · Self-Assessment v2 (chat-style) + Progress Graph
 

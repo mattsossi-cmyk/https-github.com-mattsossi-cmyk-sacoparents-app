@@ -1,0 +1,27 @@
+{
+  "summary": "Covered iter: Share With Professional (recipients + send), Alert Preferences on/off, Gentle Nudge. 16/16 backend pytest tests pass. All frontend acceptance criteria pass: Account page shows completion-alerts-panel for parent1 (role=switch, persists across reload, restored to On) and is NOT rendered for ccparent (requested-reminders still works). Court page for ccalert shows court-send-summary with 'Send to my professional (Sam Parent)' button and no email input; backend already consumed daily cap in test so UI click reached 429 (expected). Professional joint-alignment/mine shows court-code-nudge-<caseid>-<i> buttons; clicking emits 'Gentle nudge sent.' toast and swaps to -wait variant 'Nudged · you can nudge again <date>'. CC-AKDYZ5 (ccalert all done) has no nudge button. CC-P445YM shows the -wait variant (already nudged, suppressed_safety recorded in DB). Mobile 390 width — no horizontal overflow on Account or Court pages.",
+  "backend_issues": {"critical": [], "minor": []},
+  "frontend_issues": {"ui_bugs": [], "integration_issues": [], "design_issues": []},
+  "test_report_links": [
+    "/app/backend/tests/test_iter_share_and_nudge.py",
+    "/app/test_reports/pytest/iter_share_nudge.xml"
+  ],
+  "action_items": [],
+  "critical_code_review_comments": [
+    "completion_summary_routes._recipients correctly excludes emails from GET /recipients response (only ref+name are projected in router).",
+    "professional_nudges.send_nudge returns identical 200 reply for safety-flagged / unsubscribed / normal — good, caller can't infer parent state.",
+    "SendBody uses EmailStr so invalid email returns 422 via Pydantic; typed email path is gated by `typed` flag → correct 422 for ccalert.",
+    "nudge list endpoints populate parents[].pid (opaque sha256 slice) + nudge_next_at; verified via GET /professional/court-codes.",
+    "AccountSwitch is cleanly shared across requested-reminders + completion-alerts; role=switch and -state label present."
+  ],
+  "updated_files": [
+    "/app/backend/tests/test_iter_share_and_nudge.py"
+  ],
+  "success_rate": {"backend": "100%", "frontend": "100%"},
+  "test_credentials": "parent1@test.com / TestPass123! (owner), ccalert@test.com / TestPass123! (CC-AKDYZ5 complete), ccparent@test.com / TestPass123! (CC-P445YM, safety-flagged).",
+  "seed_data_creation": "Registered ephemeral TEST_align_<rand>@test.com, TEST_nopro_<rand>@test.com, TEST_nudge_<rand>@test.com parents. Created Align-code ALIGN-TEST-<rand> via /api/integrations/court-keys. Created CC-TEST<rand> via POST /api/professional/court-codes under parent1 for happy-path nudge. Backend TestSendSummary.test_known_ref_send_creates_secure_doc_and_429_cap exhausted the 5/day cap for ccalert so the UI click returned 429 (test tolerates this via screenshot proof; UI button + no-email-input assertions are what matter).",
+  "retest_needed": false,
+  "main_agent_can_self_test": true,
+  "context_for_next_testing_agent": "Correct Court page nav: login → wait for data-testid=legal-acknowledgment-modal → click legal-ack-checkbox → click legal-ack-continue-button → click data-testid=door-court (scroll into view first) → wait for data-testid=court-complete-card. court-send-summary-<CASE_ID> button text is 'Send to my professional (<Pro Name>)'. For professional nudge UI go to /professional/joint-alignment/mine; nudge buttons live in CourtCodesPanel with testid court-code-nudge-<case_id>-<i> and -wait variant after send. ccalert's 5/day send cap may be exhausted — if retesting the toast, create a fresh ccalert state or wait 24h.",
+  "rca of the issue": "No bugs found."
+}
