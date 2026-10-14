@@ -83,6 +83,17 @@ def build_progress_pdf(d: Dict[str, Any]) -> bytes:
         pdf.cell(0, 6, "No parent has entered this code yet.", new_x="LMARGIN", new_y="NEXT")
     for p in d["parents"]:
         _parent(pdf, p)
+    if d.get("notes"):
+        pdf.set_draw_color(*PURPLE)
+        pdf.line(pdf.l_margin, pdf.get_y(), pdf.w - pdf.r_margin, pdf.get_y())
+        pdf.ln(3)
+        pdf.set_font("Helvetica", "B", 11)
+        pdf.set_text_color(*PURPLE)
+        pdf.cell(0, 6, "Private professional notes, not shared with parents", new_x="LMARGIN", new_y="NEXT")
+        pdf.set_font("Helvetica", "", 9.5)
+        pdf.set_text_color(*INK)
+        pdf.multi_cell(0, 5, _safe(d["notes"]))
+        pdf.ln(4)
     pdf.set_font("Helvetica", "I", 8.5)
     pdf.set_text_color(*MUTED)
     pdf.multi_cell(0, 4.6, _safe(d.get("closing", "This page shows only whether each assessment you asked for is done, in "
@@ -116,7 +127,7 @@ async def court_code_progress_pdf(case_id: str, user: UserPublic = Depends(get_c
 
 
 @router.get("/joint-alignment/cases/{case_id}/progress.pdf")
-async def joint_case_progress_pdf(case_id: str, user: UserPublic = Depends(get_current_user),
+async def joint_case_progress_pdf(case_id: str, include_notes: bool = False, user: UserPublic = Depends(get_current_user),
                                   db: AsyncIOMotorDatabase = Depends(get_db)) -> StreamingResponse:
     case = await db.joint_alignment_cases.find_one({"case_id": case_id, "professional_created_by": user.user_id}, {"_id": 0})
     if not case:
@@ -130,5 +141,6 @@ async def joint_case_progress_pdf(case_id: str, user: UserPublic = Depends(get_c
     return _pdf_response({
         "kind": "Joint case", "ref": case_id, "label": case.get("align_case_reference") or "", "generated_at": _now(),
         "state": (case.get("status") or "").replace("_", " ").capitalize(), "parents": parents,
+        "notes": (case.get("case_notes") or "").strip() if include_notes else "",
     })
 

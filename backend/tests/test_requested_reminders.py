@@ -183,3 +183,57 @@ def test_professional_nudge_email_is_neutral(monkeypatch):
     assert "https://x/unsub" in body and out["subject"] == "A gentle reminder from your professional"
     for word in ("Self-Assessment", "Medical", "Educational", "Psychological", "Foundation", "Parallel"):
         assert word not in body
+
+
+def test_professional_digest_counts_weekly_and_unchanged(monkeypatch):
+    import professional_digest
+
+    sent = []
+    monkeypatch.setattr(email_service, "send_professional_digest", lambda **kw: sent.append(kw))
+
+    async def run():
+        client = AsyncIOMotorClient(os.environ["MONGO_URL"])
+        name = f"{os.environ['DB_NAME']}_test_pro_digest"
+        await client.drop_database(name)
+        db = client[name]
+        try:
+            await db.users.insert_many([{"user_id": u, "email": f"{u}@example.com", "name": u.title()}
+                                        for u in ("pro", "off", "done1", "mid1", "new1", "arch1")])
+            await db.portal_court_keys.insert_many([
+                {"case_id": "CC-A", "created_by": "pro", "requested": ["self", "medical"], "archived_at": None},
+                {"case_id": "CC-ARCH", "created_by": "pro", "requested": ["self"], "archived_at": "2026-06-01T00:00:00+00:00"},
+                {"case_id": "CC-OFF", "created_by": "off", "requested": ["self"]},
+            ])
+            await db.portal_state.insert_many([{"user_id": "done1", "court_key": "CC-A"}, {"user_id": "mid1", "court_key": "CC-A"},
+                                               {"user_id": "arch1", "court_key": "CC-ARCH"}, {"user_id": "new1", "court_key": "CC-OFF"}])
+            await db.self_assessment_history.insert_many([{"user_id": u, "completed_at": "2026-06-01T10:00:00+00:00"} for u in ("done1", "mid1")])
+            await db.child_needs_assessments.insert_one({"user_id": "done1", "completed_at": {"medical": "2026-06-02T10:00:00+00:00"}})
+            await db.joint_alignment_cases.insert_one({"case_id": "SA-X", "status": "pending", "professional_created_by": "pro",
+                                                       "assessment_type": "co-parenting", "parents": [{"email": "x@example.com"}],
+                                                       "created_at": "2099-01-01T00:00:00+00:00", "expires_at": "2099-12-31T00:00:00+00:00"})
+            await db.professional_prefs.insert_one({"user_id": "off", "digest_off": True})
+            counts = await professional_digest.digest_counts(db, "pro")
+            first = await professional_digest.send_professional_digests(db, now=NOW)
+            again = await professional_digest.send_professional_digests(db, now=NOW)
+            from datetime import timedelta
+            nxt = await professional_digest.send_professional_digests(db, now=NOW + timedelta(days=7))
+            return counts, first, again, nxt
+        finally:
+            await client.drop_database(name)
+
+    counts, first, again, nxt = asyncio.run(run())
+    assert counts == {"finished": 1, "in_progress": 1, "not_started": 1}  # archived code excluded; unjoined parent = not started
+    assert first["sent"] == 1 and first["skipped_off"] == 1
+    assert again["already_sent"] == 1 and again["sent"] == 0
+    assert nxt["skipped_unchanged"] == 1 and nxt["sent"] == 0
+    assert len(sent) == 1 and sent[0]["counts"] == counts and "/api/professional/digest/unsubscribe?token=" in sent[0]["unsubscribe_url"]
+
+
+def test_professional_digest_email_is_counts_only(monkeypatch):
+    out = {}
+    monkeypatch.setattr(email_service, "_send", lambda **kw: out.update(kw))
+    email_service.send_professional_digest(to_email="p@example.com", counts={"finished": 3, "in_progress": 5, "not_started": 2},
+                                           cta_url="https://x/mine", unsubscribe_url="https://x/unsub")
+    body = out["html"] + out["text"]
+    assert "This week in My cases: 3 parents finished, 5 in progress, 2 not started." in body
+    assert "https://x/unsub" in body and "Open My cases" in body

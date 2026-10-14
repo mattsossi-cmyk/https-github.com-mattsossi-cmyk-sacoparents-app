@@ -18,6 +18,7 @@ import MarketingConsentToggle from "../components/account/MarketingConsentToggle
 import AlignLinkCard from "../components/account/AlignLinkCard";
 import RequestedRemindersSwitch from "../components/account/RequestedRemindersSwitch";
 import CompletionAlertsSwitch from "../components/account/CompletionAlertsSwitch";
+import ProfessionalDigestSwitch from "../components/account/ProfessionalDigestSwitch";
 
 
 function LinkTile({ to, icon, label, desc, testid }) {
@@ -98,6 +99,7 @@ export default function Account() {
 
         <RequestedRemindersSwitch />
         <CompletionAlertsSwitch />
+        <ProfessionalDigestSwitch />
 
         <section className="mt-4">
           <AlignLinkCard />

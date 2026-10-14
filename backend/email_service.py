@@ -1380,6 +1380,28 @@ def send_completion_summary(*, to_email: str, pdf_bytes: bytes) -> None:
     )
 
 
+def send_professional_digest(*, to_email: str, counts: Dict[str, int], cta_url: str, unsubscribe_url: str,
+                             first_name: Optional[str] = None) -> None:
+    """Monday counts-only digest for professionals. No parent names, no case references, no assessments."""
+    f, ip, ns = counts.get("finished", 0), counts.get("in_progress", 0), counts.get("not_started", 0)
+    lead = f"This week in My cases: {f} {'parent' if f == 1 else 'parents'} finished, {ip} in progress, {ns} not started."
+    note = "Counts cover your active court codes and joint cases. For privacy, this email doesn't include names or answers."
+    hello = f"Hi {first_name}," if first_name else "Hi,"
+    plain = f"{hello}\n\n{lead}\n\n{note}\n\nOpen My cases:\n{cta_url}\n\nUnsubscribe: {unsubscribe_url}\n\n— SA CoParents · sacoparentsapp.online\n"
+    body_html = (
+        f'<p style="font-size:15px;line-height:1.55;color:#4B4567;margin:0 0 14px 0;">{_html.escape(hello)}</p>'
+        f'<p style="font-size:15px;line-height:1.55;color:#4B4567;margin:0 0 14px 0;">{_html.escape(lead)}</p>'
+        f'<p style="font-size:13px;line-height:1.55;color:#857E9C;margin:0 0 22px 0;">{note}</p>'
+    )
+    html = _branded_html(headline="Your Monday case digest", body_html=body_html, cta_label="Open My cases", cta_url=cta_url) + (
+        f'<p style="font-family:Arial,sans-serif;font-size:12px;color:#857E9C;text-align:center;margin:12px 0;">'
+        f"Don't want the Monday digest? "
+        f'<a href="{unsubscribe_url}" style="color:#857E9C;">Unsubscribe</a></p>'
+    )
+    _send(to_email=to_email, subject="Your Monday case digest", html=html, text=plain,
+          failure_message="Could not send the Monday digest right now.")
+
+
 def send_completion_alert(*, to_email: str, case_ref: str, label: str, cta_url: str) -> None:
     """To the professional: a parent finished everything requested. Case reference + private label only."""
     ref = f"{case_ref} ({label})" if label else case_ref

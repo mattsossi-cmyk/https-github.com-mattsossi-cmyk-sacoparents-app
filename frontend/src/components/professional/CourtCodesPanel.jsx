@@ -1,28 +1,32 @@
-import React, { useEffect, useState } from "react";
-import { KeyRound, Loader2, Plus, Trash2, X } from "lucide-react";
-import { toast } from "sonner";
+import React, { useEffect, useMemo, useState } from "react";
+import { KeyRound, Loader2, Plus, Search, X } from "lucide-react";
 
 import { api } from "../../lib/api";
 import { logError } from "../../lib/logger";
-import { ArchiveLink } from "./ArchiveLink";
+import { ArchiveFinishedButton } from "./ArchiveFinishedButton";
 import { CourtCodeForm } from "./CourtCodeForm";
-import { NudgeButton } from "./NudgeButton";
-import { ProgressPdfButton } from "./ProgressPdfButton";
-import { RequestedProgress, fmtDay } from "./RequestedProgress";
+import { CourtCodeItem, isFinishedCode } from "./CourtCodeItem";
 
 // "My cases": court codes this professional created, with status-only progress per parent who entered the code.
 export const CourtCodesPanel = () => {
   const [codes, setCodes] = useState(null);
   const [open, setOpen] = useState(false);
   const [showArchived, setShowArchived] = useState(false);
+  const [q, setQ] = useState("");
   const load = () =>
     api.get("/professional/court-codes").then((r) => setCodes(r.data?.codes || [])).catch((err) => {
       logError("court codes load failed:", err);
       setCodes([]);
     });
   useEffect(() => { load(); }, []);
-  const archived = (codes || []).filter((c) => c.archived_at);
-  const shown = (codes || []).filter((c) => !c.archived_at || showArchived);
+  const all = codes || [];
+  const archived = all.filter((c) => c.archived_at);
+  const finished = all.filter((c) => !c.archived_at && isFinishedCode(c)).length;
+  const query = q.trim().toLowerCase();
+  // A search looks through active and archived codes (by reference or private label).
+  const shown = useMemo(() => all.filter((c) => (query
+    ? c.case_id.toLowerCase().includes(query) || (c.label || "").toLowerCase().includes(query)
+    : !c.archived_at || showArchived)), [all, query, showArchived]);
 
   return (
     <section className="rounded-2xl border border-[#E5E0EE] bg-white p-4 sm:p-5 mb-4" data-testid="court-codes-panel">
@@ -42,17 +46,35 @@ export const CourtCodesPanel = () => {
         </button>
       </div>
       {open && <div className="mb-3"><CourtCodeForm onCreated={load} /></div>}
+      {all.length > 0 && (
+        <div className="flex items-center gap-2 flex-wrap mb-3">
+          <label className="relative flex-1 min-w-[200px] max-w-sm">
+            <Search size={12} className="absolute left-3 top-1/2 -translate-y-1/2 text-[#857E9C]" aria-hidden />
+            <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search codes by reference or label" aria-label="Search court codes"
+              className="w-full rounded-full border border-[#E5E0EE] bg-white pl-8 pr-8 py-1.5 text-xs focus:outline-none focus:border-[#3D1A78]" data-testid="court-codes-search" />
+            {q && (
+              <button type="button" onClick={() => setQ("")} aria-label="Clear search" data-testid="court-codes-search-clear"
+                className="absolute right-2.5 top-1/2 -translate-y-1/2 text-[#857E9C] hover:text-[#3D1A78]"><X size={12} /></button>
+            )}
+          </label>
+          <ArchiveFinishedButton kind="codes" count={finished} onDone={load} testid="court-codes-archive-finished" />
+        </div>
+      )}
       {codes === null ? (
         <p className="text-xs text-[#857E9C]" data-testid="court-codes-loading"><Loader2 size={12} className="animate-spin inline mr-1" /> Loading codes…</p>
-      ) : codes.length === 0 ? (
+      ) : all.length === 0 ? (
         <p className="text-xs text-[#857E9C]" data-testid="court-codes-empty">No court codes yet.</p>
       ) : (
         <>
-          {shown.length === 0 && <p className="text-xs text-[#857E9C]" data-testid="court-codes-all-archived">All your court codes are archived.</p>}
+          {shown.length === 0 && (
+            <p className="text-xs text-[#857E9C]" data-testid={query ? "court-codes-no-match" : "court-codes-all-archived"}>
+              {query ? "No codes match your search." : "All your court codes are archived."}
+            </p>
+          )}
           <ul className="space-y-2.5" data-testid="court-codes-list">
             {shown.map((c) => <CourtCodeItem key={c.case_id} c={c} onChanged={load} />)}
           </ul>
-          {archived.length > 0 && (
+          {archived.length > 0 && !query && (
             <button type="button" onClick={() => setShowArchived((v) => !v)} aria-pressed={showArchived} data-testid="court-codes-show-archived"
               className="mt-3 text-xs font-semibold text-[#3D1A78] hover:underline">
               {showArchived ? "Hide archived" : `Show archived (${archived.length})`}
@@ -61,61 +83,5 @@ export const CourtCodesPanel = () => {
         </>
       )}
     </section>
-  );
-};
-
-const stateOf = (c) => (c.revoked_at ? "Revoked" : c.expires_at && new Date(c.expires_at) < new Date() ? "Expired" : "Active");
-
-const CourtCodeItem = ({ c, onChanged }) => {
-  const [busy, setBusy] = useState(false);
-  const state = stateOf(c);
-  const revoke = async () => {
-    if (!window.confirm(`Revoke ${c.case_id}? Parents who haven't entered the code yet won't be able to use it.`)) return;
-    setBusy(true);
-    try {
-      await api.post(`/professional/court-codes/${c.case_id}/revoke`);
-      toast.success(`${c.case_id} revoked`);
-      onChanged();
-    } catch (err) {
-      toast.error(String(err?.response?.data?.detail || "Revoke failed"));
-    } finally {
-      setBusy(false);
-    }
-  };
-  return (
-    <li className={`rounded-xl border border-[#E5E0EE] p-3 ${c.archived_at ? "bg-[#F4F2F8] opacity-80" : "bg-[#FAF8FD]"}`} data-testid={`court-code-row-${c.case_id}`}>
-      <div className="flex items-baseline justify-between gap-2 flex-wrap">
-        <div className="min-w-0 text-xs text-[#4B4567]">
-          <span className="font-mono text-sm font-semibold text-[#1A1330] mr-2">{c.case_id}</span>
-          <span className={`font-bold ${state === "Active" ? "text-[#1F5C3B]" : "text-[#B02A2A]"}`} data-testid={`court-code-state-${c.case_id}`}>{state}</span>
-          {c.label ? ` · ${c.label}` : ""}
-          {c.expires_at && state === "Active" ? ` · until ${fmtDay(c.expires_at)}` : ""}
-          {c.archived_at ? <span className="ml-1 font-semibold text-[#857E9C]" data-testid={`court-code-archived-${c.case_id}`}>· Archived</span> : null}
-        </div>
-        <div className="flex items-center gap-3 flex-wrap">
-          <ProgressPdfButton path={`/professional/court-codes/${c.case_id}/progress.pdf`} caseId={c.case_id} testid={`court-code-progress-pdf-${c.case_id}`} />
-          {state === "Active" && (
-            <button type="button" onClick={revoke} disabled={busy} data-testid={`court-code-revoke-${c.case_id}`}
-              className="inline-flex items-center gap-1 text-[11px] font-semibold text-[#B02A2A] hover:underline disabled:opacity-60">
-              {busy ? <Loader2 size={11} className="animate-spin" /> : <Trash2 size={11} />} Revoke
-            </button>
-          )}
-          <ArchiveLink caseRef={c.case_id} archived={!!c.archived_at} onChanged={onChanged} testid={`court-code-archive-${c.case_id}`} />
-        </div>
-      </div>
-      {c.parents.length === 0 ? (
-        <p className="text-[11px] text-[#857E9C] mt-2" data-testid={`court-code-waiting-${c.case_id}`}>No parent has entered this code yet.</p>
-      ) : (
-        <div className="mt-1 grid gap-2 sm:grid-cols-2">
-          {c.parents.map((p, i) => (
-            <div key={i} className="rounded-lg border border-[#E5E0EE] bg-white p-2.5" data-testid={`court-code-parent-${c.case_id}-${i}`}>
-              <div className="text-sm text-[#1A1330] truncate">{p.name}</div>
-              <RequestedProgress rows={p.assessments} testid={`court-code-progress-${c.case_id}-${i}`} />
-              <NudgeButton caseRef={c.case_id} pid={p.pid} nextAt={p.nudge_next_at} lastAt={p.nudge_last_at} count={p.nudge_count} rows={p.assessments} testid={`court-code-nudge-${c.case_id}-${i}`} />
-            </div>
-          ))}
-        </div>
-      )}
-    </li>
   );
 };

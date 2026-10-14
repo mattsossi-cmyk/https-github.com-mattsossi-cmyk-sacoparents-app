@@ -47,6 +47,7 @@ import { RequestedProgress } from "../components/professional/RequestedProgress"
 import { ProgressPdfButton } from "../components/professional/ProgressPdfButton";
 import { NudgeButton } from "../components/professional/NudgeButton";
 import { ArchiveLink } from "../components/professional/ArchiveLink";
+import { ArchiveFinishedButton } from "../components/professional/ArchiveFinishedButton";
 import { toast } from "sonner";
 import { api } from "../lib/api";
 import { logError } from "../lib/logger";
@@ -154,6 +155,8 @@ export default function ProfessionalJointAlignmentMine() {
       );
     });
   }, [cases, search, statusFilter]);
+
+  const finishedCount = (cases || []).filter((c) => !c.archived_at && ["both_complete", "cancelled", "expired"].includes(c.status)).length;
 
   const counts = useMemo(() => {
     const base = { all: 0, pending: 0, in_progress: 0, both_complete: 0, cancelled: 0, archived: 0 };
@@ -425,6 +428,7 @@ export default function ProfessionalJointAlignmentMine() {
                 {f.label} <span className="opacity-70">· {counts[f.key] ?? 0}</span>
               </button>
             ))}
+            <ArchiveFinishedButton kind="cases" count={finishedCount} onDone={load} testid="pj-mine-archive-finished" />
           </div>
         </div>
 
@@ -502,7 +506,7 @@ export default function ProfessionalJointAlignmentMine() {
                   <div className="flex items-center gap-2 flex-wrap">
                   {c.status !== "cancelled" && c.status !== "expired" && (
                     <>
-                      <ProgressPdfButton path={`/professional/joint-alignment/cases/${c.case_id}/progress.pdf`} caseId={c.case_id} testid={`pj-mine-progress-pdf-${c.case_id}`} />
+                      <ProgressPdfButton path={`/professional/joint-alignment/cases/${c.case_id}/progress.pdf`} caseId={c.case_id} testid={`pj-mine-progress-pdf-${c.case_id}`} hasNotes={!!c.case_notes} />
                       <button
                         type="button"
                         onClick={(e) => openDownload(c.case_id, e.currentTarget)}

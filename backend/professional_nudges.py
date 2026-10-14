@@ -9,7 +9,7 @@ import asyncio
 import hashlib
 import logging
 from datetime import datetime, timedelta, timezone
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Literal, Optional, Tuple
 
 from fastapi import APIRouter, Depends, HTTPException
 from motor.motor_asyncio import AsyncIOMotorDatabase
@@ -145,3 +145,59 @@ async def set_archived(body: ArchiveBody, user: UserPublic = Depends(get_current
     if not res.matched_count:
         raise HTTPException(status_code=404, detail="Case not found.")
     return {"ref": body.ref, "archived_at": at}
+
+
+class FinishedBody(BaseModel):
+    kind: Literal["codes", "cases"]
+
+
+async def _finished_refs(db: AsyncIOMotorDatabase, uid: str, kind: str) -> List[str]:
+    """Codes: revoked, expired, or every linked parent done. Cases: both complete, cancelled or expired."""
+    from court_codes_routes import linked_parents
+    from joint_alignment_routes import _derived_status
+
+    now = datetime.now(timezone.utc).isoformat()
+    refs = []
+    if kind == "cases":
+        async for case in db.joint_alignment_cases.find({"professional_created_by": uid, "professional_archived_at": None}, {"_id": 0}):
+            if _derived_status(case) in ("both_complete", "cancelled", "expired"):
+                refs.append(case["case_id"])
+        return refs
+    async for d in db.portal_court_keys.find({"created_by": uid, "archived_at": None},
+                                             {"_id": 0, "case_id": 1, "requested": 1, "revoked_at": 1, "expires_at": 1}):
+        if d.get("revoked_at") or (d.get("expires_at") and d["expires_at"] < now):
+            refs.append(d["case_id"])
+            continue
+        parents = await linked_parents(db, d["case_id"], [k for k in REQUESTABLE if k in (d.get("requested") or [])])
+        if parents and all(r["status"] == "done" for p in parents for r in p["assessments"]):
+            refs.append(d["case_id"])
+    return refs
+
+
+@router.post("/archive/finished")
+async def archive_finished(body: FinishedBody, user: UserPublic = Depends(get_current_user),
+                           db: AsyncIOMotorDatabase = Depends(get_db)) -> Dict[str, Any]:
+    refs = await _finished_refs(db, user.user_id, body.kind)
+    if refs:
+        await _bulk(db, user.user_id, refs, datetime.now(timezone.utc).isoformat())
+    return {"refs": refs}
+
+
+class BulkBody(BaseModel):
+    refs: List[str] = Field(..., min_length=1, max_length=500)
+    archived: bool
+
+
+async def _bulk(db: AsyncIOMotorDatabase, uid: str, refs: List[str], at: Optional[str]) -> int:
+    a = await db.portal_court_keys.update_many({"case_id": {"$in": refs}, "created_by": uid}, {"$set": {"archived_at": at}})
+    b = await db.joint_alignment_cases.update_many({"case_id": {"$in": refs}, "professional_created_by": uid},
+                                                   {"$set": {"professional_archived_at": at}})
+    return a.matched_count + b.matched_count
+
+
+@router.put("/archive/bulk")
+async def archive_bulk(body: BulkBody, user: UserPublic = Depends(get_current_user),
+                       db: AsyncIOMotorDatabase = Depends(get_db)) -> Dict[str, Any]:
+    """Used for Undo after "Archive finished"."""
+    at = datetime.now(timezone.utc).isoformat() if body.archived else None
+    return {"count": await _bulk(db, user.user_id, body.refs, at)}
