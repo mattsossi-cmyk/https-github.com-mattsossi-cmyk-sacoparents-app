@@ -1,0 +1,26 @@
+{
+  "summary": "iter135 (nudge history + case archive) tested end-to-end. Backend 9/9 pytest pass covering: (a) GET /professional/court-codes exposes archived_at + parents[].{pid,nudge_pid,nudge_next_at,nudge_last_at,nudge_count} and CC-P445YM parent 0 has nudge_count=1; (b) GET /professional/joint-alignment/cases-i-created exposes archived_at and joined-parent nudge fields; (c) PUT /professional/archive — 401 unauthenticated, 404 unknown ref, 404 for non-owner (parent2), 200 roundtrip for both court code (portal_court_keys.archived_at) and joint case (joint_alignment_cases.professional_archived_at mapped to archived_at in response); (d) archiving CC-P445YM does not break the parent's /court-path/requested view and nudge POST is still allowed (returns 429 as expected since nudged <7d). Frontend on /professional/joint-alignment/mine (parent1): history line court-code-nudge-CC-P445YM-0-history shows 'Last nudged Oct 14, 2026 · 1 nudge total' next to the -wait line 'You can nudge again Oct 21, 2026'. Clicking court-code-archive-<id> hides the row and reveals 'Show archived (1)' toggle; toggling shows the · Archived marker and the link swaps to 'Restore'. Joint-case archive: pj-mine-filter-archived chip transitions from 'Archived · 0' to 'Archived · 1' and link reads 'Restore'. All archived items restored (incl. CC-P445YM/CC-AKDYZ5/SA-DEMO01 untouched). Mobile 390px: no horizontal overflow.",
+  "backend_issues": {"critical": [], "minor": []},
+  "frontend_issues": {"ui_bugs": [], "integration_issues": [], "design_issues": []},
+  "test_report_links": [
+    "/app/backend/tests/test_iter135_archive_and_nudge_history.py",
+    "/app/test_reports/pytest/iter135.xml"
+  ],
+  "action_items": [],
+  "critical_code_review_comments": [
+    "professional_nudges.set_archived cleanly branches to the correct collection and persists under different field names (portal_court_keys.archived_at vs joint_alignment_cases.professional_archived_at), with the API response unifying both as archived_at — good data-minimisation shape.",
+    "nudge_info correctly uses count_documents (includes suppressed nudges) so safety-flagged / unsubscribed state cannot be inferred by the professional from the count.",
+    "linked_parents(..., with_nudge=True) spreads nudge_info into each row keeping response shape stable; joint-case parents keep nudge_pid=None for not-yet-joined parents, which is a sensible invariant.",
+    "Archive is additive — PDFs, parent requested view, nudge POST and completion summary are unaffected (verified end-to-end on CC-P445YM)."
+  ],
+  "updated_files": [
+    "/app/backend/tests/test_iter135_archive_and_nudge_history.py"
+  ],
+  "success_rate": {"backend": "100%", "frontend": "100%"},
+  "test_credentials": "parent1@test.com / TestPass123! (owner), parent2@test.com (non-owner), ccparent@test.com (CC-P445YM linked parent).",
+  "seed_data_creation": "None — used existing CC-P445YM, CC-AKDYZ5, SA-DEMO01 (all restored at end). For throwaway archive flows the test picked a non-protected court-code (CC-484ZUG) and joint case (SA-762034) and restored them.",
+  "retest_needed": false,
+  "main_agent_can_self_test": true,
+  "context_for_next_testing_agent": "Login flow needs clicking 'Sign in with email' link first on /login (demo landing is default). Nudge history testid pattern: <nudge-testid>-history where nudge-testid is e.g. court-code-nudge-CC-P445YM-0. For joint cases, archive link testid is pj-mine-archive-<case_id> and filter chip is pj-mine-filter-archived. API response uses 'archived_at' for both collections even though storage key for joint cases is 'professional_archived_at'.",
+  "rca of the issue": "No bugs found. Spec fully implemented."
+}

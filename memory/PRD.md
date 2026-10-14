@@ -70,6 +70,11 @@ Auth: Custom JWT (`auth.py`)
 - Gentle Nudge: `professional_nudges.py` `POST /api/professional/nudges` {ref, pid} (opaque pid; owner only; 7-day limit; 409 when all done). Suppressed silently for safety-flagged / unsubscribed parents with the same reply. UI `components/professional/NudgeButton.jsx` on court-code and joint-case parent cards.
 - Testing: iteration_134 backend 16/16 + frontend 100%.
 
+### 2026-06 — Iter135 · Nudge history + Case archive
+- Nudge history: `professional_nudges.nudge_info` → parents[] carry `nudge_last_at`, `nudge_count` (suppressed nudges count too). UI line "Last nudged <date> · N nudges total" in `NudgeButton.jsx`, shown even after the parent finishes.
+- Archive: `PUT /api/professional/archive {ref, archived}` (owner only; court codes → `portal_court_keys.archived_at`, joint cases → `professional_archived_at`, returned as `archived_at`). View-only: parents, reminders, completion emails, PDFs unaffected. UI `ArchiveLink.jsx`; Court codes "Show archived (N)" toggle; joint cases "Archived" filter chip (excluded from other filters/counts).
+- Testing: iteration_135 backend 9/9 + frontend 100%.
+
 
 ### 2026-06 — Iter271–273 · Self-Assessment v2 (chat-style) + Progress Graph
 
