@@ -38,6 +38,16 @@ async def nudge_next_at(db: AsyncIOMotorDatabase, ref: str, uid: str) -> Optiona
     return nxt.isoformat() if nxt > datetime.now(timezone.utc) else None
 
 
+async def nudge_info(db: AsyncIOMotorDatabase, ref: str, uid: str) -> Dict[str, Any]:
+    """Per-parent nudge history for the professional's cards (suppressed nudges count too, so nothing is revealed)."""
+    last = await db.professional_nudges.find_one({"ref": ref, "user_id": uid}, {"_id": 0, "sent_at": 1}, sort=[("sent_at", -1)])
+    return {
+        "nudge_next_at": await nudge_next_at(db, ref, uid) if last else None,
+        "nudge_last_at": last["sent_at"] if last else None,
+        "nudge_count": await db.professional_nudges.count_documents({"ref": ref, "user_id": uid}) if last else 0,
+    }
+
+
 async def _owned(db: AsyncIOMotorDatabase, ref: str, pro_uid: str) -> Tuple[List[str], List[str]]:
     """(parent user ids, requested keys) for a court code or joint case this professional created."""
     kd = await db.portal_court_keys.find_one({"case_id": ref, "created_by": pro_uid}, {"_id": 0, "requested": 1})
@@ -116,3 +126,22 @@ async def put_alert_pref(body: AlertPrefBody, user: UserPublic = Depends(get_cur
                          db: AsyncIOMotorDatabase = Depends(get_db)) -> Dict[str, Any]:
     await db.professional_prefs.update_one({"user_id": user.user_id}, {"$set": {"completion_alerts_off": not body.enabled}}, upsert=True)
     return {"eligible": await _is_creator(db, user.user_id), "enabled": body.enabled}
+
+
+class ArchiveBody(BaseModel):
+    ref: str = Field(..., min_length=1, max_length=80)
+    archived: bool
+
+
+@router.put("/archive")
+async def set_archived(body: ArchiveBody, user: UserPublic = Depends(get_current_user),
+                       db: AsyncIOMotorDatabase = Depends(get_db)) -> Dict[str, Any]:
+    """Tidy My cases. Professional's view only: parents, reminders, alerts and PDFs are unaffected."""
+    at = datetime.now(timezone.utc).isoformat() if body.archived else None
+    res = await db.portal_court_keys.update_one({"case_id": body.ref, "created_by": user.user_id}, {"$set": {"archived_at": at}})
+    if not res.matched_count:
+        res = await db.joint_alignment_cases.update_one({"case_id": body.ref, "professional_created_by": user.user_id},
+                                                        {"$set": {"professional_archived_at": at}})
+    if not res.matched_count:
+        raise HTTPException(status_code=404, detail="Case not found.")
+    return {"ref": body.ref, "archived_at": at}

@@ -1673,7 +1673,7 @@ async def list_cases_i_created(
         ]
     }
     from court_checklist import case_requested_keys, progress_rows
-    from professional_nudges import nudge_next_at, nudge_pid
+    from professional_nudges import nudge_info, nudge_pid
 
     cursor = db[_CASES_COLL].find(query).sort("created_at", -1).limit(100)
     cases = []
@@ -1689,6 +1689,7 @@ async def list_cases_i_created(
         # payload. Only ever included in the mediator-authenticated
         # /mine listing (this cursor).
         shape["case_notes"] = case.get("case_notes")
+        shape["archived_at"] = case.get("professional_archived_at")
         # Directory-invite acceptances — mediator-only. Each row logs
         # a `sacoparentsalign.com` professional who accepted a bind
         # invite for this case. Never leaked to parent-facing shapes.
@@ -1714,7 +1715,7 @@ async def list_cases_i_created(
                 # Status only (Done / In progress / Not started + date) — never answers. None until the parent joins.
                 "requested_progress": await progress_rows(db, p["user_id"], req_keys) if p.get("user_id") else None,
                 "nudge_pid": nudge_pid(case["case_id"], p["user_id"]) if p.get("user_id") else None,
-                "nudge_next_at": await nudge_next_at(db, case["case_id"], p["user_id"]) if p.get("user_id") else None,
+                **(await nudge_info(db, case["case_id"], p["user_id"]) if p.get("user_id") else {}),
             }
             for p in (case.get("parents") or [])
         ]

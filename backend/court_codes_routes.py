@@ -36,7 +36,7 @@ class CourtCodeCreate(BaseModel):
 
 async def linked_parents(db: AsyncIOMotorDatabase, case_id: str, keys: List[str], with_nudge: bool = False) -> List[Dict[str, Any]]:
     """Parents who entered this code: display name + status-only rows for the requested options."""
-    from professional_nudges import nudge_next_at, nudge_pid
+    from professional_nudges import nudge_info, nudge_pid
 
     out = []
     async for ps in db.portal_state.find({"court_key": case_id}, {"_id": 0, "user_id": 1, "court_legal_name": 1}).limit(10):
@@ -46,7 +46,7 @@ async def linked_parents(db: AsyncIOMotorDatabase, case_id: str, keys: List[str]
             "assessments": await progress_rows(db, ps["user_id"], keys),
         }
         if with_nudge:
-            row.update(pid=nudge_pid(case_id, ps["user_id"]), nudge_next_at=await nudge_next_at(db, case_id, ps["user_id"]))
+            row.update(pid=nudge_pid(case_id, ps["user_id"]), **await nudge_info(db, case_id, ps["user_id"]))
         out.append(row)
     return out
 
@@ -60,6 +60,7 @@ async def _public(db: AsyncIOMotorDatabase, doc: Dict[str, Any]) -> Dict[str, An
         "created_at": doc.get("created_at"),
         "expires_at": doc.get("expires_at"),
         "revoked_at": doc.get("revoked_at"),
+        "archived_at": doc.get("archived_at"),
         "parents": await linked_parents(db, doc["case_id"], keys, with_nudge=True),
     }
 

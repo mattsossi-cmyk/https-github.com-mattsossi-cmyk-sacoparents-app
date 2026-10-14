@@ -46,6 +46,7 @@ import { CourtCodesPanel } from "../components/professional/CourtCodesPanel";
 import { RequestedProgress } from "../components/professional/RequestedProgress";
 import { ProgressPdfButton } from "../components/professional/ProgressPdfButton";
 import { NudgeButton } from "../components/professional/NudgeButton";
+import { ArchiveLink } from "../components/professional/ArchiveLink";
 import { toast } from "sonner";
 import { api } from "../lib/api";
 import { logError } from "../lib/logger";
@@ -58,6 +59,7 @@ const STATUS_FILTERS = [
   { key: "in_progress", label: "In progress" },
   { key: "both_complete", label: "Both complete" },
   { key: "cancelled", label: "Cancelled" },
+  { key: "archived", label: "Archived" },
 ];
 
 const STATUS_PILL = {
@@ -141,7 +143,8 @@ export default function ProfessionalJointAlignmentMine() {
     if (!cases) return [];
     const q = search.trim().toLowerCase();
     return cases.filter((c) => {
-      if (statusFilter !== "all" && c.status !== statusFilter) return false;
+      if ((statusFilter === "archived") !== !!c.archived_at) return false;
+      if (!["all", "archived"].includes(statusFilter) && c.status !== statusFilter) return false;
       if (!q) return true;
       if (c.case_id?.toLowerCase().includes(q)) return true;
       if (c.align_case_reference?.toLowerCase().includes(q)) return true;
@@ -153,8 +156,9 @@ export default function ProfessionalJointAlignmentMine() {
   }, [cases, search, statusFilter]);
 
   const counts = useMemo(() => {
-    const base = { all: 0, pending: 0, in_progress: 0, both_complete: 0, cancelled: 0 };
+    const base = { all: 0, pending: 0, in_progress: 0, both_complete: 0, cancelled: 0, archived: 0 };
     (cases || []).forEach((c) => {
+      if (c.archived_at) { base.archived += 1; return; }
       base.all += 1;
       if (c.status in base) base[c.status] += 1;
     });
@@ -449,12 +453,14 @@ export default function ProfessionalJointAlignmentMine() {
             <div className="font-serif text-lg text-[#1A1330]">
               {(cases || []).length === 0
                 ? "No cases yet"
-                : "No cases match your search"}
+                : statusFilter === "archived" ? "No archived cases" : "No cases match your search"}
             </div>
             <p className="text-sm text-[#4B4567] mt-1 max-w-md mx-auto leading-relaxed">
               {(cases || []).length === 0
                 ? "Create your first Joint Alignment case from the button above and both parents will receive private invitation links."
-                : "Try a different search term or clear the status filter."}
+                : statusFilter === "archived"
+                  ? "Archive a case to tidy this list. Parents won't notice, and you can restore it anytime."
+                  : "Try a different search term or clear the status filter."}
             </p>
             {(cases || []).length === 0 && (
               <Link
@@ -493,8 +499,9 @@ export default function ProfessionalJointAlignmentMine() {
                       {c.created_at ? ` · Created ${new Date(c.created_at).toLocaleDateString()}` : ""}
                     </div>
                   </div>
+                  <div className="flex items-center gap-2 flex-wrap">
                   {c.status !== "cancelled" && c.status !== "expired" && (
-                    <div className="flex items-center gap-2 flex-wrap">
+                    <>
                       <ProgressPdfButton path={`/professional/joint-alignment/cases/${c.case_id}/progress.pdf`} caseId={c.case_id} testid={`pj-mine-progress-pdf-${c.case_id}`} />
                       <button
                         type="button"
@@ -516,8 +523,15 @@ export default function ProfessionalJointAlignmentMine() {
                           Revoke
                         </button>
                       )}
-                    </div>
+                    </>
                   )}
+                    <ArchiveLink
+                      caseRef={c.case_id}
+                      archived={!!c.archived_at}
+                      onChanged={(at) => setCases((prev) => prev.map((x) => (x.case_id === c.case_id ? { ...x, archived_at: at } : x)))}
+                      testid={`pj-mine-archive-${c.case_id}`}
+                    />
+                  </div>
                 </div>
 
                 <div className="mt-3 grid gap-2 sm:grid-cols-2">
@@ -552,7 +566,7 @@ export default function ProfessionalJointAlignmentMine() {
                         )}
                       </div>
                       <RequestedProgress rows={p.requested_progress} testid={`pj-mine-progress-${c.case_id}-${pi}`} />
-                      <NudgeButton caseRef={c.case_id} pid={p.nudge_pid} nextAt={p.nudge_next_at} rows={p.requested_progress} testid={`pj-mine-nudge-${c.case_id}-${pi}`} />
+                      <NudgeButton caseRef={c.case_id} pid={p.nudge_pid} nextAt={p.nudge_next_at} lastAt={p.nudge_last_at} count={p.nudge_count} rows={p.requested_progress} testid={`pj-mine-nudge-${c.case_id}-${pi}`} />
                     </div>
                   ))}
                 </div>

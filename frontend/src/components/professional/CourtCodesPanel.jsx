@@ -4,6 +4,7 @@ import { toast } from "sonner";
 
 import { api } from "../../lib/api";
 import { logError } from "../../lib/logger";
+import { ArchiveLink } from "./ArchiveLink";
 import { CourtCodeForm } from "./CourtCodeForm";
 import { NudgeButton } from "./NudgeButton";
 import { ProgressPdfButton } from "./ProgressPdfButton";
@@ -13,12 +14,15 @@ import { RequestedProgress, fmtDay } from "./RequestedProgress";
 export const CourtCodesPanel = () => {
   const [codes, setCodes] = useState(null);
   const [open, setOpen] = useState(false);
+  const [showArchived, setShowArchived] = useState(false);
   const load = () =>
     api.get("/professional/court-codes").then((r) => setCodes(r.data?.codes || [])).catch((err) => {
       logError("court codes load failed:", err);
       setCodes([]);
     });
   useEffect(() => { load(); }, []);
+  const archived = (codes || []).filter((c) => c.archived_at);
+  const shown = (codes || []).filter((c) => !c.archived_at || showArchived);
 
   return (
     <section className="rounded-2xl border border-[#E5E0EE] bg-white p-4 sm:p-5 mb-4" data-testid="court-codes-panel">
@@ -43,9 +47,18 @@ export const CourtCodesPanel = () => {
       ) : codes.length === 0 ? (
         <p className="text-xs text-[#857E9C]" data-testid="court-codes-empty">No court codes yet.</p>
       ) : (
-        <ul className="space-y-2.5" data-testid="court-codes-list">
-          {codes.map((c) => <CourtCodeItem key={c.case_id} c={c} onChanged={load} />)}
-        </ul>
+        <>
+          {shown.length === 0 && <p className="text-xs text-[#857E9C]" data-testid="court-codes-all-archived">All your court codes are archived.</p>}
+          <ul className="space-y-2.5" data-testid="court-codes-list">
+            {shown.map((c) => <CourtCodeItem key={c.case_id} c={c} onChanged={load} />)}
+          </ul>
+          {archived.length > 0 && (
+            <button type="button" onClick={() => setShowArchived((v) => !v)} aria-pressed={showArchived} data-testid="court-codes-show-archived"
+              className="mt-3 text-xs font-semibold text-[#3D1A78] hover:underline">
+              {showArchived ? "Hide archived" : `Show archived (${archived.length})`}
+            </button>
+          )}
+        </>
       )}
     </section>
   );
@@ -70,15 +83,16 @@ const CourtCodeItem = ({ c, onChanged }) => {
     }
   };
   return (
-    <li className="rounded-xl border border-[#E5E0EE] bg-[#FAF8FD] p-3" data-testid={`court-code-row-${c.case_id}`}>
+    <li className={`rounded-xl border border-[#E5E0EE] p-3 ${c.archived_at ? "bg-[#F4F2F8] opacity-80" : "bg-[#FAF8FD]"}`} data-testid={`court-code-row-${c.case_id}`}>
       <div className="flex items-baseline justify-between gap-2 flex-wrap">
         <div className="min-w-0 text-xs text-[#4B4567]">
           <span className="font-mono text-sm font-semibold text-[#1A1330] mr-2">{c.case_id}</span>
           <span className={`font-bold ${state === "Active" ? "text-[#1F5C3B]" : "text-[#B02A2A]"}`} data-testid={`court-code-state-${c.case_id}`}>{state}</span>
           {c.label ? ` · ${c.label}` : ""}
           {c.expires_at && state === "Active" ? ` · until ${fmtDay(c.expires_at)}` : ""}
+          {c.archived_at ? <span className="ml-1 font-semibold text-[#857E9C]" data-testid={`court-code-archived-${c.case_id}`}>· Archived</span> : null}
         </div>
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-3 flex-wrap">
           <ProgressPdfButton path={`/professional/court-codes/${c.case_id}/progress.pdf`} caseId={c.case_id} testid={`court-code-progress-pdf-${c.case_id}`} />
           {state === "Active" && (
             <button type="button" onClick={revoke} disabled={busy} data-testid={`court-code-revoke-${c.case_id}`}
@@ -86,6 +100,7 @@ const CourtCodeItem = ({ c, onChanged }) => {
               {busy ? <Loader2 size={11} className="animate-spin" /> : <Trash2 size={11} />} Revoke
             </button>
           )}
+          <ArchiveLink caseRef={c.case_id} archived={!!c.archived_at} onChanged={onChanged} testid={`court-code-archive-${c.case_id}`} />
         </div>
       </div>
       {c.parents.length === 0 ? (
@@ -96,7 +111,7 @@ const CourtCodeItem = ({ c, onChanged }) => {
             <div key={i} className="rounded-lg border border-[#E5E0EE] bg-white p-2.5" data-testid={`court-code-parent-${c.case_id}-${i}`}>
               <div className="text-sm text-[#1A1330] truncate">{p.name}</div>
               <RequestedProgress rows={p.assessments} testid={`court-code-progress-${c.case_id}-${i}`} />
-              <NudgeButton caseRef={c.case_id} pid={p.pid} nextAt={p.nudge_next_at} rows={p.assessments} testid={`court-code-nudge-${c.case_id}-${i}`} />
+              <NudgeButton caseRef={c.case_id} pid={p.pid} nextAt={p.nudge_next_at} lastAt={p.nudge_last_at} count={p.nudge_count} rows={p.assessments} testid={`court-code-nudge-${c.case_id}-${i}`} />
             </div>
           ))}
         </div>
