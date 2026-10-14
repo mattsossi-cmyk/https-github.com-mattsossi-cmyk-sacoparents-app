@@ -61,7 +61,7 @@ function Protected({ children }) {
     sessionStorage.setItem("post-privacy-redirect", window.location.pathname + window.location.search);
     return <Navigate to="/privacy-notice" replace />;
   }
-  if (user.role === "professional" && user.professional_notice_version !== PROFESSIONAL_NOTICE_VERSION && window.location.pathname !== "/professional-notice") {
+  if (user.role === "professional" && user.professional_notice_version !== PROFESSIONAL_NOTICE_VERSION && !["/professional-notice", "/privacy-notice"].includes(window.location.pathname)) {
     sessionStorage.setItem("post-pro-notice-redirect", window.location.pathname + window.location.search);
     return <Navigate to="/professional-notice" replace />;
   }

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { LifeBuoy, Phone, Clock } from "lucide-react";
 import api from "@/lib/api";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -15,9 +15,11 @@ const Item = ({ it }) => (
 export const CrisisResourcesButton = ({ version, className = "" }) => {
   const [open, setOpen] = useState(false);
   const [d, setD] = useState(null);
+  useEffect(() => { setD(null); }, [version]);
   const show = async () => {
     setOpen(true);
-    if (!d) { try { const r = await api.get("/safety/crisis-resources", { params: version ? { version } : {} }); setD(r.data); } catch { setD({ title: "Crisis Resources", items: [{ name: "Immediate danger", contact: "Call 911", tel: "911", hours: "Now", kind: "emergency" }] }); } }
+    try { const r = await api.get("/safety/crisis-resources", { params: version ? { version } : {} }); setD(r.data); }
+    catch { setD({ title: "Crisis Resources", items: [{ name: "Immediate danger", contact: "Call 911", tel: "911", hours: "Now", kind: "emergency" }] }); }
   };
   return (
     <>
