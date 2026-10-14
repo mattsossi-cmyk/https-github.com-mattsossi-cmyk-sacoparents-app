@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { SafeContactStep } from "@/components/SafeContactStep";
 import { QuickExitBar } from "@/components/QuickExit";
+import { CrisisResourcesButton } from "@/components/CrisisResources";
 
 const Hotline = ({ resources, externalNote }) => (
   <div className="rounded-md border border-red-200 bg-red-50 p-3 text-sm" data-testid="screening-hotline">
@@ -62,7 +63,7 @@ export default function SafetyScreening() {
   return (
     <div className="min-h-screen bg-background" data-testid="screening-page">
       <QuickExitBar notice={spec?.safe_device_notice} />
-      <header className="bg-white border-b border-border"><div className="max-w-3xl mx-auto px-4 sm:px-6 py-4 flex items-center justify-between"><Link to={`/joint/${id}/safety`} className="flex items-center gap-1.5 text-sm text-muted-foreground" data-testid="screening-back"><ArrowLeft className="h-4 w-4" /> Back to safety hub</Link><BrandLogo size="text-xl" /></div></header>
+      <header className="bg-white border-b border-border"><div className="max-w-3xl mx-auto px-4 sm:px-6 py-4 flex items-center justify-between gap-3"><Link to={`/joint/${id}/safety`} className="flex items-center gap-1.5 text-sm text-muted-foreground" data-testid="screening-back"><ArrowLeft className="h-4 w-4" /> Back to safety hub</Link><div className="flex items-center gap-3"><CrisisResourcesButton version={spec?.version || data.roles?.[data.my_role]?.version} /><BrandLogo size="text-xl" /></div></div></header>
       <main className="max-w-3xl mx-auto px-4 sm:px-6 py-8 space-y-4">
         {data.choice && (
           <div className="rounded-lg border border-border bg-white p-5 space-y-3" data-testid="screening-choice">

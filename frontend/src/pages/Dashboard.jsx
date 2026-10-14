@@ -6,6 +6,7 @@ import api, { formatApiError } from "@/lib/api";
 import { BrandLogo } from "@/components/Brand";
 import { PrimaryTiles } from "@/components/dashboard/PrimaryTiles";
 import { SecondaryTools } from "@/components/dashboard/SecondaryTools";
+import { SafetyEntryBanner } from "@/components/SafetyEntryBanner";
 import { SampleReports } from "@/components/dashboard/SampleReports";
 import { useAuth } from "@/context/AuthContext";
 import { Button } from "@/components/ui/button";
@@ -400,6 +401,7 @@ export default function Dashboard() {
           </div>
         </div>
       </header>
+      {user?.role === "parent" && <SafetyEntryBanner />}
 
       <main className="max-w-6xl mx-auto px-4 sm:px-6 py-10 space-y-12 overflow-x-hidden">
         {isPro ? (

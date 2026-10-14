@@ -3,6 +3,7 @@ import { Link, useParams } from "react-router-dom";
 import { ShieldCheck, MessageSquareText, HeartHandshake, Phone } from "lucide-react";
 import api from "@/lib/api";
 import { QuickExitBar } from "@/components/QuickExit";
+import { CrisisResourcesButton } from "@/components/CrisisResources";
 import { Button } from "@/components/ui/button";
 
 const CARDS = [
@@ -24,7 +25,8 @@ export default function SafetyHub() {
         <div className="mx-auto flex max-w-5xl items-center gap-3 px-4 py-4 sm:px-6">
           <span className="flex h-11 w-11 items-center justify-center rounded-xl bg-[#3D1A78] text-white" aria-hidden="true"><HeartHandshake className="h-6 w-6" /></span>
           <div><p className="text-lg font-bold leading-tight text-[#3D1A78]" data-testid="hub-brand">SA CoParents</p><p className="text-xs text-slate-600" data-testid="hub-subtitle">Safety &amp; Communication Readiness Assessment</p></div>
-          <Link to={`/joint/${id}`} className="ml-auto text-xs font-semibold text-[#3D1A78] underline-offset-2 hover:underline focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#3D1A78]" data-testid="hub-back">Back to case</Link>
+          <CrisisResourcesButton version={mine?.version} className="ml-auto" />
+          <Link to={`/joint/${id}`} className="text-xs font-semibold text-[#3D1A78] underline-offset-2 hover:underline focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#3D1A78]" data-testid="hub-back">Back to case</Link>
         </div>
       </header>
       <main className="mx-auto max-w-5xl space-y-8 px-4 py-8 sm:px-6">

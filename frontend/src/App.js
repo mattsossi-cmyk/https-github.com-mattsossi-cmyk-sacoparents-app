@@ -13,6 +13,7 @@ import SafetyScreening from "@/pages/SafetyScreening";
 import SafetyHub from "@/pages/SafetyHub";
 import PrivacyNotice from "@/pages/PrivacyNotice";
 import ProfessionalNotice from "@/pages/ProfessionalNotice";
+import StartWithSafety, { SEEN_KEY as START_SAFETY_SEEN } from "@/pages/StartWithSafety";
 export const PRIVACY_NOTICE_VERSION = "2026-10-10.2";
 export const PROFESSIONAL_NOTICE_VERSION = "2026-10-13.1";
 import CommunicationReadiness from "@/pages/CommunicationReadiness";
@@ -64,6 +65,9 @@ function Protected({ children }) {
     sessionStorage.setItem("post-pro-notice-redirect", window.location.pathname + window.location.search);
     return <Navigate to="/professional-notice" replace />;
   }
+  if (user.role === "parent" && !sessionStorage.getItem(START_SAFETY_SEEN) && window.location.pathname === "/dashboard") {
+    return <Navigate to="/start-with-safety" replace />;
+  }
   if (user.role === "judge" && !/^\/(court-dashboard|court\/case\/|privacy-notice)/.test(window.location.pathname)) return <Navigate to="/court-dashboard" replace />;
   return children;
 }
@@ -87,6 +91,7 @@ function App() {
             <Route path="/joint/:id/safety" element={<Protected><SafetyHub /></Protected>} />
             <Route path="/privacy-notice" element={<Protected><PrivacyNotice /></Protected>} />
             <Route path="/professional-notice" element={<Protected><ProfessionalNotice /></Protected>} />
+            <Route path="/start-with-safety" element={<Protected><StartWithSafety /></Protected>} />
             <Route path="/joint/:id/communication-readiness" element={<Protected><CommunicationReadiness /></Protected>} />
             <Route path="/joint/:id/safety-screening" element={<Protected><SafetyScreening /></Protected>} />
             <Route path="/joint/:id/safety-screening/:role" element={<Protected><SafetyResponses /></Protected>} />

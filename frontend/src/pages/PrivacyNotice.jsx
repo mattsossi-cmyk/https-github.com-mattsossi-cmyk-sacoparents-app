@@ -36,7 +36,7 @@ export default function PrivacyNotice() {
     try {
       await api.post("/privacy-notice/accept", { version: n.version, acknowledged: ok });
       await refresh();
-      navigate(sessionStorage.getItem("post-privacy-redirect") || "/dashboard", { replace: true });
+      navigate(sessionStorage.getItem("post-privacy-redirect") || (user?.role === "parent" ? "/start-with-safety" : "/dashboard"), { replace: true });
       sessionStorage.removeItem("post-privacy-redirect");
     } catch (e) { toast.error(formatApiError(e)); } finally { setBusy(false); }
   };

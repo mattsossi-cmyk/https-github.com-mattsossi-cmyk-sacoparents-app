@@ -29,6 +29,29 @@ RESOURCES_C = [
     {"name": "The Network/La Red (LGBTQ+ partner abuse hotline)", "contact": "1-800-832-1901", "url": "https://tnlr.org", "verified": True},
     {"name": "LGBTQ+ survivor resources from the National LGBTQ Institute on IPV, including a personal safety planning tool", "contact": "", "url": "https://lgbtqipvinstitute.org/resources-for-survivors/", "verified": True, "external": True},
 ]
+# Crisis Resources popup (owner-approved 2026-10-14). Order: 911 → 24-hour lines (+ version-specific) → daytime office with hours labelled.
+CRISIS_911 = {"name": "Immediate danger", "contact": "Call 911", "tel": "911", "hours": "Now", "kind": "emergency"}
+CRISIS_24H = [
+    {"name": "National Domestic Violence Hotline", "contact": "1-800-799-7233 · text START to 88788", "tel": "18007997233", "hours": "24 hours", "kind": "hotline"},
+    {"name": "San Antonio Family Violence Prevention Services 24-hour line", "contact": "210-733-8810", "tel": "2107338810", "hours": "24 hours", "kind": "hotline"},
+]
+CRISIS_B = [{"name": "VictimConnect", "contact": "1-855-484-2846 · call, text or chat", "tel": "18554842846", "hours": "24/7", "kind": "hotline"}]
+CRISIS_C = [
+    {"name": "The Network/La Red", "contact": "1-800-832-1901 (main)", "tel": "18008321901", "hours": "24 hours", "kind": "hotline"},
+    {"name": "The Trevor Project (for young people under 25)", "contact": "1-866-488-7386 · text START to 678-678", "tel": "18664887386", "hours": "24/7", "kind": "hotline"},
+]
+CRISIS_BEXAR = {"name": "Bexar County Family Justice Center (San Antonio)", "contact": "210-631-0100 · 126 E. Nueva, 2nd Floor", "tel": "2106310100",
+                "hours": "Open Monday to Friday, 8:00 AM to 5:00 PM; closed on county holidays. Not a 24-hour line.", "note": "Advocacy and legal help.", "kind": "office"}
+CRISIS_TITLE = "Crisis Resources"
+CRISIS_INTRO = "Help is available any time. Choosing a resource here does not change anything in your account."
+
+
+def crisis_resources_for(version: str | None) -> dict:
+    extra = CRISIS_B if version == "B" else CRISIS_C if version == "C" else []
+    return {"title": CRISIS_TITLE, "intro": CRISIS_INTRO, "version": version, "items": [CRISIS_911, *CRISIS_24H, *extra, CRISIS_BEXAR]}
+
+
+SAFETY_BANNER_TEXT = "Start with Safety. A private check-in is available any time."
 # Version B source switch. "cdc" (default, TEMPORARY) = CDC NISVS behavior-category adaptation.
 # "velonis" = HITS-based items (Velonis et al. 2021, J. Interpersonal Violence; © SAGE) — kept, switched OFF until written permission is obtained.
 VERSION_B_SOURCE = os.environ.get("VERSION_B_SOURCE", "cdc")
@@ -234,7 +257,9 @@ def _status(doc: dict) -> dict:
                   "choice_needed": not confirmed and not scr, "default_version": ver if ver in ("A", "B") else None, "chosen_by_parent": confirmed,
                   "tier": scr.get("tier") if scr else None, "tier_label": TIER_LABEL.get(scr.get("tier")) if scr else None, "version_label": VERSION_LABEL.get(ver or ""),
                   "completed_at": (scr or {}).get("completed_at"), "source": (scr or {}).get("source"), "receipt": receipt(scr, p.get("name") or f"Parent {r.upper()}"),
-                  "reminded_at": (doc.get("safety_reminded_at") or {}).get(r), "communication_received": bool((doc.get("communication_readiness") or {}).get(r))}
+                  "reminded_at": (doc.get("safety_reminded_at") or {}).get(r), "communication_received": bool((doc.get("communication_readiness") or {}).get(r)),
+                  "skipped_at": (doc.get("safety_skipped") or {}).get(r),
+                  "entry_status": "completed" if scr else ("skipped" if (doc.get("safety_skipped") or {}).get(r) else "not_started")}
     return out
 
 
@@ -319,6 +344,41 @@ def build_router(db, get_current_user, get_joint_report_doc, report_role, log_ac
                       "options": ([{"version": mine["default_version"], "label": CHOICE_LABEL[mine["default_version"]]}] if mine["default_version"] else [{"version": v, "label": CHOICE_LABEL[v]} for v in ("A", "B")]) + [{"version": "C", "label": CHOICE_LABEL["C"]}],
                       "note": None if mine["default_version"] else "Pick whichever set of questions fits your situation. Your professional can adjust this later."}
         return {"my_role": role, "is_professional": pro, "roles": st, "spec": spec, "choice": choice, "versions": VERSION_LABEL_PRO if pro else VERSION_LABEL, "scale_note": SCALE_NOTE}
+
+    @r.post("/joint/reports/{rid}/safety-screening/skip")
+    async def skip_screening(rid: str, user=Depends(get_current_user)):
+        """Parent chooses 'Skip for now'. Records completion status only (skipped); nothing else changes, no notification."""
+        doc = await get_joint_report_doc(rid, user)
+        role = report_role(doc, user["_id"])
+        if role is None:
+            raise HTTPException(status_code=403, detail="Only invited parents can skip")
+        if (doc.get("safety_screenings") or {}).get(role):
+            return {"entry_status": "completed"}
+        await db.joint_reports.update_one({"id": rid}, {"$set": {f"safety_skipped.{role}": datetime.now(timezone.utc).isoformat()}})
+        return {"entry_status": "skipped"}
+
+    @r.get("/me/safety-entry")
+    async def my_safety_entry(user=Depends(get_current_user)):
+        """Parent home banner state. Identical shape for every parent; only completion status, never tier/flags."""
+        if user.get("role") != "parent":
+            return {"applies": False}
+        cur = db.joint_reports.find({"$or": [{"participants.a.user_id": user["_id"]}, {"participants.b.user_id": user["_id"]}], "archived": {"$ne": True}},
+                                    {"id": 1, "participants": 1, "safety_screenings": 1, "safety_skipped": 1, "created_at": 1}).sort("created_at", -1)
+        docs = await cur.to_list(50)
+        if not docs:
+            return {"applies": True, "has_case": False, "status": "not_started", "report_id": None, "text": SAFETY_BANNER_TEXT}
+        statuses = []
+        for d in docs:
+            role = "a" if (d["participants"].get("a") or {}).get("user_id") == user["_id"] else "b"
+            scr = (d.get("safety_screenings") or {}).get(role)
+            statuses.append((d["id"], "completed" if scr else ("skipped" if (d.get("safety_skipped") or {}).get(role) else "not_started")))
+        pending = next((s for s in statuses if s[1] == "not_started"), None)
+        rid, status = pending or statuses[0]
+        return {"applies": True, "has_case": True, "status": status, "report_id": rid, "text": SAFETY_BANNER_TEXT}
+
+    @r.get("/safety/crisis-resources")
+    async def crisis_resources(version: str | None = None, user=Depends(get_current_user)):
+        return crisis_resources_for(version if version in ("A", "B", "C") else None)
 
     @r.put("/joint/reports/{rid}/safety-screening/choose")
     async def choose_version(rid: str, body: ChooseIn, user=Depends(get_current_user)):

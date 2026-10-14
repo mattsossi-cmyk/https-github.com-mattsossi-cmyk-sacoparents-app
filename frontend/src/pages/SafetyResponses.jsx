@@ -6,6 +6,7 @@ import api, { formatApiError } from "@/lib/api";
 import { BrandLogo } from "@/components/Brand";
 import { PathwayDecision } from "@/components/PathwayDecision";
 import { BridgeSafeContact } from "@/components/BridgeSafeContact";
+import { CrisisResourcesButton } from "@/components/CrisisResources";
 
 export default function SafetyResponses() {
   const { id, role } = useParams();
@@ -14,7 +15,7 @@ export default function SafetyResponses() {
   useEffect(() => { api.get(`/joint/reports/${id}/safety-screening/${role}/responses`).then((r) => setD(r.data)).catch((e) => { setErr(formatApiError(e)); toast.error(formatApiError(e)); }); }, [id, role]);
   return (
     <div className="min-h-screen bg-background" data-testid="screening-responses-page">
-      <header className="bg-white border-b border-border"><div className="max-w-3xl mx-auto px-4 sm:px-6 py-4 flex items-center justify-between"><Link to={`/joint/${id}`} className="flex items-center gap-1.5 text-sm text-muted-foreground" data-testid="screening-responses-back"><ArrowLeft className="h-4 w-4" /> Back to case</Link><BrandLogo size="text-xl" /></div></header>
+      <header className="bg-white border-b border-border"><div className="max-w-3xl mx-auto px-4 sm:px-6 py-4 flex items-center justify-between"><Link to={`/joint/${id}`} className="flex items-center gap-1.5 text-sm text-muted-foreground" data-testid="screening-responses-back"><ArrowLeft className="h-4 w-4" /> Back to case</Link><div className="flex items-center gap-3"><CrisisResourcesButton version={d?.status?.version} /><BrandLogo size="text-xl" /></div></div></header>
       <main className="max-w-3xl mx-auto px-4 sm:px-6 py-8 space-y-4">
         {err && <p className="rounded-md border border-red-200 bg-red-50 p-3 text-sm text-red-800" data-testid="screening-responses-error">{err}</p>}
         {d && (
