@@ -686,6 +686,9 @@ async def save_joint_responses(rid: str, body: JointResponsesIn, user=Depends(ge
     role = report_role(doc, user["_id"])
     if role is None:
         raise HTTPException(status_code=403, detail="Only invited parents can submit responses")
+    from safety_screening import safety_step_satisfied
+    if not safety_step_satisfied(doc, role):
+        raise HTTPException(status_code=403, detail="Please go through the Start with Safety step before answering the assessment.")
     _assert_joint_open(doc)
     payload = _validated_answers(doc, body)
     existing_foundation = (doc.get("responses", {}).get(role) or {}).get("foundation")

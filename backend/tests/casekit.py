@@ -88,6 +88,8 @@ def fill(api: str, session: requests.Session, rid: str, theme: str) -> dict:
         "options": f"Option A: shared homework log. Option B: same homework times. {theme} coordinated with teacher.",
         "other_parent": f"The other parent likely worries about homework quality and {theme} academic consistency.",
     }
+    r = session.post(f"{api}/joint/reports/{rid}/safety-screening/decline")  # Start-with-Safety step is required; answers are not
+    assert r.status_code == 200, f"safety step failed: {r.status_code} {r.text}"
     r = session.put(f"{api}/joint/reports/{rid}/responses", json={"answers": answers})
     assert r.status_code == 200, f"fill failed: {r.status_code} {r.text}"
     return r.json()

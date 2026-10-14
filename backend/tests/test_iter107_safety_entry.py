@@ -17,25 +17,26 @@ API = f"{(os.environ.get('REACT_APP_BACKEND_URL') or '').rstrip('/')}/api"
 FE = Path("/app/frontend/src")
 
 
-def test_banner_identical_shape_for_all_parents_and_hidden_after_skip_or_completion():
+def test_banner_identical_shape_for_all_parents_and_hidden_after_decline_or_completion():
     pro, pa, pb, d, _ = completed_case(API)
     rid = d["id"]
+    # completed_case satisfies the step for both parents (declined) so they could answer; status shape is identical for both.
     ea, eb = pa.get(f"{API}/me/safety-entry").json(), pb.get(f"{API}/me/safety-entry").json()
     assert set(ea) == set(eb) == {"applies", "has_case", "status", "report_id", "text"}
-    assert ea["status"] == eb["status"] == "not_started" and ea["text"] == SAFETY_BANNER_TEXT and ea["report_id"] == rid
+    assert ea["status"] == eb["status"] == "declined" and ea["text"] == SAFETY_BANNER_TEXT and ea["report_id"] == rid
     assert not any(k in ea for k in ("tier", "flag", "version"))
     assert pro.get(f"{API}/me/safety-entry").json() == {"applies": False}
-    assert pa.post(f"{API}/joint/reports/{rid}/safety-screening/skip").json()["entry_status"] == "skipped"
-    assert pa.get(f"{API}/me/safety-entry").json()["status"] == "skipped"
-    assert pro.post(f"{API}/joint/reports/{rid}/safety-screening/skip").status_code == 403
+    assert pa.post(f"{API}/joint/reports/{rid}/safety-screening/decline").json()["entry_status"] == "declined"
+    assert pa.get(f"{API}/me/safety-entry").json()["status"] == "declined"
+    assert pro.post(f"{API}/joint/reports/{rid}/safety-screening/decline").status_code == 403
     st = pro.get(f"{API}/joint/reports/{rid}/safety-screening").json()["roles"]["a"]
-    assert st["entry_status"] == "skipped" and st["received"] is False
+    assert st["entry_status"] == "declined" and st["received"] is False and st["entry_label"].startswith("Declined · 20")
     # Parent B completes with every question skipped → still "completed": no forced answers.
     assert pb.put(f"{API}/joint/reports/{rid}/safety-screening/choose", json={"version": "A"}).status_code == 200
     r = pb.put(f"{API}/joint/reports/{rid}/safety-screening", json={"responses": {}, "safe_contact": None})
     assert r.status_code == 200, r.text
     assert pb.get(f"{API}/me/safety-entry").json()["status"] == "completed"
-    assert pb.post(f"{API}/joint/reports/{rid}/safety-screening/skip").json()["entry_status"] == "completed"
+    assert pb.post(f"{API}/joint/reports/{rid}/safety-screening/decline").json()["entry_status"] == "completed"
 
 
 def test_crisis_resources_per_version_include_bexar_with_hours():

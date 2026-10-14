@@ -94,7 +94,7 @@ def extract_safety_screening(payload: dict) -> dict | None:
     return None
 
 
-def screening_summary(scr: dict | None, parent_label: str) -> str:
+def screening_summary(scr: dict | None, parent_label: str, declined_at: str | None = None) -> str:
     """Court-safe one-liner: receipt, version, tier, date — never answer text, never a finding."""
     from safety_screening import receipt
-    return receipt(scr, parent_label)
+    return receipt(scr, parent_label, declined_at)

@@ -78,6 +78,8 @@ export default function JointAssessment() {
         if (d.data.kind === "foundation") navigate(`/foundation?case=${id}`, { replace: true });
         if (d.data.my_answers) {
           navigate(`/joint/${id}`, { replace: true });
+        } else if (d.data.my_role && d.data.safety_step_satisfied === false) {
+          navigate("/start-with-safety", { replace: true });
         } else if (!d.data.my_role || !d.data.participants[d.data.my_role]?.accepted) {
           setError("Only invited parents can complete this assessment.");
         }

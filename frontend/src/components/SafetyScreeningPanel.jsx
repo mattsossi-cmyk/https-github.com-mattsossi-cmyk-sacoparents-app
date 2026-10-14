@@ -27,11 +27,11 @@ export function SafetyScreeningPanel({ rid }) {
           {["a", "b"].map((role) => { const s = d.roles[role]; return (
             <div key={role} className={`rounded-md border p-3 text-sm ${s.tier === 3 ? "border-amber-300 bg-amber-50" : "border-border bg-white"}`} data-testid={`safety-screening-${role}`}>
               <p className="font-semibold">{s.name}</p>
-              <p className="text-xs" data-testid={`safety-screening-${role}-status`}>{s.received ? `Received · ${s.version_label} · ${(s.completed_at || "").slice(0, 10)}` : "Not Received"}</p>
+              <p className="text-xs" data-testid={`safety-screening-${role}-status`}>{s.received ? `Received · ${s.version_label} · ${(s.completed_at || "").slice(0, 10)}` : s.entry_label || "Not started"}</p>
               {s.received && <p className="text-xs font-medium" data-testid={`safety-screening-${role}-tier`}>{s.tier_label}</p>}
               <p className="text-[11px] text-muted-foreground" data-testid={`safety-screening-${role}-comm`}>Communication readiness: {s.communication_received ? "received (private)" : "not received"}</p>
-              {!s.received && s.reminded_at && <p className="text-[11px] text-amber-800" data-testid={`safety-screening-${role}-reminded`}>Reminder sent {new Date(s.reminded_at).toLocaleDateString()} · no response yet</p>}
-              {!s.received && !s.reminded_at && <p className="text-[11px] text-muted-foreground" data-testid={`safety-screening-${role}-not-reminded`}>No reminder sent yet (automatic nudge 7 days after joining)</p>}
+              {s.entry_status === "not_started" && s.reminded_at && <p className="text-[11px] text-amber-800" data-testid={`safety-screening-${role}-reminded`}>Reminder sent {new Date(s.reminded_at).toLocaleDateString()} · no response yet</p>}
+              {s.entry_status === "not_started" && !s.reminded_at && <p className="text-[11px] text-muted-foreground" data-testid={`safety-screening-${role}-not-reminded`}>No reminder sent yet (automatic nudge 7 days after joining)</p>}
               <div className="mt-2 flex flex-wrap items-center gap-2">
                 <label className="text-xs text-muted-foreground">Version
                   <select value={s.version || ""} onChange={(e) => assign(role, e.target.value)} className={`ml-1 h-7 rounded-md border px-1 text-xs ${s.needs_assignment ? "border-amber-400 bg-amber-50" : "border-input bg-white"}`} data-testid={`safety-screening-${role}-version`}>

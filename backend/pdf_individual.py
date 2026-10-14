@@ -44,7 +44,7 @@ def _section(pdf, doc: dict, role: str, pro: dict, now: str) -> None:
                             "An assessment is not a finding; a professional report is not a court determination."))
     pdf.ln(3)
     pdf.set_text_color(0, 0, 0); pdf.set_font(FONT, "B", 12); pdf.cell(pdf.epw, 9, _s("1. Screening status"), new_x="LMARGIN", new_y="NEXT")
-    pdf.set_font(FONT, "", 10.5); pdf.set_x(pdf.l_margin); pdf.multi_cell(pdf.epw, 6, _s(receipt((doc.get("safety_screenings") or {}).get(role), label)))
+    pdf.set_font(FONT, "", 10.5); pdf.set_x(pdf.l_margin); pdf.multi_cell(pdf.epw, 6, _s(receipt((doc.get("safety_screenings") or {}).get(role), label, (doc.get("safety_declined") or {}).get(role))))
     pw = public_pathway(doc)
     if pw and pw.get("label"):
         pdf.set_x(pdf.l_margin); pdf.multi_cell(pdf.epw, 6, _s(f"Communication pathway (confirmed by the professional): {pw['label']}"))

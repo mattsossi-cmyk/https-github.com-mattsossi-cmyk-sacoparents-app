@@ -197,10 +197,32 @@ def public_record(scr: dict | None) -> dict | None:
     return {k: scr.get(k) for k in ("source", "version", "completed_at", "tier", "answered_count", "skipped_count", "item_count")}
 
 
-def receipt(scr: dict | None, parent_label: str) -> str:
-    """Court-safe line: receipt, version, tier, date. Never answer text."""
+def entry_status(doc: dict, role: str) -> str:
+    """Start-with-Safety step: completed | declined | not_started. Declined satisfies the step; it is never a fault."""
+    if (doc.get("safety_screenings") or {}).get(role):
+        return "completed"
+    return "declined" if (doc.get("safety_declined") or {}).get(role) else "not_started"
+
+
+def safety_step_satisfied(doc: dict, role: str | None) -> bool:
+    return role is not None and entry_status(doc, role) != "not_started"
+
+
+ENTRY_LABELS = {"completed": "Received", "declined": "Declined", "not_started": "Not started"}
+
+
+def entry_label(doc: dict, role: str) -> str:
+    st = entry_status(doc, role)
+    date = str(((doc.get("safety_screenings") or {}).get(role) or {}).get("completed_at") or (doc.get("safety_declined") or {}).get(role) or "")[:10]
+    return f"{ENTRY_LABELS[st]}{f' · {date}' if date and st != 'not_started' else ''}"
+
+
+def receipt(scr: dict | None, parent_label: str, declined_at: str | None = None) -> str:
+    """Court-safe line: receipt, version, tier, date. Never answer text. Declined is a neutral status, not a finding."""
+    if not scr and declined_at:
+        return f"{parent_label}: safety screening — Declined (parent chose not to answer at this time, {str(declined_at)[:10]})."
     if not scr:
-        return f"{parent_label}: safety screening — Not Received."
+        return f"{parent_label}: safety screening — Not started."
     ver = VERSION_LABEL.get(scr.get("version") or "", "legacy format")
     date = str(scr.get("completed_at") or "")[:10]
     tier = TIER_LABEL.get(scr.get("tier"), "Tier not available (legacy format)")
@@ -256,10 +278,10 @@ def _status(doc: dict) -> dict:
         out[r] = {"name": p.get("name") or f"Parent {r.upper()}", "gender": p.get("gender"), "version": ver, "needs_assignment": ver is None, "received": bool(scr),
                   "choice_needed": not confirmed and not scr, "default_version": ver if ver in ("A", "B") else None, "chosen_by_parent": confirmed,
                   "tier": scr.get("tier") if scr else None, "tier_label": TIER_LABEL.get(scr.get("tier")) if scr else None, "version_label": VERSION_LABEL.get(ver or ""),
-                  "completed_at": (scr or {}).get("completed_at"), "source": (scr or {}).get("source"), "receipt": receipt(scr, p.get("name") or f"Parent {r.upper()}"),
+                  "completed_at": (scr or {}).get("completed_at"), "source": (scr or {}).get("source"), "receipt": receipt(scr, p.get("name") or f"Parent {r.upper()}", (doc.get("safety_declined") or {}).get(r)),
                   "reminded_at": (doc.get("safety_reminded_at") or {}).get(r), "communication_received": bool((doc.get("communication_readiness") or {}).get(r)),
-                  "skipped_at": (doc.get("safety_skipped") or {}).get(r),
-                  "entry_status": "completed" if scr else ("skipped" if (doc.get("safety_skipped") or {}).get(r) else "not_started")}
+                  "declined_at": (doc.get("safety_declined") or {}).get(r),
+                  "entry_status": entry_status(doc, r), "entry_label": entry_label(doc, r)}
     return out
 
 
@@ -345,17 +367,17 @@ def build_router(db, get_current_user, get_joint_report_doc, report_role, log_ac
                       "note": None if mine["default_version"] else "Pick whichever set of questions fits your situation. Your professional can adjust this later."}
         return {"my_role": role, "is_professional": pro, "roles": st, "spec": spec, "choice": choice, "versions": VERSION_LABEL_PRO if pro else VERSION_LABEL, "scale_note": SCALE_NOTE}
 
-    @r.post("/joint/reports/{rid}/safety-screening/skip")
-    async def skip_screening(rid: str, user=Depends(get_current_user)):
-        """Parent chooses 'Skip for now'. Records completion status only (skipped); nothing else changes, no notification."""
+    @r.post("/joint/reports/{rid}/safety-screening/decline")
+    async def decline_screening(rid: str, user=Depends(get_current_user)):
+        """Parent chooses "I'd rather not answer these right now". Satisfies the step; records status + date only; no notification."""
         doc = await get_joint_report_doc(rid, user)
         role = report_role(doc, user["_id"])
         if role is None:
-            raise HTTPException(status_code=403, detail="Only invited parents can skip")
+            raise HTTPException(status_code=403, detail="Only invited parents can use this step")
         if (doc.get("safety_screenings") or {}).get(role):
             return {"entry_status": "completed"}
-        await db.joint_reports.update_one({"id": rid}, {"$set": {f"safety_skipped.{role}": datetime.now(timezone.utc).isoformat()}})
-        return {"entry_status": "skipped"}
+        await db.joint_reports.update_one({"id": rid}, {"$set": {f"safety_declined.{role}": datetime.now(timezone.utc).isoformat()}})
+        return {"entry_status": "declined"}
 
     @r.get("/me/safety-entry")
     async def my_safety_entry(user=Depends(get_current_user)):
@@ -363,15 +385,14 @@ def build_router(db, get_current_user, get_joint_report_doc, report_role, log_ac
         if user.get("role") != "parent":
             return {"applies": False}
         cur = db.joint_reports.find({"$or": [{"participants.a.user_id": user["_id"]}, {"participants.b.user_id": user["_id"]}], "archived": {"$ne": True}},
-                                    {"id": 1, "participants": 1, "safety_screenings": 1, "safety_skipped": 1, "created_at": 1}).sort("created_at", -1)
+                                    {"id": 1, "participants": 1, "safety_screenings": 1, "safety_declined": 1, "created_at": 1}).sort("created_at", -1)
         docs = await cur.to_list(50)
         if not docs:
             return {"applies": True, "has_case": False, "status": "not_started", "report_id": None, "text": SAFETY_BANNER_TEXT}
         statuses = []
         for d in docs:
             role = "a" if (d["participants"].get("a") or {}).get("user_id") == user["_id"] else "b"
-            scr = (d.get("safety_screenings") or {}).get(role)
-            statuses.append((d["id"], "completed" if scr else ("skipped" if (d.get("safety_skipped") or {}).get(role) else "not_started")))
+            statuses.append((d["id"], entry_status(d, role)))
         pending = next((s for s in statuses if s[1] == "not_started"), None)
         rid, status = pending or statuses[0]
         return {"applies": True, "has_case": True, "status": status, "report_id": rid, "text": SAFETY_BANNER_TEXT}

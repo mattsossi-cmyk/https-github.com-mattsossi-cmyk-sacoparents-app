@@ -125,6 +125,7 @@ def joint_public(doc: dict, user: dict, invitation: dict | None = None, pending:
         "status": doc["status"],
         "created_at": doc["created_at"],
         "my_role": role,
+        "safety_step_satisfied": __import__("safety_screening").safety_step_satisfied(doc, role) if role else None,
         "is_creator": doc.get("created_by") == uid,
         "professional_name": doc.get("professional_name"),
         "is_safety": bool(doc.get("is_safety")),

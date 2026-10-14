@@ -1056,3 +1056,9 @@ Probed 2026-09-02: /api/link-codes, /api/integrations/* on sacoparentsapp.online
 - Plus Jakarta Sans now bundled via @fontsource/plus-jakarta-sans (no CDN).
 - Fixes: professional first-login redirect loop (privacy vs professional notice) in App.js Protected.
 - NOT added: scoring, household questions, demographic menus. Tests: test_iter107 4/4; testing agent iteration_74 (issues fixed, re-verified by screenshot).
+
+## 2026-10-14 — Option A: Start-with-Safety STEP required, ANSWERS not (owner decision 10:02; PREVIEW ONLY)
+- Gate: PUT /joint/reports/{rid}/responses -> 403 'Please go through the Start with Safety step before answering the assessment.' until entry_status != not_started; /joint/reports/{rid} returns safety_step_satisfied for my_role; JointAssessment.jsx redirects to /start-with-safety when false.
+- 'Skip for now' removed; POST /joint/reports/{rid}/safety-screening/decline ("I'd rather not answer these right now") records safety_declined.{role} date; statuses completed|declined|not_started; entry_label Received/Declined/Not started · date; receipt() -> 'Declined (parent chose not to answer at this time, DATE)' / 'Not started.' in professional panel, Individual Perspective Reports, Legal Lens PDF.
+- Per-question skip unchanged; privacy notice unchanged; no auto restrictions; other parent never sees status (only own safety_step_satisfied flag). Banner text unchanged, no 'skip' wording. casekit.fill now declines the step before answering (tests). Tests test_iter108 2/2 + regressions 19 passed; UI verified (hub, bounce from /assess, decline -> link, assess opens).
+- Pending (not built, text unapproved): invitation email wording for the required step; choice-screen text.
