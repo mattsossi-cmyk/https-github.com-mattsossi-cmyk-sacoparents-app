@@ -75,6 +75,13 @@ Auth: Custom JWT (`auth.py`)
 - Archive: `PUT /api/professional/archive {ref, archived}` (owner only; court codes → `portal_court_keys.archived_at`, joint cases → `professional_archived_at`, returned as `archived_at`). View-only: parents, reminders, completion emails, PDFs unaffected. UI `ArchiveLink.jsx`; Court codes "Show archived (N)" toggle; joint cases "Archived" filter chip (excluded from other filters/counts).
 - Testing: iteration_135 backend 9/9 + frontend 100%.
 
+### 2026-06 — Iter136 · Archive search, Bulk archive, Case-notes PDF, Monday digest
+- Archive search: `CourtCodesPanel.jsx` search box (reference or private label) across active + archived codes; joint-case search already works inside the Archived filter. `CourtCodeItem.jsx` split out (`stateOf`, `isFinishedCode`).
+- Bulk archive: `POST /api/professional/archive/finished {kind}` (codes: revoked/expired/all parents done; cases: both_complete/cancelled/expired) + `PUT /api/professional/archive/bulk {refs, archived}` for Undo. UI `ArchiveFinishedButton.jsx` (confirm → toast with Undo).
+- Case notes in PDF: joint `progress.pdf?include_notes=true` adds "Private professional notes, not shared with parents". UI tick box in `ProgressPdfButton.jsx` (only when the case has notes; off by default).
+- Monday digest: `professional_digest.py` (counts only over non-archived codes + active cases; once per ISO week; skipped when off / empty / unchanged since last sent). `GET/PUT /api/professional/digest`, `GET /api/professional/digest/unsubscribe?token=`. Runs in the existing daily 9am Central cron, Monday gate. UI `ProfessionalDigestSwitch.jsx` on Account (creators only).
+- Testing: iteration_136 backend + frontend 100%.
+
 
 ### 2026-06 — Iter271–273 · Self-Assessment v2 (chat-style) + Progress Graph
 

@@ -1,0 +1,28 @@
+{
+  "summary": "iter136 (archive-finished bulk, case-notes PDF, weekly digest, archived search). Backend: 10/10 PASS on unit suite tests/test_requested_reminders.py (incl. digest counts weekly+unchanged and counts-only email). New integration suite tests/test_iter_prof_tools.py 3/3 PASS: (a) POST /professional/archive/finished returns exactly 20 code refs and 2 case refs for parent1; invalid kind -> 422; unauth -> 401; parent2 bulk-restore of parent1 refs -> count 0; everything restored via PUT /professional/archive/bulk {archived:false}. (b) Progress PDF for SA-460316 with include_notes=true (pdftotext) contains 'Private professional notes, not shared with parents' + note body; without the param that heading is absent; non-owner parent2 -> 404. (c) GET/PUT /professional/digest returns {eligible,enabled} with parent1 eligible=true and ccparent eligible=false; GET /professional/digest/unsubscribe?token=bad -> 400 HTML, valid make_unsubscribe_token(uid) -> 200 'You're unsubscribed' and flips enabled=false, PUT restores enabled=true. cron_routes.py imports send_professional_digests and calls it inside the Monday (America/Chicago) block of the daily 9am cron; /app/.emergent/crons.yml has NO new entry (confirmed). Frontend (/professional/joint-alignment/mine as parent1): court-codes-search filters active+archived codes — 'Smith' surfaces CC-P445YM 'Smith v Smith'; after archiving CC-484ZUG the search locates it with court-code-archived-CC-484ZUG '· Archived' marker even with Show archived OFF; court-codes-search-clear clears; non-matching query shows court-codes-no-match. court-codes-archive-finished reads 'Archive finished (20)', click fires browser confirm (auto-accepted), toast 'Archived 20.' with 'Undo' action; Undo yields 'Restored.' and button returns to '(20)'. pj-mine-archive-finished reads 'Archive finished (2)', same confirm->toast->Undo flow restores. SA-460316 row shows pj-mine-progress-pdf-SA-460316 + pj-mine-progress-pdf-SA-460316-include-notes checkbox unchecked by default; SA-DEMO01 (no notes) has no checkbox. /account: pro-digest-panel/toggle/state visible for parent1, hidden for ccparent; toggling Off persists across reload; restored to On. Mobile 390px: /mine and /account have scrollWidth-clientWidth = 0 (no horizontal overflow). All archived data restored at end (code bulk restore count=20, case bulk restore count=2); digest left On.",
+  "backend_issues": {"critical": [], "minor": []},
+  "frontend_issues": {"ui_bugs": [], "integration_issues": [], "design_issues": []},
+  "test_report_links": [
+    "/app/backend/tests/test_iter_prof_tools.py",
+    "/app/backend/tests/test_requested_reminders.py",
+    "/app/test_reports/pytest/iter_prof_tools.xml",
+    "/app/test_reports/pytest/iter_digest.xml"
+  ],
+  "action_items": [],
+  "critical_code_review_comments": [
+    "professional_nudges._finished_refs correctly scopes to archived_at:None (codes) / professional_archived_at:None (cases) so Archive-finished never re-flags already-archived items — reproducible undo relies on this.",
+    "archive_bulk is $in + created_by/professional_created_by so ownership is enforced server-side; parent2 can't restore parent1's refs (verified count=0).",
+    "professional_digest.send_professional_digests early-exits on skipped_off, already_sent (ISO week), skipped_empty, skipped_unchanged (last sent counts == current) — exactly the 'skipped when nothing changed' / 'once per ISO week' semantics in the brief.",
+    "digest_counts excludes archived codes (archived_at:None) and archived cases (professional_archived_at:None) and treats cancelled/expired cases as excluded; unjoined joint parent is bucketed 'not_started' via _bucket(None).",
+    "unsubscribe_digest returns HTMLResponse with 400 on bad token and persists digest_off:True on valid token; symmetrical PUT /professional/digest {enabled:true} re-enables.",
+    "cron_routes.py reuses the existing daily 9am Central cron and gates send_professional_digests on weekday()==0, honouring the 5-cron limit — no new /app/.emergent/crons.yml entry needed."
+  ],
+  "updated_files": ["/app/backend/tests/test_iter_prof_tools.py"],
+  "success_rate": {"backend": "100%", "frontend": "100%"},
+  "test_credentials": "parent1@test.com / TestPass123! (owner, 20 finished codes + 2 finished cases incl. SA-DEMO01 and SA-941716), parent2@test.com (non-owner), ccparent@test.com (not a creator, digest eligible=false).",
+  "seed_data_creation": "None. All archived items restored via PUT /professional/archive/bulk {archived:false}. CC-484ZUG archive-for-search also restored. Digest preference left On.",
+  "retest_needed": false,
+  "main_agent_can_self_test": true,
+  "context_for_next_testing_agent": "Login: click 'Sign in with email' on /login (demo landing is default). Attach page.on('dialog', lambda d: d.accept()) before clicking court-codes-archive-finished / pj-mine-archive-finished since both show a native browser confirm. The Undo action in the toast is a plain button:has-text('Undo'). After calling POST /professional/archive/finished to inspect refs, remember it ALSO archives them — immediately follow with PUT /professional/archive/bulk {archived:false} to restore (otherwise next call returns [] because they're archived). Restore testid pattern for individual court-code uses 'court-code-archive-<id>' when active and 'court-code-restore-<id>' only when Show archived is toggled on (see CourtCodeItem.jsx).",
+  "rca of the issue": "No bugs. All four features (archive search, bulk archive-finished with confirm+undo, case-notes PDF opt-in, Monday weekly digest + account toggle + unsubscribe) match the spec."
+}
