@@ -346,8 +346,10 @@ export function BiffMilestones({
               ? "text-[9px] font-bold px-2 py-0.5 rounded bg-purple-100 text-purple-900"
               : m.type === "success"
               ? "text-[9px] font-bold px-2 py-0.5 rounded bg-emerald-100 text-emerald-800"
-              : "text-[9px] font-bold px-2 py-0.5 rounded bg-rose-100 text-rose-800";
-            const tagLabel = isAdvocate ? "ADVOCATE" : m.type.toUpperCase();
+              : m.type === "friction"
+              ? "text-[9px] font-bold px-2 py-0.5 rounded bg-rose-100 text-rose-800"
+              : "text-[9px] font-bold px-2 py-0.5 rounded bg-slate-100 text-slate-700";
+            const tagLabel = isAdvocate ? "ADVOCATE" : String(m.type || "note").toUpperCase();
             return (
               <div
                 key={m.id}

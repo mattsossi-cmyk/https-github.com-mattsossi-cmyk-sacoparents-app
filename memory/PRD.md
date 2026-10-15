@@ -9067,3 +9067,29 @@ dashboard for sharing SELECTED completed reports with any professional.
   CourtMenu `ProNote`: "Set by <name>" when ticked / "Your professional asked for this" when unticked.
 - Checklist PDF: with ticks → case + safety + only ticked assessments (Edu/Med/Psych separate, Parallel Parenting Plan) + header note;
   no ticks → old full list. JSON checklist for the Court card unchanged.
+
+### 2026-06 — Communication Builder trust fix, welcome, court page, privacy wording, sample history purge (iter137: backend 9/9 unit + 4/4 live, frontend 95% → crash fixed + self-verified). PREVIEW ONLY, NOT DEPLOYED.
+- AI suggested wording (`backend/portal_ai.py`): `_KEEP_RULES` prompt (every date/time/number/question/boundary kept, no "...");
+  `missing_facts()` checks numbers (exact), day/month words, question count, first-person boundaries ("I can't/won't/will stop…",
+  "please don't") and ellipsis; one retry naming the gaps; still missing → `{status:"unavailable", biff:"", risk:null}`. OK →
+  `{status:"ok", biff, flags, risk, missing:[]}`. Provider failure → 502 "Suggested wording isn't available right now."
+- Frontend: no rule-based placeholder or tone label any more. `biffStatus` idle|loading|ai|unavailable in SacoparentsPortal;
+  risk badge only when status "ai"; editing the draft clears the suggestion; BIFF drawer no longer auto-sends while typing
+  (explicit `biff-suggest-btn`). Unavailable → `commBuilder/SuggestUnavailable.jsx` (Try again + fill-in template from
+  `fillInTemplate.js`, copies the parent's question/date/time/boundary sentences verbatim, labelled "not checked by AI").
+  `AiDraftNotice` directly above both draft boxes. Renamed to "Suggested wording" / "Copy with date stamp"; footer
+  "Secure & Private analysis by Emergent AI" replaced. Self-Assessment progress + START button removed from the builder.
+- Sample history: DEFAULT_MILESTONES / DEFAULT_BIFF_LOGS removed (history starts empty). `portal_routes.purge_sample_history`
+  runs on boot ($pull of the exact sample objects from portal_state + portal_pdf_shares payloads; preview removed 20) and
+  PUT /portal/state strips them (`without_samples`); frontend `withoutSamples` cleans localStorage. BiffMilestones guards
+  milestones without `type`.
+- Welcome: buttons (door-court, door-self, new door-comm "Not a separate path") above the artwork; artwork caption + "Tool for
+  either path" badge; "Individual Journey" → "Self Journey" everywhere (incl. certificate PDF + email).
+- Court page: `CourtMenu` = the one requested list (summary "X of Y done · Z remaining", requested rows then others);
+  `CourtReports` = all PDFs (completion summary + send, court-ready, checklist, comparison); `CourtMoreTools` collapsed
+  (case/communication tools, pillar tiles, court modules, checklist list). Mobile order: list → artwork → rest → chat.
+- Privacy: `CASE_EXCEPTION` first on What Professionals See; case method + notices updated; `CaseVisibilityNotice` in the court
+  accept dialog and Join invitation page; legal-ack modal + login privacy box mention the exception. Verified against code:
+  professionals get status + dates only; joint-case bundle only at both_complete; no Self-Assessment answers path.
+- Not changed: Privacy Policy legal text (Privacy.jsx §"does not share … unless you choose") — attorney-owned.
+
