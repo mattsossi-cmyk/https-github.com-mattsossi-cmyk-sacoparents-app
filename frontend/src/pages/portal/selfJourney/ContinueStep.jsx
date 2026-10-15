@@ -2,7 +2,7 @@ import React from "react";
 
 import { scrollToTestId } from "./FlowArrow";
 
-// "Continue at Step N" button: jumps to the first unfinished Individual Journey step.
+// "Continue at Step N" button: jumps to the first unfinished Self Journey step.
 export function ContinueStep({ step, doneCount, total }) {
   return (
     <button

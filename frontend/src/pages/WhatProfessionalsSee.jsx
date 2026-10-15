@@ -2,7 +2,7 @@ import React from "react";
 import { Link } from "react-router-dom";
 import { ArrowLeft, Scale, ShieldCheck } from "lucide-react";
 
-import { ATTORNEY_REVIEW_PENDING, COURT_POINTS, METHODS, SHARING_NOTICES, SHORT_VERSION } from "../lib/proVisibility";
+import { ATTORNEY_REVIEW_PENDING, CASE_EXCEPTION, COURT_POINTS, METHODS, SHARING_NOTICES, SHORT_VERSION } from "../lib/proVisibility";
 import { useHashScroll } from "../lib/useHashScroll";
 
 const UPDATED = "June 2026";
@@ -99,6 +99,10 @@ export default function WhatProfessionalsSee() {
         </div>
         )}
         <H2 id="short-version">The short version</H2>
+        <p data-testid="pros-see-case-exception" role="note" className="mb-4 rounded-2xl border border-[#D9CCF0] bg-[#F5F1FB] px-4 py-3 text-[15px] text-[#2A0F5F] leading-relaxed">
+          <i className="fa-solid fa-briefcase mr-2" aria-hidden="true"></i>
+          <strong>Case invitations and court codes.</strong> {CASE_EXCEPTION}
+        </p>
         <Bullets items={SHORT_VERSION} testid="pros-see-short-version" />
         <H2 id="how">How something reaches a professional</H2>
         <div className="grid gap-4">{METHODS.map((m) => <MethodCard key={m.key} m={m} />)}</div>

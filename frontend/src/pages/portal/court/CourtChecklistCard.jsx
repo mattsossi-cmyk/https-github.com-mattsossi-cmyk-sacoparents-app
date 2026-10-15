@@ -21,7 +21,7 @@ function Row({ item }) {
   );
 }
 
-export function CourtChecklistCard({ checklist }) {
+export function CourtChecklistCard({ checklist, showDownload = true }) {
   const { data, error, load, download, downloading } = checklist;
   const pct = data ? Math.round((data.done / data.total) * 100) : 0;
   return (
@@ -64,6 +64,7 @@ export function CourtChecklistCard({ checklist }) {
           </ul>
         </>
       )}
+      {showDownload && (
       <button
         type="button"
         data-testid="court-checklist-download"
@@ -74,6 +75,8 @@ export function CourtChecklistCard({ checklist }) {
         <i className={`fa-solid ${downloading ? "fa-spinner fa-spin" : "fa-file-arrow-down"}`}></i>
         <span>Download Checklist PDF</span>
       </button>
+      )}
+      {!showDownload && <p className="mt-3 text-[11px] text-slate-500">Download the Checklist PDF from Reports.</p>}
     </div>
   );
 }

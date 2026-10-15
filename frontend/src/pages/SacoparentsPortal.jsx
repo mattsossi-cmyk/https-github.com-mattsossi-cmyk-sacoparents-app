@@ -8,11 +8,9 @@ import {
   ALIGN_RECORDS_KEY,
   BIFF_LOG_KEY,
   COURT_KEY_KEY,
-  DEFAULT_BIFF_LOGS,
   DEFAULT_FOUNDATION,
   DEFAULT_HEALTH_INDEX,
   DEFAULT_LEGAL_REPORT,
-  DEFAULT_MILESTONES,
   FOUNDATION_KEY,
   GUIDED_DRAFT_KEY_PREFIX,
   HEALTH_INDEX_KEY,
@@ -25,6 +23,7 @@ import {
   SAFETY_PLAN_KEY,
   SNAPSHOT_HISTORY_KEY,
   SNAPSHOT_HISTORY_MAX,
+  withoutSamples,
   PATH_PICKED_KEY,
   FIRST_ENGAGEMENT_KEY,
   FOLLOWUP_DISMISSED_KEY,
@@ -87,7 +86,6 @@ export default function SacoparentsPortal() {
   const [biffDrawerOpen, setBiffDrawerOpen] = useState(false);
   const [commBuilderOpen, setCommBuilderOpen] = useState(false);
   const [commBuilderFocus, setCommBuilderFocus] = useState(null);
-  const [saRequest, setSaRequest] = useState(0);
   const [courtRequest, setCourtRequest] = useState(0);
   const [recordsDrawerOpen, setRecordsDrawerOpen] = useState(false);
   const [foundationDrawerOpen, setFoundationDrawerOpen] = useState(false);
@@ -245,9 +243,10 @@ export default function SacoparentsPortal() {
   const initialisedRef = useRef(false);
   const printDate = useMemo(() => new Date().toLocaleDateString(), []);
 
-  // BIFF live-refine state
+  // BIFF live-refine state. biffStatus: idle | loading | ai (AI-reviewed wording) | unavailable.
   const [biffLoading, setBiffLoading] = useState(false);
   const [biffError, setBiffError] = useState("");
+  const [biffStatus, setBiffStatus] = useState("idle");
   const biffAbortRef = useRef(null);
   const biffDebounceRef = useRef(null);
 
@@ -276,9 +275,10 @@ export default function SacoparentsPortal() {
     }
     setAlignRecords([]);
 
-    const seededMilestones = readJson(MILESTONE_KEY, null);
-    if (seededMilestones == null) writeJson(MILESTONE_KEY, DEFAULT_MILESTONES);
-    setMilestones(seededMilestones ?? DEFAULT_MILESTONES);
+    // History starts empty; built-in sample entries saved by older builds are removed.
+    const localMilestones = withoutSamples("milestones", readJson(MILESTONE_KEY, []));
+    writeJson(MILESTONE_KEY, localMilestones);
+    setMilestones(localMilestones);
 
     const seededFoundation = readString(FOUNDATION_KEY, null);
     if (seededFoundation == null) writeString(FOUNDATION_KEY, DEFAULT_FOUNDATION);
@@ -290,9 +290,9 @@ export default function SacoparentsPortal() {
     const seededHealth = readJson(HEALTH_INDEX_KEY, null);
     setHealthIndex({ ...DEFAULT_HEALTH_INDEX, ...(seededHealth || {}) });
 
-    const seededLogs = readJson(BIFF_LOG_KEY, null);
-    if (seededLogs == null) writeJson(BIFF_LOG_KEY, DEFAULT_BIFF_LOGS);
-    setBiffLogs(seededLogs ?? DEFAULT_BIFF_LOGS);
+    const localLogs = withoutSamples("biff_logs", readJson(BIFF_LOG_KEY, []));
+    writeJson(BIFF_LOG_KEY, localLogs);
+    setBiffLogs(localLogs);
 
     const seededReassessments = readJson(REASSESSMENT_KEY, null);
     setReassessments(seededReassessments ?? []);
@@ -376,12 +376,14 @@ export default function SacoparentsPortal() {
           writeJson(ALIGN_RECORDS_KEY, s.align_records);
         }
         if (Array.isArray(s.milestones)) {
-          setMilestones(s.milestones);
-          writeJson(MILESTONE_KEY, s.milestones);
+          const clean = withoutSamples("milestones", s.milestones);
+          setMilestones(clean);
+          writeJson(MILESTONE_KEY, clean);
         }
         if (Array.isArray(s.biff_logs)) {
-          setBiffLogs(s.biff_logs);
-          writeJson(BIFF_LOG_KEY, s.biff_logs);
+          const clean = withoutSamples("biff_logs", s.biff_logs);
+          setBiffLogs(clean);
+          writeJson(BIFF_LOG_KEY, clean);
         }
         if (Array.isArray(s.reassessments)) {
           setReassessments(s.reassessments);
@@ -856,58 +858,43 @@ export default function SacoparentsPortal() {
     alert("Official Legal Conflict Resolution Report draft saved!");
   }, [legalReport]);
 
-  // BIFF local + AI refinement
-  const runLocalAnalysis = useCallback(
-    (val) => {
-      const trimmed = (val || "").trim();
-      if (!trimmed) {
-        setFlagList([]);
-        setBiffOutput("");
-        setRiskLabel("Neutral");
-        return;
+  // BIFF suggested wording: only AI-reviewed text is ever shown; no rule-based placeholder or tone label.
+  const cancelBiff = useCallback(() => {
+    if (biffDebounceRef.current) clearTimeout(biffDebounceRef.current);
+    if (biffAbortRef.current) {
+      try {
+        biffAbortRef.current.abort();
+      } catch {
+        /* noop */
       }
-      const flags = [];
-      if (/always|never|you do/i.test(trimmed)) flags.push("Accusatory phrasing");
-      if (/!{2,}/.test(trimmed)) flags.push("High intensity");
-      setFlagList(flags);
-      setRiskLabel(flags.length > 0 ? "Escalation Flag" : "Low Risk");
-      // Match the server-side grey-rock fallback text (portal_ai.py) so a
-      // flagged parent never sees a warm "Thank you for your message..."
-      // line while Claude is warming up.
-      const flagged = !!(safetyAck && safetyAck.flagged);
-      if (flagged) {
-        setBiffOutput(
-          `Received. Follow-up in writing. — ${trimmed.substring(0, 120)}`
-        );
-      } else {
-        setBiffOutput(
-          `Thank you for your message. ${trimmed.substring(0, 100)}... Let's maintain focus on the child's schedule. Thanks.`
-        );
-      }
-    },
-    [safetyAck]
-  );
+    }
+  }, []);
+
+  const resetBiff = useCallback(() => {
+    setFlagList([]);
+    setBiffOutput("");
+    setRiskLabel("Neutral");
+    setBiffStatus("idle");
+    setBiffError("");
+    setBiffLoading(false);
+  }, []);
 
   const runAiRefine = useCallback(
     (val, delay = 900) => {
-      if (biffDebounceRef.current) clearTimeout(biffDebounceRef.current);
-      if (biffAbortRef.current) {
-        try {
-          biffAbortRef.current.abort();
-        } catch {
-          /* noop */
-        }
-      }
+      cancelBiff();
       const trimmed = (val || "").trim();
       if (!trimmed) {
-        setBiffLoading(false);
-        setBiffError("");
+        resetBiff();
         return;
       }
       const flagged = !!(safetyAck && safetyAck.flagged);
+      setBiffOutput("");
+      setFlagList([]);
+      setRiskLabel("Neutral");
+      setBiffStatus("loading");
+      setBiffLoading(true);
+      setBiffError("");
       biffDebounceRef.current = setTimeout(async () => {
-        setBiffLoading(true);
-        setBiffError("");
         const controller = new AbortController();
         biffAbortRef.current = controller;
         try {
@@ -916,35 +903,34 @@ export default function SacoparentsPortal() {
             { raw: trimmed, safety_flagged: flagged },
             { signal: controller.signal }
           );
-          if (data?.biff) {
+          if (data?.status === "ok" && data.biff) {
             setBiffOutput(data.biff);
             setFlagList(Array.isArray(data.flags) ? data.flags : []);
-            setRiskLabel(
-              data.risk === "Escalation Flag" || data.risk === "Low Risk"
-                ? data.risk
-                : (data.flags || []).length
-                ? "Escalation Flag"
-                : "Low Risk"
-            );
+            setRiskLabel(data.risk === "Escalation Flag" ? "Escalation Flag" : "Low Risk");
+            setBiffStatus("ai");
+          } else {
+            setBiffStatus("unavailable");
+            setBiffError("Suggested wording isn't available right now.");
           }
         } catch (err) {
           if (err?.name === "CanceledError" || err?.code === "ERR_CANCELED") return;
-          setBiffError("Coach is warming up — using local guidance for now.");
-        } finally {
-          setBiffLoading(false);
+          setBiffStatus("unavailable");
+          setBiffError("Suggested wording isn't available right now.");
         }
+        setBiffLoading(false);
       }, delay);
     },
-    [safetyAck]
+    [safetyAck, cancelBiff, resetBiff]
   );
 
+  // Editing the draft clears any earlier suggestion; nothing is sent until the parent asks.
   const handleRawInputChange = useCallback(
     (val) => {
       setRawInput(val);
-      runLocalAnalysis(val);
-      runAiRefine(val);
+      cancelBiff();
+      resetBiff();
     },
-    [runLocalAnalysis, runAiRefine]
+    [cancelBiff, resetBiff]
   );
 
   const applyPreset = useCallback(
@@ -952,37 +938,18 @@ export default function SacoparentsPortal() {
       const p = PRESETS[key];
       if (!p) return;
       setRawInput(p.raw);
-      setFlagList(p.flags);
-      setRiskLabel(p.flags.length > 0 ? "Escalation Flag" : "Low Risk");
-      // A flagged parent should NEVER see the canned warm preset copy
-      // — use the grey-rock template until Claude's real reply lands.
-      const flagged = !!(safetyAck && safetyAck.flagged);
-      if (flagged) {
-        setBiffOutput(
-          `Received. Follow-up in writing. — ${p.raw.substring(0, 120)}`
-        );
-      } else {
-        setBiffOutput(p.biff);
-      }
       runAiRefine(p.raw, delay);
     },
-    [runAiRefine, safetyAck]
+    [runAiRefine]
   );
 
-  // Communication Builder page: rewrite only when the parent taps Transform.
-  const transformBiff = useCallback(
-    (val) => {
-      runLocalAnalysis(val);
-      runAiRefine(val, 0);
-    },
-    [runLocalAnalysis, runAiRefine]
-  );
+  const transformBiff = useCallback((val) => runAiRefine(val, 0), [runAiRefine]);
 
   const copyBiffOutput = useCallback(() => {
     if (!biffOutput) return;
     try {
       navigator.clipboard.writeText(biffOutput);
-      alert("BIFF message copied!");
+      alert("Suggested wording copied.");
     } catch {
       alert("Clipboard unavailable — please copy manually.");
     }
@@ -993,16 +960,14 @@ export default function SacoparentsPortal() {
     const stamp = [
       "",
       "---",
-      "Refined via SA CoParents BIFF Coach",
-      `Refined: ${new Date().toISOString().replace("T", " ").substring(0, 16)} UTC`,
+      "Suggested wording from SA CoParents Communication Builder",
+      `Copied: ${new Date().toISOString().replace("T", " ").substring(0, 16)} UTC`,
       `Case: ${courtKey || "Self-Guided Coparenting Journey"}`,
       "sacoparentsapp.online",
     ].join("\n");
     try {
       navigator.clipboard.writeText(`${biffOutput}${stamp}`);
-      alert(
-        "Tone-safe message copied with audit stamp — safe to share with your attorney or mediator."
-      );
+      alert("Suggested wording copied with a date stamp for your records.");
     } catch {
       alert("Clipboard unavailable — please copy manually.");
     }
@@ -1011,10 +976,10 @@ export default function SacoparentsPortal() {
       const kudos = {
         id: Date.now(),
         type: "success",
-        title: "Coach kept a hot message tone-safe",
+        title: "Calmer wording copied",
         date: new Date().toISOString().substring(0, 10),
         note:
-          "You reformulated an escalation-flagged draft into a BIFF message and copied it via the Tone-Safe stamp.",
+          "You copied suggested wording for a draft the AI tone check flagged for friction.",
         source: "biff_kudos",
       };
       const next = [kudos, ...milestones];
@@ -1812,7 +1777,7 @@ export default function SacoparentsPortal() {
                brand-new parent sees "0 messages reworked." A filed
                `biff_pair` snapshot (iter250 Draft-to-Snapshot) is a
                stronger explicit-save signal. */
-            biffAuthoredCount={Math.max(0, biffLogs.length - 1)}
+            biffAuthoredCount={biffLogs.length}
             biffPairCount={
               snapshotHistory.filter((s) => s?.topic === "biff_pair").length
             }
@@ -1845,7 +1810,6 @@ export default function SacoparentsPortal() {
               setCommBuilderFocus(focus === "history" ? "history" : null);
               setCommBuilderOpen(true);
             }}
-            saRequest={saRequest}
             onOpenIntroGuide={() => setIntroOpen(true)}
             onOpenReport={() => setFoundationDrawerOpen(true)}
             progressByTopic={progressByTopic}
@@ -1967,22 +1931,17 @@ export default function SacoparentsPortal() {
           focus={commBuilderFocus}
           onClose={() => setCommBuilderOpen(false)}
           onQuickExit={quickExitAction}
-          onStartSelfAssessment={() => {
-            setCommBuilderOpen(false);
-            setSaRequest((n) => n + 1);
-          }}
-          userId={user?.user_id}
           greyRock={safetyFlagged}
           biff={{
             rawInput,
-            setRawInput,
+            setRawInput: handleRawInputChange,
             transform: transformBiff,
             applyPreset,
             riskLabel,
             flagList,
             biffOutput,
             biffLoading,
-            biffError,
+            biffStatus,
             copyToneSafe,
             logCommunication,
             onSaveBiffSnapshot,
@@ -2015,6 +1974,8 @@ export default function SacoparentsPortal() {
         biffOutput={biffOutput}
         biffLoading={biffLoading}
         biffError={biffError}
+        biffStatus={biffStatus}
+        onSuggest={() => transformBiff(rawInput)}
         copyBiffOutput={copyBiffOutput}
         copyToneSafe={copyToneSafe}
         logCommunication={logCommunication}

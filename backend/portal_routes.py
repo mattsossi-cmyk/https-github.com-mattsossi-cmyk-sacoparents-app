@@ -134,6 +134,34 @@ async def _rate_guard(ip: str) -> None:
 # --------------------------------------------------------------------- #
 _PORTAL_COLLECTION = "portal_state"
 
+# Built-in sample entries older builds pre-filled into every account; purged on boot and never stored again.
+SAMPLE_MILESTONES: List[Dict[str, Any]] = [
+    {"id": 1, "type": "success", "title": "On-Time Handoff Completed", "date": "2026-09-22",
+     "note": "Exchanged at neutral drop-off point without friction."},
+    {"id": 2, "type": "friction", "title": "Schedule Request Delay", "date": "2026-09-18",
+     "note": "Required 24-hr reminder before confirmation."},
+]
+SAMPLE_BIFF_LOGS: List[Dict[str, Any]] = [
+    {"id": 1, "timestamp": "2026-09-20 14:30", "category": "Handoff Delay", "original": "You are late again.",
+     "biff": "Thank you for checking in. Arrived at 4:15 PM due to traffic."},
+]
+_SAMPLES = {"milestones": SAMPLE_MILESTONES, "biff_logs": SAMPLE_BIFF_LOGS}
+
+
+def without_samples(field: str, entries: List[Any]) -> List[Any]:
+    samples = _SAMPLES[field]
+    return [e for e in entries if not (isinstance(e, dict) and any(all(e.get(k) == v for k, v in s.items()) for s in samples))]
+
+
+async def purge_sample_history(db) -> int:
+    """Remove only the exact built-in sample entries from saved accounts and share-link snapshots."""
+    changed = 0
+    for field, samples in _SAMPLES.items():
+        for s in samples:
+            for coll, path in ((_PORTAL_COLLECTION, field), ("portal_pdf_shares", f"payload.{field}")):
+                res = await db[coll].update_many({path: {"$elemMatch": s}}, {"$pull": {path: s}})
+                changed += res.modified_count
+    return changed
 
 def _empty_portal_state() -> Dict[str, Any]:
     return {
@@ -399,9 +427,9 @@ async def put_state(
         # Child record folders are switched off: never keep these records.
         updates["align_records"] = []
     if "milestones" in updates:
-        updates["milestones"] = _cap(updates["milestones"], 500)
+        updates["milestones"] = without_samples("milestones", _cap(updates["milestones"], 500))
     if "biff_logs" in updates:
-        updates["biff_logs"] = _cap(updates["biff_logs"], 500)
+        updates["biff_logs"] = without_samples("biff_logs", _cap(updates["biff_logs"], 500))
     if "reassessments" in updates:
         updates["reassessments"] = _cap(updates["reassessments"], 200)
     if "foundation_text" in updates:
@@ -622,7 +650,7 @@ async def biff_refine_endpoint(body: BiffRefineBody, request: Request) -> Dict[s
         logger.warning("portal biff-refine LLM call failed: %s", exc)
         raise HTTPException(
             status_code=502,
-            detail="The BIFF coach couldn't respond right now — please try again in a moment.",
+            detail="Suggested wording isn't available right now. Please try again.",
         )
     return result
 

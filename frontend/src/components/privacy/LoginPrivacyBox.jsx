@@ -5,6 +5,7 @@ import { PrivacyLinks } from "./PrivacyLinks";
 
 const POINTS = [
   "Your answers are private to your account. Nothing is shared unless you choose a person and tap Send.",
+  "One exception: if you accept a professional's case invitation or court code, they see whether each step they asked for is done, with dates, never your answers.",
   "Emails never carry your documents. The person you send to opens them with a one-time code.",
   "No ad trackers and no session recordings.",
 ];

@@ -1,11 +1,11 @@
 import React from "react";
 
 const btn =
-  "rounded-2xl bg-white border border-[#e0d5ed] hover:border-[#5c2c8e] hover:bg-[#f2ebfc] px-4 py-3.5 text-left flex items-center gap-3 transition-colors disabled:opacity-60";
+  "rounded-2xl bg-white border border-[#e0d5ed] hover:border-[#5c2c8e] hover:bg-[#f2ebfc] px-4 py-3.5 text-left flex items-center gap-3 transition-colors disabled:opacity-60 disabled:hover:bg-white disabled:hover:border-[#e0d5ed]";
 
-function Tool({ testid, icon, title, sub, onClick, busy, tone = "bg-[#f2ebfc] text-[#5c2c8e]", className = "" }) {
+export function Tool({ testid, icon, title, sub, onClick, busy, disabled = false, tone = "bg-[#f2ebfc] text-[#5c2c8e]", className = "" }) {
   return (
-    <button type="button" data-testid={testid} onClick={onClick} disabled={busy} className={`${btn} ${className}`}>
+    <button type="button" data-testid={testid} onClick={onClick} disabled={busy || disabled} className={`${btn} ${className}`}>
       <span className={`shrink-0 w-10 h-10 rounded-xl flex items-center justify-center ${tone}`}>
         <i className={`fa-solid ${busy ? "fa-spinner fa-spin" : icon}`}></i>
       </span>
@@ -17,13 +17,11 @@ function Tool({ testid, icon, title, sub, onClick, busy, tone = "bg-[#f2ebfc] te
   );
 }
 
-// Court tools under the artwork: case details, court-ready PDF, BIFF check, save case & open the professional site.
-export function CourtTools({ cc, courtKey, compare, onCase, onBiff }) {
-  const ready = compare.data?.state === "ready";
+// Case details, BIFF check, and save case & open the professional site (PDFs live in Reports).
+export function CourtTools({ cc, courtKey, onCase, onBiff }) {
   return (
     <section data-testid="court-tools">
-      <h2 className="text-xl sm:text-2xl font-extrabold text-[#3b1566] mb-1">Your Court Tools</h2>
-      <p className="text-sm text-[#5f6368] mb-4">Everything you need for your court-ordered path, in one place.</p>
+      <h4 className="text-sm font-extrabold text-[#3b1566] uppercase tracking-wider mb-3">Case &amp; message tools</h4>
       <div className="grid sm:grid-cols-2 gap-3">
         <Tool
           testid="court-tool-case"
@@ -33,17 +31,7 @@ export function CourtTools({ cc, courtKey, compare, onCase, onBiff }) {
           sub={cc.verified ? "Verified · update your details" : "Accept your court-ordered invite"}
           onClick={onCase}
         />
-        <Tool testid="court-tool-pdf" icon="fa-file-pdf" title="Court-Ready PDF" sub="Download your summary report" onClick={cc.pdf} busy={cc.busy === "pdf"} />
-        <Tool
-          testid="court-tool-compare-pdf"
-          icon="fa-people-arrows"
-          title="Comparison PDF"
-          sub={ready ? "Side-by-side results for mediation" : "Available once both parents share"}
-          onClick={compare.downloadPdf}
-          busy={compare.pdfBusy}
-          className={ready ? "" : "opacity-70"}
-        />
-        <Tool testid="court-tool-biff" icon="fa-wand-magic-sparkles" title="BIFF Communication Check" sub="Review your saved messages" onClick={onBiff} />
+        <Tool testid="court-tool-biff" icon="fa-wand-magic-sparkles" title="Communication Builder" sub="Review your saved messages" onClick={onBiff} />
         <Tool testid="court-tool-sync" icon="fa-rotate" title="Save Case & Open" sub={cc.alignHost} onClick={cc.sync} busy={cc.busy === "sync"} className="sm:col-span-2" />
       </div>
     </section>
@@ -56,7 +44,7 @@ export function CourtModulesCard({ modules, onOpenModule }) {
       <h4 className="text-sm font-extrabold text-[#3b1566] uppercase tracking-wider flex items-center gap-2">
         <i className="fa-solid fa-layer-group text-[#5c2c8e]"></i> Court Modules
       </h4>
-      <p className="text-[11px] text-slate-500 mt-0.5 mb-3">The modules your professional reviews.</p>
+      <p className="text-[11px] text-slate-500 mt-0.5 mb-3">Optional reflection modules.</p>
       <div className="space-y-2">
         {modules.map((m) => (
           <button

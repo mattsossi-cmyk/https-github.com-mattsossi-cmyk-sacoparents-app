@@ -351,6 +351,13 @@ async def startup_log():
     except Exception:  # noqa: BLE001
         logger.exception("Failed to purge child alignment records")
     try:
+        from portal_routes import purge_sample_history
+        n = await purge_sample_history(app.state.db)
+        if n:
+            logger.info("Removed built-in sample history from %d saved documents", n)
+    except Exception:  # noqa: BLE001
+        logger.exception("Failed to purge sample history")
+    try:
         from integration_routes import migrate_verified_links
         n = await migrate_verified_links(app.state.db)
         if n:

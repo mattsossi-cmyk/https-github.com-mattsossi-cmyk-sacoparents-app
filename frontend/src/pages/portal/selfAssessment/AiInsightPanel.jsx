@@ -43,6 +43,9 @@ function FramingForm({ safetyFlag }) {
       <label htmlFor="sa-ai-query" className="block text-xs font-bold text-[#3B1C6B]">
         Ask AI for communication framing
       </label>
+      <p data-testid="sa-ai-query-notice" className="text-[11px] text-slate-500 -mt-2">
+        Sent to an outside AI service. Leave out names and sensitive details.
+      </p>
       <div className="flex gap-2">
         <input
           id="sa-ai-query"
@@ -133,7 +136,7 @@ export function AiInsightPanel({ tip, loading, safetyFlag, onOpenBiffCoach, onUs
           className="w-full py-3 px-4 disabled:opacity-60 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white text-xs font-bold rounded-xl shadow transition-colors flex items-center justify-center gap-2"
         >
           <i className="fa-solid fa-wand-magic-sparkles"></i>
-          <span>Generate Peaceful Response (AI BIFF Tool)</span>
+          <span>Get suggested wording (AI)</span>
         </button>
         <button type="button" data-testid="sa-ai-examples" onClick={() => setLibrary("examples")} className={ghostBtn}>
           <i className="fa-regular fa-lightbulb text-purple-500"></i>
@@ -145,7 +148,7 @@ export function AiInsightPanel({ tip, loading, safetyFlag, onOpenBiffCoach, onUs
         </button>
       </div>
       <div className="mt-5 pt-3 border-t border-purple-100 text-center">
-        <span className="text-[10px] text-slate-400 font-medium">Secure &amp; Private analysis by Emergent AI</span>
+        <span data-testid="sa-ai-footer-note" className="text-[10px] text-slate-500 font-medium">AI help comes from an outside AI service. Leave out names and sensitive details.</span>
       </div>
       <AiLibraryDialog
         tab={library}

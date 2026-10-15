@@ -22,6 +22,21 @@ from ai_service import SAFETY_GUARDRAIL, _extract_json
 logger = logging.getLogger(__name__)
 
 
+# Shared by both coaches: the parent's actual request must survive the rewrite.
+_KEEP_RULES = (
+    "KEEP THE PARENT'S ACTUAL REQUEST. Every date, day, time, number, dollar "
+    "amount, place and child name the parent wrote must appear in your "
+    "rewrite exactly as written (e.g. keep '5 or 6 tomorrow', don't change it "
+    "to 'this evening'). If the parent asked questions, your rewrite must "
+    "still ask every one of them, each ending with a question mark; you may "
+    "calm a hostile question's wording but keep what it asks. Keep every "
+    "request and boundary the parent stated with the same meaning, including "
+    "any 'not' (e.g. 'I can't do Saturday', 'please don't call after 9'). "
+    "Never cut the message short and never use '...'. Do NOT invent new "
+    "facts. Do NOT add legal or clinical framing. Do NOT add generic filler "
+    "the parent didn't say.\n\n"
+)
+
 _BIFF_SYSTEM = (
     SAFETY_GUARDRAIL
     + "You are the BIFF Communication Coach for the SA CoParents portal. "
@@ -34,10 +49,8 @@ _BIFF_SYSTEM = (
     "closes politely.\n"
     "  • Firm — states the request or boundary without hostility, blame, "
     "or 'always/never' generalisations.\n\n"
-    "Preserve any specific facts (times, dates, dollar amounts, child names) "
-    "the parent supplied. Do NOT invent new facts. Do NOT add legal or "
-    "clinical framing.\n\n"
-    "Return STRICT JSON only, matching exactly this shape:\n"
+    + _KEEP_RULES
+    + "Return STRICT JSON only, matching exactly this shape:\n"
     "{\n"
     '  "biff": "<the rewritten BIFF message, plain text, no bullets>",\n'
     '  "flags": ["<short label per escalation cue you found>", ...],\n'
@@ -74,15 +87,14 @@ _BIFF_GREYROCK_SYSTEM = (
     "parent's own name if they included it. If the parent wrote a warm "
     "opener, REMOVE it.\n"
     "  • Firm — state the fact or the decision once. Do not re-explain or "
-    "hedge. Do not agree to anything not already agreed. Do not ask "
-    "questions that invite further contact unless a decision is required.\n"
+    "hedge. Do not agree to anything not already agreed. Do not add "
+    "questions that invite further contact; keep only the logistics question "
+    "the parent actually asked.\n"
     "  • Never repeat the co-parent's inflammatory phrases back to them.\n"
     "  • Never disclose the parent's location, plans, feelings, or the "
     "child's plans beyond the immediate custody logistics being discussed.\n\n"
-    "Preserve any specific facts (times, dates, dollar amounts, child names) "
-    "the parent supplied. Do NOT invent new facts. Do NOT add legal or "
-    "clinical framing.\n\n"
-    "Return STRICT JSON only, matching exactly this shape:\n"
+    + _KEEP_RULES
+    + "Return STRICT JSON only, matching exactly this shape:\n"
     "{\n"
     '  "biff": "<the rewritten grey-rock BIFF message, plain text, no bullets>",\n'
     '  "flags": ["<short label per escalation cue you found>", ...],\n'
@@ -95,23 +107,72 @@ _BIFF_GREYROCK_SYSTEM = (
 )
 
 
+_NUM_RE = re.compile(r"\d+(?:[:./]\d+)*")
+_DAY_WORDS = (
+    "monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday",
+    "today", "tomorrow", "tonight", "yesterday", "weekend", "morning", "afternoon", "evening",
+    "january", "february", "march", "april", "june", "july", "august", "september",
+    "october", "november", "december",
+)
+
+
+_BOUNDARY_RE = re.compile(
+    r"\b(?:i|we)\s+(?:will not|won't|can't|cannot|can not|am not|'m not|do not|don't|will no longer|will stop|'ll stop|am unable|'m unable)\b"
+    r"|\bplease\s+(?:do not|don't|stop)\b|\b(?:is|are)\s+not\s+(?:ok|okay|acceptable)\b",
+    re.I,
+)
+_NEG_RE = re.compile(r"\b(?:not|no|never|unable|cannot|stop)\b|n't\b", re.I)
+_QUESTION_RE = re.compile(r"[^?.!\n]*[A-Za-z0-9][^?.!\n]*\?+")
+
+
+def _norm(text: str) -> str:
+    return text.replace("\u2019", "'").replace("\u2018", "'")
+
+
+def missing_facts(raw: str, biff: str) -> List[str]:
+    """Dates, times, numbers, questions and boundaries in the draft that the rewrite dropped."""
+    raw, biff = _norm(raw), _norm(biff)
+    out_low = biff.lower()
+    missing = [n for n in dict.fromkeys(_NUM_RE.findall(raw)) if not re.search(rf"(?<![\d]){re.escape(n)}(?![\d])", biff)]
+    missing += [w for w in _DAY_WORDS if re.search(rf"\b{w}\b", raw, re.I) and not re.search(rf"\b{w}\b", out_low)]
+    asked = len(_QUESTION_RE.findall(raw))
+    if asked and len(re.findall(r"\?+", biff)) < asked:
+        missing.append(f"all {asked} of the parent's questions" if asked > 1 else "the parent's question")
+    boundaries = [m.group(0) for m in _BOUNDARY_RE.finditer(raw)]
+    if boundaries and not _NEG_RE.search(biff):
+        missing.append(f"the parent's boundary ('{boundaries[0]}')")
+    if ("..." in biff or "\u2026" in biff) and "..." not in raw and "\u2026" not in raw:
+        missing.append("a complete message without '...'")
+    return missing
+
+
+def _parse(response: Any) -> Dict[str, Any]:
+    data = _extract_json(response) or {}
+    biff = (data.get("biff") or "").strip()
+    flags_raw = data.get("flags") if isinstance(data.get("flags"), list) else []
+    flags: List[str] = [str(f).strip() for f in flags_raw if str(f).strip()][:6]
+    risk = (data.get("risk") or "").strip()
+    if risk not in {"Escalation Flag", "Low Risk"}:
+        risk = "Escalation Flag" if flags else "Low Risk"
+    return {"biff": biff, "flags": flags, "risk": risk}
+
+
 async def refine_biff(
     raw_message: str, *, safety_flagged: bool = False
 ) -> Dict[str, Any]:
-    """Send `raw_message` to Claude and return `{biff, flags, risk}`.
+    """Send `raw_message` to Claude and return `{status, biff, flags, risk, missing}`.
 
-    When `safety_flagged=True` (the parent's own Quick Safety Check
-    returned any risk signal), we switch to the grey-rock system
-    prompt so replies stay minimal, factual, and safe to send to a
-    coercive co-parent.
-
-    Raises `Exception` on network / provider failure; caller wraps as 502.
+    Grey-rock prompt when `safety_flagged`. The rewrite is checked for dropped
+    dates/times/numbers/questions/boundaries and retried once with the gaps
+    named. If anything is still missing the draft is withheld:
+    `status="unavailable"`, empty `biff`, no risk label. Raises on provider
+    failure or an empty rewrite (caller -> 502).
     """
     if not raw_message or not raw_message.strip():
-        return {"biff": "", "flags": [], "risk": "Neutral"}
+        return {"status": "empty", "biff": "", "flags": [], "risk": None, "missing": []}
 
+    raw = raw_message.strip()[:1000]
     system_message = _BIFF_GREYROCK_SYSTEM if safety_flagged else _BIFF_SYSTEM
-
     # BIFF is the empathetic voice — pin to Claude for warmth.
     provider, model_name = resolve_model("claude")
     chat = LlmChat(
@@ -120,31 +181,28 @@ async def refine_biff(
         system_message=system_message,
     ).with_model(provider, model_name)
 
-    response = await chat.send_message(
-        UserMessage(text=raw_message.strip()[:1000])
-    )
-    data = _extract_json(response) or {}
-    biff = (data.get("biff") or "").strip()
-    flags_raw = data.get("flags") or []
-    if not isinstance(flags_raw, list):
-        flags_raw = []
-    flags: List[str] = [str(f).strip() for f in flags_raw if str(f).strip()][:6]
-    risk = (data.get("risk") or "").strip()
-    if risk not in {"Escalation Flag", "Low Risk"}:
-        risk = "Escalation Flag" if flags else "Low Risk"
+    try:
+        result = _parse(await chat.send_message(UserMessage(text=raw)))
+    except Exception as exc:  # noqa: BLE001 — one retry on a transient provider error
+        logger.warning("biff refine failed once, retrying: %s", exc)
+        result = _parse(await chat.send_message(UserMessage(text=raw)))
+    if not result["biff"]:
+        raise ValueError("empty BIFF rewrite")
 
-    if not biff:
-        # Bare fallback so the caller never sees an empty rewrite.
-        stripped = re.sub(r"\s+", " ", raw_message.strip())[:200]
-        if safety_flagged:
-            biff = f"Received. Follow-up in writing. — {stripped[:120]}"
-        else:
-            biff = (
-                f"Thanks for the update. Regarding — {stripped} — let's keep the "
-                "focus on the child's schedule and follow up in writing. Thanks."
-            )
-
-    return {"biff": biff, "flags": flags, "risk": risk}
+    missing = missing_facts(raw, result["biff"])
+    if missing:
+        retry = _parse(await chat.send_message(UserMessage(text=(
+            f"Your rewrite left out: {', '.join(missing)}. Rewrite it again keeping every one of these "
+            "exactly as the parent wrote them, keep every question as a question, and keep every "
+            "boundary with the same meaning. Return the same strict JSON shape."
+        ))))
+        if retry["biff"]:
+            result = retry
+        missing = missing_facts(raw, result["biff"])
+    if missing:
+        logger.info("biff rewrite withheld, still missing %d essential(s)", len(missing))
+        return {"status": "unavailable", "biff": "", "flags": [], "risk": None, "missing": missing}
+    return {**result, "status": "ok", "missing": []}
 
 
 # ---------------------------------------------------------------------------

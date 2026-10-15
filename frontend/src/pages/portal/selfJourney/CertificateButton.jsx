@@ -57,7 +57,7 @@ export function CertificateButton({ defaultName }) {
       <Dialog open={open} onOpenChange={(v) => !busy && setOpen(v)}>
         <DialogContent data-testid="certificate-dialog" className="max-w-md">
           <DialogHeader>
-            <DialogTitle className="text-[#4a1d7a]">Individual Journey certificate</DialogTitle>
+            <DialogTitle className="text-[#4a1d7a]">Self Journey certificate</DialogTitle>
             <DialogDescription>Check how your name should be printed, then download.</DialogDescription>
           </DialogHeader>
           <label className="block text-[12px] font-bold text-slate-700" htmlFor="certificate-name">
@@ -72,7 +72,7 @@ export function CertificateButton({ defaultName }) {
             className="w-full border border-slate-300 rounded-md px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-purple-400"
           />
           <p className="text-[11px] text-slate-500 leading-relaxed">
-            A certificate of completion for the self-guided SA CoParents Individual Journey. It is not a court-approved parenting course certificate and not legal advice.
+            A certificate of completion for the self-guided SA CoParents Self Journey. It is not a court-approved parenting course certificate and not legal advice.
           </p>
           <div className="flex flex-col-reverse sm:flex-row sm:justify-end gap-2 pt-1">
             <button type="button" data-testid="certificate-cancel" onClick={() => setOpen(false)} disabled={busy} className={`${btn} bg-[#F4EEF5] hover:bg-[#E2D6E5] text-[#4A154B]`}>

@@ -47,7 +47,7 @@ export function AllStepsBanner({ sparkle, defaultName }) {
       <div className="min-w-0 flex-1 basis-48">
         <p data-testid="door-self-all-steps-title" className="text-base font-extrabold leading-tight">6 of 6 finished</p>
         <p className="text-[12px] text-purple-100 leading-snug mt-0.5">
-          Every step of your Individual Journey is done. That's a real gift to your child.
+          Every step of your Self Journey is done. That's a real gift to your child.
         </p>
       </div>
       <div className="flex flex-wrap gap-2">

@@ -6,15 +6,15 @@ import { CourtAcceptDialog } from "./court/CourtAcceptDialog";
 import { CourtAgreeCard } from "./court/CourtAgreement";
 import { CourtCelebration } from "./court/CourtCelebration";
 import { CourtChatInline, CourtChatPanel } from "./court/CourtChatPanel";
-import { CourtChecklistCard } from "./court/CourtChecklistCard";
 import { MENU, PILLARS, STEPS } from "./court/courtContent";
 import { CourtJourneyArt } from "./court/CourtJourneyArt";
-import { AcceptCard, PillarCards } from "./court/CourtJourneyCards";
+import { AcceptCard } from "./court/CourtJourneyCards";
 import { CourtMenu } from "./court/CourtMenu";
 import { CourtCompleteCard } from "./court/CourtCompleteCard";
+import { CourtMoreTools } from "./court/CourtMoreTools";
 import { CourtPillarDialog } from "./court/CourtPillarDialog";
+import { CourtReports } from "./court/CourtReports";
 import { CourtStepDialog } from "./court/CourtStepDialog";
-import { CourtModulesCard, CourtTools } from "./court/CourtTools";
 import { useCourtCase } from "./court/useCourtCase";
 import { useCourtChecklist } from "./court/useCourtChecklist";
 import { useCourtCompare } from "./court/useCourtCompare";
@@ -150,10 +150,14 @@ export function CourtOrderedView({ onBack, onQuickExit, courtKey, mediator, onVe
           pill={pill}
           pct={Math.round((doneCount / counted.length) * 100)}
         />
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
-          {/* Phones: picture first, chat last (display: contents). Desktop: one right column with both. */}
-          <div className="contents lg:block lg:col-start-8 lg:col-span-5 lg:row-start-1 lg:space-y-6">
-            <div className="order-first">
+        <div className="grid grid-cols-1 lg:grid-cols-12 lg:grid-rows-[auto_1fr] gap-8 items-start">
+          {/* Phones: requested list, picture, the rest, then chat. Desktop: list + rest on the left, picture + chat on the right. */}
+          <div data-testid="court-top" className="order-1 lg:order-none lg:col-start-1 lg:col-span-7 lg:row-start-1 space-y-6">
+            {signedIn && asked.length > 0 && doneCount === asked.length && <CourtCompleteCard count={asked.length} />}
+            <CourtMenu statusFor={statusFor} requested={requested.keys} proKeys={requested.proKeys} proName={requested.proName} onToggle={requested.toggle} onOpen={openOption} />
+          </div>
+          <div className="contents lg:block lg:col-start-8 lg:col-span-5 lg:row-start-1 lg:row-span-2 lg:space-y-6">
+            <div className="order-2">
               <CourtJourneyArt
                 hints={hints}
                 onToggleHints={() => setHints((h) => !h)}
@@ -163,19 +167,24 @@ export function CourtOrderedView({ onBack, onQuickExit, courtKey, mediator, onVe
                 onPillar={openPillar}
               />
             </div>
-            <div className="order-last">
+            <div className="order-4">
               <CourtChatInline chat={chat} fb={fb} onOpenStep4={openStep4} />
             </div>
           </div>
-          <div className="lg:col-start-1 lg:col-span-7 lg:row-start-1 space-y-6">
+          <div className="order-3 lg:order-none lg:col-start-1 lg:col-span-7 lg:row-start-2 space-y-6">
             <AcceptCard verified={cc.verified} courtKey={courtKey} onAccept={() => setDialog({ type: "accept" })} />
-            {signedIn && asked.length > 0 && doneCount === asked.length && <CourtCompleteCard count={asked.length} />}
-            <CourtMenu statusFor={statusFor} requested={requested.keys} proKeys={requested.proKeys} proName={requested.proName} onToggle={requested.toggle} onOpen={openOption} />
             <CourtAgreeCard compare={compare} onOpen={() => openPillar(PILLARS[1])} />
-            <PillarCards onPillar={openPillar} />
-            <CourtTools cc={cc} courtKey={courtKey} compare={compare} onCase={() => setDialog({ type: "accept" })} onBiff={onOpenBiffHistory} />
-            <CourtModulesCard modules={modules} onOpenModule={onOpenModule} />
-            <CourtChecklistCard checklist={checklist} />
+            <CourtReports cc={cc} checklist={checklist} compare={compare} complete={asked.length > 0 && doneCount === asked.length} signedIn={signedIn} />
+            <CourtMoreTools
+              cc={cc}
+              courtKey={courtKey}
+              onCase={() => setDialog({ type: "accept" })}
+              onBiff={onOpenBiffHistory}
+              onPillar={openPillar}
+              modules={modules}
+              onOpenModule={onOpenModule}
+              checklist={checklist}
+            />
           </div>
         </div>
         <p data-testid="court-footer" className="mt-12 text-center text-xs text-[#5f6368] font-medium">

@@ -41,30 +41,19 @@ export const FOLLOWUP_MIN_HOURS = 24;
 // the follow-up again.
 export const FOLLOWUP_SNOOZE_DAYS = 7;
 
+// Preset drafts for the scenario chips; wording suggestions always come from the AI.
 export const PRESETS = {
   late_handoff: {
     raw: "You were late again by 20 minutes! You have zero respect for my time or the schedule.",
-    biff:
-      "Thank you for letting me know. I ran into unexpected traffic and arrived at 4:20 PM. I will plan for extra transit time for our next pickup on Friday.",
-    flags: ["Hostile tone", "Accusatory phrase ('zero respect')"],
   },
   expense_request: {
     raw: "I bought the required school uniforms and you need to pay me back half right now. Stop ignoring your duties!",
-    biff:
-      "The total for the required school uniforms came to $80. Attached is the receipt for your half ($40). Please let me know if you can send reimbursement by the end of the month. Thanks.",
-    flags: ["Demanding tone", "Blame language"],
   },
   schedule_change: {
     raw: "I need to switch next weekend because I have a work event. You always refuse to help out.",
-    biff:
-      "I have a mandatory work event next weekend (Oct 12-14). I would like to request swapping for the following weekend (Oct 19-21). Please let me know if that works for your calendar by Thursday. Thank you.",
-    flags: ["Passive aggressive comment"],
   },
   medical_update: {
     raw: "I took Alex to the doctor. You never check in on his asthma symptoms as usual.",
-    biff:
-      "Alex had his regular pediatric checkup today. The doctor updated his asthma inhaler prescription. I have uploaded the visit summary to the Medical folder for your review.",
-    flags: ["Personal attack ('You never check in')"],
   },
 };
 
@@ -98,22 +87,19 @@ export const DEFAULT_ALIGNMENTS = [
   },
 ];
 
-export const DEFAULT_MILESTONES = [
-  {
-    id: 1,
-    type: "success",
-    title: "On-Time Handoff Completed",
-    date: "2026-09-22",
-    note: "Exchanged at neutral drop-off point without friction.",
-  },
-  {
-    id: 2,
-    type: "friction",
-    title: "Schedule Request Delay",
-    date: "2026-09-18",
-    note: "Required 24-hr reminder before confirmation.",
-  },
-];
+// Built-in sample entries older builds pre-filled into every account. Kept only so they can be removed.
+const SAMPLES = {
+  milestones: [
+    { id: 1, type: "success", title: "On-Time Handoff Completed", date: "2026-09-22", note: "Exchanged at neutral drop-off point without friction." },
+    { id: 2, type: "friction", title: "Schedule Request Delay", date: "2026-09-18", note: "Required 24-hr reminder before confirmation." },
+  ],
+  biff_logs: [
+    { id: 1, timestamp: "2026-09-20 14:30", category: "Handoff Delay", original: "You are late again.", biff: "Thank you for checking in. Arrived at 4:15 PM due to traffic." },
+  ],
+};
+
+export const withoutSamples = (field, list) =>
+  Array.isArray(list) ? list.filter((e) => !SAMPLES[field].some((s) => Object.keys(s).every((k) => e?.[k] === s[k]))) : [];
 
 export const DEFAULT_FOUNDATION =
   "Our primary goal remains the emotional wellbeing, stability, and health of our child. We commit to clear, low-conflict BIFF communication, respecting schedule boundaries, and sharing vital medical, educational, and psychological records promptly.";
@@ -125,16 +111,6 @@ export const DEFAULT_LEGAL_REPORT = {
 };
 
 export const DEFAULT_HEALTH_INDEX = { s1: 7, s2: 6, s3: 5 };
-
-export const DEFAULT_BIFF_LOGS = [
-  {
-    id: 1,
-    timestamp: "2026-09-20 14:30",
-    category: "Handoff Delay",
-    original: "You are late again.",
-    biff: "Thank you for checking in. Arrived at 4:15 PM due to traffic.",
-  },
-];
 
 export function readJson(key, fallback) {
   try {

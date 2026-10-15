@@ -63,19 +63,50 @@ function MenuRow({ o, status, asked, pro, proName, onToggle, onOpen }) {
   );
 }
 
-// Court page menu: every assessment a professional may ask for, in any order, with an "Asked by my professional" tick.
+function Summary({ done, total }) {
+  if (!total)
+    return (
+      <p data-testid="court-menu-summary" className="text-sm text-slate-600 mb-4 leading-relaxed">
+        No assessments are marked as requested yet. Accept your court invite, or tick the ones your professional asked for below.
+      </p>
+    );
+  const left = total - done;
+  return (
+    <div data-testid="court-menu-summary" className="mb-4">
+      <p className="text-sm text-slate-700 leading-relaxed">
+        <strong data-testid="court-menu-done-count" className="text-emerald-700">{done} of {total} done</strong>
+        {" · "}
+        <strong data-testid="court-menu-remaining-count" className={left ? "text-amber-700" : "text-emerald-700"}>{left} remaining</strong>
+        <span className="text-slate-500"> · open them in any order</span>
+      </p>
+      <div className="mt-2 w-full bg-purple-100 rounded-full h-2">
+        <div className="bg-[#5c2c8e] h-2 rounded-full transition-[width] duration-500" style={{ width: `${Math.round((done / total) * 100)}%` }} />
+      </div>
+    </div>
+  );
+}
+
+// The one requested-assessments list: requested items first (done and remaining), then the others you can tick.
 export function CourtMenu({ statusFor, requested, proKeys = [], proName, onToggle, onOpen }) {
+  const asked = MENU.filter((o) => requested.includes(o.key));
+  const others = MENU.filter((o) => !requested.includes(o.key));
+  const done = asked.filter((o) => statusFor(o.key) === "done").length;
+  const row = (o) => (
+    <MenuRow key={o.key} o={o} status={statusFor(o.key)} asked={requested.includes(o.key)} pro={proKeys.includes(o.key)} proName={proName} onToggle={() => onToggle(o.key)} onOpen={() => onOpen(o.key)} />
+  );
   return (
     <section data-testid="court-menu" className="scroll-mt-6">
-      <h3 className="text-xl sm:text-2xl font-extrabold text-[#3B1C6B]">Your Court-Ordered Journey</h3>
-      <p className="text-sm text-slate-600 mb-4 leading-relaxed">
-        Your professional may ask you to complete one or more of these. Tick the ones you were asked for, then open them in any order.
-      </p>
-      <ul className="space-y-3">
-        {MENU.map((o) => (
-          <MenuRow key={o.key} o={o} status={statusFor(o.key)} asked={requested.includes(o.key)} pro={proKeys.includes(o.key)} proName={proName} onToggle={() => onToggle(o.key)} onOpen={() => onOpen(o.key)} />
-        ))}
-      </ul>
+      <h3 className="text-xl sm:text-2xl font-extrabold text-[#3B1C6B]">Your requested assessments</h3>
+      <Summary done={done} total={asked.length} />
+      {asked.length > 0 && <ul data-testid="court-menu-requested" className="space-y-3">{asked.map(row)}</ul>}
+      {others.length > 0 && (
+        <>
+          <p data-testid="court-menu-others-label" className={`text-[11px] font-bold uppercase tracking-wider text-slate-500 mb-2 ${asked.length ? "mt-6" : ""}`}>
+            {asked.length ? "Not requested · tick any others your professional asked for" : "All assessments"}
+          </p>
+          <ul data-testid="court-menu-others" className="space-y-3">{others.map(row)}</ul>
+        </>
+      )}
     </section>
   );
 }

@@ -9,34 +9,27 @@ import { BeforeAfterCard } from "./commBuilder/BeforeAfterCard";
 import { DraftCard } from "./commBuilder/DraftCard";
 import { ResponseCard } from "./commBuilder/ResponseCard";
 import { AiInsightPanel } from "./selfAssessment/AiInsightPanel";
-import { JourneySteps } from "./selfAssessment/JourneySteps";
 import { SaArtwork } from "./selfAssessment/SaArtwork";
 import { BottomBanner, Hero, PageHeader, SafetyBanner } from "./selfAssessment/SaChrome";
-import { useSelfAssessmentHistory } from "./selfAssessment/useSelfAssessmentHistory";
 
-const STEP_LABELS = { 1: "Write", 2: "Transform", 3: "Copy or Save" };
+const STEP_LABELS = { 1: "Write", 2: "Suggest", 3: "Copy or Save" };
 const CB_ALT =
   "SA CoParents Communication Builder: child-focused templates, clear and respectful BIFF language, situations and solutions, plan and track. Less conflict. More clarity. A brighter future for your child.";
 
-// The 4 journey cards mirror the parent's real Self-Assessment progress.
-const saStatuses = (history) => {
-  if (!history.length) return { reflect: "current", identify: "upcoming", goals: "upcoming", track: "upcoming" };
-  const latest = history[history.length - 1];
-  return { reflect: "done", identify: "done", goals: latest.goal ? "done" : "current", track: history.length > 1 ? "done" : "current" };
-};
-
-const tipFor = ({ transformed, loading, riskLabel, flagList, greyRock }) => {
-  if (loading) return { label: "Reading your draft…", text: "" };
-  if (!transformed)
-    return { label: "Welcome", text: "Write or paste your message, then tap Transform. I'll check the tone and suggest a calmer, child-focused version." };
+const tipFor = ({ status, riskLabel, flagList, greyRock }) => {
+  if (status === "loading") return { label: "Reading your draft…", text: "" };
+  if (status === "unavailable")
+    return { label: "Suggested wording isn't available right now", text: "AI didn't check this draft, so there's no tone rating. Tap Try again, or use the fill-in template." };
+  if (status !== "ai")
+    return { label: "Welcome", text: "Write or paste your message, then tap Get suggested wording. AI will check the tone and suggest calmer, child-focused wording." };
   if (greyRock)
-    return { label: "Grey-rock tip", text: "Keep it to logistics only: no feelings, no apologies, no open questions. Shorter is safer." };
+    return { label: "Grey-rock tip", text: "Keep it to logistics only: no feelings, no apologies. Shorter is safer." };
   if (riskLabel === "Escalation Flag")
     return {
-      label: "Based on your draft, I'm noting potential communication friction. Here's a tip:",
+      label: "AI noticed possible friction in your draft. Here's a tip:",
       text: `Focus on objective logistics to reduce emotional impact and keep your child at the center.${flagList.length ? ` Watch for: ${flagList.join(", ")}.` : ""}`,
     };
-  return { label: "Your draft looks calm and factual", text: "Nice work keeping it factual. Keep it brief, and end with one clear next step or date." };
+  return { label: "AI didn't find friction cues", text: "Keep it brief, and end with one clear next step or date." };
 };
 
 function useLockScroll(active) {
@@ -50,9 +43,8 @@ function useLockScroll(active) {
   }, [active]);
 }
 
-// Full-page Communication Builder, opened from the welcome artwork's Communication Builder card.
-export function CommunicationBuilderView({ open, focus, onClose, onQuickExit, onStartSelfAssessment, userId, greyRock, biff, extras }) {
-  const { history } = useSelfAssessmentHistory(userId);
+// Full-page Communication Builder, opened from the welcome page or the Self Journey card.
+export function CommunicationBuilderView({ open, focus, onClose, onQuickExit, greyRock, biff, extras }) {
   const [transformed, setTransformed] = useState(false);
   const [acted, setActed] = useState(false);
   const [baMode, setBaMode] = useState("example");
@@ -67,7 +59,7 @@ export function CommunicationBuilderView({ open, focus, onClose, onQuickExit, on
   }, [open, focus]);
   if (!open) return null;
 
-  const { rawInput, setRawInput, transform, applyPreset, riskLabel, flagList, biffOutput, biffLoading, biffError } = biff;
+  const { rawInput, setRawInput, transform, applyPreset, riskLabel, flagList, biffOutput, biffLoading, biffStatus } = biff;
   const run = (fn) => {
     setTransformed(true);
     setActed(false);
@@ -75,30 +67,30 @@ export function CommunicationBuilderView({ open, focus, onClose, onQuickExit, on
     fn();
   };
   const onTransform = () => rawInput.trim() && run(() => transform(rawInput));
+  const edit = (text) => {
+    setRawInput(text);
+    setTransformed(false);
+    setActed(false);
+  };
+  const applyTemplate = (text) => {
+    edit(text);
+    toast.success("Template added to your draft. Fill in the [brackets], then tap Get suggested wording.");
+  };
   const copy = async () => {
     try {
       await navigator.clipboard.writeText(biffOutput);
       setActed(true);
-      toast.success("Peaceful response copied.");
+      toast.success("Suggested wording copied.");
     } catch {
       toast.error("Couldn't copy. Please select the text and copy it.");
     }
   };
   const stage = acted ? 4 : !transformed ? 1 : biffLoading ? 2 : 3;
   const pill = stage === 4 ? "Done · Copied or saved" : <>Step <span data-testid="cb-step-num">{stage}</span> of 3 · {STEP_LABELS[stage]}</>;
-  const tip = tipFor({ transformed, loading: biffLoading, riskLabel, flagList, greyRock });
-  // Above the draft box until the first Transform, then below the response card.
+  const tip = tipFor({ status: biffStatus, riskLabel, flagList, greyRock });
+  // Above the draft box until the first suggestion, then below the response card.
   const beforeAfter = (
-    <BeforeAfterCard
-      mode={baMode}
-      onMode={setBaMode}
-      canShowYours={transformed}
-      original={rawInput}
-      transformed={biffOutput}
-      loading={biffLoading}
-      riskLabel={riskLabel}
-      greyRock={greyRock}
-    />
+    <BeforeAfterCard mode={baMode} onMode={setBaMode} canShowYours={transformed} original={rawInput} transformed={biffOutput} status={biffStatus} riskLabel={riskLabel} greyRock={greyRock} />
   );
 
   return createPortal(
@@ -110,32 +102,25 @@ export function CommunicationBuilderView({ open, focus, onClose, onQuickExit, on
         <Hero
           tp="cb"
           title="Communication Builder"
-          subtitle="Draft calm, child-centered messages with real-time AI BIFF framing (Brief, Informative, Friendly, Firm)."
+          subtitle="Draft calm, child-centered messages. When you ask, AI suggests BIFF wording (Brief, Informative, Friendly, Firm). You copy it and send it yourself."
           textClassName="hidden lg:block"
           pill={pill}
           pct={stage === 4 ? 100 : Math.round((stage / 3) * 100)}
         />
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
           <div className="lg:col-span-7 space-y-4">
-            <p className="text-[11px] font-bold uppercase tracking-wider text-purple-700">Your Self-Assessment progress</p>
-            <JourneySteps statuses={saStatuses(history)} />
             {!transformed && beforeAfter}
-            <DraftCard
-              value={rawInput}
-              onChange={setRawInput}
-              onPreset={(key) => run(() => applyPreset(key, 0))}
-              onTransform={onTransform}
-              busy={biffLoading}
-            />
+            <DraftCard value={rawInput} onChange={edit} onPreset={(key) => run(() => applyPreset(key, 0))} onTransform={onTransform} busy={biffLoading} />
             <ResponseCard
               output={biffOutput}
-              loading={biffLoading}
-              error={biffError}
+              status={transformed ? biffStatus : "idle"}
+              raw={rawInput}
               riskLabel={riskLabel}
               flagList={flagList}
-              transformed={transformed}
               greyRock={greyRock}
               onCopy={copy}
+              onRetry={onTransform}
+              onUseTemplate={applyTemplate}
               onToneSafe={() => {
                 biff.copyToneSafe();
                 setActed(true);
@@ -155,32 +140,10 @@ export function CommunicationBuilderView({ open, focus, onClose, onQuickExit, on
               <BiffBookLink />
             </div>
             <SharingNotice area="communication-builder" />
-            <div className="pt-4">
-              <button
-                type="button"
-                data-testid="cb-start-self-assessment"
-                onClick={onStartSelfAssessment}
-                className="w-full py-4 px-6 bg-purple-950 hover:bg-purple-900 text-white font-extrabold rounded-2xl shadow-xl hover:shadow-2xl transition-[transform,box-shadow,background-color] hover:-translate-y-0.5 flex items-center justify-center gap-3 text-lg border-2 border-purple-700/50 tracking-wider"
-              >
-                <span>START SELF-ASSESSMENT</span>
-                <i className="fa-solid fa-arrow-right"></i>
-              </button>
-            </div>
           </div>
           <div className="lg:col-span-5 space-y-6">
             <SaArtwork testid="cb-artwork-desktop" name="comm-builder-art" alt={CB_ALT} className="hidden lg:block" />
-            <AiInsightPanel
-              tip={tip}
-              loading={biffLoading}
-              safetyFlag={greyRock}
-              onOpenBiffCoach={onTransform}
-              biffBusy={biffLoading || !rawInput.trim()}
-              onUseTemplate={(text) => {
-                setRawInput(text);
-                setTransformed(false);
-                toast.success("Template added to your draft. Fill in the [brackets], then tap Transform.");
-              }}
-            />
+            <AiInsightPanel tip={tip} loading={biffLoading} safetyFlag={greyRock} onOpenBiffCoach={onTransform} biffBusy={biffLoading || !rawInput.trim()} onUseTemplate={applyTemplate} />
           </div>
         </div>
         <BottomBanner tp="cb" />

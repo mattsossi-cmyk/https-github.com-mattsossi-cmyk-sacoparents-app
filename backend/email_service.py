@@ -423,10 +423,10 @@ def send_journey_certificate(
     parent_email: Optional[str],
     pdf_bytes: bytes,
 ) -> None:
-    """Email a parent's Individual Journey completion certificate (PDF attached) to someone they chose."""
+    """Email a parent's Self Journey completion certificate (PDF attached) to someone they chose."""
     paras = [
         f"Hi {recipient_name},",
-        f"{parent_name} finished every step of the self-guided SA CoParents Individual Journey and wanted you to have their certificate. It's attached as a PDF.",
+        f"{parent_name} finished every step of the self-guided SA CoParents Self Journey and wanted you to have their certificate. It's attached as a PDF.",
         "This is a certificate of completion for a self-guided program. It is not a court-approved parenting course certificate and not legal advice.",
         "Please reply directly to this email if you have questions.",
     ]
@@ -439,8 +439,8 @@ def send_journey_certificate(
     )
     _send(
         to_email=to_email,
-        subject=f"{parent_name} completed the SA CoParents Individual Journey",
-        html=_branded_html(headline="Individual Journey certificate", body_html=body_html, cta_label=""),
+        subject=f"{parent_name} completed the SA CoParents Self Journey",
+        html=_branded_html(headline="Self Journey certificate", body_html=body_html, cta_label=""),
         text=plain,
         reply_to=parent_email,
         attachments=[("SA_CoParents_Individual_Journey_Certificate.pdf", pdf_bytes)],

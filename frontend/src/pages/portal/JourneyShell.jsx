@@ -523,7 +523,6 @@ export function JourneyShell({
   onOpenBiffCoach = () => {},
   biffCoachOpen = false,
   onOpenCommBuilder = () => {},
-  saRequest = 0,
   onOpenIntroGuide = () => {},
   onOpenReport = () => {},
   biffAuthoredCount = 0,
@@ -900,7 +899,7 @@ export function JourneyShell({
   const allStepsDone = !resumeStep;
   const stepsCelebrated = useStepsCelebrated(user?.user_id);
   const [sparkle, setSparkle] = useState(false);
-  // First time all 6 Individual Journey steps are done: purple sparkle once, saved on the account.
+  // First time all 6 Self Journey steps are done: purple sparkle once, saved on the account.
   useEffect(() => {
     if (view !== "self" || !allStepsDone || stepsCelebrated.celebrated || celebrating || ppOpen || assessOpen || cpAssessOpen) return;
     setSparkle(true);
@@ -930,14 +929,6 @@ export function JourneyShell({
     else if (key === "card3") openChildNeeds("court");
     else if (key === "card4") openFoundation("court", builder);
   };
-
-  // Communication Builder's START SELF-ASSESSMENT button.
-  useEffect(() => {
-    if (!saRequest) return;
-    openDoor("self");
-    openAssess(false);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [saRequest]);
 
   // Email reminder deep link: /dashboard?open=self-assessment
   useEffect(() => {
@@ -1034,15 +1025,6 @@ export function JourneyShell({
   if (view === "door") {
     return (
       <div data-testid="journey-shell" className="space-y-4">
-        <WelcomeArtwork
-          testid="door-welcome-image"
-          actions={{
-            self: () => openDoor("self"),
-            court: () => openDoor("court"),
-            comm: onOpenCommBuilder,
-          }}
-        />
-
         <section
           data-testid="door-landing"
           className="rounded-2xl bg-white border border-slate-200 p-4 shadow-sm"
@@ -1052,10 +1034,10 @@ export function JourneyShell({
               {greetingName ? `Welcome, ${greetingName}` : "Welcome"}
             </div>
             <h1 className="text-xl font-bold text-slate-900">
-              Pick your door
+              Pick your path
             </h1>
             <p className="text-xs text-slate-600">
-              Two ways in. Everything else lives behind these two choices.
+              Two ways in. The Communication Builder works with either one.
             </p>
           </div>
           <div className="space-y-3">
@@ -1097,8 +1079,36 @@ export function JourneyShell({
               </div>
               <i className="fa-solid fa-chevron-right text-purple-400"></i>
             </button>
+            <button
+              type="button"
+              data-testid="door-comm"
+              onClick={() => onOpenCommBuilder()}
+              className="w-full text-left bg-white hover:bg-sky-50 border border-dashed border-sky-300 rounded-2xl px-4 py-3 transition flex items-center gap-3"
+            >
+              <div className="shrink-0 w-10 h-10 rounded-xl bg-sky-100 text-sky-700 flex items-center justify-center">
+                <i className="fa-solid fa-comments text-lg"></i>
+              </div>
+              <div className="min-w-0 flex-1">
+                <div className="text-sm font-bold text-slate-900">
+                  Communication Builder
+                </div>
+                <p className="text-[11px] text-sky-800 mt-0.5 leading-snug">
+                  Not a separate path. A message-writing tool you can open any time, from either path.
+                </p>
+              </div>
+              <i className="fa-solid fa-chevron-right text-sky-400"></i>
+            </button>
           </div>
         </section>
+
+        <WelcomeArtwork
+          testid="door-welcome-image"
+          actions={{
+            self: () => openDoor("self"),
+            court: () => openDoor("court"),
+            comm: () => onOpenCommBuilder(),
+          }}
+        />
 
         <GoalBanner
           testid="door-landing-goal"

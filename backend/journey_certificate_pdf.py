@@ -1,4 +1,4 @@
-"""Individual Journey completion certificate: one landscape page."""
+"""Self Journey completion certificate: one landscape page."""
 from __future__ import annotations
 
 from datetime import datetime
@@ -16,7 +16,7 @@ MUTED = (100, 116, 139)
 EMERALD = (16, 150, 105)
 LOGO = Path(__file__).parent / "assets" / "sa_coparents_logo.png"
 NOTE = (
-    "Certificate of completion of the self-guided SA CoParents Individual Journey. "
+    "Certificate of completion of the self-guided SA CoParents Self Journey. "
     "It is not a court-approved parenting course certificate and not legal advice."
 )
 
@@ -48,13 +48,13 @@ def build_certificate_pdf(*, name: str, finished_iso: str, steps: List[str]) -> 
         pdf.image(str(LOGO), x=w / 2 - 22, y=15, w=44)
 
     _centered(pdf, 44, "CERTIFICATE OF COMPLETION", "B", 26, PURPLE)
-    _centered(pdf, 58, "SA CoParents  ·  Individual Journey", "", 11, MUTED)
+    _centered(pdf, 58, "SA CoParents  ·  Self Journey", "", 11, MUTED)
     _centered(pdf, 72, "This certifies that", "I", 12, INK)
     _centered(pdf, 82, name, "B", 28, PURPLE)
     pdf.set_draw_color(*LIGHT)
     pdf.set_line_width(0.6)
     pdf.line(w / 2 - 75, 99, w / 2 + 75, 99)
-    _centered(pdf, 104, "has completed every step of the self-guided SA CoParents Individual Journey.", "", 12, INK)
+    _centered(pdf, 104, "has completed every step of the self-guided SA CoParents Self Journey.", "", 12, INK)
     finished = datetime.fromisoformat(finished_iso)
     _centered(pdf, 113, f"Finished on {finished:%B} {finished.day}, {finished.year}", "B", 11, INK)
 

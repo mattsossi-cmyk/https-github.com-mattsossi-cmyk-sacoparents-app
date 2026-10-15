@@ -1,4 +1,4 @@
-"""Iteration 112 — Individual Journey Certificate + Steps-celebrated + Medical preventive field.
+"""Iteration 112 — Self Journey Certificate + Steps-celebrated + Medical preventive field.
 
 Covers:
 - POST /api/journey-summary/certificate as journey6@test.com returns landscape Letter PDF

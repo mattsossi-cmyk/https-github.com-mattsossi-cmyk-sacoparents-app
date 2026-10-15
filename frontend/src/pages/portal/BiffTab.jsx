@@ -1,12 +1,54 @@
 import React from "react";
 
+import { AiDraftNotice } from "./commBuilder/AiDraftNotice";
+import { SuggestUnavailable } from "./commBuilder/SuggestUnavailable";
+
+const PRESET_CHIPS = [
+  ["late_handoff", "preset-late-handoff", "Late Handoff"],
+  ["expense_request", "preset-expense-request", "Reimbursement"],
+  ["schedule_change", "preset-schedule-change", "Schedule Swap"],
+  ["medical_update", "preset-medical-update", "Medical Update"],
+];
+
+// Tone label only after AI has actually reviewed the draft.
+function ToneRow({ status, riskLabel, flagList }) {
+  const checked = status === "ai";
+  const badge = checked ? riskLabel : status === "loading" ? "Checking…" : "Not checked yet";
+  const tone = !checked
+    ? "bg-slate-200 text-slate-600"
+    : riskLabel === "Escalation Flag"
+    ? "bg-rose-100 text-rose-700 font-bold"
+    : "bg-emerald-100 text-emerald-700 font-bold";
+  return (
+    <div className="p-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs space-y-1">
+      <div className="flex justify-between items-center font-bold">
+        <span className="text-slate-600">AI tone check:</span>
+        <span data-testid="risk-badge" data-status={status} className={`text-[10px] px-2 py-0.5 rounded ${tone}`}>
+          {badge}
+        </span>
+      </div>
+      <div data-testid="flag-list" className="text-slate-500 text-[11px]">
+        {!checked ? (
+          "Tap Get suggested wording to have AI check the tone."
+        ) : flagList.length > 0 ? (
+          flagList.map((f, i) => (
+            <span key={i} className="text-rose-600 font-medium mr-2">
+              • {f}
+            </span>
+          ))
+        ) : (
+          <span className="text-emerald-600 font-medium">• AI found no friction cues</span>
+        )}
+      </div>
+    </div>
+  );
+}
+
 /**
- * BiffTab — Section II of the Parent Journey. Renders the BIFF
- * Communication Builder, communication history, milestones with kudos
- * loop, and the Weekly Progress PDF actions.
+ * BiffTab — BIFF Communication Builder drawer content: composer,
+ * communication history and milestones with the Weekly Progress PDF actions.
  */
 export function BiffTab({
-  // Composer
   rawInput,
   onRawInputChange,
   applyPreset,
@@ -14,30 +56,25 @@ export function BiffTab({
   flagList,
   biffOutput,
   biffLoading,
-  biffError,
-  // Composer actions
+  biffStatus = "idle",
+  onSuggest,
   copyBiffOutput,
   copyToneSafe,
   logCommunication,
-  // History
   biffLogs,
-  // Milestones
   milestones,
   successCount,
   frictionCount,
   addMilestoneLog,
   advocateReviewCount = 0,
-  // Weekly PDF
   downloadWeeklyProgressPdf,
   onShareWeekly,
   shareStatus,
-  // Grey-rock coach chip (fires when the parent's Quick Safety
-  // Check returned a coercion / device / physical-safety flag).
   safetyFlagged = false,
 }) {
+  const ready = biffStatus === "ai" && !!biffOutput;
   return (
     <div className="space-y-4" data-testid="hub-section-biff">
-      {/* BIFF Builder */}
       <div className="bg-white p-4 rounded-2xl shadow-sm border border-purple-200 space-y-3 card-box">
         <div className="border-b border-slate-100 pb-2">
           <div className="flex items-center justify-between gap-2 flex-wrap">
@@ -50,7 +87,7 @@ export function BiffTab({
                 title="Because your Quick Safety Check flagged coercion or safety concerns, the coach is producing shorter, more neutral replies."
                 className="inline-flex items-center gap-1 bg-slate-900 text-amber-300 text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider"
               >
-                <span aria-hidden>🪨</span>
+                <i className="fa-solid fa-shield-halved" aria-hidden="true"></i>
                 <span>Grey-rock coach on</span>
               </span>
             )}
@@ -70,105 +107,58 @@ export function BiffTab({
             Scenario Presets:
           </label>
           <div className="flex flex-wrap gap-1.5 text-[11px]">
-            <button
-              onClick={() => applyPreset("late_handoff")}
-              data-testid="preset-late-handoff"
-              className="bg-slate-100 px-2.5 py-1 rounded-lg border border-slate-200 font-medium"
-            >
-              Late Handoff
-            </button>
-            <button
-              onClick={() => applyPreset("expense_request")}
-              data-testid="preset-expense-request"
-              className="bg-slate-100 px-2.5 py-1 rounded-lg border border-slate-200 font-medium"
-            >
-              Reimbursement
-            </button>
-            <button
-              onClick={() => applyPreset("schedule_change")}
-              data-testid="preset-schedule-change"
-              className="bg-slate-100 px-2.5 py-1 rounded-lg border border-slate-200 font-medium"
-            >
-              Schedule Swap
-            </button>
-            <button
-              onClick={() => applyPreset("medical_update")}
-              data-testid="preset-medical-update"
-              className="bg-slate-100 px-2.5 py-1 rounded-lg border border-slate-200 font-medium"
-            >
-              Medical Update
-            </button>
+            {PRESET_CHIPS.map(([key, testid, label]) => (
+              <button
+                key={key}
+                type="button"
+                onClick={() => applyPreset(key)}
+                data-testid={testid}
+                className="bg-slate-100 px-2.5 py-1 rounded-lg border border-slate-200 font-medium"
+              >
+                {label}
+              </button>
+            ))}
           </div>
         </div>
 
         <div className="space-y-2">
+          <AiDraftNotice testid="biff-ai-notice" />
           <textarea
             data-testid="raw-input"
+            aria-label="Draft message"
             value={rawInput}
             onChange={(e) => onRawInputChange(e.target.value)}
             rows={4}
             className="w-full p-3 border border-slate-300 rounded-xl text-xs focus:ring-2 focus:ring-purple-600 focus:outline-none"
             placeholder="Type draft message here..."
           />
+          <button
+            type="button"
+            data-testid="biff-suggest-btn"
+            onClick={onSuggest}
+            disabled={biffLoading || !rawInput.trim()}
+            className="w-full bg-purple-700 hover:bg-purple-800 disabled:opacity-60 text-white font-bold py-2 rounded-xl text-xs transition shadow"
+          >
+            <i className={`fa-solid ${biffLoading ? "fa-spinner fa-spin" : "fa-wand-magic-sparkles"} mr-1.5`} aria-hidden="true"></i>
+            {biffLoading ? "Getting suggested wording…" : "Get suggested wording"}
+          </button>
 
-          <div className="p-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs space-y-1">
-            <div className="flex justify-between items-center font-bold">
-              <span className="text-slate-600">Tone Risk Analysis:</span>
-              <span
-                data-testid="risk-badge"
-                className={
-                  riskLabel === "Escalation Flag"
-                    ? "text-[10px] px-2 py-0.5 rounded bg-rose-100 text-rose-700 font-bold"
-                    : riskLabel === "Low Risk"
-                    ? "text-[10px] px-2 py-0.5 rounded bg-emerald-100 text-emerald-700 font-bold"
-                    : "text-[10px] px-2 py-0.5 rounded bg-slate-200 text-slate-600"
-                }
-              >
-                {riskLabel}
-              </span>
-            </div>
-            <div data-testid="flag-list" className="text-slate-500 text-[11px]">
-              {rawInput.trim() === "" ? (
-                "Type above to run analysis..."
-              ) : flagList.length > 0 ? (
-                flagList.map((f, i) => (
-                  <span key={i} className="text-rose-600 font-medium mr-2">
-                    • {f}
-                  </span>
-                ))
-              ) : (
-                <span className="text-emerald-600 font-medium">
-                  • Factual structure detected
-                </span>
-              )}
-            </div>
-            {(biffLoading || biffError) && (
-              <div
-                data-testid="biff-loading"
-                className="text-[10px] text-purple-700 font-semibold pt-1 flex items-center gap-1"
-              >
-                {biffLoading ? (
-                  <>
-                    <i className="fa-solid fa-wand-magic-sparkles"></i>
-                    Coach refining…
-                  </>
-                ) : (
-                  <span className="text-amber-700">{biffError}</span>
-                )}
-              </div>
-            )}
-          </div>
+          <ToneRow status={biffStatus} riskLabel={riskLabel} flagList={flagList} />
 
           <div
             data-testid="biff-output"
+            data-status={biffStatus}
             className="p-3 bg-purple-50/70 border border-purple-200 rounded-xl text-xs text-slate-800 font-medium min-h-[80px]"
           >
-            {biffOutput ? (
-              <p className="font-semibold text-purple-950">{biffOutput}</p>
+            <p className="text-[10px] font-bold uppercase tracking-wider text-purple-700 mb-1">Suggested wording</p>
+            {biffStatus === "unavailable" ? (
+              <SuggestUnavailable tp="biff" raw={rawInput} greyRock={safetyFlagged} onRetry={onSuggest} onUseTemplate={onRawInputChange} busy={biffLoading} />
+            ) : biffStatus === "loading" ? (
+              <p data-testid="biff-loading" className="text-purple-700">Getting suggested wording…</p>
+            ) : ready ? (
+              <p className="font-semibold text-purple-950 whitespace-pre-wrap">{biffOutput}</p>
             ) : (
-              <p className="text-slate-400 italic">
-                Reformulated BIFF message appears here...
-              </p>
+              <p className="text-slate-400 italic">Suggested wording appears here after you tap Get suggested wording.</p>
             )}
           </div>
 
@@ -176,24 +166,27 @@ export function BiffTab({
             <button
               data-testid="copy-biff-btn"
               onClick={copyBiffOutput}
-              className="flex-1 bg-purple-800 hover:bg-purple-900 text-white font-bold py-2 rounded-xl text-xs transition shadow"
+              disabled={!ready}
+              className="flex-1 bg-purple-800 hover:bg-purple-900 disabled:opacity-50 text-white font-bold py-2 rounded-xl text-xs transition shadow"
             >
-              Copy BIFF
+              Copy
             </button>
             <button
               data-testid="copy-tone-safe-btn"
               onClick={copyToneSafe}
-              title="Copy BIFF + a date/case audit stamp — safe to share with attorneys or mediators"
-              className="bg-emerald-700 hover:bg-emerald-800 text-white font-bold px-3 py-2 rounded-xl text-xs shadow"
+              disabled={!ready}
+              title="Copy with a date stamp for your own records"
+              className="bg-emerald-700 hover:bg-emerald-800 disabled:opacity-50 text-white font-bold px-3 py-2 rounded-xl text-xs shadow"
             >
-              <i className="fa-solid fa-shield-halved mr-1"></i>Tone-Safe
+              <i className="fa-regular fa-calendar-check mr-1"></i>Date stamp
             </button>
             <button
               data-testid="archive-biff-btn"
               onClick={logCommunication}
-              className="bg-slate-800 text-white font-bold px-3 py-2 rounded-xl text-xs"
+              disabled={!ready}
+              className="bg-slate-800 disabled:opacity-50 text-white font-bold px-3 py-2 rounded-xl text-xs"
             >
-              Archive
+              Save
             </button>
           </div>
         </div>

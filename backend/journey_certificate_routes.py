@@ -1,4 +1,4 @@
-"""Individual Journey certificate sharing: email it to an accepted professional or the case-code co-parent.
+"""Self Journey certificate sharing: email it to an accepted professional or the case-code co-parent.
 Parents never type an address. The co-parent option is hidden when either parent is safety-flagged."""
 from __future__ import annotations
 

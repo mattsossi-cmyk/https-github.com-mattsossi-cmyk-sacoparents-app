@@ -171,7 +171,8 @@ export default function LegalAcknowledgment() {
             <p className="text-[13px] font-bold text-[#1A1330]">Your privacy</p>
             <p className="text-[13px] text-[#4B4567] leading-relaxed">
               What you enter is private to your account. Nothing is shared with your co-parent, a professional or anyone
-              else unless you choose a person and tap Send.
+              else unless you choose a person and tap Send. One exception: if you accept a professional&rsquo;s case
+              invitation or court code, they see whether each step they asked for is done, with dates, never your answers.
             </p>
             <PrivacyLinks tp="legal-ack" />
           </div>

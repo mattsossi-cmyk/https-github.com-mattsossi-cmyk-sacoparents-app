@@ -6,8 +6,12 @@ export const PROS_PAGE_PATH = "/what-professionals-see";
 // Single switch: set to false once the attorney approves this wording (hides the draft label and review tags).
 export const ATTORNEY_REVIEW_PENDING = false;
 
+// Case invitations and court codes are the one exception to "nothing leaves until you send it". Keep it first.
+export const CASE_EXCEPTION =
+  "One exception: if you accept a professional's case invitation or enter their court code, they can see whether each step they asked for is done, in progress or not started, with the dates. Shared co-parenting results reach them only after both parents finish. Your Self-Assessment answers are never shared.";
+
 export const SHORT_VERSION = [
-  "Nothing in your account goes to a professional until you choose who gets it, choose what to include, and tap Send or Share.",
+  "Apart from the exception above, nothing in your account goes to a professional until you choose who gets it, choose what to include, and tap Send or Share.",
   "They get only the document or report you picked, never your whole account.",
   "Your Guide (AI) chats and journal entries are never sent to a professional.",
   "Your safety answers stay private. When you email your Safety Assessment to a mediator they're left out unless you tick the box to include them, and the court report never includes them.",
@@ -63,10 +67,12 @@ export const METHODS = [
     key: "case",
     icon: "fa-briefcase",
     title: "When a professional invites you to a case",
-    lead: "A mediator or attorney can start a case and invite you.",
+    lead: "A mediator or attorney can start a case and invite you, or give you a court code.",
     points: [
-      "Nothing from your account reaches them until you accept the invitation.",
-      "After you accept, they see whether each step they asked for is finished, and the results of only those steps.",
+      "Nothing from your account reaches them until you accept the invitation or enter the code.",
+      "After that, they see whether each step they asked for is done, in progress or not started, with the dates. They don't see your answers.",
+      "Shared co-parenting results reach them only after both parents finish.",
+      "Your Self-Assessment answers are never shared.",
     ],
   },
   {
@@ -98,25 +104,25 @@ export const SHARING_NOTICES = {
   "self-assessment": {
     title: "Self-Assessment",
     stays: "Your answers, scores, reflections and goals are private to your account.",
-    leaves: "Nothing is sent from here. You can download your own PDF.",
+    leaves: "Your answers are never shared with a professional. If you accepted a professional's case invitation or court code and they asked for this step, they see only whether it's done and the date. You can download your own PDF.",
     ai: "If you ask for a tip or use the Guide, the text needed for that reply goes to our AI provider to write it.",
   },
   "communication-builder": {
     title: "Communication Builder",
     stays: "Your drafts and saved messages stay in your account.",
     leaves: "Nothing is sent to your co-parent. You copy the message and send it yourself.",
-    ai: "When you tap Transform, your draft goes to our AI provider to suggest calmer wording.",
+    ai: "When you tap Get suggested wording, your draft goes to our AI provider to suggest calmer wording. Leave out names and sensitive details.",
   },
   "child-needs": {
     title: "Educational, Medical and Psychological",
     stays: "Your answers are private to your account. SA CoParents doesn't keep your child's records or documents.",
-    leaves: "Only the finished forms you tick are sent, and only to a professional who accepted your invitation, when you tap Send to a provider.",
+    leaves: "Only the finished forms you tick are sent, and only to a professional who accepted your invitation, when you tap Send to a provider. If you accepted a professional's case invitation or court code and they asked for this step, they also see whether it's done and the date.",
     ai: "If you ask the Guide, your question goes to our AI provider to answer it.",
   },
   "parallel-parenting": {
     title: "Parallel Parenting",
     stays: "Your plan choices and notes are private to your account.",
-    leaves: "Nothing is sent from here. You can download your plan or Court-Order Notes PDF yourself.",
+    leaves: "Nothing is sent from here, apart from one exception: if you accepted a professional's case invitation or court code and they asked for this step, they see whether it's done and the date. You can download your plan or Court-Order Notes PDF yourself.",
     ai: "If you ask the Guide or for a tip, your question and the step you're on go to our AI provider.",
   },
   "safety-check": {
@@ -128,7 +134,7 @@ export const SHARING_NOTICES = {
   "foundation-statement": {
     title: "Foundation Statement",
     stays: "Private until you share it.",
-    leaves: "You can download it, email it, copy a share link, or include it when you invite a professional. If you link your account to SA CoParents Align, Align can read it.",
+    leaves: "You can download it, email it, copy a share link, or include it when you invite a professional. If you link your account to SA CoParents Align, Align can read it. In a professional's joint case, it can be part of the shared co-parenting results that reach them after both parents finish.",
     ai: "If you use guided help, your answers go to our AI provider to draft wording.",
   },
 };
