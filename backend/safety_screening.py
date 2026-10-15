@@ -52,6 +52,11 @@ def crisis_resources_for(version: str | None) -> dict:
 
 
 SAFETY_BANNER_TEXT = "Start with Safety. A private check-in is available any time."
+# Owner-approved 2026-10-15. Single editable string; bump STEP_NOTICE_VERSION so every parent sees the step screen again.
+STEP_NOTICE_VERSION = "2026-10-15.1"
+PROFESSIONAL_ACCESS_NOTICE = ("Professional Access Notice: Your individual answers are not shared with your co-parent. The professional linked to your case may be notified "
+                              "whether you have completed or declined this required step, and assigned professionals may see individual screening answers as described in "
+                              "the privacy notification. This status notification does not itself disclose your answers.")
 # Version B source switch. "cdc" (default, TEMPORARY) = CDC NISVS behavior-category adaptation.
 # "velonis" = HITS-based items (Velonis et al. 2021, J. Interpersonal Violence; © SAGE) — kept, switched OFF until written permission is obtained.
 VERSION_B_SOURCE = os.environ.get("VERSION_B_SOURCE", "cdc")
@@ -384,18 +389,26 @@ def build_router(db, get_current_user, get_joint_report_doc, report_role, log_ac
         """Parent home banner state. Identical shape for every parent; only completion status, never tier/flags."""
         if user.get("role") != "parent":
             return {"applies": False}
+        notice = {"notice": PROFESSIONAL_ACCESS_NOTICE, "notice_version": STEP_NOTICE_VERSION,
+                  "needs_notice": (user.get("safety_step_notice") or {}).get("version") != STEP_NOTICE_VERSION}
         cur = db.joint_reports.find({"$or": [{"participants.a.user_id": user["_id"]}, {"participants.b.user_id": user["_id"]}], "archived": {"$ne": True}},
                                     {"id": 1, "participants": 1, "safety_screenings": 1, "safety_declined": 1, "created_at": 1}).sort("created_at", -1)
         docs = await cur.to_list(50)
         if not docs:
-            return {"applies": True, "has_case": False, "status": "not_started", "report_id": None, "text": SAFETY_BANNER_TEXT}
+            return {"applies": True, "has_case": False, "status": "not_started", "report_id": None, "text": SAFETY_BANNER_TEXT, **notice}
         statuses = []
         for d in docs:
             role = "a" if (d["participants"].get("a") or {}).get("user_id") == user["_id"] else "b"
             statuses.append((d["id"], entry_status(d, role)))
         pending = next((s for s in statuses if s[1] == "not_started"), None)
         rid, status = pending or statuses[0]
-        return {"applies": True, "has_case": True, "status": status, "report_id": rid, "text": SAFETY_BANNER_TEXT}
+        return {"applies": True, "has_case": True, "status": status, "report_id": rid, "text": SAFETY_BANNER_TEXT, **notice}
+
+    @r.post("/me/safety-entry/ack-notice")
+    async def ack_step_notice(user=Depends(get_current_user)):
+        """Parent has seen the step screen with the current Professional Access Notice. Status only; nothing else changes."""
+        await db.users.update_one({"_id": user["_id"]}, {"$set": {"safety_step_notice": {"version": STEP_NOTICE_VERSION, "seen_at": datetime.now(timezone.utc).isoformat()}}})
+        return {"ok": True, "notice_version": STEP_NOTICE_VERSION}
 
     @r.get("/safety/crisis-resources")
     async def crisis_resources(version: str | None = None, user=Depends(get_current_user)):

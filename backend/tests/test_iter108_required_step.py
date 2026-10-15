@@ -70,3 +70,25 @@ def test_report_wording_neutral_for_declined_and_not_started():
     with fitz.open(stream=build_individual_reports_pdf(doc, {"name": "Pro"}), filetype="pdf") as pdf:
         t = " ".join("\n".join(p.get_text() for p in pdf).split())
     assert "Parent A: safety screening — Declined (parent chose not to answer at this time, 2026-10-14)" in t and "Parent B: safety screening — Not started." in t
+
+
+def test_professional_access_notice_on_step_screen():
+    from pathlib import Path
+    from safety_screening import PROFESSIONAL_ACCESS_NOTICE, STEP_NOTICE_VERSION
+    exact = ("Professional Access Notice: Your individual answers are not shared with your co-parent. The professional linked to your case may be notified "
+             "whether you have completed or declined this required step, and assigned professionals may see individual screening answers as described in "
+             "the privacy notification. This status notification does not itself disclose your answers.")
+    assert PROFESSIONAL_ACCESS_NOTICE == exact
+    assert exact in Path("/app/frontend/src/content/safetyEntry.js").read_text(encoding="utf-8")
+    page = Path("/app/frontend/src/pages/StartWithSafety.jsx").read_text(encoding="utf-8")
+    assert 'data-testid="professional-access-notice"' in page and page.index("professional-access-notice") < page.index("start-safety-decline-btn")
+    pro, pa, pb, rid = _case()
+    e = pa.get(f"{API}/me/safety-entry").json()
+    assert e["notice"] == exact and e["needs_notice"] is True and e["notice_version"] == STEP_NOTICE_VERSION
+    assert pa.post(f"{API}/me/safety-entry/ack-notice").json()["notice_version"] == STEP_NOTICE_VERSION
+    assert pa.get(f"{API}/me/safety-entry").json()["needs_notice"] is False
+    # Already-satisfied parent still gets the screen again after a version bump (needs_notice drives it), privacy notice untouched.
+    assert pb.post(f"{API}/joint/reports/{rid}/safety-screening/decline").json()["entry_status"] == "declined"
+    eb = pb.get(f"{API}/me/safety-entry").json()
+    assert eb["status"] == "declined" and eb["needs_notice"] is True
+    assert "2026-10-10.2" in Path("/app/backend/privacy_notice.py").read_text(encoding="utf-8")

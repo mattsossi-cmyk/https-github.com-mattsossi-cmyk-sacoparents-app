@@ -22,7 +22,7 @@ def test_banner_identical_shape_for_all_parents_and_hidden_after_decline_or_comp
     rid = d["id"]
     # completed_case satisfies the step for both parents (declined) so they could answer; status shape is identical for both.
     ea, eb = pa.get(f"{API}/me/safety-entry").json(), pb.get(f"{API}/me/safety-entry").json()
-    assert set(ea) == set(eb) == {"applies", "has_case", "status", "report_id", "text"}
+    assert set(ea) == set(eb) == {"applies", "has_case", "status", "report_id", "text", "notice", "notice_version", "needs_notice"}
     assert ea["status"] == eb["status"] == "declined" and ea["text"] == SAFETY_BANNER_TEXT and ea["report_id"] == rid
     assert not any(k in ea for k in ("tier", "flag", "version"))
     assert pro.get(f"{API}/me/safety-entry").json() == {"applies": False}
