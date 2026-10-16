@@ -461,7 +461,6 @@ def build_router(db, get_current_user, get_joint_report_doc, report_role, log_ac
         role = report_role(doc, user["_id"])
         if role is None:
             raise HTTPException(status_code=403, detail="Only invited parents can choose a screening version")
-        st = _status(doc)[role]
         if body.version not in set(VERSIONS):
             raise HTTPException(status_code=400, detail="Choose one of the versions offered to you")
         await db.joint_reports.update_one({"id": rid}, {"$set": {f"safety_version.{role}": body.version, f"safety_version_confirmed.{role}": True}})
@@ -516,6 +515,8 @@ def build_router(db, get_current_user, get_joint_report_doc, report_role, log_ac
         doc = await get_joint_report_doc(rid, user)
         if not _is_pro(doc, user):
             raise HTTPException(status_code=403, detail="Item-level screening responses are visible only to the assigned professional")
+        from pro_training import require_training
+        await require_training(db, user)
         scr = (doc.get("safety_screenings") or {}).get(role) if role in ("a", "b") else None
         if not scr and not (doc.get("communication_readiness") or {}).get(role):
             raise HTTPException(status_code=404, detail="No safety screening on file for this parent")

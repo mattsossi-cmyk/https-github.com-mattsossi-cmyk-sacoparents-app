@@ -436,7 +436,8 @@ def _export_routes(s: LensStore, get_current_user) -> APIRouter:
         doc = await s.own_case(rid, user)
         rep = await s.get_or_create(doc, user)
         await log_event(rid, "LEGAL_LENS_REPORT_EXPORTED", user)
-        return Response(content=build_legal_lens_pdf(await s.view(rep, doc)), media_type="application/pdf",
+        from safety_review import assert_export_clean
+        return Response(content=assert_export_clean(build_legal_lens_pdf(await s.view(rep, doc)), "Legal Lens report"), media_type="application/pdf",
                         headers={"Content-Disposition": f'attachment; filename="legal-lens-report-{doc.get("case_code") or rid}.pdf"'})
 
     @r.get("/cases/{rid}/professional-report/bundle.zip")
@@ -455,7 +456,8 @@ def _export_routes(s: LensStore, get_current_user) -> APIRouter:
         buf = io.BytesIO()
         with zipfile.ZipFile(buf, "w", zipfile.ZIP_DEFLATED) as z:
             z.writestr(f"{code}-joint-report.pdf", build_joint_pdf({**generate_joint_report(doc), "is_sample": bool(doc.get("is_demo"))}))
-            z.writestr(f"{code}-professional-report.pdf", build_legal_lens_pdf(await s.view(rep, doc)))
+            from safety_review import assert_export_clean
+            z.writestr(f"{code}-professional-report.pdf", assert_export_clean(build_legal_lens_pdf(await s.view(rep, doc)), "Legal Lens report"))
         await log_event(rid, "LEGAL_LENS_BUNDLE_EXPORTED", user)
         return Response(content=buf.getvalue(), media_type="application/zip", headers={"Content-Disposition": f'attachment; filename="{code}-reports.zip"'})
 

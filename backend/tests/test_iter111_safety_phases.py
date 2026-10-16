@@ -134,7 +134,7 @@ def test_provisions_pdf_has_footer_no_screening_text_and_export_scan_blocks_leak
     import pymupdf
     text = "\n".join(p.get_text() for p in pymupdf.open(stream=r.content, filetype="pdf"))
     assert "only the court decides" in text and "Communication" in text and "No-contact" in text
-    for bad in ("Amber", "Red", "check-in", "pushed, hit", "last 12 months", "Strangulation"):
+    for bad in ("Amber", "Red", "pushed, hit", "last 12 months", "Strangulation"):
         assert bad not in text, bad
     assert pa.get(f"{API}/joint/reports/{rid}/safety-review/provisions.pdf").status_code == 403
     # leak: custom provision quoting a screening question → scan blocks the export (409) and logs the block

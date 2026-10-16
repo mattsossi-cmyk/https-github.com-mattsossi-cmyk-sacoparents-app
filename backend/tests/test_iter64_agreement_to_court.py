@@ -1,6 +1,6 @@
 """Iter 64: Co-Parenting Agreement explicitly attached to a court submission; judge sees card + PDF."""
-import requests
 import pymupdf
+import requests
 from casekit import complete_both, new_user
 from test_judicial_portal import _flow
 from test_legal_report import API
@@ -33,6 +33,7 @@ def test_agreement_attached_to_court_submission() -> None:
         assert s.post(f"{API}/joint/invitations/accept", json={"code": toks[role]}).json().get("ok")
         s.put(f"{API}/foundation/mine", json={"fields": AGR_FIELDS, "safety": {"fear": False, "threats": False, "control": False}})
         s.post(f"{API}/joint/reports/{ag['id']}/foundation/share")
+        s.post(f"{API}/joint/reports/{ag['id']}/safety-screening/decline")  # required Start with Safety step (iter108)
         r = s.put(f"{API}/joint/reports/{ag['id']}/responses", json={"answers": answers})
         assert r.status_code == 200, r.text[:200]
     assert pro.get(f"{API}/joint/reports/{ag['id']}").json()["status"] == "ready"

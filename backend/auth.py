@@ -56,6 +56,8 @@ def public_user(u: dict) -> dict:
         "must_change_password": bool(u.get("must_change_password")),
         "privacy_notice_version": (u.get("privacy_notice") or {}).get("version"),
         "professional_notice_version": (u.get("professional_notice") or {}).get("version"),
+        "safety_training_version": (u.get("safety_training") or {}).get("version"),
+        "is_supervisor": bool(u.get("is_supervisor")) or u.get("role") == "admin",
         "profile": u.get("profile", {}),
     }
 

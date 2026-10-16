@@ -42,6 +42,8 @@ def _safe_name(p: dict) -> str:
 
 
 def _pdf_response(content: bytes, filename: str) -> Response:
+    from safety_review import assert_export_clean
+    content = assert_export_clean(content, "Court packet")
     return Response(content=content, media_type="application/pdf", headers={"Content-Disposition": f'attachment; filename="{filename}"'})
 
 

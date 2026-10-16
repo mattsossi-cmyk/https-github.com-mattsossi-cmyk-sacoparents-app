@@ -1,16 +1,15 @@
 """Iter-108: Option A — the Start-with-Safety STEP is required, the ANSWERS are not."""
-import io
 import os
 import re
 import uuid
 
-import requests
 from dotenv import load_dotenv
 
 load_dotenv("/app/frontend/.env")
 load_dotenv("/app/backend/.env")
 
 from casekit import new_user  # noqa: E402
+
 from pdf_individual import build_individual_reports_pdf  # noqa: E402
 from safety_screening import receipt  # noqa: E402
 
@@ -29,6 +28,7 @@ def _case():
         s = new_user(API, "parent", f"Parent {role.upper()}", email=emails[role], invite=toks[role])
         assert s.post(f"{API}/joint/invitations/accept", json={"code": toks[role]}).json().get("ok")
         ses[role] = s
+    pro.post(f"{API}/professional-training/acknowledge", json={"version": __import__("pro_training").TRAINING_VERSION, "acknowledged": True})
     return pro, ses["a"], ses["b"], d["id"]
 
 
@@ -74,6 +74,7 @@ def test_report_wording_neutral_for_declined_and_not_started():
 
 def test_professional_access_notice_on_step_screen():
     from pathlib import Path
+
     from safety_screening import PROFESSIONAL_ACCESS_NOTICE, STEP_NOTICE_VERSION
     exact = ("Professional Access Notice: Your individual answers are not shared with your co-parent. The professional linked to your case may be notified "
              "whether you have completed or declined this required step, and assigned professionals may see individual screening answers as described in "

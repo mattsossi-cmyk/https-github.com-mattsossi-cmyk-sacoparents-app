@@ -1903,6 +1903,8 @@ from safety_pathway import build_router as _build_pathway_router  # noqa: E402
 from safety_invites import build_router as _build_invites_router  # noqa: E402
 from safety_status_webhook import build_router as _build_webhook_router  # noqa: E402
 from safety_review import build_router as _build_review_router  # noqa: E402
+from pro_training import build_router as _build_training_router  # noqa: E402
+app.include_router(_build_training_router(db, get_current_user), prefix="/api")
 from safety_screening import _status as _screening_status  # noqa: E402
 _is_case_pro = lambda doc, user: user.get("role") == "admin" or user["_id"] in (doc.get("professional_id"), doc.get("created_by"))  # noqa: E731
 app.include_router(_build_invites_router(get_current_user, get_joint_report_doc, _log_report_access, _is_case_pro), prefix="/api")

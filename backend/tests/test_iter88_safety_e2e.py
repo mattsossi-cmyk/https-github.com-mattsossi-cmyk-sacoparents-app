@@ -49,7 +49,9 @@ def _register(email, name, role="parent", invite=""):
 
 @pytest.fixture(scope="module")
 def pro_session():
-    return _login(PRO_EMAIL, PRO_PASSWORD)
+    s = _login(PRO_EMAIL, PRO_PASSWORD)
+    s.post(f"{BASE}/api/professional-training/acknowledge", json={"version": __import__("pro_training").TRAINING_VERSION, "acknowledged": True}, timeout=15)
+    return s
 
 
 @pytest.fixture(scope="module")

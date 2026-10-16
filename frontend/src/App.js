@@ -19,6 +19,7 @@ export const PROFESSIONAL_NOTICE_VERSION = "2026-10-13.1";
 import CommunicationReadiness from "@/pages/CommunicationReadiness";
 import SafetyResponses from "@/pages/SafetyResponses";
 import SafetyReview from "@/pages/SafetyReview";
+import ProfessionalTraining from "@/pages/ProfessionalTraining";
 import JointReport from "@/pages/JointReport";
 import Hub from "@/pages/Hub";
 import CompleteReport from "@/pages/CompleteReport";
@@ -97,6 +98,7 @@ function App() {
             <Route path="/joint/:id/safety-screening" element={<Protected><SafetyScreening /></Protected>} />
             <Route path="/joint/:id/safety-screening/:role" element={<Protected><SafetyResponses /></Protected>} />
             <Route path="/joint/:id/safety-review" element={<Protected><SafetyReview /></Protected>} />
+            <Route path="/professional-training" element={<Protected><ProfessionalTraining /></Protected>} />
             <Route path="/joint/:id/legal-report" element={<Protected><LegalLensRedirect /></Protected>} />
             <Route path="/joint/:id/legal-report/sample" element={<Protected><LegalLensRedirect /></Protected>} />
             <Route path="/samples/legal-report" element={<Navigate to="/samples/legal-lens-report" replace />} />

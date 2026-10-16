@@ -8,6 +8,7 @@ from pydantic import BaseModel, Field
 from core import db
 from fv_screening import ITEMS, RULE_LABEL, TF
 from pdf_common import _new_pdf, _s
+from pro_training import is_supervisor, require_training
 
 LEVELS = ("none", "green", "amber", "red")
 LEVEL_LABEL = {"none": "Not yet decided", "green": "No concerns reported", "amber": "Amber — structured review", "red": "Red — protected review"}
@@ -52,7 +53,7 @@ def pattern_panel(triggered: list[str]) -> list[dict]:
 def _forbidden_terms() -> list[str]:
     terms = [it["text"] for it in ITEMS if it.get("text")]
     terms += [o for o in TF if o.lower() not in ("never", "prefer not to answer")]
-    terms += ["Red — protected", "Amber — structured", "Family check-in", "triggered_rules"]
+    terms += ["Red — protected", "Amber — structured", "triggered_rules"] + [v for v in RULE_LABEL.values() if len(v) > 12]
     return terms
 
 
@@ -60,6 +61,14 @@ def scan_text(text: str) -> list[str]:
     """Returns the forbidden screening terms present in export text (export must be blocked when non-empty)."""
     norm = re.sub(r"\s+", " ", text or "").lower()
     return [t for t in _forbidden_terms() if len(t) > 6 and re.sub(r"\s+", " ", t).lower() in norm]
+
+
+def assert_export_clean(pdf: bytes, label: str = "export") -> bytes:
+    """Every outbound PDF passes through here: blocks the download (409) if screening wording is present."""
+    leaks = scan_pdf(pdf)
+    if leaks:
+        raise HTTPException(status_code=409, detail=f"{label} blocked by the export scan: the document contains private check-in wording. Remove it and try again.")
+    return pdf
 
 
 def scan_pdf(pdf: bytes) -> list[str]:
@@ -99,6 +108,11 @@ def build_provisions_pdf(doc: dict, review: dict, pro: dict) -> bytes:
     return bytes(pdf.output())
 
 
+class SignoffIn(BaseModel):
+    approve: bool
+    note: str = ""
+
+
 class ReviewIn(BaseModel):
     concern_level: str = "none"
     reasons: list[str] = Field(default_factory=list)
@@ -127,12 +141,15 @@ def build_router(get_current_user, get_joint_report_doc, log_access, is_pro, sta
     @r.get("/joint/reports/{rid}/safety-review")
     async def get_review(rid: str, user=Depends(get_current_user)):
         doc = await get_joint_report_doc(rid, user)
-        if not is_pro(doc, user):
+        if not is_pro(doc, user) and not (doc.get("safety_review_pending_lower") and await is_supervisor(db, user)):
             raise HTTPException(status_code=403, detail="Only the assigned professional can open the safety review")
+        await require_training(db, user)
         status = status_fn(doc)
         await log_access(doc, user, "Opened safety review (two-column)", "safety_review")
         rev = doc.get("safety_review") or {"concern_level": "none", "reasons": [], "provisions": [], "custom_provisions": [], "notes": ""}
+        pend = doc.get("safety_review_pending_lower")
         return {"columns": [_column(doc, "a", status), _column(doc, "b", status)], "review": {**rev, "level_label": LEVEL_LABEL.get(rev.get("concern_level") or "none")},
+                "pending_lower": pend, "can_sign_off": bool(pend) and await is_supervisor(db, user) and pend.get("requested_by") != user["_id"],
                 "reasons": REASONS, "levels": [{"id": k, "label": LEVEL_LABEL[k]} for k in LEVELS], "provisions": PROVISIONS, "footer": PROVISIONS_FOOTER,
                 "notice": "Professional-only. Access is logged. Nothing here is shown to either parent or to the court; only the provisions document can be exported, and it is scanned before download."}
 
@@ -145,19 +162,53 @@ def build_router(get_current_user, get_joint_report_doc, log_access, is_pro, sta
             raise HTTPException(status_code=400, detail="Unknown concern level")
         if body.concern_level in ("amber", "red") and not body.reasons:
             raise HTTPException(status_code=400, detail="Give at least one reason for an Amber or Red concern level")
+        await require_training(db, user)
         valid = {p["id"] for p in PROVISIONS}
         rev = {"concern_level": body.concern_level, "reasons": [x for x in body.reasons if x in REASONS][:9], "provisions": [p for p in body.provisions if p in valid],
                "custom_provisions": [c.strip()[:600] for c in body.custom_provisions if c.strip()][:10], "notes": body.notes.strip()[:4000],
                "decided_by": user["_id"], "decided_by_name": user.get("name", ""), "at": datetime.now(timezone.utc).isoformat()}
-        await db.joint_reports.update_one({"id": rid}, {"$set": {"safety_review": rev}})
+        current = (doc.get("safety_review") or {}).get("concern_level")
+        if current == "red" and body.concern_level != "red":
+            if not body.reasons:
+                raise HTTPException(status_code=400, detail="Give at least one reason to lower a Red concern level")
+            pend = {**rev, "requested_by": user["_id"], "requested_by_name": user.get("name", ""), "requested_at": rev["at"], "from_level": "red"}
+            await db.joint_reports.update_one({"id": rid}, {"$set": {"safety_review_pending_lower": pend}})
+            await log_access(doc, user, f"Requested lowering concern level Red → {LEVEL_LABEL[body.concern_level]} (awaiting supervising professional)", "supervisor_signoff")
+            return {**(doc.get("safety_review") or {}), "level_label": LEVEL_LABEL["red"], "pending_lower": pend, "requires_supervisor": True}
+        await db.joint_reports.update_one({"id": rid}, {"$set": {"safety_review": rev}, "$unset": {"safety_review_pending_lower": ""}})
         await log_access(doc, user, f"Safety review saved: concern level {LEVEL_LABEL[body.concern_level]} ({len(rev['reasons'])} reasons, {len(rev['provisions']) + len(rev['custom_provisions'])} provisions)", "safety_review")
         return {**rev, "level_label": LEVEL_LABEL[body.concern_level]}
+
+    @r.post("/joint/reports/{rid}/safety-review/supervisor-signoff")
+    async def supervisor_signoff(rid: str, body: SignoffIn, user=Depends(get_current_user)):
+        doc = await get_joint_report_doc(rid, user)
+        pend = doc.get("safety_review_pending_lower")
+        if not pend:
+            raise HTTPException(status_code=404, detail="No lowering request is awaiting sign-off")
+        if not await is_supervisor(db, user):
+            raise HTTPException(status_code=403, detail="Only a supervising professional can sign off lowering a Red concern level")
+        if pend.get("requested_by") == user["_id"]:
+            raise HTTPException(status_code=403, detail="A second professional must sign off; you made the request")
+        await require_training(db, user)
+        if not body.note.strip():
+            raise HTTPException(status_code=400, detail="Record a short reason for your decision")
+        now = datetime.now(timezone.utc).isoformat()
+        sign = {"by": user["_id"], "by_name": user.get("name", ""), "at": now, "approved": body.approve, "note": body.note.strip()[:1000]}
+        if body.approve:
+            rev = {k: v for k, v in pend.items() if k not in ("requested_by", "requested_by_name", "requested_at", "from_level")}
+            rev["supervisor_signoff"] = sign
+            await db.joint_reports.update_one({"id": rid}, {"$set": {"safety_review": rev}, "$unset": {"safety_review_pending_lower": ""}})
+        else:
+            await db.joint_reports.update_one({"id": rid}, {"$unset": {"safety_review_pending_lower": ""}, "$set": {"safety_review.last_signoff": sign}})
+        await log_access(doc, user, f"Supervising professional {'approved' if body.approve else 'declined'} lowering Red → {LEVEL_LABEL.get(pend.get('concern_level'), '?')}", "supervisor_signoff")
+        return {"ok": True, "approved": body.approve, "concern_level": pend["concern_level"] if body.approve else "red"}
 
     @r.get("/joint/reports/{rid}/safety-review/provisions.pdf")
     async def provisions_pdf(rid: str, user=Depends(get_current_user)):
         doc = await get_joint_report_doc(rid, user)
         if not is_pro(doc, user):
             raise HTTPException(status_code=403, detail="Only the assigned professional can export provisions")
+        await require_training(db, user)
         rev = doc.get("safety_review") or {}
         pdf = build_provisions_pdf(doc, rev, user)
         leaks = scan_pdf(pdf)

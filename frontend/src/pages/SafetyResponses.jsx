@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
-import { Link, useParams } from "react-router-dom";
+import { Link, useNavigate, useParams } from "react-router-dom";
+import { trainingRedirect } from "@/lib/trainingGate";
 import { toast } from "sonner";
 import { ArrowLeft, Lock } from "lucide-react";
 import api, { formatApiError } from "@/lib/api";
@@ -10,9 +11,10 @@ import { CrisisResourcesButton } from "@/components/CrisisResources";
 
 export default function SafetyResponses() {
   const { id, role } = useParams();
+  const navigate = useNavigate();
   const [d, setD] = useState(null);
   const [err, setErr] = useState(null);
-  useEffect(() => { api.get(`/joint/reports/${id}/safety-screening/${role}/responses`).then((r) => setD(r.data)).catch((e) => { setErr(formatApiError(e)); toast.error(formatApiError(e)); }); }, [id, role]);
+  useEffect(() => { api.get(`/joint/reports/${id}/safety-screening/${role}/responses`).then((r) => setD(r.data)).catch((e) => { if (trainingRedirect(e, navigate)) return; setErr(formatApiError(e)); toast.error(formatApiError(e)); }); }, [id, role]);
   return (
     <div className="min-h-screen bg-background" data-testid="screening-responses-page">
       <header className="bg-white border-b border-border"><div className="max-w-3xl mx-auto px-4 sm:px-6 py-4 flex items-center justify-between"><Link to={`/joint/${id}`} className="flex items-center gap-1.5 text-sm text-muted-foreground" data-testid="screening-responses-back"><ArrowLeft className="h-4 w-4" /> Back to case</Link><div className="flex items-center gap-3"><CrisisResourcesButton version={d?.status?.version} /><BrandLogo size="text-xl" /></div></div></header>

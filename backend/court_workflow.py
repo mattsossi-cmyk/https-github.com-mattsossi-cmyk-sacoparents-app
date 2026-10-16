@@ -712,7 +712,8 @@ async def _legal_pdf_bytes(db, doc: dict, include_sources: bool = False) -> tupl
     if include_sources and rb.get("citations"):
         summary["research_sources"] = {"citations": rb["citations"][:10], "fetched_at": rb.get("fetched_at"), "model": rb.get("model"),
                                        "note": "Cited web sources consulted by the professional for the Research Base under Options & Resources. Sources only — no findings, diagnoses or recommendations are drawn from them."}
-    return build_legal_lens_pdf(view), summary
+    from safety_review import assert_export_clean
+    return assert_export_clean(build_legal_lens_pdf(view), "Legal Lens report"), summary
 
 
 async def _agreement_pdf_bytes(db, doc: dict, user: dict, agreement_id: str | None) -> tuple[bytes | None, dict | None]:
@@ -1006,9 +1007,11 @@ async def _build_bundle(db, doc: dict, pro: dict, app_url, user: dict, body: Sub
     joint_pdf, stmt_pdf, legal_pdf, legal_summary = await _submission_pdfs(db, doc, pro, app_url, body.include_legal_report, body.include_research_sources)
     if mode == "individual":
         from pdf_individual import build_individual_reports_pdf
-        joint_pdf = build_individual_reports_pdf(doc, pro)
+        from safety_review import assert_export_clean
+        joint_pdf = assert_export_clean(build_individual_reports_pdf(doc, pro), "Individual Perspective Reports")
     agreement_pdf, agreement_card = await _agreement_pdf_bytes(db, doc, user, body.agreement_report_id)
-    combined = merge_pdfs([stmt_pdf, joint_pdf] + ([legal_pdf] if legal_pdf else []) + ([agreement_pdf] if agreement_pdf else []))
+    from safety_review import assert_export_clean
+    combined = assert_export_clean(merge_pdfs([stmt_pdf, joint_pdf] + ([legal_pdf] if legal_pdf else []) + ([agreement_pdf] if agreement_pdf else [])), "Court packet")
     return {"mode": mode, "joint_pdf": joint_pdf, "stmt_pdf": stmt_pdf, "legal_pdf": legal_pdf, "legal_summary": legal_summary, "agreement_pdf": agreement_pdf, "agreement_card": agreement_card, "combined": combined}
 
 

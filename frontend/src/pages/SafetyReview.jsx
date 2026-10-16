@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
-import { Link, useParams } from "react-router-dom";
+import { Link, useNavigate, useParams } from "react-router-dom";
+import { trainingRedirect } from "@/lib/trainingGate";
 import { toast } from "sonner";
 import { ArrowLeft, Lock, Download } from "lucide-react";
 import api, { formatApiError } from "@/lib/api";
@@ -27,15 +28,26 @@ const Column = ({ c }) => (
 
 export default function SafetyReview() {
   const { id } = useParams();
+  const navigate = useNavigate();
   const [d, setD] = useState(null);
+  const [note, setNote] = useState("");
   const [rev, setRev] = useState(null);
   const [custom, setCustom] = useState("");
   const [busy, setBusy] = useState(false);
-  useEffect(() => { api.get(`/joint/reports/${id}/safety-review`).then((r) => { setD(r.data); setRev(r.data.review); }).catch((e) => toast.error(formatApiError(e))); }, [id]);
+  const load = () => api.get(`/joint/reports/${id}/safety-review`).then((r) => { setD(r.data); setRev(r.data.review); }).catch((e) => { if (!trainingRedirect(e, navigate)) toast.error(formatApiError(e)); });
+  useEffect(() => { load(); }, [id]); // eslint-disable-line react-hooks/exhaustive-deps
+  const signOff = async (approve) => {
+    try { await api.post(`/joint/reports/${id}/safety-review/supervisor-signoff`, { approve, note }); toast.success(approve ? "Lowering approved" : "Lowering declined"); setNote(""); load(); }
+    catch (e) { toast.error(formatApiError(e)); }
+  };
   const toggle = (key, v) => setRev((x) => ({ ...x, [key]: x[key].includes(v) ? x[key].filter((i) => i !== v) : [...x[key], v] }));
   const save = async () => {
     setBusy(true);
-    try { const r = await api.put(`/joint/reports/${id}/safety-review`, { ...rev, custom_provisions: custom.split("\n").map((s) => s.trim()).filter(Boolean) }); setRev({ ...r.data, custom_provisions: r.data.custom_provisions }); toast.success("Safety review saved"); }
+    try {
+      const r = await api.put(`/joint/reports/${id}/safety-review`, { ...rev, custom_provisions: custom.split("\n").map((s) => s.trim()).filter(Boolean) });
+      if (r.data.requires_supervisor) { toast.info("Lowering a Red needs a supervising professional's sign-off — request recorded."); load(); return; }
+      setRev({ ...r.data, custom_provisions: r.data.custom_provisions }); toast.success("Safety review saved");
+    }
     catch (e) { toast.error(formatApiError(e)); } finally { setBusy(false); }
   };
   const exportPdf = async () => {
@@ -58,6 +70,18 @@ export default function SafetyReview() {
           <p className="mt-2 rounded-md border-l-4 border-amber-500 bg-amber-50 p-2 text-xs" data-testid="safety-review-notice">{d.notice}</p>
         </div>
         <div className="grid gap-4 md:grid-cols-2" data-testid="safety-review-columns">{d.columns.map((c) => <Column key={c.role} c={c} />)}</div>
+        {d.pending_lower && (
+          <section className="rounded-lg border-2 border-red-300 bg-red-50 p-4 space-y-3" data-testid="pending-lower">
+            <p className="text-sm font-semibold text-red-900">Lowering Red → {d.levels.find((l) => l.id === d.pending_lower.concern_level)?.label} requested by {d.pending_lower.requested_by_name || "a professional"} on {d.pending_lower.requested_at?.slice(0, 10)} — awaiting a supervising professional.</p>
+            <p className="text-xs text-red-900/80">Reasons: {d.pending_lower.reasons.join("; ")}</p>
+            {d.can_sign_off && (
+              <div className="space-y-2">
+                <Textarea value={note} onChange={(e) => setNote(e.target.value)} placeholder="Supervisor note (required)" rows={2} data-testid="signoff-note" />
+                <div className="flex gap-2"><Button size="sm" onClick={() => signOff(true)} data-testid="signoff-approve">Approve lowering</Button><Button size="sm" variant="outline" onClick={() => signOff(false)} data-testid="signoff-decline">Keep Red</Button></div>
+              </div>
+            )}
+          </section>
+        )}
         <section className="rounded-lg border border-border bg-white p-5 space-y-4" data-testid="safety-review-decision">
           <h2 className="text-base font-semibold md:text-lg">Concern level (your decision)</h2>
           <div className="flex flex-wrap gap-2">{d.levels.map((l) => <button key={l.id} type="button" onClick={() => setRev((x) => ({ ...x, concern_level: l.id }))} className={`rounded-full border px-3 py-1.5 text-sm ${rev.concern_level === l.id ? "border-brand-purple bg-brand-purple text-white" : "border-border bg-white hover:bg-muted"}`} data-testid={`concern-level-${l.id}`}>{l.label}</button>)}</div>
