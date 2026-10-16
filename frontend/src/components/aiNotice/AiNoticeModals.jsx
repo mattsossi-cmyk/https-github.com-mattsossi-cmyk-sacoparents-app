@@ -1,51 +1,64 @@
-import React, { useEffect, useId, useRef, useState } from "react";
-import { createPortal } from "react-dom";
+import React, { useRef, useState } from "react";
+import * as Dialog from "@radix-ui/react-dialog";
 
-const FOCUSABLE = 'a[href], button:not([disabled]), input:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])';
+const stopEscape = (e) => e.key === "Escape" && e.stopPropagation();
 
-// Overlay + box from the file, with a keyboard focus trap. `onEscape` closes it.
-function TrapModal({ testid, labelledBy, initialRef, onEscape, children }) {
-  const boxRef = useRef(null);
-  useEffect(() => {
-    (initialRef?.current || boxRef.current?.querySelector(FOCUSABLE))?.focus();
-  }, [initialRef]);
-  const onKeyDown = (e) => {
-    if (e.key === "Escape") {
-      e.stopPropagation();
-      onEscape();
-      return;
-    }
-    if (e.key !== "Tab") return;
-    const els = [...boxRef.current.querySelectorAll(FOCUSABLE)];
-    if (!els.length) return;
-    const first = els[0];
-    const last = els[els.length - 1];
-    if (e.shiftKey && document.activeElement === first) {
-      e.preventDefault();
-      last.focus();
-    } else if (!e.shiftKey && document.activeElement === last) {
-      e.preventDefault();
-      first.focus();
-    }
-  };
-  return createPortal(
-    <div className="sa-ai-modal" data-testid={testid} role="dialog" aria-modal="true" aria-labelledby={labelledBy} onKeyDown={onKeyDown}>
-      <div className="sa-ai-modal__box" ref={boxRef}>
-        {children}
-      </div>
-    </div>,
-    document.body
+// Radix modal (stacks above other Radix dialogs: takes focus, clicks and Escape). `onEscape` closes it; outside clicks do nothing.
+function TrapModal({ testid, title, initialRef, onEscape, footer, children }) {
+  return (
+    <Dialog.Root open onOpenChange={(open) => !open && onEscape()}>
+      <Dialog.Portal>
+        <Dialog.Overlay className="sa-ai-modal" data-testid={`${testid}-overlay`}>
+          <Dialog.Content
+            className="sa-ai-modal__box"
+            data-testid={testid}
+            aria-describedby={undefined}
+            onKeyDown={stopEscape}
+            onPointerDownOutside={(e) => e.preventDefault()}
+            onInteractOutside={(e) => e.preventDefault()}
+            onOpenAutoFocus={(e) => {
+              if (!initialRef?.current) return;
+              e.preventDefault();
+              initialRef.current.focus();
+            }}
+            onCloseAutoFocus={(e) => e.preventDefault()}
+          >
+            <div className="sa-ai-modal__body">
+              <div className="sa-ai-modal__icon" aria-hidden="true">!</div>
+              <Dialog.Title asChild>
+                <h2>{title}</h2>
+              </Dialog.Title>
+              {children}
+            </div>
+            {footer && <div className="sa-ai-modal__foot">{footer}</div>}
+          </Dialog.Content>
+        </Dialog.Overlay>
+      </Dialog.Portal>
+    </Dialog.Root>
   );
 }
 
-export function AiNoticeModal({ onContinue, onClose, busy }) {
-  const titleId = useId();
+export function AiNoticeModal({ onContinue, onClose, busy, error }) {
   const agreeRef = useRef(null);
   const [agree, setAgree] = useState(false);
+  const footer = (
+    <>
+      <label className="sa-ai-modal__check">
+        <input type="checkbox" ref={agreeRef} data-testid="ai-notice-agree" checked={agree} onChange={(e) => setAgree(e.target.checked)} />
+        I understand and will not enter personal or sensitive information into the AI tool.
+      </label>
+      {error && (
+        <p className="sa-ai-modal__error" role="alert" data-testid="ai-notice-error">
+          {error}
+        </p>
+      )}
+      <button type="button" className="sa-ai-btn" data-testid="ai-notice-continue" disabled={!agree || busy} onClick={onContinue}>
+        Continue to AI Communication Builder
+      </button>
+    </>
+  );
   return (
-    <TrapModal testid="ai-notice-modal" labelledBy={titleId} initialRef={agreeRef} onEscape={onClose}>
-      <div className="sa-ai-modal__icon" aria-hidden="true">!</div>
-      <h2 id={titleId}>Before you use the AI Communication Builder</h2>
+    <TrapModal testid="ai-notice-modal" title="Before you use the AI Communication Builder" initialRef={agreeRef} onEscape={onClose} footer={footer}>
       <p>This tool uses artificial intelligence to help you write messages. What you type is sent to our AI service provider to generate a draft.</p>
       <p><strong>Please do not enter:</strong></p>
       <ul>
@@ -65,24 +78,14 @@ export function AiNoticeModal({ onContinue, onClose, busy }) {
         </a>
         .
       </p>
-      <label className="sa-ai-modal__check">
-        <input type="checkbox" ref={agreeRef} data-testid="ai-notice-agree" checked={agree} onChange={(e) => setAgree(e.target.checked)} />
-        I understand and will not enter personal or sensitive information into the AI tool.
-      </label>
-      <button type="button" className="sa-ai-btn" data-testid="ai-notice-continue" disabled={!agree || busy} onClick={onContinue}>
-        Continue to AI Communication Builder
-      </button>
     </TrapModal>
   );
 }
 
 export function AiConfirmModal({ labels, onEdit, onSendAnyway }) {
-  const titleId = useId();
   const editRef = useRef(null);
   return (
-    <TrapModal testid="ai-confirm-modal" labelledBy={titleId} initialRef={editRef} onEscape={onEdit}>
-      <div className="sa-ai-modal__icon" aria-hidden="true">!</div>
-      <h2 id={titleId}>Your message may contain personal information</h2>
+    <TrapModal testid="ai-confirm-modal" title="Your message may contain personal information" initialRef={editRef} onEscape={onEdit}>
       <p>We found:</p>
       <ul data-testid="ai-confirm-list">
         {labels.map((t) => (

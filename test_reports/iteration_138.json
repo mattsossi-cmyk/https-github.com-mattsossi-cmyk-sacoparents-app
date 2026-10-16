@@ -1,0 +1,61 @@
+{
+  "summary": "Tested the AI privacy warning, Consent Trend and Privacy Notice in preview. Backend regression passed: 66/66 (test_ai_notice, test_consent_trend, test_privacy_consent, test_comm_builder_batch). Frontend: most flows pass. There is 1 HIGH bug: inside the Court Ordered chat dialog (Radix CourtDialog) the AI notice and confirm pop-ups cannot be clicked, focus and Escape go to the dialog behind, so a user cannot accept the notice or answer the confirm from the court chat dialog. There is 1 MEDIUM bug: on the Landing page (/legacy) Coach demo, a signed-out visitor never sees the 'Before you continue' consent screen and the AI pop-up does not open by itself. Minor gaps are listed below.",
+  "backend_issues": {
+    "critical": [],
+    "minor": [
+      {"endpoint": "POST /api/legal/acknowledge", "issue": "Signed-out first-visit 'Just so we're on the same page' modal POSTs and gets 401. The UI still continues, but the request is noisy."}
+    ]
+  },
+  "frontend_issues": {
+    "ui_bugs": [
+      {"component": "CourtChatPanel inside CourtDialog (Radix Dialog, court-ai-fab -> court-chat)", "issue": "The AiNoticeModal and AiConfirmModal are portaled to document.body. The Radix modal Dialog sets body pointer-events:none, and .sa-ai-modal inherits 'none', so clicks fall through to court-chat (Playwright: 'court-chat-ai-banner ... subtree intercepts pointer events'). ai-notice-agree, ai-notice-continue, ai-confirm-edit and ai-confirm-send-anyway cannot be clicked. Radix FocusScope keeps focus in the court dialog: on open, focus is on court-chat-close and Tab goes to court-chat-prompt-0, so the TrapModal trap does not work. Escape closes the Court dialog (Radix document capture listener), not the AI pop-up, and the pop-up stays open over the page. Result: a user cannot accept the AI notice or answer the confirm dialog from the court chat dialog.", "selector": "[data-testid=court-chat-input] -> [data-testid=ai-notice-modal] / [data-testid=ai-confirm-modal]", "priority": "HIGH"},
+      {"component": "Landing CoachDemoSection (/legacy)", "issue": "Signed-out visitor taps coach-demo-empty-input -> POST /api/auth/guest 200, then nothing happens: no consent screen and no AI pop-up. '/legacy' is in ConsentGate OPEN_PATHS, so the consent screen never renders, user.consent_current stays false and the provider's afterGuest effect never opens the notice. A second tap opens the AI notice directly, and the guest can accept it (POST /ai-notice/ack 200) and use AI without ever passing 'Before you continue'. The '/' portal flow (door-comm -> cb-draft-input) works correctly: guest -> consent screen -> AI pop-up opens by itself.", "selector": "[data-testid=coach-demo-empty-input]", "priority": "MEDIUM"}
+    ],
+    "integration_issues": [
+      {"flow": "Parallel Parenting step tips before ack", "issue": "PpStep shows nothing when the notice is not accepted (requestTip is skipped). There is no 'Read the AI notice' (AiNoticeNeeded) prompt, unlike SA tips, section coaching and journal recap. AI is correctly NOT called.", "affected_selectors": ["PpStep TipCard"]},
+      {"flow": "Consent Trend links", "issue": "/admin/accounts has no link to /admin/consent-trend (only /admin/consent has admin-consent-trend-link). The request said links exist on both admin pages.", "affected_selectors": ["a[href='/admin/consent-trend']"]}
+    ],
+    "design_issues": [
+      {"screen": "Consent Trend at 390px", "issues": ["Suppressed rows: 'fewer than 5' is right-aligned in the last column, so at 390px the row looks empty unless the user scrolls the table sideways. Put the label in the first visible numeric column or left-align it. The page itself does not overflow (scrollWidth 390); the table scrolls inside admin-trend-table."]},
+      {"screen": "AI notice modal at 390px", "issues": ["The box is about 760px tall, so the Continue button is below the fold inside the box and the user has to scroll inside the modal. Consider a sticky footer for the checkbox and Continue."]},
+      {"screen": "/summary", "issues": ["Video player shows 'Couldn't play the video. Try refreshing.' (unrelated to this batch, possibly a preview asset)."]}
+    ]
+  },
+  "passed_checks": [
+    "Privacy Notice public, h1 'Privacy Notice', #promise(1) #collect(2) #ai(7) #contact(12); hash scrolls; /privacy, /privacy-policy, /confidentiality redirect to /privacy-notice",
+    "global-footer-privacy-notice visible -> /privacy-notice on /login, /register, /privacy-notice, /terms, /admin/consent, /for-professionals, /watch; login-privacy-link-notice; for-pros-footer-privacy and watch-privacy-link say 'Privacy Notice'; portal-privacy-footer-link visible above bottom-nav at 390px",
+    "Version bump: parent1 and admin both got consent-screen (links /terms, /privacy-notice), ticked 2 boxes, continued",
+    "CB: cb-draft-input readOnly + data-ai-locked; click opens ai-notice-modal; Continue disabled until ticked; link /privacy-notice#ai target _blank; Tab/Shift+Tab loop inside; Escape closes, box stays locked, focus goes back to the box without re-opening; Continue unlocks",
+    "Scan: phone + medical alert, data-ai-flagged; confirm list; Edit = no network; Send anyway = POST /ai-notice/send-anyway body {feature:'communication_builder',labels:[...]} only, then biff-refine; Mongo log has no text",
+    "Regex: 'Pickup is at 5 on Friday', 'drop off at 3 on the way home', 'We have 2 Family Court dates' not flagged",
+    "Cross-device: fresh browser context unlocked right away; ai_notice_version set to 2000-01-01 mid-session -> biff-refine 428 -> pop-up re-opened and box locked again",
+    "Locked + banner before ack: sa-guide-chat, cp-chat, cn-chat, pp-chat, court-inline-chat, biff (raw-input + preset chips open the pop-up), coach-demo-empty",
+    "Enter on flagged text opens ai-confirm-modal with no AI POST: SA guide chat; court chat (modal opens but cannot be clicked, see bug)",
+    "BIFF drawer: Escape closes only the pop-up and the drawer stays open; ack works; DOB + street address flagged; confirm opens; Escape cancels with no POST",
+    "Summaries: summary-regenerate-button, agreement-generate-button, improve-regenerate-button, med-deep-add-ai-summary open the pop-up with no AI POST; *-add-ai-summary-card present on med/edu/psych reports; report/generate skips the AI summary when not acknowledged (server-side)",
+    "Auto AI: myplan-overall-coaching-ai-needed and journal-recap-needs-notice (History tab, >=2 entries) shown, and their 'Read the AI notice' opens the pop-up",
+    "Consent Trend: admin sees 12 admin-trend-row, 2 admin-trend-suppressed, last row '(so far)', correct headers, no other emails/ids, no export; parent1 sees admin-trend-forbidden 'Admin only' and API 403; 390px no page overflow"
+  ],
+  "test_report_links": ["/app/backend/tests/test_ai_notice.py", "/app/backend/tests/test_consent_trend.py", "/app/backend/tests/test_privacy_consent.py", "/app/backend/tests/test_comm_builder_batch.py", "/app/tests/ai_reset.py"],
+  "action_items": [
+    "HIGH: Make the AI notice and confirm modals usable when opened from a Radix modal Dialog (CourtDialog / court-chat). Options: (a) add pointer-events:auto to .sa-ai-modal; (b) expose noticeOpen||confirm from AiNoticeProvider and render CourtDialog with modal={!aiModalOpen}, or add onPointerDownOutside/onInteractOutside/onFocusOutside handlers that call preventDefault when the target is inside .sa-ai-modal, plus onEscapeKeyDown preventDefault while an AI modal is open. Radix FocusScope also steals focus, so modal={false} while the AI modal is open is the simplest fix. Check the same for any other shadcn/Radix Dialog that holds an AI input.",
+    "MEDIUM: Landing /legacy Coach demo signed out: either remove /legacy from ConsentGate OPEN_PATHS for guest sessions, or in AiNoticeProvider.openNotice show the consent screen (or navigate to a gated route) when user.consent_current is false. Also block openNotice/ack for users without consent_current so the AI pop-up cannot be accepted before 'Before you continue'.",
+    "LOW: Add an AiNoticeNeeded prompt for Parallel Parenting step tips before ack.",
+    "LOW: Add a /admin/consent-trend link on /admin/accounts.",
+    "LOW: Show 'fewer than 5' in a visible column at 390px; consider a sticky Continue in the AI modal on mobile.",
+    "Verify: the Privacy Notice shows only sections 1, 2, 7 and 12 (no 3-6 or 8-11). Confirm this matches the user's exact pasted text."
+  ],
+  "critical_code_review_comments": [
+    "AiNoticeProvider.ack(): no catch, so a failed POST /ai-notice/ack gives an unhandled rejection with no error message in the modal.",
+    "TrapModal's keydown handler is on the overlay div. If focus is outside it (e.g. Radix steals it), neither the trap nor Escape works. A document-level capture listener while open would be more robust.",
+    "AiNoticeProvider.openNotice for guests relies on the consent gate showing. It breaks on any OPEN_PATHS page (/legacy, /watch, /for-professionals...) that hosts an AI input.",
+    "aiNoticeChecks: phone needs separators (2105551234 is not flagged); 'specific date' misses written dates like 'March 3rd'. Acceptable per spec, but worth noting."
+  ],
+  "updated_files": ["/app/tests/ai_reset.py (new helper: python /app/tests/ai_reset.py <email> unset|old)"],
+  "success_rate": {"backend": "100% (66/66)", "frontend": "~88% (2 bugs out of ~17 flows)"},
+  "seed_data_creation": "parent1@test.com: 2 journal entries 'TEST_ journal entry 0/1 ...'; a few ai_send_anyway_log rows; parent1 ai_notice_version currently UNSET (not acknowledged). Admin and parent1 have now accepted consent version 2026-10-16-v2.",
+  "retest_needed": true,
+  "should_main_agent_self_test": false,
+  "context_for_next_testing_agent": "Login: click login-show-email-toggle first. The court chat dialog opens via door-court -> court-ai-fab; its input is court-chat-input (inline version: court-inline-chat-input). Self Journey chats open via door-self -> door-self-art-assess-btn-self/coparent, door-self-art-needs-btn-medical, door-self-art-parallel-btn-communication. The portal remembers its last view, so click door-back if door-self/door-comm are missing. /coach composer appears only inside a session (/coach/new redirects to /coach). Not tested: the /coach session composer, FieldHelp, GuidedJourneyModal, CommStyle sample, LearningArticle summary, and Professional-role 403 in the UI (the backend test covers it). Use /app/tests/ai_reset.py to reset or age the acknowledgment.",
+  "rca of the issue": "Court chat: Radix Dialog (modal) sets body{pointer-events:none} and runs FocusScope + DismissableLayer. The AI modals are createPortal(document.body) siblings outside the Radix layer, so they inherit pointer-events:none, can't hold focus, and Escape goes to Radix's document capture listener first. Repro: parent1 unacked -> / -> door-court -> court-ai-fab -> click court-chat-input -> ai-notice-modal shows but ai-notice-agree can't be clicked. /legacy: ConsentGate OPEN_PATHS has '/legacy', so the consent screen is skipped for the new guest; the afterGuestRef effect waits for consent_current, which never becomes true."
+}

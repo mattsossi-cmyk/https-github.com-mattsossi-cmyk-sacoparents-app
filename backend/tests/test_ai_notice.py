@@ -146,6 +146,18 @@ def test_version_change_asks_again():
     assert _call("get", "/auth/me", None, h).json()["ai_notice_current"] is True
 
 
+def test_ack_refused_until_privacy_consent_is_current():
+    email, h = _new_user()
+    db.users.update_one({"email": email}, {"$set": {"privacy_notice_version": "2000-01-01-v0"}})
+    assert _call("get", "/auth/me", None, h).json()["consent_current"] is False
+    r = _call("post", "/ai-notice/ack", None, h)
+    assert r.status_code == 409, r.text
+    assert "ai_notice_version" not in db.users.find_one({"email": email})
+    assert _call("post", "/privacy-consent", CONSENT, h).status_code == 200
+    assert _call("post", "/ai-notice/ack", None, h).status_code == 200
+
+
+
 def test_send_anyway_records_labels_only():
     email, h = _new_user()
     assert _call("post", "/ai-notice/ack", None, h).status_code == 200

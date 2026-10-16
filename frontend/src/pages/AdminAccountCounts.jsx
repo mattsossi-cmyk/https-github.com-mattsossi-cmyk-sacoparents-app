@@ -59,6 +59,8 @@ export default function AdminAccountCounts() {
           every other account counts as a parent. Guest sessions ({data?.guest_sessions ?? "–"}) aren&rsquo;t included.
           These are the numbers for the site you&rsquo;re signed in to.{" "}
           <Link to="/admin/consent" className="underline text-[#3D1A78]" data-testid="admin-counts-consent-link">Consent counts</Link>
+          {" · "}
+          <Link to="/admin/consent-trend" className="underline text-[#3D1A78]" data-testid="admin-counts-trend-link">Weekly consent trend</Link>
         </p>
       </div>
     </AppShell>

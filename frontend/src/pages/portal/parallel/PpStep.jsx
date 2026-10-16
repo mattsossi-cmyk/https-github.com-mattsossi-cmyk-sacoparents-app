@@ -1,5 +1,7 @@
 import React from "react";
 
+import { AiNoticeNeeded } from "../../../components/aiNotice/AiGuard";
+
 function OptionCard({ q, o, selected, onPick }) {
   return (
     <button
@@ -47,7 +49,7 @@ function TipCard({ step, tip, busy, error }) {
   );
 }
 
-export function PpStep({ step, index, total, plan, prevStep, tipBusy, tipError, onPick, onNote, onBack, onNext }) {
+export function PpStep({ step, index, total, plan, prevStep, tipBusy, tipError, aiNeeded, onPick, onNote, onBack, onNext }) {
   const answered = step.questions.filter((q) => plan.answers[q.id]).length;
   const prevTip = prevStep ? plan.tips[prevStep.key] : "";
   const showTip = prevStep && (tipBusy === prevStep.key || prevTip || (tipError && !tipBusy));
@@ -55,6 +57,7 @@ export function PpStep({ step, index, total, plan, prevStep, tipBusy, tipError, 
   return (
     <div data-testid={`pp-step-${step.key}`} className="space-y-5">
       {showTip && <TipCard step={prevStep} tip={prevTip} busy={tipBusy === prevStep.key} error={tipError} />}
+      {!showTip && prevStep && aiNeeded && <AiNoticeNeeded tp="pp-tip">Your Guide&apos;s step tips appear here after you read and accept the AI privacy notice.</AiNoticeNeeded>}
       <div className="bg-white rounded-3xl border border-purple-100 shadow-lg p-5 sm:p-8">
         <div className="md:hidden mb-4">
           <div className="flex justify-between text-[11px] font-bold text-[#4a2574] uppercase mb-1">

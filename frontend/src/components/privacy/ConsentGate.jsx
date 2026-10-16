@@ -2,6 +2,7 @@ import React, { useEffect, useRef, useState } from "react";
 import { useLocation } from "react-router-dom";
 
 import { useAuth } from "../../context/AuthContext";
+import { useAiNotice } from "../aiNotice/AiNoticeProvider";
 import { api } from "../../lib/api";
 import { ConsentFields, consentReady, emptyConsent } from "./ConsentFields";
 
@@ -72,8 +73,11 @@ function ConsentScreen() {
 }
 
 // Keeps signed-in users (including demo sessions and Google sign-ins) out of the app until both boxes are ticked.
+// On open pages it still appears when someone taps an AI box, so the AI notice never comes before it.
 export function ConsentGate({ children }) {
   const { user } = useAuth();
   const { pathname } = useLocation();
-  return consentScreenApplies(user, pathname) ? <ConsentScreen /> : children;
+  const ai = useAiNotice();
+  const forAi = !!user && !user.consent_current && !!ai?.needConsent;
+  return consentScreenApplies(user, pathname) || forAi ? <ConsentScreen /> : children;
 }

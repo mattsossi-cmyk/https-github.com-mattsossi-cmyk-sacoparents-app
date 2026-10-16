@@ -15,7 +15,7 @@ function WeekRow({ w, isCurrent }) {
     <tr className="border-t border-[#F0EDF6]" data-testid="admin-trend-row" data-week={w.week_start}>
       <td className="px-4 py-2.5 font-semibold text-[#1A1330] whitespace-nowrap">{label}</td>
       {w.fewer_than_5 ? (
-        <td colSpan={4} className="px-4 py-2.5 text-right text-[#857E9C] italic" data-testid="admin-trend-suppressed">fewer than 5</td>
+        <td colSpan={4} className="px-4 py-2.5 text-left text-[#857E9C] italic" data-testid="admin-trend-suppressed">fewer than 5</td>
       ) : (
         [w.signups, w.privacy_notice_accepted, w.sensitive_info_consent, w.needs_reconsent].map((n, i) => (
           <td key={HEAD[i + 1]} className="px-4 py-2.5 text-right tabular-nums" data-testid={`admin-trend-cell-${i}`}>{n}</td>

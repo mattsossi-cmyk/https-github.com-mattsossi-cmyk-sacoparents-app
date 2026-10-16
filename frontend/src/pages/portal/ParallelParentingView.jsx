@@ -141,6 +141,7 @@ export function ParallelParentingView({ onClose, onQuickExit, safetyFlag, hidden
         prevStep={STEPS[stepIndex - 1]}
         tipBusy={pp.tipBusy}
         tipError={pp.tipError}
+        aiNeeded={!aiAcked}
         onPick={pp.setAnswer}
         onNote={pp.setNote}
         onBack={() => (stepIndex === 0 ? show("welcome") : openStep(stepIndex - 1))}

@@ -18,9 +18,16 @@
 }
 .sa-ai-modal__box {
   background: #fff; color: #1f2933; max-width: 520px; width: 100%;
-  max-height: 90vh; overflow-y: auto; border-radius: 12px; padding: 24px;
+  max-height: 90vh; overflow: hidden; border-radius: 12px;
   box-shadow: 0 10px 40px rgba(0,0,0,0.3); font-size: 16px;
+  display: flex; flex-direction: column;
 }
+.sa-ai-modal__box:focus { outline: none; }
+/* The text scrolls; the checkbox and Continue stay at the bottom of the box. */
+.sa-ai-modal__body { overflow-y: auto; min-height: 0; padding: 24px 24px 0; }
+.sa-ai-modal__body:last-child { padding-bottom: 24px; }
+.sa-ai-modal__foot { flex-shrink: 0; padding: 0 24px 24px; }
+.sa-ai-modal__error { color: #b42318; font-size: 14px; margin: 0 0 10px; }
 .sa-ai-modal__box h2 { font-size: 1.25rem; margin: 8px 0 12px; }
 .sa-ai-modal__icon {
   width: 40px; height: 40px; border-radius: 50%; background: #f0a500; color: #fff;
@@ -46,8 +53,15 @@
 .sa-ai-modal__box p { margin: 1em 0; }
 .sa-ai-modal__fine a { text-decoration: underline; }
 
+@media (max-width: 640px) {
+  .sa-ai-modal__foot { border-top: 1px solid #e4e7eb; }
+  .sa-ai-modal__check { margin: 12px 0; }
+}
+
 /* The app has no theme setting of its own, so this follows the device setting (as in the file). */
 @media (prefers-color-scheme: dark) {
+  .sa-ai-modal__foot { border-top-color: #323f4b; }
+  .sa-ai-modal__error { color: #f5a3a3; }
   .sa-ai-banner { background: #3a2f12; color: #f5dfa0; border-color: #6b5520; }
   .sa-ai-alert { background: #3d1c1c; color: #f5c2c2; border-color: #6e3030; }
   .sa-ai-modal__box { background: #1d252c; color: #e4e7eb; }

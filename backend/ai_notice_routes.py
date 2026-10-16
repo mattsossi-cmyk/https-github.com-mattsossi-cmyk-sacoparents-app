@@ -50,6 +50,9 @@ async def ai_notice_version():
 
 @router.post("/ack")
 async def ack_ai_notice(current: UserPublic = Depends(get_current_user), db=Depends(get_db)):
+    # "Before you continue" (current Privacy Notice + sensitive-info consent) must come first.
+    if not current.consent_current:
+        raise HTTPException(status_code=409, detail="Please accept the Privacy Notice on the \"Before you continue\" screen first.")
     at = datetime.now(timezone.utc).isoformat()
     await db.users.update_one({"user_id": current.user_id}, {"$set": {"ai_notice_version": AI_NOTICE_VERSION, "ai_notice_ack_at": at}})
     return {"ok": True, "version": AI_NOTICE_VERSION, "ack_at": at}

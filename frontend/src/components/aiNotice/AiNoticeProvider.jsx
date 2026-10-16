@@ -14,21 +14,42 @@ export function AiNoticeProvider({ children }) {
   const { user, checkAuth, startGuest } = useAuth();
   const [justAcked, setJustAcked] = useState(false);
   const [noticeOpen, setNoticeOpen] = useState(false);
+  const [needConsent, setNeedConsent] = useState(false);
   const [busy, setBusy] = useState(false);
+  const [ackError, setAckError] = useState("");
   const [confirm, setConfirm] = useState(null);
   const returnRef = useRef(null);
   const skipFocusRef = useRef(false);
-  const afterGuestRef = useRef(false);
-  const acked = !!user && (user.ai_notice_current || justAcked);
+  const afterConsentRef = useRef(false);
+  const userRef = useRef(user);
+  userRef.current = user;
+  // AI stays locked until "Before you continue" is accepted too.
+  const acked = !!user && !!user.consent_current && (user.ai_notice_current || justAcked);
 
   useEffect(() => setJustAcked(false), [user?.user_id]);
 
-  // A signed-out visitor who tapped an AI box: once the demo session has passed the consent screen, show the AI pop-up.
+  // "Before you continue" comes first; once it's accepted, the AI pop-up opens by itself.
+  const showNotice = useCallback(() => {
+    if (userRef.current && !userRef.current.consent_current) {
+      afterConsentRef.current = true;
+      setNeedConsent(true);
+      return;
+    }
+    setAckError("");
+    setNoticeOpen(true);
+  }, []);
+
   useEffect(() => {
-    if (!afterGuestRef.current || !user?.consent_current) return;
-    afterGuestRef.current = false;
-    if (!user.ai_notice_current) setNoticeOpen(true);
-  }, [user]);
+    if (!user) {
+      afterConsentRef.current = false;
+      setNeedConsent(false);
+      return;
+    }
+    if (!afterConsentRef.current || !user.consent_current) return;
+    afterConsentRef.current = false;
+    setNeedConsent(false);
+    if (!user.ai_notice_current) showNotice();
+  }, [user, showNotice]);
 
   // A version change while the page is open: the server refuses (428), so ask again.
   useEffect(() => {
@@ -36,12 +57,12 @@ export function AiNoticeProvider({ children }) {
       if (err?.response?.status === 428) {
         setJustAcked(false);
         checkAuth().catch(() => {});
-        setNoticeOpen(true);
+        showNotice();
       }
       return Promise.reject(err);
     });
     return () => api.interceptors.response.eject(id);
-  }, [checkAuth]);
+  }, [checkAuth, showNotice]);
 
   const restoreFocus = useCallback(() => {
     const el = returnRef.current;
@@ -55,27 +76,33 @@ export function AiNoticeProvider({ children }) {
     (el) => {
       if (!user) {
         // Signed-out visitors get a demo session first; the consent screen then appears before the AI pop-up.
-        if (afterGuestRef.current) return;
-        afterGuestRef.current = true;
+        if (afterConsentRef.current) return;
+        afterConsentRef.current = true;
+        setNeedConsent(true);
         startGuest().catch(() => {
-          afterGuestRef.current = false;
+          afterConsentRef.current = false;
+          setNeedConsent(false);
         });
         return;
       }
       returnRef.current = el || document.activeElement;
-      setNoticeOpen(true);
+      showNotice();
     },
-    [user, startGuest]
+    [user, startGuest, showNotice]
   );
 
   const ack = async () => {
     setBusy(true);
+    setAckError("");
     try {
       await api.post("/ai-notice/ack");
       setJustAcked(true);
       setNoticeOpen(false);
       checkAuth().catch(() => {});
       setTimeout(restoreFocus, 0);
+    } catch (err) {
+      const detail = err?.response?.data?.detail;
+      setAckError(typeof detail === "string" ? detail : "Couldn't save that. Please try again.");
     } finally {
       setBusy(false);
     }
@@ -104,8 +131,8 @@ export function AiNoticeProvider({ children }) {
   );
 
   const value = useMemo(
-    () => ({ acked, openNotice, confirmSend, shouldSkipFocus: () => skipFocusRef.current }),
-    [acked, openNotice, confirmSend]
+    () => ({ acked, needConsent, openNotice, confirmSend, shouldSkipFocus: () => skipFocusRef.current }),
+    [acked, needConsent, openNotice, confirmSend]
   );
   return (
     <AiNoticeContext.Provider value={value}>
@@ -113,6 +140,7 @@ export function AiNoticeProvider({ children }) {
       {noticeOpen && (
         <AiNoticeModal
           busy={busy}
+          error={ackError}
           onContinue={ack}
           onClose={() => {
             setNoticeOpen(false);
