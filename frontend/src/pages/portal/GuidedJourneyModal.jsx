@@ -36,7 +36,7 @@ import {
  */
 const TOPIC_TITLES = {
   foundation: "Foundation Statement — guided",
-  safety: "Safety Check — guided",
+  safety: "Conflict Readiness — guided",
   coparenting: "Co-parenting Assessment — guided",
   medical: "Medical Needs Assessment — guided",
   educational: "Educational Assessment — guided",
@@ -50,7 +50,7 @@ const SAVE_KEY_LABELS = {
   align_record: RECORDS_ENABLED
     ? "Align-Before-Agreement record (added to your folder)"
     : "Nothing is saved. Your child's details stay private and are not kept as a record",
-  safety_ack: "Private Safety Check summary (kept on this device)",
+  readiness_note: "Conflict Readiness note (kept on this device)",
 };
 
 function draftKey(topic) {

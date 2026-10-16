@@ -1,5 +1,7 @@
 """Tests for the new POST /api/safety-assessment/{assessment_id}/email-mediator endpoint
 and the new-rule coercive-threshold scoring (single yes -> Level 2)."""
+import pytest
+pytest.skip("In-app safety screen turned off (2026-10); screening now happens on SACOparentsAlign.", allow_module_level=True)
 import os
 import sys
 import uuid

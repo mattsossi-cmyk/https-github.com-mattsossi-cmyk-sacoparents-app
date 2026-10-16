@@ -9,7 +9,7 @@ import { ConsentFields, consentReady, emptyConsent } from "./ConsentFields";
 // Public and recipient-facing pages that never need the consent screen.
 const OPEN_PATHS = new Set([
   "/privacy-notice", "/privacy", "/privacy-policy", "/confidentiality", "/terms", "/accessibility", "/methodology",
-  "/data-retention", "/safety", "/what-professionals-see", "/watch", "/legacy", "/for-portal-engineers", "/for-professionals",
+  "/data-retention", "/safety", "/help", "/calendar", "/what-professionals-see", "/watch", "/legacy", "/for-portal-engineers", "/for-professionals",
   "/login", "/register", "/signup", "/claim", "/forgot-password", "/reset-password", "/verify-email",
 ]);
 const OPEN_PREFIXES = ["/auth/", "/invite/", "/verify/", "/doc/", "/shared/", "/joint-agreement/shared/", "/joint-report/shared/", "/foundation/shared/", "/survey/", "/legal/", "/samples", "/join/sample-preview"];

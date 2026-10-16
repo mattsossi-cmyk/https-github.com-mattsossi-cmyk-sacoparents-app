@@ -44,14 +44,8 @@ def _normalize_email(email: str) -> str:
 
 
 async def _latest_safety_level(db: AsyncIOMotorDatabase, user_id: str) -> Optional[int]:
-    doc = await db[SAFETY].find_one(
-        {"user_id": user_id}, {"_id": 0, "result": 1},
-        sort=[("created_at", -1)],
-    )
-    if not doc:
-        return None
-    lvl = (doc.get("result") or {}).get("level")
-    return lvl if isinstance(lvl, int) else None
+    # The in-app safety screen is turned off (screening happens on SACOparentsAlign); saved answers are never read.
+    return None
 
 
 async def _load_user_by_email(db: AsyncIOMotorDatabase, email: str) -> Optional[Dict[str, Any]]:

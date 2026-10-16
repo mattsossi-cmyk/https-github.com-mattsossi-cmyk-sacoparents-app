@@ -794,10 +794,8 @@ def build_portal_complete_report_pdf(
 ) -> bytes:
     """Assemble the Complete Coparenting Report PDF.
 
-    Sections rendered in order:
-      1. Family Violence / Safety Assessment (from the Quick Safety Check
-         answers persisted in ``safety_ack``).
-      2. Co-parenting Assessment (Health Index sliders from the portal;
+    Sections rendered in order (``safety_ack`` is ignored: the in-app safety check is off):
+      1. Co-parenting Assessment (Health Index sliders from the portal;
          when the caller provides a richer external assessment via
          ``cop_assessment`` we surface those values instead).
       3. Individual Align-Before-Agreement Records (portal's own
@@ -844,60 +842,8 @@ def build_portal_complete_report_pdf(
         _draw_meta_row(pdf, "Parent", author_name)
     pdf.ln(3)
 
-    # ---- 1. Family Violence Assessment ----
-    _draw_h2(pdf, "1. Family Violence / Safety Assessment")
-    if not safety_ack or not isinstance(safety_ack, dict):
-        _draw_empty_state(
-            pdf,
-            "No Safety Check completed yet. Ask the parent to open the "
-            "Portal, tap the Safety chip, and answer three quick questions.",
-        )
-    else:
-        cleared = bool(safety_ack.get("cleared"))
-        flagged = bool(safety_ack.get("flagged"))
-        completed_at = str(safety_ack.get("date") or "")
-        status_line = (
-            "Cleared - no risk flag." if cleared and not flagged
-            else "Flagged for safety concerns."
-        )
-        pdf.set_font("Helvetica", "B", 10)
-        pdf.set_text_color(*(_PURPLE_INK if cleared and not flagged else _SLATE_INK))
-        pdf.cell(0, 5, _safe(status_line), ln=1)
-        if completed_at:
-            pdf.set_font("Helvetica", "", 8)
-            pdf.set_text_color(*_SLATE_MUTED)
-            pdf.cell(0, 4, _safe(f"Completed: {completed_at}"), ln=1)
-        pdf.ln(0.5)
-        pdf.set_font("Helvetica", "", 9)
-        pdf.set_text_color(*_SLATE_INK)
-        pdf.multi_cell(
-            0,
-            5,
-            _safe(
-                "The parent completed the Quick Safety Check inside the "
-                "SA CoParents Portal. This is NOT a clinical screen. For "
-                "the full clinical assessment, see the parent's Safety "
-                "Assessment record on sacoparentsapp.online."
-            ),
-        )
-        if flagged:
-            pdf.ln(0.5)
-            pdf.set_font("Helvetica", "B", 9)
-            pdf.set_text_color(*_SLATE_INK)
-            pdf.multi_cell(
-                0,
-                5,
-                _safe(
-                    "Because a safety concern was flagged, all joint "
-                    "collaborative tools in this bundle should be read as "
-                    "voluntary. Any Safety Plan the parent built is "
-                    "PRIVATE and is NEVER included in this shared report."
-                ),
-            )
-    pdf.ln(2)
-
     # ---- 2. Co-parenting Assessment (Health Index for now) ----
-    _draw_h2(pdf, "2. Co-parenting Assessment")
+    _draw_h2(pdf, "1. Co-parenting Assessment")
     if cop_assessment and isinstance(cop_assessment, dict):
         s1 = int(cop_assessment.get("s1", 0) or 0)
         s2 = int(cop_assessment.get("s2", 0) or 0)
@@ -923,7 +869,7 @@ def build_portal_complete_report_pdf(
     _draw_align_records_section(
         pdf,
         list(align_records or []),
-        heading="3. Individual Align Before Agreement",
+        heading="2. Individual Align Before Agreement",
         empty_stub=(
             "To protect your child's privacy, SA CoParents does not keep "
             "medical, educational or psychological records."
@@ -937,7 +883,7 @@ def build_portal_complete_report_pdf(
     # back to explicit joint_records if the caller passed them, and
     # finally to an empty-state stub pointing the parent at the
     # /joint-agreement flow.
-    _draw_h2(pdf, "4. Joint Alignment Summary")
+    _draw_h2(pdf, "3. Joint Alignment Summary")
 
     joint_sections = [
         ("shared_goals", "Shared Goals"),
@@ -1026,7 +972,7 @@ def build_portal_complete_report_pdf(
         )
 
     # ---- 5. Foundation Statement ----
-    _draw_h2(pdf, "5. Foundation Statement")
+    _draw_h2(pdf, "4. Foundation Statement")
     text = (foundation_text or "").strip()
     if not text:
         _draw_empty_state(
@@ -1049,7 +995,7 @@ def build_portal_complete_report_pdf(
 _TOPIC_LABELS = {
     "foundation": "Foundation Statement Snapshot",
     "coparenting": "Co-parenting Assessment Snapshot",
-    "safety": "Private Safety Check Snapshot",
+    "safety": "Conflict Readiness Snapshot",
     "medical": "Medical Needs Snapshot",
     "educational": "Educational Snapshot",
     "psychological": "Psychological Snapshot",
@@ -1064,8 +1010,8 @@ _TOPIC_INTRO = {
         "where you'd like more support."
     ),
     "safety": (
-        "A private summary of your last Safety Check. Keep this on your "
-        "device — never share it with your co-parent."
+        "Your plan for staying calm and child-focused in tense moments "
+        "and hand-offs."
     ),
     "medical": (
         "A one-page snapshot of your child's medical picture — providers, "
@@ -1086,7 +1032,7 @@ _TOPIC_INTRO = {
 _FRIDGE_HEADLINES = {
     "foundation": "Our Foundation",
     "coparenting": "Our Co-parenting Plan",
-    "safety": "Our Safe-Space Pledge",
+    "safety": "Our Calm Hand-off Plan",
     "medical": "Our Medical Plan",
     "educational": "Our School Plan",
     "psychological": "Our Support Plan",
@@ -1129,7 +1075,7 @@ def _draw_fridge_card(
     if author_name:
         meta = f"{author_name} \u2022 {meta}"
     if safety_flagged:
-        meta = f"{meta} \u2022 Safety-flagged voice"
+        meta = f"{meta} \u2022 Grey-rock voice"
     pdf.cell(inner_w, 3, _safe(meta), ln=1)
     pdf.ln(2)
 
@@ -1401,7 +1347,7 @@ def build_portal_guided_snapshot_pdf(
     if author_name:
         _draw_meta_row(pdf, "Parent", author_name)
     if safety_flagged:
-        _draw_meta_row(pdf, "Communication Style", "Grey-rock voice (safety flagged)")
+        _draw_meta_row(pdf, "Communication Style", "Grey-rock voice")
     pdf.ln(3)
 
     if not answers:

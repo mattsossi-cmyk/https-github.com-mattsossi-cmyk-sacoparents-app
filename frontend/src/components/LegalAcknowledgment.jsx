@@ -25,6 +25,8 @@ const PUBLIC_MARKETING_PATHS = new Set([
   "/methodology",
   "/data-retention",
   "/safety",
+  "/help",
+  "/calendar",
   "/login",
   "/signup",
   // Account-creation forms show these lines with the consent boxes and record both together.

@@ -78,9 +78,7 @@ async def _load_party_context(
     profile = await db.users.find_one(
         {"user_id": user_id}, {"_id": 0, "name": 1},
     ) or {}
-    safety = await db.safety_assessments.find_one(
-        {"user_id": user_id}, sort=[("created_at", -1)],
-    )
+    safety = None  # in-app safety screen is off
     # NOTE: the Dimension Companion assessment persists to
     # `dimension_companion_assessments` (see dimension_companion_routes.py
     # `COLLECTION`). The old `dimension_companion` name is unused legacy.

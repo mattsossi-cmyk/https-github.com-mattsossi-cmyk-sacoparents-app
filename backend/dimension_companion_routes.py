@@ -372,10 +372,7 @@ async def email_four_dimension_briefing(
         )
 
     # ---- Load latest Safety + Companion ------------------------------------
-    safety_doc = await db.safety_assessments.find_one(
-        {"user_id": user.user_id}, {"_id": 0},
-        sort=[("created_at", -1)],
-    )
+    safety_doc = None  # in-app safety screen is off
     companion_doc = await db[COLLECTION].find_one(
         {"user_id": user.user_id}, {"_id": 0},
         sort=[("created_at", -1)],
@@ -495,10 +492,7 @@ async def download_four_dimension_briefing(
     from four_dimension_briefing_pdf import build_four_dimension_briefing_pdf
     from pdf_signing import sign_kwargs
 
-    safety_doc = await db.safety_assessments.find_one(
-        {"user_id": user.user_id}, {"_id": 0},
-        sort=[("created_at", -1)],
-    )
+    safety_doc = None  # in-app safety screen is off
     companion_doc = await db[COLLECTION].find_one(
         {"user_id": user.user_id}, {"_id": 0},
         sort=[("created_at", -1)],

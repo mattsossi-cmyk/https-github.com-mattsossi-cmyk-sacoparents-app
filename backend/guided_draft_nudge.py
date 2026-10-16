@@ -44,7 +44,7 @@ DRAFT_TTL_DAYS = 14
 _TOPIC_LABELS: Dict[str, str] = {
     "foundation": "Foundation Statement",
     "coparenting": "Co-parenting Assessment",
-    "safety": "Safety Check",
+    "safety": "Conflict Readiness",
     "medical": "Medical Needs Assessment",
     "educational": "Educational Assessment",
     "psychological": "Psychological Assessment",

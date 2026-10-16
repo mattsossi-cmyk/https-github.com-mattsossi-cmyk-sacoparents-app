@@ -329,7 +329,7 @@ export default function SpecialNeedsV2Report() {
           <div className="mt-4 rounded-2xl border-2 border-[#F1BDA1] bg-[#FBF2E7] p-3 flex items-start gap-2" data-testid="snc2-structure-safety-notice">
             <ShieldAlert className="text-[#C2481F] shrink-0 mt-0.5" size={18} />
             <div className="text-xs text-[#7A4A2E]">{structure.safety_notice}
-              {" "}<Link to="/safety-assessment" className="underline font-semibold">Open the full Safety Screen</Link>.</div>
+              {" "}<Link to="/help" className="underline font-semibold">Get help</Link>.</div>
           </div>
         </Section>
 

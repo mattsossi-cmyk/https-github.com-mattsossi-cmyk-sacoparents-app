@@ -13,7 +13,8 @@ Tests hit the live backend via HTTP (same pattern as iter99). Skipped
 gracefully when the backend URL / credentials aren't reachable so this
 file doesn't red-line unrelated CI runs.
 """
-from __future__ import annotations
+import pytest
+pytest.skip("In-app safety screen turned off (2026-10); screening now happens on SACOparentsAlign.", allow_module_level=True)
 
 import os
 import sys

@@ -54,6 +54,10 @@ const PUBLIC_PREFIXES = [
   "/legal",
   "/foundation/demo",
   "/safety", // public safety resources page (not /safety-assessment)
+  "/help",
+  "/calendar",
+  "/case-settings",
+  "/plan-options",
   "/watch",
 ];
 

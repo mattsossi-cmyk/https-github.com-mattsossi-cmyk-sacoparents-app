@@ -127,13 +127,13 @@ export default function AppShell({ children }) {
           {/* Right-side actions */}
           <div className="flex items-center gap-2 sm:gap-3">
             <Link
-              to="/safety"
+              to="/help"
               className="inline-flex items-center gap-1.5 text-xs px-2.5 sm:px-3 py-1.5 rounded-full bg-[#C28771]/10 text-[#C28771] hover:bg-[#C28771]/15 transition-colors shrink-0"
-              data-testid="header-safety-link"
-              title="Safety & domestic violence resources"
+              data-testid="header-get-help-link"
+              title="Get help"
             >
               <ShieldAlert size={12} />
-              <span className="hidden xs:inline sm:inline">Safety</span>
+              <span className="hidden xs:inline sm:inline">Get help</span>
             </Link>
             <div className="hidden lg:block text-right">
               <div className="text-sm text-[#1A1330] truncate max-w-[160px]">{user?.name}</div>

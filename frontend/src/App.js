@@ -116,7 +116,12 @@ import DimensionCompanion from "@/pages/DimensionCompanion";
 import InterventionCompliance from "@/pages/InterventionCompliance";
 import SignUp from "@/pages/SignUp";
 import MediatorBadge from "@/pages/MediatorBadge";
-import SafetyAssessment from "@/pages/SafetyAssessment";
+import GetHelp from "@/pages/GetHelp";
+import CalendarPage from "@/pages/CalendarPage";
+import CaseSettingsPage from "@/pages/CaseSettings";
+import PlanOptionsPage from "@/pages/PlanOptions";
+import AdminHelpServices from "@/pages/AdminHelpServices";
+import AdminAuditLog from "@/pages/AdminAuditLog";
 import ProblemSolvingWorksheet from "@/pages/ProblemSolvingWorksheet";
 import SharedCoParentingReport from "@/pages/SharedCoParentingReport";
 import SpecialNeedsV2 from "@/pages/SpecialNeedsV2";
@@ -273,16 +278,16 @@ function AppRoutes() {
         <Route path="/delete-account" element={<DeleteAccount />} />
         <Route path="/cancel-subscription" element={<CancelSubscription />} />
         <Route path="/safety" element={<Safety />} />
+        <Route path="/help" element={<GetHelp />} />
+        <Route path="/calendar" element={<CalendarPage />} />
+        <Route path="/case-settings" element={<ProtectedRoute><CaseSettingsPage /></ProtectedRoute>} />
+        <Route path="/plan-options" element={<ProtectedRoute><PlanOptionsPage /></ProtectedRoute>} />
+        <Route path="/admin/help-services" element={<ProtectedRoute><AdminHelpServices /></ProtectedRoute>} />
+        <Route path="/admin/audit-log" element={<ProtectedRoute><AdminAuditLog /></ProtectedRoute>} />
         <Route path="/watch" element={<Watch />} />
 
-        <Route
-          path="/safety-assessment"
-          element={
-            <ProtectedRoute>
-              <SafetyAssessment />
-            </ProtectedRoute>
-          }
-        />
+        {/* The in-app safety screen is turned off; screening happens on SACOparentsAlign. */}
+        <Route path="/safety-assessment" element={<Navigate to="/help" replace />} />
         <Route
           path="/nd-risk-assessment"
           element={

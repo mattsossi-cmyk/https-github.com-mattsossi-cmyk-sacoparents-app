@@ -48,66 +48,15 @@ class IPVGateError(HTTPException):
 
 
 async def _latest_safety_level(db: AsyncIOMotorDatabase, user_id: str) -> Optional[int]:
-    """Return the numeric `level` from this parent's most recent safety
-    assessment (1..4), or None if they have not completed one."""
-    doc = await db.safety_assessments.find_one(
-        {"user_id": user_id},
-        {"_id": 0, "result.level": 1},
-        sort=[("created_at", -1)],
-    )
-    if not doc:
-        return None
-    result = doc.get("result") or {}
-    level = result.get("level")
-    return int(level) if isinstance(level, (int, float)) else None
+    # The in-app safety screen is turned off (screening happens on SACOparentsAlign); saved answers are never read.
+    return None
 
 
-async def require_ipv_clearance(
-    db: AsyncIOMotorDatabase,
-    user_id: str,
-) -> int:
-    """Raise `IPVGateError` when the parent should NOT be able to invite
-    the co-parent. Returns the passing level (3 or 4) otherwise.
-
-    - No safety screen on file    → 403 `safety_screen_required`
-    - Latest screen level ≤ 2     → 403 `safety_screen_blocked`
-    - Latest screen level ≥ 3     → returns the level
-    """
-    level = await _latest_safety_level(db, user_id)
-    if level is None:
-        raise IPVGateError(
-            "safety_screen_required",
-            (
-                "Please complete the family-violence safety screen before sending "
-                "a co-parent invitation. It takes about 5 minutes and stays private."
-            ),
-        )
-    if level <= BLOCKED_LEVEL_CEILING:
-        raise IPVGateError(
-            "safety_screen_blocked",
-            (
-                "Based on your safety screen, direct outreach to your co-parent "
-                f"through this app isn't recommended. If you're in danger, call {DV_HOTLINE}. "
-                "A mediator or attorney can safely handle communication on your behalf."
-            ),
-            level=level,
-        )
-    return level
+async def require_ipv_clearance(db: AsyncIOMotorDatabase, user_id: str) -> None:
+    """No longer gates invites: the in-app safety screen is off and the case settings from SACOparentsAlign
+    (structured / restricted) now protect families. Kept so existing callers don't change."""
+    return None
 
 
-async def ipv_gate_status(
-    db: AsyncIOMotorDatabase,
-    user_id: str,
-) -> dict:
-    """Non-raising variant used by GET endpoints so the frontend can decide
-    whether to render the "Invite co-parent" surface at all.
-
-    Returns:
-      { "clear": bool, "level": int|None, "code": "ok"|"safety_screen_required"|"safety_screen_blocked" }
-    """
-    level = await _latest_safety_level(db, user_id)
-    if level is None:
-        return {"clear": False, "level": None, "code": "safety_screen_required"}
-    if level <= BLOCKED_LEVEL_CEILING:
-        return {"clear": False, "level": level, "code": "safety_screen_blocked"}
-    return {"clear": True, "level": level, "code": "ok"}
+async def ipv_gate_status(db: AsyncIOMotorDatabase, user_id: str) -> dict:
+    return {"clear": True, "level": None, "code": "ok"}

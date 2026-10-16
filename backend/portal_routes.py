@@ -175,8 +175,7 @@ def _empty_portal_state() -> Dict[str, Any]:
         "court_key": "",
         "court_legal_name": "",
         "reassessments": [],
-        "safety_ack": None,
-        "safety_plan": None,
+        "grey_rock": False,
         "guided_drafts": None,
         "snapshot_history": None,
         "updated_at": None,
@@ -193,11 +192,8 @@ class PortalStatePayload(BaseModel):
     court_key: str = ""
     court_legal_name: str = ""
     reassessments: List[Dict[str, Any]] = Field(default_factory=list)
-    # Safety-first sync (iter212). Both are opaque JSON blobs the client
-    # owns — the server only enforces size + shape at write time so we
-    # can iterate on the client without a schema migration.
-    safety_ack: Optional[Dict[str, Any]] = None
-    safety_plan: Optional[Dict[str, Any]] = None
+    # Grey-rock tone: the parent's own on/off choice. (The old safety check fields are ignored.)
+    grey_rock: Optional[bool] = None
     # Guided Journey draft sync (iter222). Map: topic -> snapshot the
     # frontend GuidedJourneyModal writes on every parent-send so a
     # signed-in parent can resume a mid-wizard session on a new device.
@@ -211,7 +207,8 @@ class PortalStatePayload(BaseModel):
 @router.get("/state")
 async def get_state(user: UserPublic = Depends(get_current_user), db=Depends(get_db)) -> Dict[str, Any]:
     """Return the caller's portal state (creates an empty doc on first hit)."""
-    doc = await db[_PORTAL_COLLECTION].find_one({"user_id": user.user_id}, {"_id": 0})
+    # The old safety check / plan stay stored but are never returned.
+    doc = await db[_PORTAL_COLLECTION].find_one({"user_id": user.user_id}, {"_id": 0, "safety_ack": 0, "safety_plan": 0})
     if not doc:
         return {"exists": False, "state": _empty_portal_state()}
     doc.pop("user_id", None)
@@ -453,10 +450,8 @@ async def put_state(
             "s2": max(1, min(10, int(hi.get("s2", 5) or 5))),
             "s3": max(1, min(10, int(hi.get("s3", 5) or 5))),
         }
-    if "safety_ack" in updates:
-        updates["safety_ack"] = _sanitize_safety_ack(updates["safety_ack"])
-    if "safety_plan" in updates:
-        updates["safety_plan"] = _sanitize_safety_plan(updates["safety_plan"])
+    if "grey_rock" in updates:
+        updates["grey_rock"] = bool(updates["grey_rock"])
     if "guided_drafts" in updates:
         updates["guided_drafts"] = _sanitize_guided_drafts(updates["guided_drafts"])
     if "snapshot_history" in updates:
@@ -899,7 +894,7 @@ async def complete_report_pdf(
 
     try:
         pdf_bytes = portal_pdf.build_portal_complete_report_pdf(
-            safety_ack=body.safety_ack,
+            safety_ack=None,
             cop_assessment=body.cop_assessment,
             align_records=[],
             joint_records=body.joint_records or [],
@@ -1057,7 +1052,7 @@ def _regenerate_share_pdf(artefact_type: str, payload: Dict[str, Any]) -> bytes:
         )
     if artefact_type == "complete":
         return portal_pdf.build_portal_complete_report_pdf(
-            safety_ack=payload.get("safety_ack"),
+            safety_ack=None,
             cop_assessment=payload.get("cop_assessment"),
             align_records=[],
             joint_records=payload.get("joint_records") or [],

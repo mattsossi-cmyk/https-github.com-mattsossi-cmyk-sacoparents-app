@@ -111,7 +111,7 @@ async def _requested_items(db: AsyncIOMotorDatabase, uid: str, keys: List[str]) 
 async def build_checklist(db: AsyncIOMotorDatabase, user: UserPublic, modules: Dict[str, str], requested: Optional[List[str]] = None) -> Dict[str, Any]:
     uid = user.user_id
     ps = await db.portal_state.find_one(
-        {"user_id": uid}, {"_id": 0, "court_key": 1, "court_legal_name": 1, "safety_ack": 1, "biff_logs": 1}
+        {"user_id": uid}, {"_id": 0, "court_key": 1, "court_legal_name": 1, "biff_logs": 1}
     ) or {}
     sa = await db.self_assessment_history.find({"user_id": uid}, {"_id": 0, "completed_at": 1}).sort("completed_at", -1).to_list(100)
     cp = await db.cp_report_history.find_one({"_id": uid}, {"snapshots.submitted_at": 1}) or {}
@@ -128,8 +128,6 @@ async def build_checklist(db: AsyncIOMotorDatabase, user: UserPublic, modules: D
     items = [
         _item("case", "Case code verified", "done" if case else "todo", f"Case {case}" if case else "",
               "Enter the code from your court order on the Court page."),
-        _item("safety", "Safety check", "done" if ps.get("safety_ack") else "todo",
-              "Completed" if ps.get("safety_ack") else "", "Take the short, private safety check."),
     ]
     for key, letter, title in MODULES:
         status = MODULE_STATUS[modules.get(key, "not_yet")]

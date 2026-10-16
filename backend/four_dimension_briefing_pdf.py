@@ -250,10 +250,6 @@ def build_four_dimension_briefing_pdf(
             SAFETY_LEVEL_COLORS.get(lvl, (61, 26, 120)),
             note[:110],
         )
-    else:
-        _executive_summary_row(pdf, "Dim 1 - Safety", "Not yet completed",
-                               (133, 126, 156),
-                               "Complete the Safety Assessment before relying on this briefing.")
 
     # Dim 2 / 3 / 4 (Companion)
     if companion_doc:
@@ -312,25 +308,12 @@ def build_four_dimension_briefing_pdf(
 
     _section_break(pdf)
 
-    # ---------------- Dimension 1 · Safety ----------------
-    pdf.add_page()
-    pdf.set_font("Helvetica", "B", 14); pdf.set_text_color(61, 26, 120)
-    pdf.cell(0, 7, _safe("Dimension 1 - Safety"), ln=1)
-    pdf.set_font("Helvetica", "", 9.5); pdf.set_text_color(75, 69, 103)
-    pdf.multi_cell(0, 5, _safe(
-        "Family violence, coercive control, and communication safety. Scored "
-        "independently first so a genuine safety concern is never diluted by "
-        "communication-difference answers from the other three dimensions."
-    ))
-    pdf.ln(2)
-
-    if not safety_doc:
-        pdf.set_font("Helvetica", "I", 10); pdf.set_text_color(133, 126, 156)
-        pdf.multi_cell(0, 5, _safe(
-            "The parent has not yet completed the Safety Assessment. This section is "
-            "left intentionally blank; it must not be assumed to be safe."
-        ))
-    else:
+    # ---------------- Dimension 1 · Safety (older saved screens only; the in-app screen is off) ----------------
+    if safety_doc:
+        pdf.add_page()
+        pdf.set_font("Helvetica", "B", 14); pdf.set_text_color(61, 26, 120)
+        pdf.cell(0, 7, _safe("Dimension 1 - Safety"), ln=1)
+        pdf.ln(2)
         r = safety_doc.get("result") or {}
         lvl = int(r.get("level") or 4)
         _pill(pdf,

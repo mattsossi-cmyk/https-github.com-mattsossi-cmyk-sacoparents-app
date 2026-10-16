@@ -17,7 +17,8 @@ Locks the contract of `POST /api/safety-assessment`:
 These tests hit the live backend via HTTP with the parent1 fixture
 account. Skipped gracefully when credentials aren't available.
 """
-from __future__ import annotations
+import pytest
+pytest.skip("In-app safety screen turned off (2026-10); screening now happens on SACOparentsAlign.", allow_module_level=True)
 
 import os
 import sys

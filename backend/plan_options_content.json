@@ -1,0 +1,43 @@
+{
+  "categories": [
+    {
+      "key": "communication",
+      "label": "Communication",
+      "options": [
+        {"id": "comm_no_direct", "kind": "parallel", "title": "No direct contact", "description": "Parents don't call or message each other directly. Child information goes through the app's templates only."},
+        {"id": "comm_templates", "kind": "parallel", "title": "Structured template messages", "description": "Schedule, health, school and expense updates use set templates, each with a short optional note."},
+        {"id": "comm_flexible_dm", "kind": "cooperative", "title": "Flexible swaps by direct message", "description": "Parents arrange schedule swaps by messaging each other directly."},
+        {"id": "comm_joint_meetings", "kind": "cooperative", "title": "Joint decision meetings", "description": "Parents meet in person or by video to make decisions together."}
+      ]
+    },
+    {
+      "key": "exchanges",
+      "label": "Exchanges",
+      "options": [
+        {"id": "ex_supervised", "kind": "parallel", "title": "Supervised or third-party exchanges", "description": "A trusted third person or a supervised exchange service handles hand-offs."},
+        {"id": "ex_safe_site", "kind": "parallel", "title": "Safe-exchange site", "description": "Hand-offs happen at a set safe-exchange location, such as a monitored public site."},
+        {"id": "ex_staggered", "kind": "parallel", "title": "Staggered arrival times", "description": "One parent arrives and leaves before the other arrives, so parents don't meet."},
+        {"id": "ex_school", "kind": "parallel", "title": "Exchanges through school or childcare", "description": "One parent drops off at school or childcare and the other picks up."},
+        {"id": "ex_flexible_home", "kind": "cooperative", "title": "Flexible hand-offs at either home", "description": "Parents agree each time where and when the hand-off happens."}
+      ]
+    },
+    {
+      "key": "school_activities",
+      "label": "School and activities",
+      "options": [
+        {"id": "sch_separate", "kind": "parallel", "title": "Separate school and activity contact", "description": "Each parent has their own contact with the school, doctors and activities and gets their own copies of notices."},
+        {"id": "sch_shared_events", "kind": "cooperative", "title": "Shared events with both parents", "description": "Both parents attend birthdays, school events and activities together."}
+      ]
+    },
+    {
+      "key": "decisions_schedule",
+      "label": "Decisions and schedule",
+      "options": [
+        {"id": "dec_own_home", "kind": "parallel", "title": "Each home runs its own routine", "description": "Each parent makes everyday decisions during their own time, without checking with the other."},
+        {"id": "sched_fixed", "kind": "parallel", "title": "Fixed written schedule", "description": "A set schedule. Changes go through a template or a professional, not by direct request."},
+        {"id": "dec_joint_everyday", "kind": "cooperative", "title": "Joint everyday decisions", "description": "Parents talk through everyday decisions together before acting."},
+        {"id": "sched_flexible", "kind": "cooperative", "title": "Flexible schedule by agreement", "description": "Parents adjust the schedule together as needs change."}
+      ]
+    }
+  ]
+}

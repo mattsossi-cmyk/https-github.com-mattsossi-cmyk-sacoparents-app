@@ -8,6 +8,8 @@ Covers:
 - POST /api/safety-assessment/{id}/email rejects guest sessions with 400
 - POST /api/safety-assessment/problem-solving + GET /problem-solving/me
 """
+import pytest
+pytest.skip("In-app safety screen turned off (2026-10); screening now happens on SACOparentsAlign.", allow_module_level=True)
 import os
 import sys
 import uuid

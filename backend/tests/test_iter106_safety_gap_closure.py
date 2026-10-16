@@ -15,7 +15,8 @@ Locks the contract:
       — they DO NOT by themselves shift the level, so declining to
       pursue an order isn't punished by the score.
 """
-from __future__ import annotations
+import pytest
+pytest.skip("In-app safety screen turned off (2026-10); screening now happens on SACOparentsAlign.", allow_module_level=True)
 
 import os
 import sys

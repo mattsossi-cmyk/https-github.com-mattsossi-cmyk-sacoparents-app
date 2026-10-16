@@ -477,7 +477,7 @@ const PRIMARY_MODULES = [
     letter: "C",
     key: "safety",
     title: "Conflict Readiness",
-    body: "Prepare for conflict and spot safety concerns.",
+    body: "Prepare for tense moments, schedule changes and hand-offs.",
     topic: "safety",
   },
 ];

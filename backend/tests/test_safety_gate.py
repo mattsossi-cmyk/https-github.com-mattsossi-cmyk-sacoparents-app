@@ -1,0 +1,340 @@
+"""Safety Gate acceptance tests (backend). Test 9 (Quick exit) is checked in the browser."""
+import asyncio
+import hashlib
+import hmac
+import io
+import json
+import os
+import sys
+import time
+import uuid
+from pathlib import Path
+
+import httpx
+import pytest
+from dotenv import load_dotenv
+from PIL import Image
+from pymongo import MongoClient
+
+ROOT = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(ROOT))
+load_dotenv(ROOT / ".env")
+
+import case_safety as cs  # noqa: E402
+from media_scrub import UnsupportedFile, scrub_upload  # noqa: E402
+
+API = "http://localhost:8001/api"
+CONSENT = {"ack_privacy_notice": True, "consent_sensitive_info": True}
+PASSWORD = "Str0ng!Pass99"
+SECRET = os.environ["ALIGN_WEBHOOK_SECRET"]
+db = MongoClient(os.environ["MONGO_URL"])[os.environ["DB_NAME"]]
+_emails, _cases = [], []
+LIMITED = ("free_form_messaging", "calls_video", "addresses_visible", "gps_checkins")
+COOPERATIVE = {"comm_flexible_dm", "comm_joint_meetings", "ex_flexible_home", "sch_shared_events", "dec_joint_everyday", "sched_flexible"}
+FORBIDDEN_WORDS = ("safety", "screening", "violence", "abuse", "auto_red", "restricted", "disclos")
+
+
+@pytest.fixture(autouse=True, scope="module")
+def _cleanup():
+    yield
+    ids = [u["user_id"] for u in db.users.find({"email": {"$in": _emails}}, {"user_id": 1})]
+    db.users.delete_many({"email": {"$in": _emails}})
+    for coll in ("privacy_consents", "legal_acknowledgments", "plan_option_picks"):
+        db[coll].delete_many({"user_id": {"$in": ids}})
+    db.joint_alignment_cases.delete_many({"case_id": {"$in": _cases}})
+    db[cs.COLL].delete_many({"case_id": {"$in": _cases}})
+    db[cs.AUDIT].delete_many({"case_id": {"$in": _cases}})
+
+
+def _user():
+    email = f"test_gate_{uuid.uuid4().hex[:8]}@example.com"
+    _emails.append(email)
+    r = httpx.post(f"{API}/auth/register", json={"email": email, "password": PASSWORD, "name": "Gate Test", **CONSENT}, timeout=20)
+    assert r.status_code == 200, r.text
+    uid = db.users.find_one({"email": email})["user_id"]
+    return uid, {"Authorization": f"Bearer {r.json()['access_token']}"}
+
+
+def _case():
+    """A joint case with two linked parents. Returns (case_id, headers A, headers B)."""
+    case_id = f"SA-T{uuid.uuid4().hex[:6].upper()}"
+    _cases.append(case_id)
+    (ua, ha), (ub, hb) = _user(), _user()
+    db.joint_alignment_cases.insert_one({
+        "case_id": case_id, "status": "pending", "created_at": cs.now_iso(),
+        "parents": [{"parent_slot": "A", "user_id": ua}, {"parent_slot": "B", "user_id": ub}],
+    })
+    return case_id, ha, hb
+
+
+def _body(case_id, version, *, mode="standard", set_by="professional", referral="none", offered=True, ts=None, **extra):
+    return json.dumps({
+        "case_id": case_id, "safety_mode": mode, "set_by": set_by, "professional_name": "Dr. Reviewer",
+        "referral": referral, "screening_offered": offered, "version": version,
+        "timestamp": int(time.time()) if ts is None else ts, **extra,
+    }).encode()
+
+
+def _sign(raw, secret=SECRET):
+    return hmac.new(secret.encode(), raw, hashlib.sha256).hexdigest()
+
+
+def _send(raw, sig="__auto__"):
+    headers = {"Content-Type": "application/json"}
+    if sig == "__auto__":
+        sig = _sign(raw)
+    if sig is not None:
+        headers["X-Align-Signature"] = sig
+    return httpx.post(f"{API}/internal/safety-status", content=raw, headers=headers, timeout=20)
+
+
+def _flags(h, case_id=None):
+    r = httpx.get(f"{API}/case-settings", params={"case_id": case_id} if case_id else None, headers=h, timeout=20)
+    assert r.status_code == 200, r.text
+    return r
+
+
+def _stored(case_id):
+    return db[cs.COLL].find_one({"case_id": case_id}, {"_id": 0})
+
+
+# 1. restricted / auto_red -> both parents lose free-form messaging, calls, address view and GPS on the next load.
+def test_auto_red_limits_both_parents_on_next_load():
+    case_id, ha, hb = _case()
+    assert _send(_body(case_id, 1)).status_code == 200
+    for h in (ha, hb):
+        f = _flags(h).json()["features"]
+        assert all(f[k] for k in LIMITED)
+    r = _send(_body(case_id, 2, mode="restricted", set_by="auto_red"))
+    assert r.status_code == 200 and r.json() == {"ok": True}
+    for h in (ha, hb):
+        body = _flags(h).json()
+        assert not any(body["features"][k] for k in LIMITED)
+        assert body["banner"] == "Some features are set by your professional for this case."
+    # Stays restricted until a professional changes it.
+    assert _send(_body(case_id, 3, mode="standard", set_by="default")).status_code == 200
+    assert not _flags(ha).json()["features"]["free_form_messaging"]
+    assert _send(_body(case_id, 4, mode="standard", set_by="professional")).status_code == 200
+    assert _flags(ha).json()["features"]["free_form_messaging"]
+
+
+# 2. Byte-identical responses for both parents of the same case.
+def test_flag_responses_are_byte_identical():
+    case_id, ha, hb = _case()
+    for v, mode in ((1, "structured"), (2, "restricted"), (3, "standard")):
+        _send(_body(case_id, v, mode=mode, referral="parallel_parenting" if v == 2 else "none"))
+        assert _flags(ha).content == _flags(hb).content
+        assert _flags(ha, case_id).content == _flags(hb, case_id).content
+    text = _flags(ha).text.lower()
+    assert "dr. reviewer" not in text and not any(w in text for w in FORBIDDEN_WORDS)
+
+
+# 3. No push, email or SMS for any mode or referral change (in-process, every email path patched).
+def test_no_notifications_on_mode_or_referral_change(monkeypatch):
+    import smtplib
+
+    import email_service
+    import server
+
+    calls = []
+    monkeypatch.setattr(email_service, "_send", lambda *a, **k: calls.append(("resend", a, k)))
+    monkeypatch.setattr(smtplib.SMTP, "send_message", lambda *a, **k: calls.append(("smtp", a, k)), raising=False)
+    monkeypatch.setattr(smtplib.SMTP, "sendmail", lambda *a, **k: calls.append(("smtp", a, k)), raising=False)
+    case_id, ha, hb = _case()
+
+    async def run():
+        async with httpx.AsyncClient(transport=httpx.ASGITransport(app=server.app), base_url="http://t") as c:
+            for v, mode, ref in ((1, "structured", "none"), (2, "restricted", "parallel_parenting"), (3, "standard", "none")):
+                raw = _body(case_id, v, mode=mode, referral=ref, set_by="auto_red" if mode == "restricted" else "professional")
+                r = await c.post("/api/internal/safety-status", content=raw, headers={"X-Align-Signature": _sign(raw)})
+                assert r.status_code == 200
+                for h in (ha, hb):
+                    assert (await c.get("/api/case-settings", headers=h)).status_code == 200
+                    assert (await c.get("/api/plan-options", headers=h)).status_code == 200
+
+    asyncio.run(run())
+    assert calls == []
+    source = (ROOT / "case_safety.py").read_text() + (ROOT / "case_safety_routes.py").read_text()
+    assert not any(w in source for w in ("email_service", "send_", "push", "sms", "twilio"))
+
+
+# 4. Photos uploaded in structured or restricted carry no EXIF/GPS.
+def _photo_with_gps():
+    img = Image.new("RGB", (40, 30), (200, 80, 40))
+    exif = Image.Exif()
+    exif[0x010F] = "PhoneMaker"
+    exif[0x0132] = "2026:01:02 03:04:05"
+    exif[0x8825] = {1: "N", 2: (29.0, 25.0, 1.0), 3: "W", 4: (98.0, 29.0, 1.0)}
+    out = io.BytesIO()
+    img.save(out, format="JPEG", exif=exif)
+    raw = out.getvalue()
+    assert Image.open(io.BytesIO(raw)).getexif().get_ifd(0x8825)
+    return raw
+
+
+@pytest.mark.parametrize("mode", ["structured", "restricted"])
+def test_uploaded_photo_has_no_exif_or_gps(mode):
+    level = cs.scrub_level(cs.FEATURES[mode])
+    clean = scrub_upload(_photo_with_gps(), level)
+    with Image.open(io.BytesIO(clean)) as img:
+        exif = img.getexif()
+        assert len(exif) == 0 and not exif.get_ifd(0x8825)
+        assert "exif" not in img.info and img.size == (40, 30)
+    assert b"PhoneMaker" not in clean and b"Exif" not in clean
+
+
+def test_restricted_strips_png_text_and_pdf_info():
+    from PIL import PngImagePlugin
+    from pypdf import PdfReader, PdfWriter
+
+    info = PngImagePlugin.PngInfo()
+    info.add_text("Author", "Parent Name")
+    out = io.BytesIO()
+    Image.new("RGB", (8, 8)).save(out, format="PNG", pnginfo=info)
+    assert b"Parent Name" not in scrub_upload(out.getvalue(), "all")
+    w = PdfWriter()
+    w.add_blank_page(100, 100)
+    w.add_metadata({"/Author": "Parent Name", "/Title": "Home address"})
+    pdf = io.BytesIO()
+    w.write(pdf)
+    meta = PdfReader(io.BytesIO(scrub_upload(pdf.getvalue(), "all"))).metadata or {}
+    assert "/Author" not in meta and "/Title" not in meta
+    with pytest.raises(UnsupportedFile):
+        scrub_upload(b"PK\x03\x04 not an image", "location")
+    assert scrub_upload(b"anything", "none") == b"anything"
+
+
+# 5. Unsigned or wrongly signed -> 401, nothing changes.
+@pytest.mark.parametrize("sig", [None, "", "deadbeef", "__wrong_secret__"])
+def test_bad_signature_rejected(sig):
+    case_id, ha, _ = _case()
+    raw = _body(case_id, 5, mode="standard")
+    if sig == "__wrong_secret__":
+        sig = _sign(raw, "not-the-secret")
+    assert _send(raw, sig).status_code == 401
+    assert _stored(case_id) is None
+    assert not _flags(ha).json()["features"]["free_form_messaging"]
+
+
+# 6. Old timestamp, replay, or a version that isn't higher -> nothing changes.
+def test_stale_timestamp_replay_and_old_version_change_nothing():
+    case_id, ha, _ = _case()
+    assert _send(_body(case_id, 1, ts=int(time.time()) - 301)).status_code == 401
+    assert _send(_body(case_id, 1, ts="2020-01-01T00:00:00+00:00")).status_code == 401
+    assert _stored(case_id) is None
+    raw = _body(case_id, 3, mode="standard")
+    assert _send(raw).status_code == 200
+    assert _send(raw).status_code == 409
+    before = _stored(case_id)
+    for v in (3, 2):
+        assert _send(_body(case_id, v, mode="restricted", set_by="auto_red")).status_code == 200
+    assert _stored(case_id) == before
+    assert _flags(ha).json()["features"]["free_form_messaging"]
+
+
+# 7. With a parallel_parenting referral, no cooperative options for either parent.
+def test_referral_hides_cooperative_options_for_both():
+    case_id, ha, hb = _case()
+    full = httpx.get(f"{API}/plan-options", headers=ha, timeout=20).json()
+    assert COOPERATIVE <= {o["id"] for c in full["categories"] for o in c["options"]}
+    _send(_body(case_id, 1, mode="structured", referral="parallel_parenting"))
+    bodies = [httpx.get(f"{API}/plan-options", headers=h, timeout=20) for h in (ha, hb)]
+    assert bodies[0].content == bodies[1].content
+    ids = {o["id"] for c in bodies[0].json()["categories"] for o in c["options"]}
+    assert ids and not (ids & COOPERATIVE)
+    assert {"comm_no_direct", "comm_templates", "ex_supervised", "ex_safe_site", "ex_staggered", "sch_separate"} <= ids
+    for h in (ha, hb):
+        assert _flags(h).json()["plan_options"] is True
+    r = httpx.put(f"{API}/plan-options/picks", json={"picks": ["comm_flexible_dm", "ex_staggered"]}, headers=ha, timeout=20)
+    assert r.json()["picks"] == ["ex_staggered"]
+
+
+# 8. Schedule, health, school and expense templates send in every mode.
+def test_templates_always_allowed():
+    case_id, ha, _ = _case()
+    for v, mode in ((1, "standard"), (2, "structured"), (3, "restricted")):
+        _send(_body(case_id, v, mode=mode, set_by="auto_red" if mode == "restricted" else "professional"))
+        body = _flags(ha).json()
+        assert body["features"]["template_messages"] is True
+        assert body["template_categories"] == ["schedule", "health", "school", "expenses"]
+        for cat in body["template_categories"]:
+            assert cs.message_allowed(body["features"], "template", cat, "x" * 280)
+        assert not cs.message_allowed(body["features"], "template", "schedule", "x" * 281)
+        assert cs.message_allowed(body["features"], "free_form") is (mode == "standard")
+
+
+# 10. Nothing parent-visible records a mode change, referral change or Get help visit.
+def test_no_parent_visible_trace():
+    case_id, ha, _ = _case()
+    _send(_body(case_id, 1, mode="restricted", set_by="auto_red", referral="parallel_parenting"))
+    assert httpx.get(f"{API}/help/local-services", timeout=20).status_code == 200
+    for path in ("/me/export", "/me/access-log", "/portal/state", "/plan-options/picks"):
+        r = httpx.get(f"{API}{path}", headers=ha, timeout=30)
+        assert r.status_code in (200, 404), path
+        text = r.text.lower()
+        assert case_id.lower() not in text and "case_safety" not in text and "help_local" not in text
+        assert "parallel_parenting" not in text and "safety_mode" not in text and "safety_audit" not in text
+
+
+# 11. A new case is structured until screening_offered is true.
+def test_new_case_structured_until_screening_offered():
+    case_id, ha, hb = _case()
+    body = _flags(ha).json()
+    assert body["features"] == cs.FEATURES["structured"]
+    assert body["banner"] == "Some features are limited until your case setup is complete."
+    _, lone = _user()
+    assert _flags(lone).json()["features"] == cs.FEATURES["structured"]
+    _send(_body(case_id, 1, mode="standard", offered=False))
+    assert _flags(ha).json()["features"]["free_form_messaging"] is False
+    _send(_body(case_id, 2, mode="structured", set_by="default", offered=True))
+    for h in (ha, hb):
+        b = _flags(h).json()
+        assert b["features"]["free_form_messaging"] is True and b["banner"] is None
+
+
+def test_record_encrypted_and_audited():
+    case_id, ha, _ = _case()
+    _send(_body(case_id, 1, mode="restricted", set_by="professional"))
+    doc = _stored(case_id)
+    assert set(doc) == {"case_id", "version", "enc", "updated_at"}
+    assert "restricted" not in doc["enc"] and "Reviewer" not in doc["enc"]
+    assert cs.decrypt(doc["enc"])["professional_name"] == "Dr. Reviewer"
+    _flags(ha)
+    actions = [(r["actor_type"], r["action"]) for r in db[cs.AUDIT].find({"case_id": case_id})]
+    assert ("system", "write") in actions and ("user", "read") in actions
+
+
+def test_audit_export_admin_only_and_logged():
+    _, h = _user()
+    assert httpx.get(f"{API}/admin/safety-audit-log/export", headers=h, timeout=20).status_code == 403
+    r = httpx.post(f"{API}/auth/login", json={"email": "mattsossi@bsossi.com", "password": "AdminPass123!"}, timeout=20)
+    if r.status_code != 200:
+        pytest.skip("admin test account not available")
+    admin = {"Authorization": f"Bearer {r.json()['access_token']}"}
+    before = db[cs.AUDIT].count_documents({"action": "export"})
+    e = httpx.get(f"{API}/admin/safety-audit-log/export", headers=admin, timeout=30)
+    assert e.status_code == 200 and e.text.startswith("at,actor_type,actor_id,action,case_id")
+    assert db[cs.AUDIT].count_documents({"action": "export"}) == before + 1
+
+
+def test_support_sees_mode_only_and_parents_cannot():
+    case_id, ha, _ = _case()
+    _send(_body(case_id, 1, mode="restricted", set_by="auto_red", referral="parallel_parenting"))
+    assert httpx.get(f"{API}/support/case-settings/{case_id}", headers=ha, timeout=20).status_code == 403
+    r = httpx.post(f"{API}/auth/login", json={"email": "mattsossi@bsossi.com", "password": "AdminPass123!"}, timeout=20)
+    if r.status_code != 200:
+        pytest.skip("admin test account not available")
+    s = httpx.get(f"{API}/support/case-settings/{case_id}", headers={"Authorization": f"Bearer {r.json()['access_token']}"}, timeout=20)
+    assert s.json() == {"case_id": case_id, "safety_mode": "restricted"}
+
+
+def test_other_case_not_readable():
+    case_id, _, _ = _case()
+    _, outsider = _user()
+    r = httpx.get(f"{API}/case-settings", params={"case_id": case_id}, headers=outsider, timeout=20)
+    assert r.status_code == 404
+
+
+def test_internal_endpoint_hidden_from_docs():
+    paths = httpx.get("http://localhost:8001/openapi.json", timeout=20).json()["paths"]
+    assert not any("internal" in p for p in paths)

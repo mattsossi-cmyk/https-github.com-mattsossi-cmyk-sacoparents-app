@@ -41,7 +41,10 @@ SAFETY_GUARDRAIL = (
     "5. Centre every recommendation on the child's emotional safety and developmental "
     "needs — not on what is 'fair' between the parents.\n"
     "6. Output strict JSON only when the response schema requires it — no prose "
-    "outside the JSON, no apologies, no preamble.\n\n"
+    "outside the JSON, no apologies, no preamble.\n"
+    "7. Tone checks are only for the parent's own outgoing words: flag aggressive or "
+    "threatening language they are about to send. Never tell a parent to apologise, "
+    "soften, or reply to anything the other parent sent.\n\n"
 )
 
 
@@ -604,7 +607,7 @@ async def draft_coparent_reply(
         "things they didn't agree to, or soften a legitimate boundary. If the "
         "original message contains threats, coercion, or abuse, you gently "
         "note that direct de-escalated replies may not be appropriate and "
-        "point them to the Safety page and hotlines. Output strict JSON only."
+        "point them to the Get help page and hotlines. Output strict JSON only."
     )
 
     intent_block = f"\n=== PARENT'S INTENT ===\n{intent.strip()}\n" if intent and intent.strip() else ""

@@ -4,9 +4,11 @@
    - network-first for HTML and API calls
    - falls back to last-good cache when offline */
 
-const VERSION = "sac-v2";
+const VERSION = "sac-v3";
 const STATIC_CACHE = `${VERSION}-static`;
 const RUNTIME_CACHE = `${VERSION}-runtime`;
+// Get help is never stored for offline use.
+const NEVER_CACHE = ["/help"];
 
 const STATIC_ASSETS = [
   "/",
@@ -58,6 +60,10 @@ self.addEventListener("fetch", (event) => {
 
   // HTML — network first, fall back to cached / shell
   if (request.headers.get("accept")?.includes("text/html")) {
+    if (NEVER_CACHE.some((p) => url.pathname === p || url.pathname.startsWith(`${p}/`))) {
+      event.respondWith(fetch(request, { cache: "no-store" }));
+      return;
+    }
     event.respondWith(
       fetch(request)
         .then((res) => {

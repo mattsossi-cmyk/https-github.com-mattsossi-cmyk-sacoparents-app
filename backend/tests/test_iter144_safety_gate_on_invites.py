@@ -13,7 +13,8 @@ Endpoints locked here:
 Non-gated paths verified to STILL work:
   * POST /api/professionals/{id}/send-alignment-code (professional-directed)
 """
-from __future__ import annotations
+import pytest
+pytest.skip("In-app safety screen turned off (2026-10); screening now happens on SACOparentsAlign.", allow_module_level=True)
 
 import os
 import sys

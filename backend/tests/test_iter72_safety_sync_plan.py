@@ -8,6 +8,8 @@ Covers:
   - safety_ack requires a `date` string (empty {} -> None)
   - Two-user isolation
 """
+import pytest
+pytest.skip("In-app safety screen turned off (2026-10); screening now happens on SACOparentsAlign.", allow_module_level=True)
 import os
 import requests
 

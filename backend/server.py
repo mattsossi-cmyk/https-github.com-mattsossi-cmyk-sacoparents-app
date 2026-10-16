@@ -25,6 +25,10 @@ from legal_routes import router as legal_router  # noqa: E402
 from privacy_consent_routes import router as privacy_consent_router  # noqa: E402
 from ai_notice_routes import router as ai_notice_router  # noqa: E402
 from safety_assessment_routes import router as safety_assessment_router  # noqa: E402
+from case_safety import ensure_indexes as ensure_case_safety_indexes  # noqa: E402
+from case_safety_routes import router as case_settings_router, internal_router as case_safety_internal_router  # noqa: E402
+from plan_options_routes import router as plan_options_router  # noqa: E402
+from help_routes import router as help_router, seed_help_services  # noqa: E402
 from gmail_routes import router as gmail_router  # noqa: E402
 from coparenting_routes import router as coparenting_router  # noqa: E402
 from snc2_routes import router as snc2_router  # noqa: E402
@@ -221,7 +225,8 @@ api_router.include_router(learning_router)
 api_router.include_router(signature_verify_router)
 api_router.include_router(briefing_verify_router)
 api_router.include_router(pathway_verify_router)
-api_router.include_router(court_report_verify_router)
+# Co-signed safety court reports are off with the in-app safety screen.
+# api_router.include_router(court_report_verify_router)
 api_router.include_router(pathway_report_router)
 api_router.include_router(joint_professional_report_router)
 api_router.include_router(joint_agreement_router)
@@ -272,6 +277,10 @@ api_router.include_router(cron_router)
 api_router.include_router(release_check_router)
 api_router.include_router(self_journey_weekly_router)
 api_router.include_router(self_journey_weekly_admin_router)
+api_router.include_router(case_settings_router)
+api_router.include_router(case_safety_internal_router)
+api_router.include_router(plan_options_router)
+api_router.include_router(help_router)
 app.include_router(api_router)
 
 # CORS — allow credentials for cookie-based auth.
@@ -310,6 +319,8 @@ app.add_middleware(
 @app.on_event("startup")
 async def startup_log():
     logger.info("SA CoParents backend ready. DB=%s", os.environ.get("DB_NAME"))
+    await ensure_case_safety_indexes(app.state.db)
+    await seed_help_services(app.state.db)
     # Contract sanity: every duration advertised by the joint-artefact
     # share-link dialogs MUST be in `auth.SHARE_TOKEN_WINDOWS`. If not,
     # `create_share_token` silently downgrades to the 7-day default and
