@@ -1,6 +1,7 @@
 """Iter-109 (owner-approved 2026-10-16): neutral invitation email, same four choice options for every parent, switch-later line,
 updated content note, and real resume (private draft)."""
 import os
+import pytest
 import re
 
 from dotenv import load_dotenv
@@ -39,6 +40,9 @@ def _case_with_genders():
         assert s.post(f"{API}/joint/invitations/accept", json={"code": toks[role]}).json().get("ok")
         ses[role] = s
     return pro, ses["a"], ses["b"], d["id"]
+
+
+@pytest.mark.skip(reason="Superseded 2026-10-16: the Family check-in (FV) replaces the A/B/C choice; see test_iter110_family_checkin.py")
 
 
 def test_choice_screen_same_four_options_for_everyone_switch_note_and_content_note():

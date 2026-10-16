@@ -8,12 +8,12 @@ Covers:
   - Report + PDF content: version/tier appear; raw answers never leak; new framing text present
 """
 import os
-import uuid
-import re
 import time
+import uuid
+
+import pymongo
 import pytest
 import requests
-import pymongo
 from dotenv import load_dotenv
 
 load_dotenv("/app/backend/.env")
@@ -126,6 +126,7 @@ class TestReportGuide:
 # Batch 2 — screening overview + assignment
 # =============================================================================
 class TestScreeningOverview:
+    @pytest.mark.skip(reason="Superseded 2026-10-16: the Family check-in (FV) replaces the A/B/C choice; see test_iter110_family_checkin.py")
     def test_overview_default_versions(self, pro_session):
         # Fresh case so parallel workers' choices cannot interfere.
         body = {"child_name": "TEST Fresh", "subject": "communication", "parent_a_name": "FA", "parent_a_email": f"qa.fa.{TS}.{uuid.uuid4().hex[:5]}@example.com",
@@ -142,6 +143,8 @@ class TestScreeningOverview:
         assert data["roles"]["b"]["needs_assignment"] is True
         assert data["roles"]["a"]["received"] is False
         assert data["roles"]["b"]["received"] is False
+
+    @pytest.mark.skip(reason="Superseded 2026-10-16: the Family check-in (FV) replaces the A/B/C choice; see test_iter110_family_checkin.py")
 
     def test_overview_no_gender(self, pro_session, pro_case_no_gender):
         r = pro_session.get(f"{BASE}/api/joint/reports/{pro_case_no_gender}/safety-screening", timeout=15)
@@ -194,6 +197,7 @@ def parent_a_submitted(pro_case, parent_a_session, parents_accepted):
 
 
 class TestParentScreening:
+    @pytest.mark.skip(reason="Superseded 2026-10-16: the Family check-in (FV) replaces the A/B/C choice; see test_iter110_family_checkin.py")
     def test_parent_a_sees_spec_only_her_role(self, pro_case, parent_a_session, parents_accepted):
         r = parent_a_session.get(f"{BASE}/api/joint/reports/{pro_case['id']}/safety-screening", timeout=15)
         assert r.status_code == 200, r.text
@@ -300,6 +304,8 @@ class TestParentScreening:
         assert r.status_code == 200, r.text
         assert r.json()["tier"] == 1
 
+    @pytest.mark.skip(reason="Superseded 2026-10-16: the Family check-in (FV) replaces the A/B/C choice; see test_iter110_family_checkin.py")
+
     def test_no_gender_parent_sees_a_b_c_and_pro_can_override(self, pro_session):
         """Missing/non-binary gender → neutral choice screen offers A, B and C; parent picks; professional may override afterward."""
         body = {"child_name": f"TEST NB {TS}", "subject": "communication",
@@ -384,8 +390,9 @@ class TestProfessionalReport:
         assert r.headers.get("content-type", "").startswith("application/pdf")
         # Extract text via pypdf
         try:
-            from pypdf import PdfReader
             import io
+
+            from pypdf import PdfReader
             reader = PdfReader(io.BytesIO(r.content))
             text = "\n".join((p.extract_text() or "") for p in reader.pages)
         except Exception as e:

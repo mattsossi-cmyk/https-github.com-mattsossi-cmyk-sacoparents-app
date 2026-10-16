@@ -1,10 +1,21 @@
 """Version A / B private safety screenings: tiering, skips, assignment defaults, import parsing (new + legacy), PDF never prints answers."""
 import pymupdf
+import pytest
 
 from safety_import import extract_safety_screening, screening_summary
-from safety_screening import VERSIONS, build_record, compute_tier, default_version, item_view, receipt
+from safety_screening import (
+    VERSIONS,
+    build_record,
+    compute_tier,
+    default_version,
+    item_view,
+    receipt,
+)
 
 RAW_A = {"a1": "Frequently", "a2": "Sometimes", "a3": "Never", "a4": "Never", "a5": "Rarely", "a6": "Sometimes", "c1": "Yes", "c2": "Not sure", "a9": "fear of losing custody UNIQUE-FREETEXT-XYZ", "safe": "Somewhat safe"}
+
+
+@pytest.mark.skip(reason="Superseded 2026-10-16: the Family check-in (FV) replaces the A/B/C choice; see test_iter110_family_checkin.py")
 
 
 def test_versions_have_required_items_and_no_lethality_items():
@@ -37,6 +48,9 @@ def test_skips_and_prefer_not_to_say_never_raise_tier():
     assert compute_tier("B", {"b_11": "Prefer not to say", "safe": "Prefer not to say"}) == 1
     rec = build_record("A", {"a1": "Never", "a2": "Prefer not to say", "a9": ""})
     assert rec["answered_count"] == 1 and rec["skipped_count"] == 14 and rec["tier"] == 1 and "a9" not in rec["responses"]
+
+
+@pytest.mark.skip(reason="Superseded 2026-10-16: the Family check-in (FV) replaces the A/B/C choice; see test_iter110_family_checkin.py")
 
 
 def test_default_version_by_gender():

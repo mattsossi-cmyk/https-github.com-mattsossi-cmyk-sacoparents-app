@@ -116,6 +116,7 @@ VERSIONS = {
         _item("a9", "What makes it hard to stay safe or get help (money, fear of losing custody, immigration status, lack of support)?", "text", "Part 3 · Optional"),
         _item("safe", "How safe is it for you to go home today?", "safe", "Closing")]},
     "B": B_VARIANTS["cdc"],
+    "FV": __import__("fv_screening").SPEC,
     "C": {"version": "C", "title": "Safety Screening — Version C (LGBTQ+ Relationship Self-Assessment)", "intro": INTRO_C, "source": SOURCES["C"], "label": LABEL_C, "items": [
         *[_item(i, t, "freq", "Part 1 · Your relationship", t3, STEM) for i, t, t3 in _C_FREQ],
         *[_item(i, t, "freq", "Part 2 · Identity-based tactics", t3, STEM) for i, t, t3 in _C_IDENTITY],
@@ -125,8 +126,9 @@ VERSIONS = {
 }
 TIER_LABEL = {1: "Tier 1 — resources only", 2: "Tier 2 — review resources; professional follow-up suggested", 3: "Tier 3 — professional follow-up recommended"}
 # Report/PDF/co-parent-safe labels: never name identity. Full names live in VERSION_LABEL_PRO (professional-only screens).
-VERSION_LABEL = {"A": "Version A", "B": "Version B", "C": "Version C"}
-VERSION_LABEL_PRO = {"A": "Version A (women)", "B": "Version B (men)", "C": "Version C (LGBTQ+ relationship)"}
+VERSION_LABEL = {"A": "Version A", "B": "Version B", "C": "Version C", "FV": "Family check-in"}
+VERSION_LABEL_PRO = {"A": "Version A (women)", "B": "Version B (men)", "C": "Version C (LGBTQ+ relationship)", "FV": "Family check-in (8 domains)"}
+OFFERED_VERSION = "FV"  # 2026-10-16: the family check-in replaces the A/B/C choice; identical for every parent
 # Owner-approved 2026-10-16: every parent sees the SAME four options; nothing is inferred from the profile. Only the version letter is stored.
 CHOICE_LABEL = {"A": "Questions written for women (Version A)", "B": "Questions written for men (Version B)", "C": "Questions written for LGBTQ+ relationships (Version C)"}
 CHOICE_HELP_LABEL = "Prefer not to say (I'll help you choose)"
@@ -160,6 +162,10 @@ def public_spec(version: str) -> dict:
     v = VERSIONS[version]
     from safety_pathway import EXTRA_ITEMS, YN3
     items = [i for i in v["items"] if i["id"] != "safe"] + EXTRA_ITEMS + [i for i in v["items"] if i["id"] == "safe"]
+    if version == "FV":
+        import fv_screening as fv
+        return {**v, "label": LABEL, "trigger_warning": TRIGGER_WARNING, "scale_note": None, "scales": {**fv.SCALES, "yn3": YN3}, "resources": RESOURCES, "external_link_note": EXTERNAL_LINK_NOTE,
+                "safe_device_notice": "Use a device your co-parent cannot see. The Quick Exit button (or pressing Escape twice) leaves this page immediately and clears it from this browser."}
     return {**v, "items": items, "label": v.get("label", LABEL), "trigger_warning": TRIGGER_WARNING, "scale_note": SCALE_NOTE, "scales": {"freq": FREQ, "yn": YN, "safe": SAFE, "yn3": YN3}, "resources": resources_for(version),
             "external_link_note": EXTERNAL_LINK_NOTE,
             "safe_device_notice": "Use a device your co-parent cannot see. The Quick Exit button (or pressing Escape twice) leaves this page immediately and clears it from this browser."}
@@ -167,6 +173,8 @@ def public_spec(version: str) -> dict:
 
 def compute_tier(version: str, responses: dict, b_source: str | None = None) -> int:
     """Design guide, not a validated cutoff. Skipped / 'Prefer not to say' items never raise the tier."""
+    if version == "FV":
+        return __import__("fv_screening").compute(responses)["tier"]
     items = _spec_for(version, b_source)["items"]
     freq = {i["id"]: (responses.get(i["id"]) or "") for i in items if i["kind"] == "freq"}
     safe = responses.get("safe") or ""
@@ -181,15 +189,23 @@ def compute_tier(version: str, responses: dict, b_source: str | None = None) -> 
 
 
 def default_version(gender: str | None) -> str | None:
-    return GENDER_DEFAULT.get((gender or "").strip().lower())
+    return OFFERED_VERSION  # every parent gets the same family check-in; nothing inferred from the profile
 
 
 def build_record(version: str, responses: dict, source: str = "sacoparentsalign.com", completed_at: str | None = None, tier: int | None = None, answered_count: int | None = None,
                  flags: dict | None = None, pathway: str | None = None, b_source: str | None = None) -> dict:
     from safety_pathway import EXTRA_ITEMS, compute_flags, pathway_from_flags
     spec = _spec_for(version, b_source)
-    items = spec["items"] + EXTRA_ITEMS
+    items = spec["items"] + (EXTRA_ITEMS if version != "FV" else [])
     clean = {i["id"]: str(responses[i["id"]])[:1000].strip() for i in items if responses.get(i["id"]) not in (None, "")}
+    if version == "FV":
+        import fv_screening as fv
+        res = fv.compute(clean)
+        skipped = [i["id"] for i in items if i["kind"] != "gate" and (i["id"] not in clean or clean[i["id"]] in fv.SKIP)]
+        return {"source": source, "version": "FV", "b_source": None, "title": spec["title"], "completed_at": completed_at or datetime.now(timezone.utc).isoformat(), "tier": res["tier"],
+                "app_tier": res["app_tier"], "triggered_rules": res["triggered_rules"], "answered_count": len([k for k in clean if clean[k] not in fv.SKIP and k != "gate"]),
+                "skipped_count": len(skipped), "item_count": len([i for i in items if i["kind"] != "gate"]), "concern_count": len(res["triggered_rules"]), "responses": clean,
+                "flags": {}, "pathway_suggested": {"pathway": None, "label": None, "triggered": res["triggered_rules"], "triggered_labels": [fv.RULE_LABEL.get(k, k) for k in res["triggered_rules"]]}}
     skipped = [i["id"] for i in items if i["id"] not in clean or clean[i["id"]] == "Prefer not to say"]
     t = tier if tier in (1, 2, 3) else compute_tier(version, clean, spec.get("b_source"))
     fl = flags if isinstance(flags, dict) else compute_flags(version, clean, spec.get("b_source"))
@@ -287,10 +303,12 @@ def _status(doc: dict) -> dict:
     for r in ("a", "b"):
         p = doc["participants"][r]
         scr = (doc.get("safety_screenings") or {}).get(r) or None
-        ver = (doc.get("safety_version") or {}).get(r)
+        ver = (doc.get("safety_version") or {}).get(r) or OFFERED_VERSION
         confirmed = bool((doc.get("safety_version_confirmed") or {}).get(r))
         out[r] = {"name": p.get("name") or f"Parent {r.upper()}", "gender": p.get("gender"), "version": ver, "needs_assignment": ver is None, "received": bool(scr),
-                  "choice_needed": not confirmed and not scr, "default_version": ver if ver in ("A", "B") else None, "chosen_by_parent": confirmed,
+                  "choice_needed": (not confirmed and not scr) and ver != "FV", "default_version": ver if ver in ("A", "B") else None, "chosen_by_parent": confirmed,
+                  "app_tier": (scr or {}).get("app_tier"), "app_tier_label": __import__("fv_screening").APP_TIER_LABEL.get((scr or {}).get("app_tier")) if scr else None,
+                  "triggered_rules": [__import__("fv_screening").RULE_LABEL.get(k, k) for k in ((scr or {}).get("triggered_rules") or [])] if scr else [],
                   "tier": scr.get("tier") if scr else None, "tier_label": TIER_LABEL.get(scr.get("tier")) if scr else None, "version_label": VERSION_LABEL.get(ver or ""),
                   "completed_at": (scr or {}).get("completed_at"), "source": (scr or {}).get("source"), "receipt": receipt(scr, p.get("name") or f"Parent {r.upper()}", (doc.get("safety_declined") or {}).get(r)),
                   "reminded_at": (doc.get("safety_reminded_at") or {}).get(r), "communication_received": bool((doc.get("communication_readiness") or {}).get(r)),
@@ -489,6 +507,8 @@ def build_router(db, get_current_user, get_joint_report_doc, report_role, log_ac
             except Exception as exc:  # alert must never block the parent's submission
                 import logging
                 logging.getLogger("safety_screening").warning("Tier 3 alert not sent for case %s: %s", rid, exc)
+        if version == "FV":  # parents never see a tier, score or flag
+            return {"ok": True, "close_note": __import__("fv_screening").CLOSE_NOTE, "resources": RESOURCES, "external_link_note": EXTERNAL_LINK_NOTE, "answered_count": rec["answered_count"], "skipped_count": rec["skipped_count"]}
         return {"tier": rec["tier"], "tier_label": TIER_LABEL[rec["tier"]], "resources": resources_for(version), "external_link_note": EXTERNAL_LINK_NOTE, "answered_count": rec["answered_count"], "skipped_count": rec["skipped_count"], "scale_note": SCALE_NOTE}
 
     @r.get("/joint/reports/{rid}/safety-screening/{role}/responses")

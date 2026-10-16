@@ -7,7 +7,8 @@ import { BrandLogo } from "@/components/Brand";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { SafeContactStep } from "@/components/SafeContactStep";
-import { QuickExitBar } from "@/components/QuickExit";
+import { QuickExitBar, quickExit } from "@/components/QuickExit";
+import { useNavigate } from "react-router-dom";
 import { CrisisResourcesButton } from "@/components/CrisisResources";
 
 const Hotline = ({ resources, externalNote }) => (
@@ -49,6 +50,14 @@ export default function SafetyScreening() {
   const [safeContact, setSafeContact] = useState(null);
   const [busy, setBusy] = useState(false);
   const [help, setHelp] = useState(false);
+  const navigate = useNavigate();
+  const onAnswer = (it, v) => {
+    if (it.kind === "gate") {
+      if (v === "Quick exit") { quickExit(); return; }
+      if (v.startsWith("Not now")) { navigate("/dashboard", { replace: true }); return; }
+    }
+    setAnswers((a) => ({ ...a, [it.id]: v }));
+  };
   useEffect(() => { api.get(`/joint/reports/${id}/safety-screening`).then((r) => { setData(r.data); if (r.data.my_draft) setAnswers(r.data.my_draft); }).catch((e) => toast.error(formatApiError(e))); }, [id]);
   useEffect(() => {
     if (!data?.spec || result || !Object.keys(answers).length) return undefined;
@@ -97,10 +106,11 @@ export default function SafetyScreening() {
           <div className="space-y-4" data-testid="screening-result">
             <div className={`rounded-lg border p-5 ${result.tier === 3 ? "border-amber-300 bg-amber-50" : "border-align-green/40 bg-align-green/10"}`}>
               <p className="flex items-center gap-2 text-sm font-bold"><ShieldCheck className="h-5 w-5" /> Thank you. Your answers were saved privately for your professional.</p>
-              <p className="mt-2 text-sm" data-testid="screening-result-tier">{result.tier_label}</p>
+              {result.tier_label && <p className="mt-2 text-sm" data-testid="screening-result-tier">{result.tier_label}</p>}
+              {result.close_note && <p className="mt-2 text-sm" data-testid="screening-result-close">{result.close_note}</p>}
               <p className="mt-1 text-xs text-muted-foreground">{result.answered_count} answered · {result.skipped_count} skipped. {result.scale_note}</p>
             </div>
-            {result.tier >= 2 && <p className="text-sm" data-testid="screening-result-followup">{result.tier === 3 ? "Please consider reaching out to the hotline below and making a simple safety plan — where you could go, who you could call, what you would take. Your professional has been flagged to follow up with you." : "Your professional may suggest a follow-up conversation. The resources below are available any time."}</p>}
+            {result.tier >= 2 && !result.close_note && <p className="text-sm" data-testid="screening-result-followup">{result.tier === 3 ? "Please consider reaching out to the hotline below and making a simple safety plan — where you could go, who you could call, what you would take. Your professional has been flagged to follow up with you." : "Your professional may suggest a follow-up conversation. The resources below are available any time."}</p>}
             <Hotline resources={result.resources} externalNote={result.external_link_note} />
             <Link to={`/joint/${id}`}><Button data-testid="screening-done-btn">Return to case</Button></Link>
           </div>
@@ -117,7 +127,19 @@ export default function SafetyScreening() {
             {parts.map((part) => (
               <section key={part} className="space-y-2" data-testid={`screening-part-${part.split(" ")[0].replace(/[^A-Za-z0-9]/g, "").toLowerCase()}`}>
                 <h2 className="text-base md:text-lg font-semibold text-brand-purple">{part}</h2>
-                {spec.items.filter((i) => i.part === part).map((it) => <Item key={it.id} it={it} scales={spec.scales} value={answers[it.id]} onChange={(v) => setAnswers((a) => ({ ...a, [it.id]: v }))} />)}
+                {spec.items.filter((i) => i.part === part && (!i.follow || (answers[i.follow] && answers[i.follow] !== "Never" && answers[i.follow] !== "Prefer not to answer"))).map((it) => (
+                  <div key={it.id}>
+                    <Item it={it} scales={spec.scales} value={answers[it.id]} onChange={(v) => onAnswer(it, v)} />
+                    {it.id === "danger" && answers.danger === "Yes" && spec.emergency && (
+                      <div className="mt-2 rounded-lg border-2 border-red-400 bg-red-50 p-4" role="alert" data-testid="screening-emergency">
+                        <p className="text-sm font-bold text-red-800">{spec.emergency.title}</p>
+                        {spec.emergency.lines.map((l) => <p key={l} className="mt-1 text-sm text-red-900">{l}</p>)}
+                        <p className="mt-2 text-xs text-red-800">{spec.emergency.note}</p>
+                        <div className="mt-2 flex gap-2"><CrisisResourcesButton /><button type="button" onClick={quickExit} className="rounded-full bg-red-700 px-4 py-1.5 text-xs font-bold text-white" data-testid="screening-emergency-quick-exit">Quick exit</button></div>
+                      </div>
+                    )}
+                  </div>
+                ))}
               </section>
             ))}
             <SafeContactStep value={safeContact} onChange={setSafeContact} />
