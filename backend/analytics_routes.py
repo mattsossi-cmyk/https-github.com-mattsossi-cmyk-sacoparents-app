@@ -422,8 +422,23 @@ async def admin_consent_counts(request: Request, _admin: UserPublic = Depends(re
         "demo_sessions_consented": demo_current,
         "by_version": sorted(by_version.values(), key=lambda r: r["version"], reverse=True),
         "current_version_by_source": sources,
+        "daily": await _consent_daily(db, 30),
         "generated_at": _iso(_now()),
     }
+
+
+async def _consent_daily(db, days: int) -> list:
+    """People (distinct accounts) who ticked both boxes each UTC day, oldest first, zero-filled."""
+    start = (_now() - timedelta(days=days - 1)).date()
+    counts = {
+        row["_id"]: row["n"]
+        async for row in db.privacy_consents.aggregate([
+            {"$match": {"consent_at": {"$gte": start.isoformat()}}},
+            {"$group": {"_id": {"d": {"$substrCP": ["$consent_at", 0, 10]}, "u": "$user_id"}}},
+            {"$group": {"_id": "$_id.d", "n": {"$sum": 1}}},
+        ])
+    }
+    return [{"date": (d := (start + timedelta(days=i)).isoformat()), "people": counts.get(d, 0)} for i in range(days)]
 
 
 @router.get("/admin/overview")

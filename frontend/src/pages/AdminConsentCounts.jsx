@@ -3,6 +3,7 @@ import { Link, Navigate } from "react-router-dom";
 import { ShieldCheck, FileCheck2 } from "lucide-react";
 
 import AppShell from "../components/AppShell";
+import { ConsentTrendChart } from "../components/admin/ConsentTrendChart";
 import { useAuth } from "../context/AuthContext";
 import { api } from "../lib/api";
 
@@ -86,6 +87,7 @@ export default function AdminConsentCounts() {
           <Stat label="Still to be asked" value={data?.accounts_pending} sub="Asked at their next sign-in" testid="admin-consent-pending" />
           <Stat label="Demo sessions consented" value={data?.demo_sessions_consented} sub={data ? `of ${data.demo_sessions} demo sessions` : null} testid="admin-consent-demo" />
         </div>
+        {data?.daily && <ConsentTrendChart daily={data.daily} />}
         <section className="space-y-2">
           <h2 className="text-sm font-bold text-[#1A1330]">By version</h2>
           <Table testid="admin-consent-by-version" head={["Version", "Accounts", "Demo sessions"]} rows={versions} />
@@ -96,7 +98,7 @@ export default function AdminConsentCounts() {
         </section>
         <p className="text-xs text-[#857E9C] leading-relaxed max-w-2xl" data-testid="admin-consent-note">
           &ldquo;By version&rdquo; counts each account&rsquo;s latest consent. &ldquo;How consent was given&rdquo; counts every time the
-          boxes were ticked, so a person can appear more than once. These are the numbers for the site you&rsquo;re signed in to.{" "}
+          boxes were ticked, so a person can appear more than once. The daily chart counts each person once per day. These are the numbers for the site you&rsquo;re signed in to.{" "}
           <Link to="/admin/accounts" className="underline text-[#3D1A78]" data-testid="admin-consent-accounts-link">Account counts</Link>
         </p>
       </div>
