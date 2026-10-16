@@ -4,8 +4,7 @@ import { Link } from "react-router-dom";
 import { PROS_PAGE_PATH } from "../../lib/proVisibility";
 
 const LINKS = [
-  { key: "policy", to: "/privacy", label: "Privacy Policy" },
-  { key: "rights", to: "/privacy#your-rights", label: "Your data rights" },
+  { key: "notice", to: "/privacy-notice", label: "Privacy Notice" },
   { key: "pros", to: PROS_PAGE_PATH, label: "What professionals can see" },
   { key: "assessments", to: `${PROS_PAGE_PATH}#by-assessment`, label: "How each assessment is shared" },
 ];

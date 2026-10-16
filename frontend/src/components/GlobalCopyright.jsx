@@ -1,4 +1,5 @@
 import React from "react";
+import { Link } from "react-router-dom";
 
 /**
  * GlobalCopyright — appears at the bottom of every page in the app.
@@ -16,7 +17,10 @@ export default function GlobalCopyright() {
       data-testid="global-copyright"
     >
       <span className="text-[11px] text-[#857E9C]">
-        © {year} SA CoParents · All rights reserved.
+        © {year} SA CoParents · All rights reserved. ·{" "}
+        <Link to="/privacy-notice" data-testid="global-footer-privacy-notice" className="text-[#3D1A78] font-semibold underline underline-offset-2">
+          Privacy Notice
+        </Link>
       </span>
     </div>
   );

@@ -9093,3 +9093,19 @@ dashboard for sharing SELECTED completed reports with any professional.
   professionals get status + dates only; joint-case bundle only at both_complete; no Self-Assessment answers path.
 - Not changed: Privacy Policy legal text (Privacy.jsx §"does not share … unless you choose") — attorney-owned.
 
+
+### 2026-10 — Privacy Notice consent, /privacy-notice, redirects (PREVIEW ONLY, NOT DEPLOYED; self-tested: pytest 11/11 + screenshots)
+- `backend/privacy_consent.py`: PRIVACY_NOTICE_VERSION "2026-10-16-v1" (single source) + PRIVACY_NOTICE_TEXT_SHA256 of
+  `frontend/src/pages/privacyNotice/PrivacyNoticeContent.jsx` (test fails if text changes without a bump). `consent_fields()`
+  422s unless both boxes true; server sets consent_at. Enforced on /auth/register, /auth/signup-from-token, /auth/claim,
+  /invites/coparent/accept/{token}. `log_consent` appends `privacy_consents` + upserts `legal_acknowledgments` v1.
+  `POST /api/privacy-consent` (any signed-in user), `GET /api/privacy-consent/version`. UserPublic.consent_current.
+- Frontend: `components/privacy/ConsentFields.jsx` (pop-up's two lines + 2 boxes) on Register, AccountSetup, InviteAccept
+  (also fixed refresh→checkAuth bug), ClaimAccount; `ConsentGate.jsx` wraps <Routes> in App.js (replaces the app for signed-in
+  users without current consent; open paths listed in the file). LegalAcknowledgment now only for signed-out visitors and
+  skips account-creation pages. PrivacyLinks "Privacy Notice" (old policy/rights links removed). GlobalCopyright footer link
+  on every page; AppFooter + Landing footer → /privacy-notice. /privacy, /privacy-policy, /confidentiality → /privacy-notice.
+- tests/conftest.py ticks both boxes for older suites (requests only); tests/test_privacy_consent.py uses httpx.
+- PENDING: user's exact Privacy Notice text (page is a labelled placeholder) and the AI-warning HTML/JS/CSS file.
+  AI-warning scope agreed: Communication Builder/BIFF (/portal/biff-refine), all chats (3 Guides, Court, Parallel Parenting,
+  AI Coach), summaries (pop-up on Generate + server refusal), auto demo session for signed-out AI use at "/".

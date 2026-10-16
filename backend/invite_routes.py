@@ -40,6 +40,7 @@ from auth import (
     hash_password,
 )
 from models import TokenResponse, UserPublic
+from privacy_consent import consent_fields, log_consent
 from safety_gate import require_ipv_clearance, ipv_gate_status
 
 
@@ -120,6 +121,8 @@ class CoparentInviteRequest(BaseModel):
 class CoparentInviteAccept(BaseModel):
     name: str = Field(min_length=1, max_length=120)
     password: str = Field(min_length=8, max_length=128)
+    ack_privacy_notice: bool = False
+    consent_sensitive_info: bool = False
 
 
 # ============ Auth endpoints ============
@@ -556,6 +559,7 @@ async def fetch_coparent_invite(token: str, db: AsyncIOMotorDatabase = Depends(g
 async def accept_coparent_invite(
     token: str,
     response: Response,
+    request: Request,
     body: CoparentInviteAccept = Body(...),
     db: AsyncIOMotorDatabase = Depends(get_db),
 ):
@@ -572,6 +576,7 @@ async def accept_coparent_invite(
             status_code=409,
             detail="An account has already been created from this invite. Please sign in instead.",
         )
+    consent = consent_fields(body.ack_privacy_notice, body.consent_sensitive_info)
 
     email = _normalize_email(invite["invitee_email"])
     existing = await db.users.find_one({"email": email}, {"_id": 0})
@@ -595,8 +600,10 @@ async def accept_coparent_invite(
         "email_verified": True,  # Email ownership proven via the invite link.
         "invited_by_user_id": invite.get("inviter_user_id"),
         "created_at": _iso(_now()),
+        **consent,
     }
     await db.users.insert_one(doc.copy())
+    await log_consent(db, doc, consent, "coparent_invite", request)
     await db.coparent_invites.update_one(
         {"token": token},
         {

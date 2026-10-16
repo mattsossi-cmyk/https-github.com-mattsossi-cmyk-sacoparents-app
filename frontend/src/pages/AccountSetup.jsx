@@ -4,6 +4,7 @@ import { api } from "../lib/api";
 import { useAuth } from "../context/AuthContext";
 import { logError } from "../lib/logger";
 import PasswordStrengthMeter, { scorePassword } from "../components/PasswordStrengthMeter";
+import { ConsentFields, consentReady, emptyConsent } from "../components/privacy/ConsentFields";
 
 export default function AccountSetup() {
   const [params] = useSearchParams();
@@ -18,6 +19,7 @@ export default function AccountSetup() {
   const [password, setPassword] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [formError, setFormError] = useState(null);
+  const [consent, setConsent] = useState(emptyConsent);
 
   useEffect(() => {
     if (previewed.current) return;
@@ -62,6 +64,10 @@ export default function AccountSetup() {
   const submit = async (e) => {
     e.preventDefault();
     setFormError(null);
+    if (!consentReady(consent)) {
+      setFormError("Please tick both boxes to create your account.");
+      return;
+    }
     if (scorePassword(password).score < 2) {
       setFormError("Please choose a stronger password.");
       return;
@@ -69,12 +75,13 @@ export default function AccountSetup() {
     setSubmitting(true);
     try {
       const token = params.get("token");
-      await api.post("/auth/signup-from-token", { token, name, password });
+      await api.post("/auth/signup-from-token", { token, name, password, ...consent });
       await checkAuth();
       navigate("/dashboard", { replace: true });
     } catch (err) {
       logError("signup-from-token failed:", err);
-      setFormError(err?.response?.data?.detail || "Could not create your account. Please try again.");
+      const detail = err?.response?.data?.detail;
+      setFormError(typeof detail === "string" ? detail : "Could not create your account. Please try again.");
     } finally {
       setSubmitting(false);
     }
@@ -181,21 +188,18 @@ export default function AccountSetup() {
               </div>
             )}
 
+            <ConsentFields tp="setup" value={consent} onChange={setConsent} />
+
             <button
               type="submit"
-              disabled={submitting}
-              className="btn-gradient w-full"
+              disabled={submitting || !consentReady(consent)}
+              className="btn-gradient w-full disabled:opacity-50 disabled:cursor-not-allowed"
               data-testid="setup-submit-button"
             >
               {submitting ? "Creating your account…" : "Create my account"}
             </button>
           </form>
 
-          <p className="text-xs text-[#857E9C] mt-6 text-center">
-            By creating an account you agree to our{" "}
-            <Link to="/terms" className="underline">Terms</Link> and{" "}
-            <Link to="/privacy" className="underline">Privacy Policy</Link>.
-          </p>
         </div>
       </div>
     </div>

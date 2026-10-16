@@ -21,7 +21,7 @@ async def run() -> str:
     db = AsyncIOMotorClient(os.environ["MONGO_URL"])[os.environ["DB_NAME"]]
     if not await db.users.find_one({"email": EMAIL}, {"_id": 1}):
         async with httpx.AsyncClient() as c:
-            r = await c.post("http://localhost:8001/api/auth/register", json={"email": EMAIL, "password": PASSWORD, "name": NAME})
+            r = await c.post("http://localhost:8001/api/auth/register", json={"email": EMAIL, "password": PASSWORD, "name": NAME, "ack_privacy_notice": True, "consent_sensitive_info": True})
             r.raise_for_status()
     uid = (await db.users.find_one({"email": EMAIL}, {"user_id": 1}))["user_id"]
     src = (await db.users.find_one({"email": SOURCE}, {"user_id": 1}))["user_id"]
@@ -58,7 +58,7 @@ async def run() -> str:
         )
     if not await db.users.find_one({"email": CO_EMAIL}, {"_id": 1}):
         async with httpx.AsyncClient() as c:
-            r = await c.post("http://localhost:8001/api/auth/register", json={"email": CO_EMAIL, "password": PASSWORD, "name": "Casey Six (test co-parent)"})
+            r = await c.post("http://localhost:8001/api/auth/register", json={"email": CO_EMAIL, "password": PASSWORD, "name": "Casey Six (test co-parent)", "ack_privacy_notice": True, "consent_sensitive_info": True})
             r.raise_for_status()
     co_uid = (await db.users.find_one({"email": CO_EMAIL}, {"user_id": 1}))["user_id"]
     for who in (uid, co_uid):

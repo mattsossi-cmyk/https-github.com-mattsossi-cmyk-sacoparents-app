@@ -16,6 +16,24 @@ if not BASE_URL:
         pass
 
 
+_CONSENT_ROUTES = ("/auth/register", "/auth/claim", "/auth/signup-from-token", "/invites/coparent/accept/")
+_CONSENT = {"ack_privacy_notice": True, "consent_sensitive_info": True}
+_orig_request = requests.Session.request
+
+
+def _consenting_request(self, method, url, *args, **kwargs):
+    # Older suites create accounts without the consent boxes added in Oct 2026; tick both for them.
+    # Consent behaviour itself is tested in test_privacy_consent.py (httpx, not patched).
+    body = kwargs.get("json")
+    if method.upper() == "POST" and isinstance(body, dict) and any(r in str(url) for r in _CONSENT_ROUTES):
+        if not any(k in body for k in _CONSENT):
+            kwargs["json"] = {**body, **_CONSENT}
+    return _orig_request(self, method, url, *args, **kwargs)
+
+
+requests.Session.request = _consenting_request
+
+
 @pytest.fixture(scope="session")
 def base_url():
     assert BASE_URL, "REACT_APP_BACKEND_URL not configured"

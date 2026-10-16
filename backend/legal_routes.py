@@ -33,7 +33,9 @@ from models import UserPublic
 logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/legal", tags=["legal"])
 
-CURRENT_VERSION = "v1"
+from privacy_consent import LEGAL_ACK_VERSION  # noqa: E402
+
+CURRENT_VERSION = LEGAL_ACK_VERSION
 
 
 def _now_iso() -> str:

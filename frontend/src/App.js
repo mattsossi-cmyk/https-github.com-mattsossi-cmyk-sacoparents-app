@@ -31,7 +31,8 @@ import ReadinessCheck from "@/pages/ReadinessCheck";
 import Summary from "@/pages/Summary";
 import Safety from "@/pages/Safety";
 import Watch from "@/pages/Watch";
-import Privacy from "@/pages/Privacy";
+import PrivacyNotice from "@/pages/PrivacyNotice";
+import { ConsentGate } from "@/components/privacy/ConsentGate";
 import WhatProfessionalsSee from "@/pages/WhatProfessionalsSee";
 import AppStorePrivacy from "@/pages/AppStorePrivacy";
 import HipaaNotice from "@/pages/HipaaNotice";
@@ -158,6 +159,7 @@ function AppRoutes() {
   return (
     <HashAuthGuard>
       <BiometricGate>
+        <ConsentGate>
         <PolicyRefreshBanner />
         <Routes>
         <Route path="/" element={<DomainGuard side="parent"><SacoparentsPortal /></DomainGuard>} />
@@ -250,7 +252,10 @@ function AppRoutes() {
             </ProtectedRoute>
           }
         />
-        <Route path="/privacy" element={<Privacy />} />
+        <Route path="/privacy-notice" element={<PrivacyNotice />} />
+        <Route path="/privacy" element={<Navigate to="/privacy-notice" replace />} />
+        <Route path="/privacy-policy" element={<Navigate to="/privacy-notice" replace />} />
+        <Route path="/confidentiality" element={<Navigate to="/privacy-notice" replace />} />
         <Route path="/what-professionals-see" element={<WhatProfessionalsSee />} />
         <Route path="/legal/app-store-privacy" element={<AppStorePrivacy />} />
         <Route path="/legal/hipaa" element={<HipaaNotice />} />
@@ -637,6 +642,7 @@ function AppRoutes() {
 
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
+        </ConsentGate>
       <GlobalCopyright />
       </BiometricGate>
     </HashAuthGuard>

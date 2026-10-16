@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { useLocation, Link } from "react-router-dom";
 import { ScrollText, Check } from "lucide-react";
 import { api } from "../lib/api";
+import { useAuth } from "../context/AuthContext";
 import { logError } from "../lib/logger";
 import { PrivacyLinks } from "./privacy/PrivacyLinks";
 
@@ -15,6 +16,9 @@ const PUBLIC_MARKETING_PATHS = new Set([
   "/",
   "/watch",
   "/privacy",
+  "/privacy-notice",
+  "/privacy-policy",
+  "/confidentiality",
   "/what-professionals-see",
   "/terms",
   "/accessibility",
@@ -23,6 +27,10 @@ const PUBLIC_MARKETING_PATHS = new Set([
   "/safety",
   "/login",
   "/signup",
+  // Account-creation forms show these lines with the consent boxes and record both together.
+  "/register",
+  "/claim",
+  "/auth/setup",
   "/for-portal-engineers",
   "/for-professionals",
   "/join/sample-preview",
@@ -66,11 +74,13 @@ function recordAck() {
  */
 export default function LegalAcknowledgment() {
   const location = useLocation();
+  const { user } = useAuth();
   const [open, setOpen] = useState(false);
   const [checked, setChecked] = useState(false);
 
   useEffect(() => {
-    if (PUBLIC_MARKETING_PATHS.has(location.pathname)) {
+    // Signed-in users accept these lines together with the Privacy Notice consent, so the pop-up never repeats.
+    if (user || PUBLIC_MARKETING_PATHS.has(location.pathname)) {
       // Public marketing / legal pages should never gate a visitor.
       if (open) {
         setOpen(false);
@@ -86,6 +96,7 @@ export default function LegalAcknowledgment() {
       location.pathname.startsWith("/joint-agreement/shared/") ||
       location.pathname.startsWith("/joint-report/shared/") ||
       location.pathname.startsWith("/doc/") ||
+      location.pathname.startsWith("/invite/") ||
       location.pathname.startsWith("/onboarding/")
     ) {
       if (open) {
@@ -114,7 +125,7 @@ export default function LegalAcknowledgment() {
         document.body.style.overflow = prev;
       };
     }
-  }, [location.pathname, open]);
+  }, [location.pathname, open, user]);
 
   if (!open) return null;
 

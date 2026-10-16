@@ -15,7 +15,7 @@ export default function AppFooter() {
     >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 py-6">
         <div className="flex flex-wrap gap-x-6 gap-y-3 items-center justify-center text-[13px] text-[#4B4567]">
-          <FooterLink to="/privacy" icon={<ShieldCheck size={13} />} testId="footer-privacy">Privacy</FooterLink>
+          <FooterLink to="/privacy-notice" icon={<ShieldCheck size={13} />} testId="footer-privacy">Privacy Notice</FooterLink>
           <FooterLink to="/terms" icon={<FileText size={13} />} testId="footer-terms">Terms</FooterLink>
           <FooterLink to="/data-retention" icon={<HardDrive size={13} />} testId="footer-data-retention">Data retention</FooterLink>
           <FooterLink to="/methodology" icon={<FlaskConical size={13} />} testId="footer-methodology">Methodology</FooterLink>

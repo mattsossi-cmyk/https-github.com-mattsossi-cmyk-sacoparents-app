@@ -13,6 +13,7 @@ from passlib.context import CryptContext
 from motor.motor_asyncio import AsyncIOMotorDatabase
 
 import secure_docs
+from privacy_consent import consent_fields, has_current_consent, log_consent
 
 from models import UserRegister, UserLogin, UserPublic, TokenResponse, GuestClaimPayload, MagicLinkRequest, MagicLinkConsume, SignupFromToken, PasswordResetRequest, PasswordResetConfirm, EmailVerifyConfirm, EmailCodeSend, EmailCodeConfirm, PasswordResetCodeConfirm
 from email_service import send_magic_link, send_setup_link, send_password_reset_link, send_verification_link, send_verification_code, send_password_reset_code, EmailNotConfigured, EmailSendError
@@ -78,6 +79,7 @@ def _serialize_user(doc: dict) -> UserPublic:
         email_verified=bool(doc.get("email_verified", False)),
         email_bounced=bool(doc.get("email_bounced", False)),
         email_complained=bool(doc.get("email_complained", False)),
+        consent_current=has_current_consent(doc),
     )
 
 
@@ -245,6 +247,7 @@ async def register(
     response: Response,
     db: AsyncIOMotorDatabase = Depends(get_db),
 ):
+    consent = consent_fields(body.ack_privacy_notice, body.consent_sensitive_info)
     existing = await db.users.find_one({"email": body.email.lower()}, {"_id": 0})
     if existing:
         raise HTTPException(status_code=400, detail="Email already registered")
@@ -269,8 +272,10 @@ async def register(
         "hb300_ack_at":      datetime.now(timezone.utc).isoformat(),
         "marketing_opt_in":  False,
         "created_at": datetime.now(timezone.utc).isoformat(),
+        **consent,
     }
     await db.users.insert_one(doc)
+    await log_consent(db, doc, consent, "register", request)
 
     # Best-effort: send a verification email. Failure here doesn't block signup.
     try:
@@ -513,6 +518,7 @@ async def start_guest_session(
 @router.post("/claim", response_model=TokenResponse)
 async def claim_guest_account(
     body: GuestClaimPayload,
+    request: Request,
     response: Response,
     current=Depends(get_current_user),
     db: AsyncIOMotorDatabase = Depends(get_db),
@@ -523,6 +529,7 @@ async def claim_guest_account(
     doc = await db.users.find_one({"user_id": current.user_id}, {"_id": 0})
     if not doc or not doc.get("is_guest"):
         raise HTTPException(status_code=400, detail="Not a guest session")
+    consent = consent_fields(body.ack_privacy_notice, body.consent_sensitive_info)
 
     email = body.email.lower()
     if await db.users.find_one({"email": email, "user_id": {"$ne": current.user_id}}, {"_id": 0}):
@@ -536,6 +543,7 @@ async def claim_guest_account(
                 "name": body.name,
                 "hashed_password": hash_password(body.password),
                 "auth_method": "jwt",
+                **consent,
             },
             "$unset": {
                 "is_guest": "",
@@ -545,6 +553,7 @@ async def claim_guest_account(
         },
     )
     user = await db.users.find_one({"user_id": current.user_id}, {"_id": 0})
+    await log_consent(db, user, consent, "claim", request)
     token = create_jwt(current.user_id)
     _set_jwt_cookie(response, token)
     return TokenResponse(access_token=token, user=_serialize_user(user))
@@ -734,11 +743,13 @@ async def preview_magic_link(
 @router.post("/signup-from-token", response_model=TokenResponse)
 async def signup_from_token(
     body: SignupFromToken,
+    request: Request,
     response: Response,
     db: AsyncIOMotorDatabase = Depends(get_db),
 ):
     """Create a new account using a verified email (via a magic link in signup mode).
     Idempotent against double-clicks: if the token was just used, returns the same user."""
+    consent = consent_fields(body.ack_privacy_notice, body.consent_sensitive_info)
     rec = await db.magic_links.find_one({"token": body.token}, {"_id": 0})
     if not rec:
         raise HTTPException(status_code=400, detail="Invalid or expired link.")
@@ -775,8 +786,10 @@ async def signup_from_token(
         "picture": None,
         "email_verified": True,
         "created_at": datetime.now(timezone.utc).isoformat(),
+        **consent,
     }
     await db.users.insert_one(doc)
+    await log_consent(db, doc, consent, "magic_link_setup", request)
     await db.magic_links.update_one({"token": body.token}, {"$set": {"used": True}})
     token = create_jwt(user_id)
     _set_jwt_cookie(response, token)

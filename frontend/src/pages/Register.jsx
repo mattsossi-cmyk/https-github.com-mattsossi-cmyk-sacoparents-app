@@ -4,6 +4,7 @@ import { useAuth } from "../context/AuthContext";
 import { toast } from "sonner";
 import { Plus, X } from "lucide-react";
 import PasswordStrengthMeter, { scorePassword } from "../components/PasswordStrengthMeter";
+import { ConsentFields, consentReady, emptyConsent } from "../components/privacy/ConsentFields";
 
 export default function Register() {
   const navigate = useNavigate();
@@ -15,6 +16,7 @@ export default function Register() {
   const [mediationDate, setMediationDate] = useState("");
   const [children, setChildren] = useState([{ uid: "c0", name: "", age: "" }]);
   const [loading, setLoading] = useState(false);
+  const [consent, setConsent] = useState(emptyConsent);
 
   const addChild = () =>
     setChildren((c) => [...c, { uid: `c${Date.now()}`, name: "", age: "" }]);
@@ -25,6 +27,10 @@ export default function Register() {
 
   const onSubmit = async (e) => {
     e.preventDefault();
+    if (!consentReady(consent)) {
+      toast.error("Please tick both boxes to create your account.");
+      return;
+    }
     if (scorePassword(password).score < 2) {
       toast.error("Please choose a stronger password.");
       return;
@@ -38,11 +44,13 @@ export default function Register() {
         custody_situation: custody,
         mediation_date: mediationDate || null,
         children: children.filter((c) => c.name.trim()),
+        ...consent,
       });
       toast.success("Welcome. Your space is ready.");
       navigate("/onboarding/what-do-you-need", { replace: true });
     } catch (err) {
-      toast.error(err?.response?.data?.detail || "Could not create account.");
+      const detail = err?.response?.data?.detail;
+      toast.error(typeof detail === "string" ? detail : "Could not create account.");
     } finally {
       setLoading(false);
     }
@@ -197,10 +205,12 @@ export default function Register() {
               </div>
             </div>
 
+            <ConsentFields tp="register" value={consent} onChange={setConsent} />
+
             <button
               type="submit"
-              disabled={loading}
-              className="btn-gradient w-full"
+              disabled={loading || !consentReady(consent)}
+              className="btn-gradient w-full disabled:opacity-50 disabled:cursor-not-allowed"
               data-testid="register-submit-button"
             >
               {loading ? "Creating account…" : "Create my account"}

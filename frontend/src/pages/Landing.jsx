@@ -211,8 +211,8 @@ function MarketingFooter() {
             <Link to="/terms" className="hover:text-white" data-testid="footer-terms-link">
               Terms
             </Link>
-            <Link to="/privacy" className="hover:text-white" data-testid="footer-privacy-link">
-              Privacy
+            <Link to="/privacy-notice" className="hover:text-white" data-testid="footer-privacy-link">
+              Privacy Notice
             </Link>
             <Link to="/data-retention" className="hover:text-white" data-testid="footer-data-retention-link">
               Data retention

@@ -4,6 +4,7 @@ import { Loader2, ShieldCheck, Sparkles, Users } from "lucide-react";
 import { api } from "../lib/api";
 import { useAuth } from "../context/AuthContext";
 import { logError } from "../lib/logger";
+import { ConsentFields, consentReady, emptyConsent } from "../components/privacy/ConsentFields";
 
 /**
  * Public landing for co-parent invites. Loads inviter info via the token,
@@ -12,7 +13,7 @@ import { logError } from "../lib/logger";
 export default function InviteAccept() {
   const { token } = useParams();
   const nav = useNavigate();
-  const { refresh } = useAuth();
+  const { checkAuth } = useAuth();
 
   const [loading, setLoading] = useState(true);
   const [info, setInfo] = useState(null);
@@ -23,6 +24,7 @@ export default function InviteAccept() {
   const [confirm, setConfirm] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [err, setErr] = useState(null);
+  const [consent, setConsent] = useState(emptyConsent);
 
   useEffect(() => {
     let alive = true;
@@ -53,18 +55,24 @@ export default function InviteAccept() {
       setErr("Passwords don't match.");
       return;
     }
+    if (!consentReady(consent)) {
+      setErr("Please tick both boxes to create your account.");
+      return;
+    }
     setErr(null);
     setSubmitting(true);
     try {
       await api.post(`/invites/coparent/accept/${token}`, {
         name: name.trim(),
         password,
+        ...consent,
       });
       // Hydrate AuthContext with the new signed-in user, then go to dashboard.
-      await refresh?.();
+      await checkAuth();
       nav("/dashboard", { replace: true });
     } catch (e) {
-      setErr(e?.response?.data?.detail || "Could not create your account. Please try again.");
+      const detail = e?.response?.data?.detail;
+      setErr(typeof detail === "string" ? detail : "Could not create your account. Please try again.");
       setSubmitting(false);
     }
   };
@@ -211,10 +219,14 @@ export default function InviteAccept() {
             </div>
           )}
 
+          <div className="mt-5">
+            <ConsentFields tp="invite-accept" value={consent} onChange={setConsent} />
+          </div>
+
           <button
             type="button"
             onClick={handleSubmit}
-            disabled={submitting}
+            disabled={submitting || !consentReady(consent)}
             data-testid="invite-accept-submit"
             className="mt-6 w-full inline-flex items-center justify-center gap-2 px-6 py-3.5 rounded-full bg-gradient-to-r from-[#3D1A78] to-[#2DB5B5] text-white font-semibold text-sm shadow-md hover:shadow-lg transition-all disabled:opacity-60"
           >

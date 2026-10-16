@@ -17,6 +17,8 @@ class UserRegister(BaseModel):
     children: Optional[List[Dict[str, Any]]] = []
     custody_situation: Optional[str] = ""
     mediation_date: Optional[str] = None
+    ack_privacy_notice: bool = False
+    consent_sensitive_info: bool = False
 
 
 class UserLogin(BaseModel):
@@ -39,6 +41,7 @@ class UserPublic(BaseModel):
     email_verified: bool = False
     email_bounced: bool = False
     email_complained: bool = False
+    consent_current: bool = False
 
 
 class TokenResponse(BaseModel):
@@ -51,6 +54,8 @@ class GuestClaimPayload(BaseModel):
     email: EmailStr
     password: str = Field(min_length=8)
     name: str
+    ack_privacy_notice: bool = False
+    consent_sensitive_info: bool = False
 
 
 class MagicLinkRequest(BaseModel):
@@ -65,6 +70,8 @@ class SignupFromToken(BaseModel):
     token: str
     name: str = Field(min_length=1)
     password: str = Field(min_length=8)
+    ack_privacy_notice: bool = False
+    consent_sensitive_info: bool = False
 
 
 class PasswordResetRequest(BaseModel):
