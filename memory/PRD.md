@@ -9112,5 +9112,5 @@ dashboard for sharing SELECTED completed reports with any professional.
 - Admin consent counts: `GET /api/analytics/admin/consent-counts` (require_admin; counts only: current version, accounts
   consented/pending, demo sessions, by_version, current_version_by_source) + `/admin/consent` page (AdminConsentCounts.jsx),
   cross-linked with /admin/accounts. Self-tested: admin 200, non-admin 403, unauth 401, no "@" in output, 390px no overflow.
-- Consent trend: consent-counts now returns `daily` (30 UTC days, distinct accounts per day from privacy_consents, zero-filled,
-  only {date, people}); `components/admin/ConsentTrendChart.jsx` (recharts bar chart) on /admin/consent. Self-tested desktop+390px.
+- Consent trend chart: built then REMOVED at user's request ("Don't build the consent chart").
+- AI-warning work: NOT started (user: "Not yet"; approved privacy notice + AI warning instructions to come in separate messages).
