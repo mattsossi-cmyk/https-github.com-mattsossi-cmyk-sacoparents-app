@@ -58,7 +58,7 @@ async def list_approved_professionals(user=Depends(get_current_user)):
     if user.get("role") != "admin":
         raise HTTPException(status_code=403, detail="Admin only")
     docs = await db.users.find({"role": "professional", "approved": True}, {"password_hash": 0}).sort("name", 1).to_list(500)
-    return [{**public_user(u), "profile": u.get("profile", {}), "credentials_verified_at": u.get("credentials_verified_at", ""), "invite_pending": bool(u.get("invite_pending")),
+    return [{**public_user(u), "profile": u.get("profile", {}), "credentials_verified_at": u.get("credentials_verified_at", ""), "invite_pending": bool(u.get("invite_pending")), "is_supervisor": bool(u.get("is_supervisor")),
              "credentials_uploaded_at": u.get("credentials_uploaded_at"), "credentials_requested_at": u.get("credentials_requested_at")} for u in docs]
 
 

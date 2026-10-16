@@ -44,6 +44,14 @@ export function AdminProfessionals() {
     } catch (e) { toast.error(formatApiError(e)); }
   };
 
+  const supervisor = async (p) => {
+    try {
+      const { data } = await api.patch(`/admin/professionals/${p.id}/supervisor`, { is_supervisor: !p.is_supervisor });
+      toast.success(data.is_supervisor ? `${p.name} can now sign off lowering a Red` : "Supervising role removed");
+      setPros((prev) => prev.map((x) => (x.id === p.id ? { ...x, is_supervisor: data.is_supervisor } : x)));
+    } catch (e) { toast.error(formatApiError(e)); }
+  };
+
   const resend = async (p) => {
     try { await api.post(`/admin/professionals/${p.id}/resend-invite`); toast.success(`Invitation re-sent to ${p.email}`); } catch (e) { toast.error(formatApiError(e)); }
   };
@@ -74,7 +82,7 @@ export function AdminProfessionals() {
             {shown.map((p) => (
               <li key={p.id} className="flex items-start justify-between gap-3 border border-border rounded-md px-4 py-3" data-testid={`approved-pro-${p.id}`}>
                 <div className="min-w-0">
-                  <p className="text-sm font-medium flex items-center gap-2 flex-wrap">{p.name}{p.profile?.degrees && <span className="text-muted-foreground font-normal">, {p.profile.degrees}</span>} {p.credentials_verified && <VerifiedBadge testId={`approved-pro-verified-${p.id}`} />}{p.invite_pending && <span className="rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-semibold text-amber-800" data-testid={`approved-pro-invite-pending-${p.id}`}>Invite pending</span>}</p>
+                  <p className="text-sm font-medium flex items-center gap-2 flex-wrap">{p.name}{p.profile?.degrees && <span className="text-muted-foreground font-normal">, {p.profile.degrees}</span>} {p.credentials_verified && <VerifiedBadge testId={`approved-pro-verified-${p.id}`} />}{p.is_supervisor && <span className="rounded-full bg-purple-100 px-2 py-0.5 text-[10px] font-semibold text-purple-900" data-testid={`approved-pro-supervisor-${p.id}`}>Supervising</span>}{p.invite_pending && <span className="rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-semibold text-amber-800" data-testid={`approved-pro-invite-pending-${p.id}`}>Invite pending</span>}</p>
                   <p className="text-xs text-muted-foreground">{p.email}{p.profile?.phone ? ` · ${p.profile.phone}` : ""}</p>
                   <p className="text-xs text-muted-foreground mt-1">{[p.profile?.pro_role, p.profile?.organization, p.profile?.license_number ? `License ${p.profile.license_number}` : ""].filter(Boolean).join(" · ") || "No credential details provided"}</p>
                 </div>
@@ -82,6 +90,9 @@ export function AdminProfessionals() {
                   {p.invite_pending && <Button size="sm" variant="outline" onClick={() => resend(p)} data-testid={`resend-invite-btn-${p.id}`}>Resend invite</Button>}
                   <Button size="sm" variant={p.credentials_verified ? "outline" : "default"} onClick={() => toggle(p)} data-testid={`verify-pro-btn-${p.id}`}>
                     {p.credentials_verified ? "Remove verification" : "Mark license verified"}
+                  </Button>
+                  <Button size="sm" variant={p.is_supervisor ? "outline" : "secondary"} onClick={() => supervisor(p)} data-testid={`supervisor-pro-btn-${p.id}`}>
+                    {p.is_supervisor ? "Remove supervising role" : "Make supervising professional"}
                   </Button>
                   <Button size="sm" variant="destructive" onClick={() => revoke(p)} data-testid={`revoke-pro-btn-${p.id}`}>Revoke approval</Button>
                 </div>

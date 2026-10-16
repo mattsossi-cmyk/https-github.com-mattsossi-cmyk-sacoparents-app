@@ -150,6 +150,29 @@ def build_router(get_current_user, get_joint_report_doc, log_access, is_pro) -> 
         pend = await db.invitations.find({"report_id": rid, "status": "pending"}, {"_id": 0, "role": 1, "reminders_sent": 1, "last_reminder_at": 1, "created_at": 1}).to_list(10)
         return {"cadence": cadence_for(doc), "defaults": DEFAULT_CADENCE, "pending": pend}
 
+    @r.get("/professional/invitations")
+    async def my_pending_invitations(user=Depends(get_current_user)):
+        """Reminder dashboard: every unopened invitation on the professional's cases, with the next reminder date and expiry."""
+        if user.get("role") not in PRO_ROLES:
+            raise HTTPException(status_code=403, detail="Professionals only")
+        cases = await db.joint_reports.find({"$or": [{"created_by": user["_id"]}, {"professional_id": user["_id"]}], "closed_at": {"$exists": False}}, {"_id": 0, "id": 1, "case_code": 1, "invite_cadence": 1, "created_by": 1}).to_list(500)
+        by_id = {c["id"]: c for c in cases}
+        now = datetime.now(timezone.utc)
+        out = []
+        async for inv in db.invitations.find({"report_id": {"$in": list(by_id)}, "status": "pending"}, {"_id": 0, "token": 0}):
+            c = by_id[inv["report_id"]]
+            cad = cadence_for(c)
+            created = _parse_iso(inv.get("created_at")) or now
+            n = int(inv.get("reminders_sent") or 0)
+            expires = created + timedelta(days=cad["expiry_days"])
+            nxt = created + timedelta(days=cad["reminder_days"][n]) if n < min(cad["max_reminders"], len(cad["reminder_days"])) else None
+            out.append({"id": inv["id"], "case_id": c["id"], "case_code": c.get("case_code") or c["id"][:8], "role": inv["role"], "parent_label": f"Parent {inv['role'].upper()}",
+                        "invitee_name": inv.get("invitee_name", ""), "invitee_email": inv["invitee_email"], "sent_at": inv.get("created_at"), "reminders_sent": n, "max_reminders": cad["max_reminders"],
+                        "next_reminder_at": nxt.isoformat() if nxt and nxt < expires and nxt > now else None, "expires_at": expires.isoformat(), "expired": expires < now,
+                        "can_reissue": c.get("created_by") == user["_id"]})
+        out.sort(key=lambda x: x["expires_at"])
+        return {"invitations": out, "count": len(out)}
+
     @r.put("/joint/reports/{rid}/invite-cadence")
     async def set_cadence(rid: str, body: CadenceIn, user=Depends(get_current_user)):
         doc = await get_joint_report_doc(rid, user)

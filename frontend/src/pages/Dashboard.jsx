@@ -33,6 +33,8 @@ import { PublicListingCard } from "@/components/PublicListingCard";
 import { AdminListings } from "@/components/AdminListings";
 import { AdminAcceptanceLog } from "@/components/AdminAcceptanceLog";
 import { AdminSafetyAudit } from "@/components/AdminSafetyAudit";
+import { AdminWebhookCheck } from "@/components/AdminWebhookCheck";
+import { InviteReminderPanel } from "@/components/InviteReminderPanel";
 import { SenderStatusBadge } from "@/components/SenderStatusBadge";
 import { ProTopNav } from "@/components/dashboard/ProTopNav";
 import { ProHero } from "@/components/dashboard/ProHero";
@@ -423,6 +425,7 @@ export default function Dashboard() {
 
         {isPro && user?.role === "professional" && <ProZipPrompt />}
         {isPro && <ProContactCard />}
+        {isPro && <InviteReminderPanel />}
         {isPro && user?.role === "professional" && <PublicListingCard />}
 
         {isPro && user?.approved === false && (
@@ -516,6 +519,7 @@ export default function Dashboard() {
               <h3 className="mb-3 text-base font-bold md:text-lg" data-testid="privacy-log-heading">Privacy Notification — parents and professionals</h3>
               <AdminAcceptanceLog />
               <AdminSafetyAudit />
+              <AdminWebhookCheck />
               <h3 className="mb-3 mt-10 text-base font-bold md:text-lg" data-testid="pro-notice-log-heading">Professional Notice, Confidentiality &amp; Safety Warning — professionals</h3>
               <AdminAcceptanceLog endpoint="/admin/professional-notice/acceptances" filename="professional-notice-acceptances.csv" label="professional notice" testId="admin-pro-notice-log" />
             </TabsContent>

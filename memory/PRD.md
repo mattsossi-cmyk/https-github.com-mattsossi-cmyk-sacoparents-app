@@ -1090,3 +1090,9 @@ Owner rulings: 1 replace A/B/C with 8-domain set; 2 professional-decides (no aut
 - Frontend: /professional-training (ProfessionalTraining.jsx), lib/trainingGate.js redirect on 428 from SafetyReview + SafetyResponses, pending-lower banner + sign-off controls in SafetyReview, AdminSafetyAudit on admin dashboard.
 - EMAIL_DNS_SETUP.md: SPF/MX/DKIM/DMARC records for sacoparentsalign.com (DKIM value from Resend dashboard).
 - Tests: test_iter112 4 passed; fixtures updated (_case acks training; iter88 pro_session acks; iter64 declines step). Suites 43+18 passed. Browser: 428 redirect → training page → review opens (390px).
+
+## 2026-10-16 — Supervisor toggle, reminder dashboard, webhook live check DONE (PREVIEW ONLY)
+- AdminProfessionals: is_supervisor in /admin/professionals; 'Make supervising professional' button → PATCH /admin/professionals/{id}/supervisor; Supervising badge.
+- Reminder dashboard: GET /professional/invitations (pro's open cases, pending invites, next_reminder_at from cadence, expires_at, expired, can_reissue; no token). components/InviteReminderPanel.jsx on professional dashboard (under ProContactCard) with 'Send fresh link' → existing POST /joint/invitations/{iid}/reissue.
+- Webhook live check: POST /admin/safety-status-webhook/test → deliver(test=True) single attempt, response_snippet (300 chars), case_id ALIGN-TEST-PING, works while flag OFF, no admin alert email on failure; components/AdminWebhookCheck.jsx on admin Acceptance Log tab (button disabled until ALIGN_WEBHOOK_SECRET set).
+- Tests: test_iter113 3 passed (+iter111 9). Browser: admin toggle buttons + webhook card verified; reminder panel verified.
