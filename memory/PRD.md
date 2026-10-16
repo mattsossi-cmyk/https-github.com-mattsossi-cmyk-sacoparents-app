@@ -9109,3 +9109,6 @@ dashboard for sharing SELECTED completed reports with any professional.
 - PENDING: user's exact Privacy Notice text (page is a labelled placeholder) and the AI-warning HTML/JS/CSS file.
   AI-warning scope agreed: Communication Builder/BIFF (/portal/biff-refine), all chats (3 Guides, Court, Parallel Parenting,
   AI Coach), summaries (pop-up on Generate + server refusal), auto demo session for signed-out AI use at "/".
+- Admin consent counts: `GET /api/analytics/admin/consent-counts` (require_admin; counts only: current version, accounts
+  consented/pending, demo sessions, by_version, current_version_by_source) + `/admin/consent` page (AdminConsentCounts.jsx),
+  cross-linked with /admin/accounts. Self-tested: admin 200, non-admin 403, unauth 401, no "@" in output, 390px no overflow.

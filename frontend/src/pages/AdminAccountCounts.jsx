@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { Navigate } from "react-router-dom";
+import { Link, Navigate } from "react-router-dom";
 import { ShieldCheck, Users } from "lucide-react";
 
 import AppShell from "../components/AppShell";
@@ -56,7 +56,8 @@ export default function AdminAccountCounts() {
         <p className="text-xs text-[#857E9C] mt-5 leading-relaxed max-w-2xl" data-testid="admin-counts-note">
           Accounts have no role field, so &ldquo;professional&rdquo; means an account that has created a court code or joint case;
           every other account counts as a parent. Guest sessions ({data?.guest_sessions ?? "–"}) aren&rsquo;t included.
-          These are the numbers for the site you&rsquo;re signed in to.
+          These are the numbers for the site you&rsquo;re signed in to.{" "}
+          <Link to="/admin/consent" className="underline text-[#3D1A78]" data-testid="admin-counts-consent-link">Consent counts</Link>
         </p>
       </div>
     </AppShell>

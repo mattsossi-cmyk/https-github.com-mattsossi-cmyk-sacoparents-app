@@ -85,6 +85,7 @@ import ProgressPage from "@/pages/Progress";
 import AdminDashboard from "@/pages/AdminDashboard";
 import AdminUsers from "@/pages/AdminUsers";
 import AdminAccountCounts from "@/pages/AdminAccountCounts";
+import AdminConsentCounts from "@/pages/AdminConsentCounts";
 import AdminSurveys from "@/pages/AdminSurveys";
 import AdminInsights from "@/pages/AdminInsights";
 import AdminNudgeCopy from "@/pages/AdminNudgeCopy";
@@ -596,6 +597,14 @@ function AppRoutes() {
           element={
             <ProtectedRoute>
               <AdminAccountCounts />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/admin/consent"
+          element={
+            <ProtectedRoute>
+              <AdminConsentCounts />
             </ProtectedRoute>
           }
         />

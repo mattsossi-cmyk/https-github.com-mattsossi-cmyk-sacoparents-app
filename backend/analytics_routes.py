@@ -15,6 +15,7 @@ from motor.motor_asyncio import AsyncIOMotorDatabase
 
 from auth import get_current_user
 from models import UserPublic
+from privacy_consent import PRIVACY_NOTICE_VERSION
 
 router = APIRouter(prefix="/analytics", tags=["analytics"])
 
@@ -384,6 +385,43 @@ async def admin_account_counts(request: Request, _admin: UserPublic = Depends(re
         "created_last_30_days_parents": new_30d - new_pros_30d,
         "created_last_30_days_professionals": new_pros_30d,
         "guest_sessions": await db.users.count_documents({"is_guest": True}),
+        "generated_at": _iso(_now()),
+    }
+
+
+@router.get("/admin/consent-counts")
+async def admin_consent_counts(request: Request, _admin: UserPublic = Depends(require_admin)):
+    """Privacy Notice consent counts by version. Counts only: no names, emails or user ids leave this endpoint."""
+    db = request.app.state.db
+    current = {"privacy_notice_version": PRIVACY_NOTICE_VERSION, "ack_privacy_notice": True, "consent_sensitive_info": True}
+    real, guest = {"is_guest": {"$ne": True}}, {"is_guest": True}
+    by_version: dict = {}
+    async for row in db.users.aggregate([
+        {"$match": {"privacy_notice_version": {"$exists": True}}},
+        {"$group": {"_id": {"v": "$privacy_notice_version", "g": {"$eq": ["$is_guest", True]}}, "n": {"$sum": 1}}},
+    ]):
+        v = by_version.setdefault(row["_id"]["v"], {"version": row["_id"]["v"], "accounts": 0, "demo_sessions": 0})
+        v["demo_sessions" if row["_id"]["g"] else "accounts"] += row["n"]
+    sources = {
+        row["_id"] or "unknown": row["n"]
+        async for row in db.privacy_consents.aggregate([
+            {"$match": {"privacy_notice_version": PRIVACY_NOTICE_VERSION}},
+            {"$group": {"_id": "$source", "n": {"$sum": 1}}},
+        ])
+    }
+    accounts = await db.users.count_documents(real)
+    accounts_current = await db.users.count_documents({**real, **current})
+    demo = await db.users.count_documents(guest)
+    demo_current = await db.users.count_documents({**guest, **current})
+    return {
+        "current_version": PRIVACY_NOTICE_VERSION,
+        "accounts": accounts,
+        "accounts_consented": accounts_current,
+        "accounts_pending": accounts - accounts_current,
+        "demo_sessions": demo,
+        "demo_sessions_consented": demo_current,
+        "by_version": sorted(by_version.values(), key=lambda r: r["version"], reverse=True),
+        "current_version_by_source": sources,
         "generated_at": _iso(_now()),
     }
 
