@@ -8,6 +8,7 @@ Covers:
   - Report + PDF content: version/tier appear; raw answers never leak; new framing text present
 """
 import os
+import uuid
 import re
 import time
 import pytest
@@ -79,13 +80,17 @@ def pro_case(pro_session):
 @pytest.fixture(scope="module")
 def parent_a_session(pro_case):
     _register(PARENT_A_EMAIL, "QA Parent A", invite=pro_case["tokens"]["a"])
-    return _login(PARENT_A_EMAIL, PARENT_PASSWORD)
+    s = _login(PARENT_A_EMAIL, PARENT_PASSWORD)
+    s.put(f"{BASE}/api/joint/reports/{pro_case['id']}/safety-screening/choose", json={"version": "A"}, timeout=15)  # 2026-10-16: parents choose; no gender default
+    return s
 
 
 @pytest.fixture(scope="module")
 def parent_b_session(pro_case):
     _register(PARENT_B_EMAIL, "QA Parent B", invite=pro_case["tokens"]["b"])
-    return _login(PARENT_B_EMAIL, PARENT_PASSWORD)
+    s = _login(PARENT_B_EMAIL, PARENT_PASSWORD)
+    s.put(f"{BASE}/api/joint/reports/{pro_case['id']}/safety-screening/choose", json={"version": "B"}, timeout=15)
+    return s
 
 
 @pytest.fixture(scope="module")
@@ -121,15 +126,20 @@ class TestReportGuide:
 # Batch 2 — screening overview + assignment
 # =============================================================================
 class TestScreeningOverview:
-    def test_overview_default_versions(self, pro_session, pro_case):
-        r = pro_session.get(f"{BASE}/api/joint/reports/{pro_case['id']}/safety-screening", timeout=15)
+    def test_overview_default_versions(self, pro_session):
+        # Fresh case so parallel workers' choices cannot interfere.
+        body = {"child_name": "TEST Fresh", "subject": "communication", "parent_a_name": "FA", "parent_a_email": f"qa.fa.{TS}.{uuid.uuid4().hex[:5]}@example.com",
+                "parent_b_name": "FB", "parent_b_email": f"qa.fb.{TS}.{uuid.uuid4().hex[:5]}@example.com", "parent_a_gender": "woman", "parent_b_gender": "man"}
+        rid = pro_session.post(f"{BASE}/api/joint/reports/professional", json=body, timeout=30).json()["id"]
+        r = pro_session.get(f"{BASE}/api/joint/reports/{rid}/safety-screening", timeout=15)
         assert r.status_code == 200, r.text
         data = r.json()
         assert data["is_professional"] is True
-        assert data["roles"]["a"]["version"] == "A"
-        assert data["roles"]["b"]["version"] == "B"
-        assert data["roles"]["a"]["needs_assignment"] is False
-        assert data["roles"]["b"]["needs_assignment"] is False
+        # 2026-10-16: no gender-based default — both parents choose from the same four options.
+        assert data["roles"]["a"]["version"] is None
+        assert data["roles"]["b"]["version"] is None
+        assert data["roles"]["a"]["needs_assignment"] is True
+        assert data["roles"]["b"]["needs_assignment"] is True
         assert data["roles"]["a"]["received"] is False
         assert data["roles"]["b"]["received"] is False
 
@@ -137,10 +147,9 @@ class TestScreeningOverview:
         r = pro_session.get(f"{BASE}/api/joint/reports/{pro_case_no_gender}/safety-screening", timeout=15)
         assert r.status_code == 200
         d = r.json()
-        assert d["roles"]["a"]["needs_assignment"] is True
-        assert d["roles"]["b"]["needs_assignment"] is True
-        assert d["roles"]["a"]["version"] is None
-        assert d["roles"]["b"]["version"] is None
+        assert d["roles"]["a"]["needs_assignment"] is (d["roles"]["a"]["version"] is None)
+        assert d["roles"]["b"]["needs_assignment"] is (d["roles"]["b"]["version"] is None)
+        assert d["roles"]["a"]["version"] in (None, "A", "B", "C") and d["roles"]["b"]["version"] in (None, "A", "B", "C")  # chosen by the parent only, never inferred
         # Reminder dashboard: reminded_at surfaces to the professional (None until the 7-day nudge fires)
         assert d["roles"]["a"]["reminded_at"] is None
         MONGO.joint_reports.update_one({"id": pro_case_no_gender}, {"$set": {"safety_reminded_at.a": "2026-10-01T13:00:00+00:00"}})
@@ -176,6 +185,14 @@ def parents_accepted(pro_case, parent_a_session, parent_b_session):
     return True
 
 
+@pytest.fixture(scope="module")
+def parent_a_submitted(pro_case, parent_a_session, parents_accepted):
+    """Idempotent: parent A has a Version A screening on file (Tier 3 signal) regardless of xdist worker/order."""
+    parent_a_session.put(f"{BASE}/api/joint/reports/{pro_case['id']}/safety-screening/choose", json={"version": "A"}, timeout=15)
+    parent_a_session.put(f"{BASE}/api/joint/reports/{pro_case['id']}/safety-screening", json={"responses": {"a2": "Sometimes", "safe": "Very safe", "a9": UNIQUE_SIGNAL}}, timeout=15)
+    return True
+
+
 class TestParentScreening:
     def test_parent_a_sees_spec_only_her_role(self, pro_case, parent_a_session, parents_accepted):
         r = parent_a_session.get(f"{BASE}/api/joint/reports/{pro_case['id']}/safety-screening", timeout=15)
@@ -185,10 +202,12 @@ class TestParentScreening:
         assert d["my_role"] == "a"
         # Co-parent's role must NOT be included
         assert "b" not in d["roles"], f"parent A can see parent B status: {d['roles']}"
-        # Neutral choice screen first: default (A) or Version C; choosing the default reveals the spec
+        # 2026-10-16: the fixture already chose A (no gender default). Re-open the choice to assert the four identical options.
+        MONGO.joint_reports.update_one({"id": pro_case["id"]}, {"$unset": {"safety_version.a": "", "safety_version_confirmed.a": ""}})
+        d = parent_a_session.get(f"{BASE}/api/joint/reports/{pro_case['id']}/safety-screening", timeout=15).json()
         assert d["spec"] is None and d["choice"]["question"] == "Which questions fit your situation best?"
-        assert [o["version"] for o in d["choice"]["options"]] == ["A", "C"]
-        bad = parent_a_session.put(f"{BASE}/api/joint/reports/{pro_case['id']}/safety-screening/choose", json={"version": "B"}, timeout=15)
+        assert [o["version"] for o in d["choice"]["options"]] == ["A", "B", "C", "help"]
+        bad = parent_a_session.put(f"{BASE}/api/joint/reports/{pro_case['id']}/safety-screening/choose", json={"version": "help"}, timeout=15)
         assert bad.status_code == 400
         ok = parent_a_session.put(f"{BASE}/api/joint/reports/{pro_case['id']}/safety-screening/choose", json={"version": "A"}, timeout=15)
         assert ok.status_code == 200 and ok.json()["version"] == "A"
@@ -208,6 +227,7 @@ class TestParentScreening:
     def test_submit_tier3(self, pro_case, parent_a_session, parents_accepted):
         # a2 Sometimes (tier3-flagged item) → tier 3
         resp = {"a2": "Sometimes", "safe": "Very safe", "a9": UNIQUE_SIGNAL}
+        parent_a_session.put(f"{BASE}/api/joint/reports/{pro_case['id']}/safety-screening/choose", json={"version": "A"}, timeout=15)
         r = parent_a_session.put(f"{BASE}/api/joint/reports/{pro_case['id']}/safety-screening",
                                  json={"responses": resp}, timeout=15)
         assert r.status_code == 200, r.text
@@ -227,6 +247,7 @@ class TestParentScreening:
     def test_parent_b_tier2(self, pro_case, parent_b_session, parents_accepted):
         # b3 Frequently (non-tier3) + safe Very safe → tier 2
         resp = {"b_3": "Frequently", "safe": "Very safe"}
+        parent_b_session.put(f"{BASE}/api/joint/reports/{pro_case['id']}/safety-screening/choose", json={"version": "B"}, timeout=15)
         r = parent_b_session.put(f"{BASE}/api/joint/reports/{pro_case['id']}/safety-screening",
                                  json={"responses": resp}, timeout=15)
         assert r.status_code == 200, r.text
@@ -246,6 +267,7 @@ class TestParentScreening:
         _register(email, "NG Actual B", invite=token)
         s = _login(email, PARENT_PASSWORD)
         _accept_invite(s, token)
+        assert s.put(f"{BASE}/api/joint/reports/{pro_case_no_gender}/safety-screening/choose", json={"version": "B"}, timeout=15).status_code == 200
         resp = {f"b_{n}": "Never" for n in range(1, 16)}
         resp["safe"] = "Very safe"
         r = s.put(f"{BASE}/api/joint/reports/{pro_case_no_gender}/safety-screening",
@@ -272,6 +294,7 @@ class TestParentScreening:
         _register(email, "Skip Actual A", invite=token)
         s = _login(email, PARENT_PASSWORD)
         _accept_invite(s, token)
+        assert s.put(f"{BASE}/api/joint/reports/{rid}/safety-screening/choose", json={"version": "A"}, timeout=15).status_code == 200
         r = s.put(f"{BASE}/api/joint/reports/{rid}/safety-screening",
                   json={"responses": {}}, timeout=15)
         assert r.status_code == 200, r.text
@@ -293,7 +316,7 @@ class TestParentScreening:
         s = _login(email, PARENT_PASSWORD)
         _accept_invite(s, token)
         d = s.get(f"{BASE}/api/joint/reports/{rid}/safety-screening", timeout=15).json()
-        assert d["spec"] is None and [o["version"] for o in d["choice"]["options"]] == ["A", "B", "C"]
+        assert d["spec"] is None and [o["version"] for o in d["choice"]["options"]] == ["A", "B", "C", "help"]
         assert "orientation" not in str(d["roles"]["a"]).lower()
         ok = s.put(f"{BASE}/api/joint/reports/{rid}/safety-screening/choose", json={"version": "B"}, timeout=15)
         assert ok.status_code == 200 and ok.json()["version"] == "B"
@@ -320,7 +343,7 @@ class TestPrivacy:
         r = parent_a_session.get(f"{BASE}/api/joint/reports/{pro_case['id']}/safety-screening/a/responses", timeout=15)
         assert r.status_code == 403, f"parent A got {r.status_code}, expected 403 (pro-only)"
 
-    def test_pro_can_view_responses_and_logs_access(self, pro_case, pro_session, parents_accepted):
+    def test_pro_can_view_responses_and_logs_access(self, pro_case, pro_session, parents_accepted, parent_a_submitted):
         before = MONGO.access_events.count_documents({"report_id": pro_case["id"], "kind": "safety_screening"})
         r = pro_session.get(f"{BASE}/api/joint/reports/{pro_case['id']}/safety-screening/a/responses", timeout=15)
         assert r.status_code == 200, r.text
@@ -341,7 +364,7 @@ class TestPrivacy:
 # Professional report + PDF
 # =============================================================================
 class TestProfessionalReport:
-    def test_pro_report_has_screening_summary(self, pro_case, pro_session, parents_accepted):
+    def test_pro_report_has_screening_summary(self, pro_case, pro_session, parents_accepted, parent_a_submitted):
         r = pro_session.get(f"{BASE}/api/cases/{pro_case['id']}/professional-report", timeout=20)
         assert r.status_code == 200, r.text
         txt = r.text
@@ -355,7 +378,7 @@ class TestProfessionalReport:
             assert scr["a"].get("tier") == 3
             assert scr["a"].get("completed_at")
 
-    def test_pro_report_pdf_framing_and_privacy(self, pro_case, pro_session, parents_accepted):
+    def test_pro_report_pdf_framing_and_privacy(self, pro_case, pro_session, parents_accepted, parent_a_submitted):
         r = pro_session.get(f"{BASE}/api/cases/{pro_case['id']}/professional-report/pdf", timeout=30)
         assert r.status_code == 200, r.text
         assert r.headers.get("content-type", "").startswith("application/pdf")

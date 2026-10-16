@@ -48,7 +48,13 @@ export default function SafetyScreening() {
   const [result, setResult] = useState(null);
   const [safeContact, setSafeContact] = useState(null);
   const [busy, setBusy] = useState(false);
-  useEffect(() => { api.get(`/joint/reports/${id}/safety-screening`).then((r) => setData(r.data)).catch((e) => toast.error(formatApiError(e))); }, [id]);
+  const [help, setHelp] = useState(false);
+  useEffect(() => { api.get(`/joint/reports/${id}/safety-screening`).then((r) => { setData(r.data); if (r.data.my_draft) setAnswers(r.data.my_draft); }).catch((e) => toast.error(formatApiError(e))); }, [id]);
+  useEffect(() => {
+    if (!data?.spec || result || !Object.keys(answers).length) return undefined;
+    const t = setTimeout(() => { api.put(`/joint/reports/${id}/safety-screening/draft`, { responses: answers }).catch(() => {}); }, 800);
+    return () => clearTimeout(t);
+  }, [answers, data, id, result]);
   if (!data) return <div className="min-h-screen bg-background" data-testid="screening-loading"><QuickExitBar /></div>;
   const spec = data.spec;
   const choose = async (version) => {
@@ -71,9 +77,17 @@ export default function SafetyScreening() {
             <h1 className="text-2xl font-semibold" data-testid="screening-choice-title">{data.choice.question}</h1>
             <p className="text-sm" data-testid="screening-choice-intro">{data.choice.intro}</p>
             <p className="rounded-md border-l-4 border-amber-500 bg-amber-50 p-2 text-xs" data-testid="screening-choice-trigger-warning">{data.choice.trigger_warning}</p>
-            <div className={`grid gap-2 ${data.choice.options.length > 2 ? "sm:grid-cols-3" : "sm:grid-cols-2"}`}>
-              {data.choice.options.map((o) => <button key={o.version} type="button" disabled={busy} onClick={() => choose(o.version)} className="rounded-lg border border-brand-purple/30 bg-white p-4 text-left text-sm font-medium hover:bg-brand-purple/5" data-testid={`screening-choice-${o.version}`}>{o.label}</button>)}
+            <div className="grid gap-2 sm:grid-cols-2">
+              {data.choice.options.map((o) => <button key={o.version} type="button" disabled={busy} onClick={() => (o.version === "help" ? setHelp(true) : choose(o.version))} className={`rounded-lg border p-4 text-left text-sm font-medium hover:bg-brand-purple/5 ${o.version === "help" && help ? "border-brand-purple bg-brand-purple/5" : "border-brand-purple/30 bg-white"}`} data-testid={`screening-choice-${o.version}`}>{o.label}</button>)}
             </div>
+            {help && (
+              <div className="rounded-lg border border-brand-purple/20 bg-brand-purple/5 p-4 space-y-3" data-testid="screening-choice-help">
+                <p className="text-sm" data-testid="screening-choice-help-text">{data.choice.options.find((o) => o.version === "help")?.help}</p>
+                <div className="flex flex-wrap gap-2">
+                  {data.choice.options.filter((o) => o.version !== "help").map((o) => <button key={o.version} type="button" disabled={busy} onClick={() => choose(o.version)} className="rounded-full border border-brand-purple/40 bg-white px-4 py-2 text-xs font-semibold text-brand-purple hover:bg-white/60" data-testid={`screening-choice-help-${o.version}`}>{o.label}</button>)}
+                </div>
+              </div>
+            )}
             {data.choice.note && <p className="text-xs text-muted-foreground" data-testid="screening-choice-note">{data.choice.note}</p>}
             <p className="text-[11px] text-muted-foreground">Only the version you pick is saved. Your co-parent never sees this choice or your answers.</p>
           </div>

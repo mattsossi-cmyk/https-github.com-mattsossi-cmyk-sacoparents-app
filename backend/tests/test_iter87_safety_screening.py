@@ -40,8 +40,8 @@ def test_skips_and_prefer_not_to_say_never_raise_tier():
 
 
 def test_default_version_by_gender():
-    assert default_version("Woman") == "A" and default_version("female") == "A"
-    assert default_version("man") == "B" and default_version("M") == "B"
+    # 2026-10-16: no profile/gender inference — every parent sees the same four options.
+    assert default_version("Woman") is None and default_version("man") is None
     assert default_version("non-binary") is None and default_version(None) is None and default_version("") is None
 
 
@@ -65,7 +65,7 @@ def test_receipt_and_summary_have_no_answers():
     line = screening_summary(rec, "Parent A")
     assert "Received" in line and "Version A" in line and "women" not in line and "Tier 3" in line
     assert "Frequently" not in line and "UNIQUE-FREETEXT-XYZ" not in line
-    assert "Not Received" in screening_summary(None, "Parent B")
+    assert "Not started" in screening_summary(None, "Parent B")
     assert any(i["id"] == "a9" and "UNIQUE-FREETEXT-XYZ" in i["answer"] for i in item_view(rec))
 
 
@@ -75,6 +75,6 @@ def test_pdf_shows_receipt_tier_but_never_raw_answers():
     v = sample_legal_lens()
     v["safety_screening"] = {"a": build_record("A", RAW_A), "b": None}
     text = " ".join("\n".join(p.get_text() for p in pymupdf.open(stream=build_legal_lens_pdf(v), filetype="pdf")).split())
-    assert "Version A" in text and "women" not in text and "Tier 3" in text and "Not Received" in text
+    assert "Version A" in text and "women" not in text and "Tier 3" in text and "Not started" in text
     assert "not a validated or diagnostic instrument" in text.lower()
     assert "UNIQUE-FREETEXT-XYZ" not in text and "humiliate" not in text.lower() and "Frequently" not in text

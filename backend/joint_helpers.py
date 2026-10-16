@@ -190,10 +190,11 @@ def _invite_email_content(spec: InviteSpec, token: str) -> tuple[str, str]:
     html = (
         '<table role="presentation" width="100%"><tr><td style="padding:24px;font-family:Arial,sans-serif">'
         f"<p>Hi {escape(spec.invitee_name or 'there')},</p>"
-        "<p>You have been invited to participate in an SA CoParents Joint Alignment Report regarding "
-        f"<strong>{escape(spec.child_name)}</strong> ({escape(spec.subject_label)}), at the request of {escape(spec.inviter_name)}.</p>"
+        "<p>You have been invited to participate in an SA CoParents Joint Alignment Report "
+        f"at the request of {escape(spec.inviter_name)}.</p>"
         "<p>Your private participation code is:</p>"
         f'<p><strong style="font-size:18px;letter-spacing:2px">{escape(spec.code)}</strong></p>'
+        "<p>This invitation includes a private check-in before the assessment. Please complete it on a device only you can access.</p>"
         "<p>Please use the link below to complete your individual SA CoParents assessment.</p>"
         "<p>Your individual responses are completed privately. Your co-parent will complete their own "
         "assessment separately. The Joint Alignment process is designed to identify areas of shared "

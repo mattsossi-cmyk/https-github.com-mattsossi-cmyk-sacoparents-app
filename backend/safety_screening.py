@@ -13,7 +13,7 @@ SCALE_NOTE = "Screening questions adapted from published sources. Not a validate
 FREQ = ["Never", "Rarely", "Sometimes", "Frequently", "Prefer not to say"]
 YN = ["Yes", "No", "Not sure", "Prefer not to say"]
 SAFE = ["Very safe", "Somewhat safe", "Not safe", "Prefer not to say"]
-TRIGGER_WARNING = "Content note: these questions ask about fear, control, and physical or sexual harm in a relationship. Take a break at any time; your progress is saved only when you submit."
+TRIGGER_WARNING = "Content note: these questions ask about fear, control, and physical or sexual harm in a relationship. Take a break at any time; your progress is saved so you can come back later."
 INTRO = ("These questions are private. Your co-parent will not see your answers. Skip any you prefer not to answer. "
          "If you are in danger now, call 911 or the National Hotline at 1-800-799-7233 (or text START to 88788).")
 INTRO_B = "Partner violence can happen to anyone, including men."
@@ -127,8 +127,13 @@ TIER_LABEL = {1: "Tier 1 — resources only", 2: "Tier 2 — review resources; p
 # Report/PDF/co-parent-safe labels: never name identity. Full names live in VERSION_LABEL_PRO (professional-only screens).
 VERSION_LABEL = {"A": "Version A", "B": "Version B", "C": "Version C"}
 VERSION_LABEL_PRO = {"A": "Version A (women)", "B": "Version B (men)", "C": "Version C (LGBTQ+ relationship)"}
-CHOICE_LABEL = {"A": "The questions for women (Version A)", "B": "The questions for men (Version B)", "C": "I'd like the LGBTQ+ relationship version (Version C)"}
-GENDER_DEFAULT = {"woman": "A", "female": "A", "f": "A", "man": "B", "male": "B", "m": "B"}
+# Owner-approved 2026-10-16: every parent sees the SAME four options; nothing is inferred from the profile. Only the version letter is stored.
+CHOICE_LABEL = {"A": "Questions written for women (Version A)", "B": "Questions written for men (Version B)", "C": "Questions written for LGBTQ+ relationships (Version C)"}
+CHOICE_HELP_LABEL = "Prefer not to say (I'll help you choose)"
+CHOICE_HELP_TEXT = ("Any set works. Pick the one whose wording feels closest to your situation — the questions cover the same topics. "
+                    "Nothing about this choice is recorded except the version letter.")
+CHOICE_SWITCH_NOTE = "You can switch to a different set of questions later."
+GENDER_DEFAULT: dict = {}  # intentionally empty — no profile-based default (2026-10-16)
 
 
 def configure_version_b(source: str) -> None:
@@ -269,6 +274,10 @@ class AssignIn(BaseModel):
     version: str
 
 
+class DraftIn(BaseModel):
+    responses: dict = {}
+
+
 class ChooseIn(BaseModel):
     version: str
 
@@ -278,7 +287,7 @@ def _status(doc: dict) -> dict:
     for r in ("a", "b"):
         p = doc["participants"][r]
         scr = (doc.get("safety_screenings") or {}).get(r) or None
-        ver = (doc.get("safety_version") or {}).get(r) or default_version(p.get("gender"))
+        ver = (doc.get("safety_version") or {}).get(r)
         confirmed = bool((doc.get("safety_version_confirmed") or {}).get(r))
         out[r] = {"name": p.get("name") or f"Parent {r.upper()}", "gender": p.get("gender"), "version": ver, "needs_assignment": ver is None, "received": bool(scr),
                   "choice_needed": not confirmed and not scr, "default_version": ver if ver in ("A", "B") else None, "chosen_by_parent": confirmed,
@@ -368,9 +377,23 @@ def build_router(db, get_current_user, get_joint_report_doc, report_role, log_ac
         choice = None
         if mine and mine["choice_needed"]:
             choice = {"question": "Which questions fit your situation best?", "intro": INTRO, "trigger_warning": TRIGGER_WARNING,
-                      "options": ([{"version": mine["default_version"], "label": CHOICE_LABEL[mine["default_version"]]}] if mine["default_version"] else [{"version": v, "label": CHOICE_LABEL[v]} for v in ("A", "B")]) + [{"version": "C", "label": CHOICE_LABEL["C"]}],
-                      "note": None if mine["default_version"] else "Pick whichever set of questions fits your situation. Your professional can adjust this later."}
-        return {"my_role": role, "is_professional": pro, "roles": st, "spec": spec, "choice": choice, "versions": VERSION_LABEL_PRO if pro else VERSION_LABEL, "scale_note": SCALE_NOTE}
+                      "options": [{"version": v, "label": CHOICE_LABEL[v]} for v in ("A", "B", "C")] + [{"version": "help", "label": CHOICE_HELP_LABEL, "help": CHOICE_HELP_TEXT}],
+                      "note": CHOICE_SWITCH_NOTE}
+        my_draft = ((doc.get("safety_drafts") or {}).get(role) or {}).get("responses") if (role and not pro) else None
+        return {"my_role": role, "is_professional": pro, "roles": st, "spec": spec, "choice": choice, "versions": VERSION_LABEL_PRO if pro else VERSION_LABEL, "scale_note": SCALE_NOTE, "my_draft": my_draft}
+
+    @r.put("/joint/reports/{rid}/safety-screening/draft")
+    async def save_screening_draft(rid: str, body: DraftIn, user=Depends(get_current_user)):
+        """Resume support: partial answers kept on the parent's own account only; never visible to the co-parent or the professional; cleared on submit."""
+        doc = await get_joint_report_doc(rid, user)
+        role = report_role(doc, user["_id"])
+        if role is None:
+            raise HTTPException(status_code=403, detail="Only invited parents can save progress")
+        if (doc.get("safety_screenings") or {}).get(role):
+            return {"ok": True, "saved": False}
+        clean = {str(k)[:40]: str(v)[:40] for k, v in (body.responses or {}).items()}
+        await db.joint_reports.update_one({"id": rid}, {"$set": {f"safety_drafts.{role}": {"responses": clean, "saved_at": datetime.now(timezone.utc).isoformat()}}})
+        return {"ok": True, "saved": True}
 
     @r.post("/joint/reports/{rid}/safety-screening/decline")
     async def decline_screening(rid: str, user=Depends(get_current_user)):
@@ -421,8 +444,7 @@ def build_router(db, get_current_user, get_joint_report_doc, report_role, log_ac
         if role is None:
             raise HTTPException(status_code=403, detail="Only invited parents can choose a screening version")
         st = _status(doc)[role]
-        allowed = {"C", st["default_version"]} if st["default_version"] else set(VERSIONS)
-        if body.version not in allowed:
+        if body.version not in set(VERSIONS):
             raise HTTPException(status_code=400, detail="Choose one of the versions offered to you")
         await db.joint_reports.update_one({"id": rid}, {"$set": {f"safety_version.{role}": body.version, f"safety_version_confirmed.{role}": True}})
         return {"version": body.version, "spec": public_spec(body.version)}
@@ -460,7 +482,7 @@ def build_router(db, get_current_user, get_joint_report_doc, report_role, log_ac
         sc = clean_safe_contact(body.safe_contact)
         if sc:
             rec["safe_contact"] = sc
-        await db.joint_reports.update_one({"id": rid}, {"$set": {f"safety_screenings.{role}": rec, f"safety_flags.{role}": rec["tier"] >= 2}})
+        await db.joint_reports.update_one({"id": rid}, {"$set": {f"safety_screenings.{role}": rec, f"safety_flags.{role}": rec["tier"] >= 2}, "$unset": {f"safety_drafts.{role}": ""}})
         if rec["tier"] == 3:
             try:
                 await _tier3_alert(doc, role, rec)
