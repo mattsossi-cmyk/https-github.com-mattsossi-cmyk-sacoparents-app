@@ -104,6 +104,9 @@ async def _build_recap_text(db: AsyncIOMotorDatabase, user_id: str) -> Optional[
         return None
     if not os.environ.get("EMERGENT_LLM_KEY"):
         return None
+    from ai_notice_routes import user_has_ai_notice  # noqa: WPS433
+    if not await user_has_ai_notice(db, user_id):
+        return None
     try:
         result = await ai_service.generate_journal_weekly_recap(entries)
         return (result or {}).get("recap_text")

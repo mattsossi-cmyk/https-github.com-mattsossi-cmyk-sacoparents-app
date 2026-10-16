@@ -42,6 +42,7 @@ class UserPublic(BaseModel):
     email_bounced: bool = False
     email_complained: bool = False
     consent_current: bool = False
+    ai_notice_current: bool = False
 
 
 class TokenResponse(BaseModel):

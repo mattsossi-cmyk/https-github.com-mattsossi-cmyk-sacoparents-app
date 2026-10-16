@@ -33,6 +33,7 @@ import Safety from "@/pages/Safety";
 import Watch from "@/pages/Watch";
 import PrivacyNotice from "@/pages/PrivacyNotice";
 import { ConsentGate } from "@/components/privacy/ConsentGate";
+import { AiNoticeProvider } from "@/components/aiNotice/AiNoticeProvider";
 import WhatProfessionalsSee from "@/pages/WhatProfessionalsSee";
 import AppStorePrivacy from "@/pages/AppStorePrivacy";
 import HipaaNotice from "@/pages/HipaaNotice";
@@ -86,6 +87,7 @@ import AdminDashboard from "@/pages/AdminDashboard";
 import AdminUsers from "@/pages/AdminUsers";
 import AdminAccountCounts from "@/pages/AdminAccountCounts";
 import AdminConsentCounts from "@/pages/AdminConsentCounts";
+import AdminConsentTrend from "@/pages/AdminConsentTrend";
 import AdminSurveys from "@/pages/AdminSurveys";
 import AdminInsights from "@/pages/AdminInsights";
 import AdminNudgeCopy from "@/pages/AdminNudgeCopy";
@@ -609,6 +611,14 @@ function AppRoutes() {
           }
         />
         <Route
+          path="/admin/consent-trend"
+          element={
+            <ProtectedRoute>
+              <AdminConsentTrend />
+            </ProtectedRoute>
+          }
+        />
+        <Route
           path="/admin/users"
           element={
             <ProtectedRoute>
@@ -663,11 +673,13 @@ function App() {
     <div className="App">
       <BrowserRouter>
         <AuthProvider>
-          <LegalAcknowledgment />
-          <AppRoutes />
-          <BackToDashboardPill />
-          <PreShareConsentHost />
-          <Toaster position="bottom-right" toastOptions={TOAST_OPTIONS} />
+          <AiNoticeProvider>
+            <LegalAcknowledgment />
+            <AppRoutes />
+            <BackToDashboardPill />
+            <PreShareConsentHost />
+            <Toaster position="bottom-right" toastOptions={TOAST_OPTIONS} />
+          </AiNoticeProvider>
         </AuthProvider>
       </BrowserRouter>
     </div>

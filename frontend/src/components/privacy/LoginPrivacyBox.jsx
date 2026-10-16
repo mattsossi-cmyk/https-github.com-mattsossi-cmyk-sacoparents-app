@@ -26,7 +26,7 @@ export function LoginPrivacyBox() {
           </li>
         ))}
       </ul>
-      <PrivacyLinks tp="login-privacy" only={["policy", "rights", "pros"]} />
+      <PrivacyLinks tp="login-privacy" only={["notice", "pros"]} />
     </section>
   );
 }

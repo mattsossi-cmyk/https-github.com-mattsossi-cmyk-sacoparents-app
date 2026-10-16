@@ -19,6 +19,7 @@ from motor.motor_asyncio import AsyncIOMotorDatabase
 from pydantic import BaseModel, Field
 
 from auth import UserPublic, get_current_user, get_db
+from ai_notice_routes import require_ai_notice
 from court_agreements import INTENT_NOTICE, annotate, is_celebrated, load_agreements, mark_celebrated, set_mark, set_note
 from court_agreement_alerts import queue_alert
 from court_compare_alerts import notify_share
@@ -230,7 +231,7 @@ def _parse_points(raw: str, difference: List[Dict[str, str]]) -> List[Dict[str, 
 
 
 @router.post("/talking-points")
-async def talking_points(request: Request, user: UserPublic = Depends(get_current_user), db: AsyncIOMotorDatabase = Depends(get_db)) -> Dict[str, Any]:
+async def talking_points(request: Request, user: UserPublic = Depends(require_ai_notice), db: AsyncIOMotorDatabase = Depends(get_db)) -> Dict[str, Any]:
     key, _other, data = await _ready_or_409(db, user.user_id)
     difference = data["difference"][:MAX_POINTS]
     if not difference:

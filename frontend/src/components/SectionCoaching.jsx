@@ -1,6 +1,8 @@
 import { useEffect, useRef, useState } from "react";
 import { Compass, HeartHandshake, Sprout, ArrowRight } from "lucide-react";
 import { api } from "../lib/api";
+import { useAiNotice } from "./aiNotice/AiNoticeProvider";
+import { AiNoticeNeeded } from "./aiNotice/AiGuard";
 
 /**
  * SectionCoaching
@@ -37,9 +39,10 @@ export default function SectionCoaching({ section, data, ready, testid }) {
   const rootTestId = testid || `section-coaching-${section}`;
   const [state, setState] = useState({ status: "idle", data: null, error: null });
   const requestId = useRef(0);
+  const { acked } = useAiNotice();
 
   useEffect(() => {
-    if (!ready) {
+    if (!ready || !acked) {
       setState({ status: "idle", data: null, error: null });
       return;
     }
@@ -62,7 +65,7 @@ export default function SectionCoaching({ section, data, ready, testid }) {
         const detail = e?.response?.data?.detail || "Coaching temporarily unavailable.";
         setState({ status: "error", data: null, error: detail });
       });
-  }, [ready, section, data]);
+  }, [ready, section, data, acked]);
 
   if (!ready) return null;
 
@@ -75,6 +78,8 @@ export default function SectionCoaching({ section, data, ready, testid }) {
         <Compass size={12} />
         Coaching insights
       </div>
+
+      {!acked && <AiNoticeNeeded tp={rootTestId} className="mt-3 mb-0">Coaching insights are written by AI and appear after you read and accept the AI privacy notice.</AiNoticeNeeded>}
 
       {state.status === "loading" && (
         <div className="mt-3 space-y-2" data-testid={`${rootTestId}-loading`}>

@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 
 import { api } from "../../../lib/api";
+import { useAiNotice } from "../../../components/aiNotice/AiNoticeProvider";
 import { CONTENT, SECTIONS, readJson, sectionAnswers, sectionComplete, writeJson } from "./content";
 
 const WELCOME = {
@@ -17,15 +18,22 @@ export function useSaInsight({ draft, mode, latest, safetyFlag, onSectionTip, on
   const [loading, setLoading] = useState(false);
   const seen = useRef(new Set());
   const reqId = useRef(0);
+  const { acked } = useAiNotice();
 
   const ask = async (seenKey, label, body, cacheKey, onSaved, stored) => {
     if (seen.current.has(seenKey)) return;
-    seen.current.add(seenKey);
     const cached = stored || (cacheKey && readJson(cacheKey, null));
     if (cached) {
+      seen.current.add(seenKey);
       setTip({ label, text: cached });
       return;
     }
+    // No AI tip until the AI notice is accepted; asked again once it is.
+    if (!acked) {
+      setTip({ label, text: "", needsNotice: true });
+      return;
+    }
+    seen.current.add(seenKey);
     const id = ++reqId.current;
     setLoading(true);
     setTip({ label, text: "" });
@@ -59,7 +67,7 @@ export function useSaInsight({ draft, mode, latest, safetyFlag, onSectionTip, on
         tipKey(latest.id), fresh ? (text) => onOverallTip?.(latest, text) : null, latest.tips?.overall);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [mode, draft.answers, latest?.id]);
+  }, [mode, draft.answers, latest?.id, acked]);
 
   return { tip, loading };
 }

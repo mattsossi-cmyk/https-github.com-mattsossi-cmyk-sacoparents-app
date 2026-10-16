@@ -10,8 +10,8 @@ from fastapi import HTTPException, Request
 
 # The one place the Privacy Notice version lives. Bump it whenever /privacy-notice changes
 # (tests/test_privacy_consent.py fails if the notice text changes without a bump).
-PRIVACY_NOTICE_VERSION = "2026-10-16-v1"
-PRIVACY_NOTICE_TEXT_SHA256 = "491e58305465f8d82948448e730f0928b52f0bea53b48a1542697556a6bf53e7"
+PRIVACY_NOTICE_VERSION = "2026-10-16-v2"
+PRIVACY_NOTICE_TEXT_SHA256 = "597919ebb4d1ad3c5cadeaeb4f8587c7ec5cffb7474daac2fc2c7aff99d48431"
 # Version of the first-visit "Just so we're on the same page" pop-up, recorded together with consent.
 LEGAL_ACK_VERSION = "v1"
 

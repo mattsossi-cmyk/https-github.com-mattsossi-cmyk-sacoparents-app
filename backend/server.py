@@ -23,6 +23,7 @@ from invite_routes import router as invite_router  # noqa: E402
 from checkin_routes import checkin_scheduler_loop, router as checkin_router  # noqa: E402
 from legal_routes import router as legal_router  # noqa: E402
 from privacy_consent_routes import router as privacy_consent_router  # noqa: E402
+from ai_notice_routes import router as ai_notice_router  # noqa: E402
 from safety_assessment_routes import router as safety_assessment_router  # noqa: E402
 from gmail_routes import router as gmail_router  # noqa: E402
 from coparenting_routes import router as coparenting_router  # noqa: E402
@@ -187,6 +188,7 @@ async def ready(response: Response):
 
 api_router.include_router(auth_router)
 api_router.include_router(privacy_consent_router)
+api_router.include_router(ai_notice_router)
 api_router.include_router(mediation_router)
 api_router.include_router(analytics_router)
 api_router.include_router(journal_router)

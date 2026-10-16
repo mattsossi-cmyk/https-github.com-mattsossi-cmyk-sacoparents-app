@@ -407,7 +407,7 @@ export default function ForProfessionals() {
         <div className="max-w-6xl mx-auto flex flex-wrap items-center justify-between gap-3 text-xs text-[#4B4567]">
           <div>Advisory prep tools — not legal advice, therapy, or diagnosis.</div>
           <div className="flex items-center gap-4">
-            <Link to="/privacy" className="hover:underline" data-testid="for-pros-footer-privacy">Privacy</Link>
+            <Link to="/privacy-notice" className="hover:underline" data-testid="for-pros-footer-privacy">Privacy Notice</Link>
             <Link to="/legal/hipaa" className="hover:underline" data-testid="for-pros-footer-hipaa">HIPAA</Link>
             <Link to="/terms" className="hover:underline" data-testid="for-pros-footer-terms">Terms</Link>
             <Link to="/samples" className="hover:underline inline-flex items-center gap-1" data-testid="for-pros-footer-samples">

@@ -1,6 +1,7 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import { api } from "../../lib/api";
+import { AiGuardFrame, useAiGuard } from "../../components/aiNotice/AiGuard";
 import {
   GUIDED_DRAFT_KEY_PREFIX,
   GUIDED_DRAFT_TTL_MS,
@@ -117,6 +118,8 @@ export function GuidedJourneyModal({
   const [nextQuestion, setNextQuestion] = useState("");
   const [answers, setAnswers] = useState([]);
   const [input, setInput] = useState("");
+  const guard = useAiGuard("guided_journey", input);
+  const { acked: aiAcked, openNotice: openAiNotice } = guard;
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   // iter221 — resume prompt shown when a fresh draft is found on open.
@@ -181,8 +184,10 @@ export function GuidedJourneyModal({
       return;
     }
     setResumePrompt(null);
-    runIntroTurn();
-  }, [open, topic, runIntroTurn]);
+    // Nothing goes to the AI (not even the intro turn) until the AI notice is accepted.
+    if (aiAcked) runIntroTurn();
+    else openAiNotice();
+  }, [open, topic, runIntroTurn, aiAcked, openAiNotice]);
 
   // Auto-scroll to bottom on new message.
   useEffect(() => {
@@ -245,8 +250,9 @@ export function GuidedJourneyModal({
     clearDraft(topic);
     if (typeof onDraftPersist === "function") onDraftPersist();
     setResumePrompt(null);
-    runIntroTurn();
-  }, [topic, runIntroTurn, onDraftPersist]);
+    if (aiAcked) runIntroTurn();
+    else openAiNotice();
+  }, [topic, runIntroTurn, onDraftPersist, aiAcked, openAiNotice]);
 
   const discardDraftAndClose = useCallback(() => {
     clearDraft(topic);
@@ -258,6 +264,7 @@ export function GuidedJourneyModal({
   const submitAnswer = useCallback(async () => {
     const trimmed = input.trim();
     if (!trimmed || loading || isFinal) return;
+    if (!(await guard.confirmSend(trimmed))) return;
     const answeredIndex = stepIndex;
     // Clear any transient error the moment the parent retries.
     setError("");
@@ -300,6 +307,7 @@ export function GuidedJourneyModal({
     topic,
     safetyFlagged,
     nextQuestion,
+    guard,
   ]);
 
   const openRecap = useCallback(() => {
@@ -354,6 +362,10 @@ export function GuidedJourneyModal({
   // review + edit before sending — no auto-submit.
   const startRecording = useCallback(async () => {
     if (recording || transcribing || loading) return;
+    if (!aiAcked) {
+      openAiNotice();
+      return;
+    }
     if (
       typeof navigator === "undefined" ||
       !navigator.mediaDevices ||
@@ -408,7 +420,7 @@ export function GuidedJourneyModal({
     } catch (err) {
       setError("Microphone access denied — please type instead.");
     }
-  }, [recording, transcribing, loading]);
+  }, [recording, transcribing, loading, aiAcked, openAiNotice]);
 
   const stopRecording = useCallback(() => {
     const rec = mediaRecorderRef.current;
@@ -746,8 +758,10 @@ export function GuidedJourneyModal({
                 </div>
               </>
             ) : (
+              <AiGuardFrame tp={`guided-${topic}`} guard={guard}>
               <div className="flex gap-2 items-end">
                 <textarea
+                  {...guard.inputProps}
                   data-testid={`guided-input-${topic}`}
                   rows={2}
                   value={input}
@@ -814,6 +828,7 @@ export function GuidedJourneyModal({
                   <i className="fa-solid fa-paper-plane"></i>
                 </button>
               </div>
+              </AiGuardFrame>
             )}
           </div>
         )}

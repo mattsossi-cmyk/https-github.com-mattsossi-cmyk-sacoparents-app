@@ -117,7 +117,7 @@ class JournalRecapOut(BaseModel):
     themes: List[str] = []
     generated_at: Optional[str] = None
     entry_count: int
-
+    ai_notice_required: bool = False
 
 # ============ Endpoints ============
 @router.get("/prompt", response_model=JournalPromptOut)
@@ -341,6 +341,10 @@ async def weekly_recap(
             generated_at=None,
             entry_count=entry_count,
         )
+
+    # No AI recap until the AI notice is acknowledged; the page offers a button for it.
+    if not current.ai_notice_current:
+        return JournalRecapOut(week_iso=wk, entry_count=entry_count, ai_notice_required=True)
 
     # Generate via Claude (Emergent LLM key)
     try:

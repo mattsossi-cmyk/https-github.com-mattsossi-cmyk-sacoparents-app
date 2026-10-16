@@ -400,8 +400,8 @@ export default function Watch() {
         <div className="max-w-6xl mx-auto px-4 sm:px-6 py-6 flex flex-wrap items-center justify-between gap-4 text-xs text-[#857E9C]">
           <div>A Seeds for Success project</div>
           <div className="flex items-center gap-4">
-            <Link to="/privacy" className="hover:text-[#3D1A78]" data-testid="watch-privacy-link">
-              Privacy
+            <Link to="/privacy-notice" className="hover:text-[#3D1A78]" data-testid="watch-privacy-link">
+              Privacy Notice
             </Link>
             <Link to="/terms" className="hover:text-[#3D1A78]" data-testid="watch-terms-link">
               Terms

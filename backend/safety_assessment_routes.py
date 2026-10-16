@@ -32,6 +32,7 @@ from safety_one_pager_pdf import build_one_pager_pdf
 from trauma_lens import PROCEDURAL_SAFEGUARDS
 from share_routes import record_share_token, is_share_token_revoked
 from analytics_routes import ADMIN_EMAILS
+from ai_notice_routes import user_has_ai_notice
 import report_visibility
 
 
@@ -669,6 +670,8 @@ async def _fetch_or_generate_ai_summaries(
     cached = doc.get("ai_summaries")
     if isinstance(cached, dict) and any(cached.get(k) for k in ("overall", "pathway", "section_1", "section_2")):
         return cached
+    if not await user_has_ai_notice(db, doc.get("user_id")):
+        return {}
     try:
         from safety_ai_summary import generate_safety_summaries
         section_1_rows = [

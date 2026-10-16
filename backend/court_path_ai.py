@@ -10,6 +10,7 @@ from motor.motor_asyncio import AsyncIOMotorDatabase
 from pydantic import BaseModel, Field
 
 from auth import UserPublic, get_current_user, get_db
+from ai_notice_routes import require_ai_notice
 from court_checklist import build_checklist
 from guide_chat import chat_turn, latest_chat, new_chat
 from self_assessment_ai import _VOICE, _ask, _guard
@@ -67,7 +68,7 @@ async def start_new_chat(user: UserPublic = Depends(get_current_user), db: Async
 
 @router.post("/chat")
 async def chat(
-    body: ChatBody, request: Request, user: UserPublic = Depends(get_current_user), db: AsyncIOMotorDatabase = Depends(get_db)
+    body: ChatBody, request: Request, user: UserPublic = Depends(require_ai_notice), db: AsyncIOMotorDatabase = Depends(get_db)
 ) -> Dict[str, str]:
     checklist = await build_checklist(db, user, body.modules)
     lines = [f"- {i['label']}: {STATUS_WORDS[i['status']]}" for i in checklist["items"] if i["key"] != "case"]
@@ -84,7 +85,7 @@ class SplitBody(BaseModel):
 
 
 @router.post("/foundation-split")
-async def foundation_split(body: SplitBody, request: Request, user: UserPublic = Depends(get_current_user)) -> Dict[str, str]:
+async def foundation_split(body: SplitBody, request: Request, user: UserPublic = Depends(require_ai_notice)) -> Dict[str, str]:
     """Split an AI-drafted Foundation Statement into the Step 4 boxes."""
     await _guard(request)
     raw = await _ask(_SPLIT_TASK, body.text.strip())

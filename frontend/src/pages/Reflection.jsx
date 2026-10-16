@@ -21,6 +21,8 @@ import BreathingExercise from "../components/BreathingExercise";
 import FoundationStatementShareModal from "../components/foundation/FoundationStatementShareModal";
 import { api } from "../lib/api";
 import { logError } from "../lib/logger";
+import { useAiNotice } from "../components/aiNotice/AiNoticeProvider";
+import { AiNoticeNeeded } from "../components/aiNotice/AiGuard";
 import { detectSafetyConcern } from "../lib/safety";
 import WatchFirstVideo from "../components/WatchFirstVideo";
 
@@ -432,6 +434,7 @@ function JournalHistory() {
   const [loading, setLoading] = useState(true);
   const [recap, setRecap] = useState(null);
   const [recapLoading, setRecapLoading] = useState(false);
+  const { acked: aiAcked } = useAiNotice();
 
   useEffect(() => {
     Promise.all([
@@ -455,7 +458,7 @@ function JournalHistory() {
       .then((r) => setRecap(r.data))
       .catch((err) => logError("Recap failed:", err))
       .finally(() => setRecapLoading(false));
-  }, [entries.length]);
+  }, [entries.length, aiAcked]);
 
   const submitDaily = async (e) => {
     e?.preventDefault?.();
@@ -570,6 +573,14 @@ function RecapCard({ recap, loading, entries }) {
       >
         <Loader2 size={14} className="animate-spin text-[#3D1A78]" />
         <span className="text-sm text-[#857E9C]">Reflecting on your week…</span>
+      </div>
+    );
+  }
+  if (recap?.ai_notice_required) {
+    return (
+      <div className="card-soft p-5 border border-dashed border-[#E5E0EE]" data-testid="journal-recap-needs-notice">
+        <div className="eyebrow text-[#3D1A78] mb-2">Weekly recap</div>
+        <AiNoticeNeeded tp="journal-recap" className="mb-0">Your weekly recap is written by AI from this week&apos;s entries. It appears after you read and accept the AI privacy notice.</AiNoticeNeeded>
       </div>
     );
   }

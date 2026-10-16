@@ -1819,6 +1819,12 @@ export default function SacoparentsPortal() {
         )}
 
       </main>
+      {/* The site-wide footer sits under the fixed bottom bar here, so the link is repeated above it. */}
+      <div data-testid="portal-privacy-footer" className="no-print py-4 text-center text-[13px]">
+        <Link to="/privacy-notice" data-testid="portal-privacy-footer-link" className="font-semibold text-[#3D1A78] underline underline-offset-2">
+          Privacy Notice
+        </Link>
+      </div>
 
       {/* Safety crisis strip — pinned above bottom nav */}
       <SafetyCrisisStrip />

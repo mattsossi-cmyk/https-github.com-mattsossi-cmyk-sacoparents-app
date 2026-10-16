@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
 
 import { api } from "../../../lib/api";
+import { useAiNotice } from "../../../components/aiNotice/AiNoticeProvider";
 
 // Both-parent comparison state + the parent's own "Share my results for comparison" switch.
 export function useCourtCompare(active) {
@@ -10,6 +11,7 @@ export function useCourtCompare(active) {
   const [pdfBusy, setPdfBusy] = useState(false);
   const [pointsBusy, setPointsBusy] = useState(false);
   const [agreeBusy, setAgreeBusy] = useState(null);
+  const aiNotice = useAiNotice();
   const load = useCallback(() => {
     api
       .get("/court-path/compare")
@@ -60,6 +62,7 @@ export function useCourtCompare(active) {
   };
 
   const suggestPoints = async () => {
+    if (!(await aiNotice.confirmSend("summary", ""))) return;
     setPointsBusy(true);
     try {
       const { data: d } = await api.post("/court-path/compare/talking-points");

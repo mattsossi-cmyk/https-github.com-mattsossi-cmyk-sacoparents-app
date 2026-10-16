@@ -38,6 +38,7 @@ export default function AdminAccountCounts() {
       </AppShell>
     );
   }
+  if (!data && !err) return null;
   return (
     <AppShell>
       <div className="max-w-4xl mx-auto px-1 py-6" data-testid="admin-counts-page">

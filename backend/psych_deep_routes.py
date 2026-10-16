@@ -13,6 +13,7 @@ from motor.motor_asyncio import AsyncIOMotorDatabase
 from pydantic import BaseModel
 
 from auth import UserPublic, get_current_user, get_db
+from ai_notice_routes import require_ai_notice
 from ai_summary import generate_executive_summary
 from ai_summary_gpt import generate_executive_summary_gpt
 from deep_dive_section_coach import load_or_generate_section_coach
@@ -173,10 +174,11 @@ async def _build_and_cache(db, user, doc):
     content = build_deep_dive_report(parent_name=user.name,
                                      child_name=doc.get("child_name"),
                                      responses=responses)
+    # The AI summary is only written once the AI notice is acknowledged; the rest of the report needs no AI.
     ai_summary = await generate_executive_summary(
         product_name="Psychological / Behavioural Needs Deep Dive",
         report=content,
-    )
+    ) if user.ai_notice_current else None
     if ai_summary:
         content["ai_summary"] = ai_summary
     rec = {
@@ -221,7 +223,7 @@ class RegenSummaryIn(BaseModel):
 
 @router.post("/report/regen-summary")
 async def regen_summary(body: RegenSummaryIn = RegenSummaryIn(),
-                        user: UserPublic = Depends(get_current_user),
+                        user: UserPublic = Depends(require_ai_notice),
                         db: AsyncIOMotorDatabase = Depends(get_db)):
     if user.is_guest:
         raise HTTPException(status_code=403, detail="Please claim an account before generating your report.")
@@ -338,7 +340,7 @@ class SectionCoachIn(BaseModel):
 @router.post("/section/{section_id}/coach")
 async def section_coach(section_id: str,
                         body: SectionCoachIn = SectionCoachIn(),
-                        user: UserPublic = Depends(get_current_user),
+                        user: UserPublic = Depends(require_ai_notice),
                         db: AsyncIOMotorDatabase = Depends(get_db)) -> Dict[str, Any]:
     """AI Personal Coach for a single Psychological Deep Dive section."""
     doc = await _load(db, user.user_id) or {}

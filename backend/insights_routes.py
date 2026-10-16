@@ -35,6 +35,7 @@ from fastapi import APIRouter, Depends, HTTPException, Request
 
 import email_service
 from analytics_routes import ADMIN_EMAILS, require_admin
+from ai_notice_routes import ensure_ai_notice
 from ai_models import resolve_model
 from ai_service import SAFETY_GUARDRAIL
 from models import UserPublic
@@ -231,6 +232,7 @@ async def get_weekly_insights(
     cached = await db.weekly_insights.find_one({"week_iso": week}, {"_id": 0})
     if cached:
         return cached
+    ensure_ai_notice(_admin)
     return await _build_and_cache(db)
 
 
@@ -584,6 +586,7 @@ async def regenerate_weekly_insights(
     _admin: UserPublic = Depends(require_admin),
 ):
     """Force a fresh build for the current ISO week (overwrites the cache)."""
+    ensure_ai_notice(_admin)
     return await _build_and_cache(request.app.state.db)
 
 

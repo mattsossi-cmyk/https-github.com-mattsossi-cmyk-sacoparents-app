@@ -18,6 +18,7 @@ from motor.motor_asyncio import AsyncIOMotorDatabase
 from pydantic import BaseModel, Field, field_validator
 
 from auth import UserPublic, get_current_user, get_db
+from ai_notice_routes import require_ai_notice
 from guide_chat import chat_turn, latest_chat, new_chat, plain as _plain
 from self_assessment_ai import _GREY_ROCK, _ask, _grey_rock, _guard
 import parallel_parenting_pdf
@@ -216,7 +217,7 @@ async def save_plan(
 
 @router.post("/ai/tip")
 async def ai_tip(
-    body: TipBody, request: Request, user: UserPublic = Depends(get_current_user), db: AsyncIOMotorDatabase = Depends(get_db)
+    body: TipBody, request: Request, user: UserPublic = Depends(require_ai_notice), db: AsyncIOMotorDatabase = Depends(get_db)
 ) -> Dict[str, str]:
     step = STEPS.get(body.step)
     if not step:
@@ -246,7 +247,7 @@ async def start_new_chat(user: UserPublic = Depends(get_current_user), db: Async
 
 @router.post("/ai/chat")
 async def chat(
-    body: ChatBody, request: Request, user: UserPublic = Depends(get_current_user), db: AsyncIOMotorDatabase = Depends(get_db)
+    body: ChatBody, request: Request, user: UserPublic = Depends(require_ai_notice), db: AsyncIOMotorDatabase = Depends(get_db)
 ) -> Dict[str, str]:
     summary = _plan_summary(await _plan(db, user.user_id))
     step = STEPS.get(body.step or "")

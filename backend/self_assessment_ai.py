@@ -16,8 +16,9 @@ from pydantic import BaseModel, Field
 
 from ai_service import _extract_json, _make_chat
 from self_assessment_reminders import is_safety_flagged
-from self_assessment_routes import CONTENT, FRAMING_LOG, _optional_user
+from self_assessment_routes import CONTENT, FRAMING_LOG
 from emergentintegrations.llm.chat import UserMessage
+from ai_notice_routes import require_ai_notice
 
 logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/self-assessment/ai", tags=["self-assessment"])
@@ -107,7 +108,7 @@ async def _ask(system: str, prompt: str) -> str:
 
 
 @router.post("/tip")
-async def ai_tip(body: TipBody, request: Request, user=Depends(_optional_user)) -> Dict[str, str]:
+async def ai_tip(body: TipBody, request: Request, user=Depends(require_ai_notice)) -> Dict[str, str]:
     prompt = _tip_prompt(body)
     await _guard(request)
     grey = await _grey_rock(request, user, body.safety_flagged)
@@ -120,7 +121,7 @@ async def ai_tip(body: TipBody, request: Request, user=Depends(_optional_user)) 
 
 
 @router.post("/framing")
-async def ai_framing(body: FramingBody, request: Request, user=Depends(_optional_user)) -> Dict[str, str]:
+async def ai_framing(body: FramingBody, request: Request, user=Depends(require_ai_notice)) -> Dict[str, str]:
     await _guard(request)
     grey = await _grey_rock(request, user, body.safety_flagged)
     raw = await _ask(_VOICE + (_GREY_ROCK + _FRAMING_TASK_GREY if grey else _FRAMING_TASK), body.text.strip())

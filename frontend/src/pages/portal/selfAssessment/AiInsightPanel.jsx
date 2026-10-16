@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { toast } from "sonner";
 
+import { AiGuardFrame, AiNoticeNeeded, useAiGuard } from "../../../components/aiNotice/AiGuard";
 import { GuideChat } from "../guide/GuideChat";
 import { AiLibraryDialog } from "./AiLibraryDialog";
 import { useFraming } from "./useSaInsight";
@@ -19,6 +20,8 @@ export function TipBox({ tip, loading, testid = "sa-ai-tip" }) {
           <span className="w-1.5 h-1.5 rounded-full bg-purple-400 animate-bounce [animation-delay:240ms]"></span>
           <span className="ml-1">Your guide is thinking…</span>
         </p>
+      ) : tip.needsNotice ? (
+        <AiNoticeNeeded tp={testid} className="mb-0">AI tips appear here after you read and accept the AI privacy notice.</AiNoticeNeeded>
       ) : (
         <p data-testid={`${testid}-text`} className="text-slate-600">{tip.text}</p>
       )}
@@ -29,7 +32,12 @@ export function TipBox({ tip, loading, testid = "sa-ai-tip" }) {
 function FramingForm({ safetyFlag }) {
   const [text, setText] = useState("");
   const { result, busy, error, submit } = useFraming(safetyFlag);
-  const send = () => text.trim().length >= 3 && submit(text.trim());
+  const guard = useAiGuard("self_assessment", text);
+  const send = async () => {
+    const t = text.trim();
+    if (t.length < 3 || !(await guard.confirmSend(t))) return;
+    submit(t);
+  };
   const copy = async () => {
     try {
       await navigator.clipboard.writeText(result.suggested);
@@ -43,11 +51,10 @@ function FramingForm({ safetyFlag }) {
       <label htmlFor="sa-ai-query" className="block text-xs font-bold text-[#3B1C6B]">
         Ask AI for communication framing
       </label>
-      <p data-testid="sa-ai-query-notice" className="text-[11px] text-slate-500 -mt-2">
-        Sent to an outside AI service. Leave out names and sensitive details.
-      </p>
+      <AiGuardFrame tp="sa-ai-query" guard={guard}>
       <div className="flex gap-2">
         <input
+          {...guard.inputProps}
           id="sa-ai-query"
           data-testid="sa-ai-query"
           type="text"
@@ -68,6 +75,7 @@ function FramingForm({ safetyFlag }) {
           {busy ? <i className="fa-solid fa-spinner fa-spin"></i> : "Submit Text"}
         </button>
       </div>
+      </AiGuardFrame>
       {error && <p data-testid="sa-ai-error" className="text-[11px] text-rose-700">{error}</p>}
       {result && (
         <div data-testid="sa-ai-framing" className="rounded-xl border border-purple-100 bg-white p-3 space-y-2 text-xs">

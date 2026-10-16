@@ -66,6 +66,7 @@ export default function AdminConsentCounts() {
       </AppShell>
     );
   }
+  if (!data && !err) return null;
   const versions = (data?.by_version || []).map((v) => [v.version, v.accounts, v.demo_sessions]);
   const sources = Object.entries(data?.current_version_by_source || {}).map(([k, n]) => [SOURCE_LABELS[k] || k, n]);
   return (
@@ -98,6 +99,8 @@ export default function AdminConsentCounts() {
           &ldquo;By version&rdquo; counts each account&rsquo;s latest consent. &ldquo;How consent was given&rdquo; counts every time the
           boxes were ticked, so a person can appear more than once. These are the numbers for the site you&rsquo;re signed in to.{" "}
           <Link to="/admin/accounts" className="underline text-[#3D1A78]" data-testid="admin-consent-accounts-link">Account counts</Link>
+          {" · "}
+          <Link to="/admin/consent-trend" className="underline text-[#3D1A78]" data-testid="admin-consent-trend-link">Weekly consent trend</Link>
         </p>
       </div>
     </AppShell>

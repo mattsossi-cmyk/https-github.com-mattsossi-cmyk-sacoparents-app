@@ -1,0 +1,56 @@
+/* SA CoParents AI privacy warnings: styles from the approved file (colors and layout unchanged; classes renamed sa-ai-*). */
+.sa-ai-banner, .sa-ai-alert, .sa-ai-modal { font-family: inherit; line-height: 1.5; }
+.sa-ai-banner {
+  display: flex; gap: 10px; align-items: flex-start;
+  background: #fff8e6; color: #5c4400; border: 1px solid #f0d58a;
+  border-radius: 8px; padding: 10px 14px; margin: 0 0 10px; font-size: 15px;
+}
+.sa-ai-banner[hidden], .sa-ai-alert[hidden], .sa-ai-modal[hidden] { display: none; }
+.sa-ai-alert {
+  background: #fdecec; color: #7a1b1b; border: 1px solid #f3b6b6;
+  border-radius: 8px; padding: 10px 14px; margin: 8px 0; font-size: 15px;
+}
+.sa-ai-alert ul, .sa-ai-modal ul { margin: 6px 0 8px; padding-left: 1.3em; }
+.sa-ai-link { background: none; border: 0; padding: 0; color: inherit; text-decoration: underline; cursor: pointer; font: inherit; }
+.sa-ai-modal {
+  position: fixed; inset: 0; z-index: 9999; background: rgba(15, 23, 30, 0.6);
+  display: flex; align-items: center; justify-content: center; padding: 16px;
+}
+.sa-ai-modal__box {
+  background: #fff; color: #1f2933; max-width: 520px; width: 100%;
+  max-height: 90vh; overflow-y: auto; border-radius: 12px; padding: 24px;
+  box-shadow: 0 10px 40px rgba(0,0,0,0.3); font-size: 16px;
+}
+.sa-ai-modal__box h2 { font-size: 1.25rem; margin: 8px 0 12px; }
+.sa-ai-modal__icon {
+  width: 40px; height: 40px; border-radius: 50%; background: #f0a500; color: #fff;
+  font-weight: 700; font-size: 22px; display: flex; align-items: center; justify-content: center;
+}
+.sa-ai-modal__fine { font-size: 14px; color: #52606d; }
+.sa-ai-modal__fine a { color: #2f6f8f; }
+.sa-ai-modal__check { display: flex; gap: 10px; align-items: flex-start; margin: 16px 0; cursor: pointer; }
+.sa-ai-modal__check input { width: 18px; height: 18px; margin-top: 3px; flex-shrink: 0; }
+.sa-ai-modal__actions { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 16px; }
+.sa-ai-btn {
+  background: #2f6f8f; color: #fff; border: 0; border-radius: 8px;
+  padding: 12px 18px; font: inherit; font-weight: 600; cursor: pointer; width: 100%;
+}
+.sa-ai-modal__actions .sa-ai-btn { width: auto; flex: 1; }
+.sa-ai-btn:disabled { opacity: 0.45; cursor: not-allowed; }
+.sa-ai-btn--ghost { background: transparent; color: #7a1b1b; border: 1px solid #e0a3a3; }
+[data-ai-flagged="true"] { outline: 2px solid #e06666; outline-offset: 1px; }
+
+/* The app's CSS reset removes browser defaults the file relied on; restore them so it looks as written. */
+.sa-ai-alert ul, .sa-ai-modal ul { list-style: disc; }
+.sa-ai-modal__box h2 { font-weight: 700; }
+.sa-ai-modal__box p { margin: 1em 0; }
+.sa-ai-modal__fine a { text-decoration: underline; }
+
+/* The app has no theme setting of its own, so this follows the device setting (as in the file). */
+@media (prefers-color-scheme: dark) {
+  .sa-ai-banner { background: #3a2f12; color: #f5dfa0; border-color: #6b5520; }
+  .sa-ai-alert { background: #3d1c1c; color: #f5c2c2; border-color: #6e3030; }
+  .sa-ai-modal__box { background: #1d252c; color: #e4e7eb; }
+  .sa-ai-modal__fine { color: #9aa5b1; }
+  .sa-ai-modal__fine a { color: #7cc0dd; }
+}

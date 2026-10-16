@@ -1,5 +1,6 @@
 import React, { useEffect, useRef, useState } from "react";
 import { api } from "../../lib/api";
+import { useAiGuard } from "../aiNotice/AiGuard";
 import {
   Sparkles,
   Star,
@@ -88,6 +89,7 @@ export default function SectionCoachCard({
   // Reset when the parent switches to a different section so we don't show
   // a stale card. Refs avoid the useEffect running twice in strict mode.
   const lastSectionRef = useRef(sectionId);
+  const aiGuard = useAiGuard("summary");
   useEffect(() => {
     if (lastSectionRef.current !== sectionId) {
       lastSectionRef.current = sectionId;
@@ -98,6 +100,7 @@ export default function SectionCoachCard({
   }, [sectionId]);
 
   async function loadCoach({ force = false } = {}) {
+    if (!(await aiGuard.confirmSend(""))) return;
     setLoading(true);
     setError("");
     try {
@@ -119,8 +122,9 @@ export default function SectionCoachCard({
     }
   }
 
-  function handleToggle() {
+  async function handleToggle() {
     const next = !open;
+    if (next && !coach && !loading && !(await aiGuard.confirmSend(""))) return;
     setOpen(next);
     if (next && !coach && !loading) {
       loadCoach();

@@ -8,6 +8,7 @@ from motor.motor_asyncio import AsyncIOMotorDatabase
 from pydantic import BaseModel, Field
 
 from auth import UserPublic, get_current_user, get_db
+from ai_notice_routes import require_ai_notice
 from child_needs_routes import CONTENT as NEEDS_CONTENT, FIELDS as NEEDS_FIELDS
 from guide_chat import chat_turn, latest_chat, new_chat, plain
 from self_assessment_ai import _ask, _guard
@@ -82,7 +83,7 @@ class SuggestBody(BaseModel):
 
 @router.post("/child-needs/suggest")
 async def suggest_child_needs_answer(
-    body: SuggestBody, request: Request, user: UserPublic = Depends(get_current_user)
+    body: SuggestBody, request: Request, user: UserPublic = Depends(require_ai_notice)
 ) -> Dict[str, str]:
     field = NEEDS_FIELDS.get(body.category, {}).get(body.field_id)
     if not field or field["type"] in ("select", "rating") or field.get("help") is False:
@@ -128,7 +129,7 @@ async def chat(
     topic: str,
     body: ChatBody,
     request: Request,
-    user: UserPublic = Depends(get_current_user),
+    user: UserPublic = Depends(require_ai_notice),
     db: AsyncIOMotorDatabase = Depends(get_db),
 ) -> Dict[str, str]:
     t = _topic(topic)

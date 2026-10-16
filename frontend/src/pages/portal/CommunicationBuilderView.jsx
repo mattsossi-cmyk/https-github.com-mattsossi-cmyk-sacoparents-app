@@ -3,6 +3,7 @@ import { createPortal } from "react-dom";
 import { toast } from "sonner";
 
 import { BiffHistory, BiffMilestones } from "./BiffTab";
+import { useAiGuard } from "../../components/aiNotice/AiGuard";
 import { SharingNotice } from "../../components/privacy/SharingNotice";
 import { BiffBookLink, BiffSnapshotCard } from "./JourneyDrawers";
 import { BeforeAfterCard } from "./commBuilder/BeforeAfterCard";
@@ -48,6 +49,7 @@ export function CommunicationBuilderView({ open, focus, onClose, onQuickExit, gr
   const [transformed, setTransformed] = useState(false);
   const [acted, setActed] = useState(false);
   const [baMode, setBaMode] = useState("example");
+  const guard = useAiGuard("communication_builder", biff.rawInput);
   useLockScroll(open);
   useEffect(() => {
     if (!open) return;
@@ -66,7 +68,12 @@ export function CommunicationBuilderView({ open, focus, onClose, onQuickExit, gr
     setBaMode("yours");
     fn();
   };
-  const onTransform = () => rawInput.trim() && run(() => transform(rawInput));
+  // The AI notice and the browser check run before anything is sent (button, Try again and the template chips).
+  const onTransform = async () => {
+    if (!rawInput.trim() || !(await guard.confirmSend(rawInput))) return;
+    run(() => transform(rawInput));
+  };
+  const onPreset = async (key) => (await guard.confirmSend("")) && run(() => applyPreset(key, 0));
   const edit = (text) => {
     setRawInput(text);
     setTransformed(false);
@@ -110,7 +117,7 @@ export function CommunicationBuilderView({ open, focus, onClose, onQuickExit, gr
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
           <div className="lg:col-span-7 space-y-4">
             {!transformed && beforeAfter}
-            <DraftCard value={rawInput} onChange={edit} onPreset={(key) => run(() => applyPreset(key, 0))} onTransform={onTransform} busy={biffLoading} />
+            <DraftCard value={rawInput} onChange={edit} onPreset={onPreset} onTransform={onTransform} busy={biffLoading} guard={guard} />
             <ResponseCard
               output={biffOutput}
               status={transformed ? biffStatus : "idle"}

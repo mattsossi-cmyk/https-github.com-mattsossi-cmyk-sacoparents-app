@@ -2,12 +2,15 @@ import React, { useState } from "react";
 import { toast } from "sonner";
 
 import { api } from "../../../lib/api";
+import { useAiGuard } from "../../../components/aiNotice/AiGuard";
 
 // "Help me answer": asks the Child Needs Guide for a short editable draft for one question.
 export function FieldHelp({ category, field, values, onUse }) {
   const [busy, setBusy] = useState(false);
   const [text, setText] = useState("");
+  const guard = useAiGuard("child_needs_help");
   const ask = async () => {
+    if (!(await guard.confirmSend(values[field.id] || ""))) return;
     setBusy(true);
     try {
       const { data } = await api.post("/journey-guide/child-needs/suggest", {

@@ -15,6 +15,7 @@ import { shareViaText } from "../lib/share";
 import { toast } from "sonner";
 import { logError } from "../lib/logger";
 import { useAuth } from "../context/AuthContext";
+import { useAiGuard } from "../components/aiNotice/AiGuard";
 import {
   Sparkles,
   Download,
@@ -263,7 +264,9 @@ function MediationSummaryTab() {
     // Mount-only fetch.
   }, []);
 
+  const aiGuard = useAiGuard("summary");
   const generate = async () => {
+    if (!(await aiGuard.confirmSend(""))) return;
     setLoading(true);
     try {
       const r = await api.post("/mediation/summary");
@@ -508,7 +511,9 @@ function AgreementDraftTab() {
       .catch(() => {});
   }, []);
 
+  const aiGuard = useAiGuard("summary");
   const generate = async () => {
+    if (!(await aiGuard.confirmSend(""))) return;
     setLoading(true);
     try {
       const r = await api.post("/mediation/agreement");
@@ -740,7 +745,9 @@ function ImprovementPlanTab() {
     loadHistory();
   }, [loadHistory]);
 
+  const aiGuard = useAiGuard("summary");
   const generate = async () => {
+    if (!(await aiGuard.confirmSend(""))) return;
     setLoading(true);
     try {
       const r = await api.post("/mediation/improvement-plan");

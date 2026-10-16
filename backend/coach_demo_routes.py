@@ -30,10 +30,12 @@ import time
 from collections import deque
 from typing import Any, Deque, Dict, List, Optional
 
-from fastapi import APIRouter, HTTPException, Request
+from fastapi import APIRouter, Depends, HTTPException, Request
 from pydantic import BaseModel, Field
 
 import ai_service
+from ai_notice_routes import require_ai_notice
+from models import UserPublic
 
 
 logger = logging.getLogger(__name__)
@@ -186,8 +188,10 @@ async def list_demo_starters() -> Dict[str, Any]:
 
 
 @router.post("/reply")
-async def demo_reply(body: DemoReplyBody, request: Request) -> Dict[str, Any]:
-    """Return the Coach's reply to a demo turn. No auth, rate-limited."""
+async def demo_reply(
+    body: DemoReplyBody, request: Request, _user: UserPublic = Depends(require_ai_notice)
+) -> Dict[str, Any]:
+    """Return the Coach's reply to a demo turn. Rate-limited; needs a (demo) session with the AI notice acknowledged."""
     ip = _client_ip(request)
     await _rate_guard(ip)
 

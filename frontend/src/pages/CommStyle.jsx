@@ -11,6 +11,7 @@ import WatchFirstVideo from "../components/WatchFirstVideo";
 import SectionCoaching from "../components/SectionCoaching";
 import MethodologyCard from "../components/MethodologyCard";
 import { Sparkles } from "lucide-react";
+import { AiGuardFrame, useAiGuard } from "../components/aiNotice/AiGuard";
 
 const QUIZ = [
   {
@@ -73,7 +74,10 @@ export default function CommStyle() {
       .catch((err) => logError("Failed to load prep:", err));
   }, []);
 
+  // The sample is also saved to the account, so the box stays editable; the AI notice and check run on the AI button.
+  const aiGuard = useAiGuard("comm_style", sample);
   const handleAnalyze = async () => {
+    if (!(await aiGuard.confirmSend(sample))) return;
     setAnalyzing(true);
     try {
       const res = await api.post("/mediation/analyze-communication", {
@@ -163,14 +167,16 @@ export default function CommStyle() {
             <label className="eyebrow block mb-2">
               Optional: paste a recent message you sent (it will be reframed gently)
             </label>
-            <textarea
-              rows={4}
-              value={sample}
-              onChange={(e) => setSample(e.target.value)}
-              className="input-soft resize-none"
-              placeholder="Stays private to your account."
-              data-testid="comm-sample-textarea"
-            />
+            <AiGuardFrame tp="comm-sample" guard={aiGuard}>
+              <textarea
+                rows={4}
+                value={sample}
+                onChange={(e) => setSample(e.target.value)}
+                className="input-soft resize-none"
+                placeholder="Stays private to your account."
+                data-testid="comm-sample-textarea"
+              />
+            </AiGuardFrame>
             <CommSafety sample={sample} />
           </div>
 

@@ -14,6 +14,8 @@ import SignDownloadToggle from "../components/SignDownloadToggle";
 import AssessmentResultHandoff from "../components/AssessmentResultHandoff";
 import CourtReportDisclaimer from "../components/CourtReportDisclaimer";
 import { api } from "../lib/api";
+import { useAiGuard } from "../components/aiNotice/AiGuard";
+import { AddAiSummaryCard } from "../components/deepdive/AddAiSummaryCard";
 import { toast } from "sonner";
 import { downloadPdf } from "../lib/pdf";
 import {
@@ -81,7 +83,9 @@ export default function SpecialNeedsV2EducationalDeepDiveReport() {
 
   useEffect(() => { load(); }, [load]);
 
+  const aiGuard = useAiGuard("summary");
   const regenerateSummary = async () => {
+    if (!(await aiGuard.confirmSend(""))) return;
     setRegenBusy(true);
     try {
       const r = await api.post("/med-deep/report/regen-summary", {
@@ -253,6 +257,7 @@ export default function SpecialNeedsV2EducationalDeepDiveReport() {
         </SectionCard>
 
         {/* AI Executive Summary (existing feature) */}
+        {!report.ai_summary && <AddAiSummaryCard tp="med-deep" busy={regenBusy} onAdd={regenerateSummary} />}
         {report.ai_summary && (
           <SectionCard testid="med-deep-ai-summary">
             <div className="flex items-start justify-between gap-3 flex-wrap">

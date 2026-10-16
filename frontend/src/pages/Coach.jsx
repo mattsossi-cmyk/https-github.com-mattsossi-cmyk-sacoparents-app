@@ -20,6 +20,7 @@ import CoachModelPickerChip, {
 } from "../components/coach/CoachModelPickerChip";
 import { api } from "../lib/api";
 import { logError } from "../lib/logger";
+import { AiGuardFrame, useAiGuard } from "../components/aiNotice/AiGuard";
 
 /**
  * Coach — Interactive AI Coach Chat.
@@ -174,10 +175,12 @@ function Suggestions({ items, onPick }) {
 
 function ChatComposer({ onSend, disabled }) {
   const [value, setValue] = useState("");
+  const guard = useAiGuard("guide_chat", value);
   const inputRef = useRef(null);
-  const submit = () => {
+  const submit = async () => {
     const trimmed = value.trim();
     if (!trimmed || disabled) return;
+    if (!(await guard.confirmSend(trimmed))) return;
     onSend(trimmed);
     setValue("");
   };
@@ -190,8 +193,10 @@ function ChatComposer({ onSend, disabled }) {
       className="sticky bottom-0 bg-gradient-to-t from-white via-white to-transparent pt-4 pb-2"
       data-testid="coach-composer"
     >
+      <AiGuardFrame tp="coach" guard={guard}>
       <div className="flex items-end gap-2 bg-white border border-[#E5E0EE] rounded-3xl px-4 py-2 shadow-sm focus-within:border-[#3D1A78]">
         <textarea
+          {...guard.inputProps}
           ref={inputRef}
           value={value}
           onChange={(e) => setValue(e.target.value)}
@@ -221,6 +226,7 @@ function ChatComposer({ onSend, disabled }) {
           )}
         </button>
       </div>
+      </AiGuardFrame>
       <p className="text-[11px] text-[#857E9C] mt-2 text-center">
         Not legal, medical, or therapy advice. In an emergency call 911 or
         1-800-799-7233.
@@ -412,6 +418,7 @@ export default function Coach() {
     [navigate, reloadSessions, modelPreference]
   );
 
+  const pickGuard = useAiGuard("guide_chat");
   const sendInSession = useCallback(
     async (content) => {
       if (!sessionId) {
@@ -505,7 +512,7 @@ export default function Coach() {
                 </div>
                 <EmptyState
                   starters={starters}
-                  onPick={createSessionAndSend}
+                  onPick={async (s) => (await pickGuard.confirmSend(s)) && createSessionAndSend(s)}
                   onStartBlank={() => navigate("/coach/new")}
                   busy={sending}
                 />
@@ -581,7 +588,7 @@ export default function Coach() {
                       Array.isArray(lastAssistant.suggested_followups) && (
                         <Suggestions
                           items={lastAssistant.suggested_followups}
-                          onPick={(s) => sendInSession(s)}
+                          onPick={async (s) => (await pickGuard.confirmSend(s)) && sendInSession(s)}
                         />
                       )}
                   </div>

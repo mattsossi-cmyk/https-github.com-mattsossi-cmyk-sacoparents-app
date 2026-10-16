@@ -2,6 +2,7 @@ import React, { useCallback, useEffect, useState } from "react";
 import { Link, useParams, useNavigate } from "react-router-dom";
 import AppShell from "../components/AppShell";
 import { api } from "../lib/api";
+import { useAiGuard } from "../components/aiNotice/AiGuard";
 import {
   ArrowLeft, Clock, CheckCircle2, Circle, Loader2, Sparkles,
   RefreshCw, ArrowRight,
@@ -22,6 +23,7 @@ export default function LearningArticle() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [coachLoading, setCoachLoading] = useState(false);
+  const aiGuard = useAiGuard("summary");
   const [coach, setCoach] = useState(null);
   const [coachError, setCoachError] = useState(null);
 
@@ -67,6 +69,7 @@ export default function LearningArticle() {
   }
 
   async function askCoach(force = false) {
+    if (!(await aiGuard.confirmSend(""))) return;
     setCoachLoading(true);
     setCoachError(null);
     try {

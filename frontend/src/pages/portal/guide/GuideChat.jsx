@@ -1,5 +1,7 @@
 import React, { useEffect, useRef, useState } from "react";
 
+import { AiGuardFrame, useAiGuard } from "../../../components/aiNotice/AiGuard";
+
 function Bubble({ m, tp }) {
   const mine = m.role === "user";
   return (
@@ -54,6 +56,7 @@ function Starters({ tp, starters, busy, onAsk }) {
 // Shared Guide chat box (Parallel Parenting Guide, Court Assistant). Testids are prefixed with `tp`.
 export function GuideChat({ chat, tp, title, greeting, suggestions = [], starters, icon = "fa-comments", headerStyle = { background: "#2d1548" } }) {
   const [text, setText] = useState("");
+  const guard = useAiGuard("guide_chat", text);
   const listRef = useRef(null);
   useEffect(() => {
     listRef.current?.scrollTo({ top: listRef.current.scrollHeight, behavior: "smooth" });
@@ -62,6 +65,7 @@ export function GuideChat({ chat, tp, title, greeting, suggestions = [], starter
   const submit = async (value) => {
     const t = (value ?? text).trim();
     if (!t || chat.busy) return;
+    if (!(await guard.confirmSend(t))) return;
     setText("");
     if (!(await chat.send(t))) setText(t);
   };
@@ -110,14 +114,16 @@ export function GuideChat({ chat, tp, title, greeting, suggestions = [], starter
       </div>
       {chat.error && <p data-testid={`${tp}-chat-error`} className="px-4 pt-2 text-[11px] text-rose-700">{chat.error}</p>}
       {starters && <Starters key={starters.label} tp={tp} starters={starters} busy={chat.busy} onAsk={submit} />}
+      <AiGuardFrame tp={`${tp}-chat`} guard={guard} className="px-3 pt-3 border-t border-purple-100">
       <form
         onSubmit={(e) => {
           e.preventDefault();
           submit();
         }}
-        className="p-3 border-t border-purple-100 flex gap-2"
+        className="flex gap-2"
       >
         <input
+          {...guard.inputProps}
           data-testid={`${tp}-chat-input`}
           value={text}
           maxLength={1000}
@@ -136,6 +142,7 @@ export function GuideChat({ chat, tp, title, greeting, suggestions = [], starter
           <i className="fa-solid fa-paper-plane"></i>
         </button>
       </form>
+      </AiGuardFrame>
       <p className="px-4 pb-3 text-[10px] text-slate-400">General guidance, not legal advice. In danger? Call 911.</p>
     </section>
   );

@@ -44,6 +44,7 @@ from pydantic import BaseModel, Field
 
 from auth import get_current_user, get_db
 from models import UserPublic
+from ai_notice_routes import require_ai_notice
 import portal_ai
 import portal_pdf
 
@@ -493,13 +494,9 @@ class GuidedJourneyStepBody(BaseModel):
 
 @router.post("/guided-journey/step")
 async def guided_journey_step_endpoint(
-    body: GuidedJourneyStepBody, request: Request
+    body: GuidedJourneyStepBody, request: Request, _user: UserPublic = Depends(require_ai_notice)
 ) -> Dict[str, Any]:
-    """Emit the coach's next turn in the guided-journey chat wizard.
-
-    Rate-limited via the shared BIFF/verify quota. No auth (offline-
-    first parity with the rest of the portal).
-    """
+    """Emit the coach's next turn in the guided-journey chat wizard. Rate-limited; needs the AI notice acknowledged."""
     ip = _client_ip(request)
     await _rate_guard(ip)
     try:
@@ -592,6 +589,7 @@ _ALLOWED_VOICE_TYPES = {
 async def voice_transcribe(
     request: Request,
     audio: UploadFile = File(...),
+    _user: UserPublic = Depends(require_ai_notice),
 ) -> Dict[str, Any]:
     """Transcribe a short parent voice note to text via Whisper.
 
@@ -633,8 +631,10 @@ async def voice_transcribe(
 
 
 @router.post("/biff-refine")
-async def biff_refine_endpoint(body: BiffRefineBody, request: Request) -> Dict[str, Any]:
-    """Refine a draft into BIFF style via Claude. Rate limited, no auth.
+async def biff_refine_endpoint(
+    body: BiffRefineBody, request: Request, _user: UserPublic = Depends(require_ai_notice)
+) -> Dict[str, Any]:
+    """Refine a draft into BIFF style via Claude. Rate limited; needs the AI notice acknowledged.
 
     When `safety_flagged=true` (the parent's own Quick Safety Check
     returned any risk signal), the coach switches to a grey-rock

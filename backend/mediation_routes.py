@@ -10,6 +10,7 @@ from fastapi.responses import StreamingResponse
 from motor.motor_asyncio import AsyncIOMotorDatabase
 
 from auth import get_current_user, create_share_token, decode_share_token, require_active_user
+from ai_notice_routes import require_ai_notice
 from share_routes import record_share_token, is_share_token_revoked
 
 # Daily email cap for demo/guest accounts. Permanent accounts are uncapped.
@@ -1059,7 +1060,7 @@ async def get_shared_foundation_voice_section(
 @router.post("/analyze-communication")
 async def analyze_communication(
     body: CommAnalysisRequest,
-    current: UserPublic = Depends(get_current_user),
+    current: UserPublic = Depends(require_ai_notice),
 ):
     try:
         result = await ai_service.analyze_communication(
@@ -1073,7 +1074,7 @@ async def analyze_communication(
 @router.post("/reframe")
 async def reframe(
     body: dict,
-    current: UserPublic = Depends(get_current_user),
+    current: UserPublic = Depends(require_ai_notice),
 ):
     text = (body.get("text") or "").strip()
     if not text:
@@ -1093,7 +1094,7 @@ _ALLOWED_COACHING_SECTIONS = {"readiness", "comm-style", "safety", "overall"}
 @router.post("/section-coaching")
 async def section_coaching(
     body: dict,
-    current: UserPublic = Depends(get_current_user),
+    current: UserPublic = Depends(require_ai_notice),
 ):
     section = (body.get("section") or "").strip()
     payload = body.get("data") or {}
@@ -1113,7 +1114,7 @@ async def section_coaching(
 @router.post("/summary")
 async def generate_summary(
     request: Request,
-    current: UserPublic = Depends(get_current_user),
+    current: UserPublic = Depends(require_ai_notice),
 ):
     db = request.app.state.db
     prep = await _load_prep(db, current.user_id)
@@ -1339,7 +1340,7 @@ async def download_certificate(
 @router.post("/agreement")
 async def generate_agreement(
     request: Request,
-    current: UserPublic = Depends(get_current_user),
+    current: UserPublic = Depends(require_ai_notice),
 ):
     db = request.app.state.db
     prep = await _load_prep(db, current.user_id)
@@ -1622,7 +1623,7 @@ async def download_shared_pdf(
 @router.post("/improvement-plan")
 async def generate_improvement_plan_route(
     request: Request,
-    current: UserPublic = Depends(get_current_user),
+    current: UserPublic = Depends(require_ai_notice),
 ):
     db = request.app.state.db
     prep = await _load_prep(db, current.user_id)

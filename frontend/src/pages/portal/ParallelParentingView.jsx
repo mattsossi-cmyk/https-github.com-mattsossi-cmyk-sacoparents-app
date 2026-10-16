@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { toast } from "sonner";
 
 import { useGuideChat } from "./guide/useGuideChat";
+import { useAiNotice } from "../../components/aiNotice/AiNoticeProvider";
 import { SharingNotice } from "../../components/privacy/SharingNotice";
 import { PpActionButton } from "./parallel/PpActionButton";
 import { PpChecklist } from "./parallel/PpChecklist";
@@ -34,6 +35,7 @@ const actionLabel = (plan) =>
 // Full-page Parallel Parenting Option Builder. Screens: welcome, steps 0-5, quick checks ("check:<key>"), summary.
 export function ParallelParentingView({ onClose, onQuickExit, safetyFlag, hidden = false, initialScreen = "welcome" }) {
   const pp = usePpPlan();
+  const { acked: aiAcked } = useAiNotice();
   const [screen, setScreen] = useState(initialScreen);
   const [downloading, setDownloading] = useState(false);
   const [historyTick, setHistoryTick] = useState(0);
@@ -57,7 +59,8 @@ export function ParallelParentingView({ onClose, onQuickExit, safetyFlag, hidden
     pp.goStep(STEPS.length, { completed: true }).then(refreshHistory);
   };
   const next = (i) => {
-    pp.requestTip(STEPS[i], safetyFlag);
+    // The step tip is AI-written, so it's only asked for once the AI notice is accepted.
+    if (aiAcked) pp.requestTip(STEPS[i], safetyFlag);
     if (i + 1 < STEPS.length) openStep(i + 1);
     else openCheck(0);
   };

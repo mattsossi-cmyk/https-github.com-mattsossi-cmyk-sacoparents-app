@@ -14,6 +14,7 @@ from motor.motor_asyncio import AsyncIOMotorDatabase
 
 import secure_docs
 from privacy_consent import consent_fields, has_current_consent, log_consent
+from ai_notice import has_ai_notice
 
 from models import UserRegister, UserLogin, UserPublic, TokenResponse, GuestClaimPayload, MagicLinkRequest, MagicLinkConsume, SignupFromToken, PasswordResetRequest, PasswordResetConfirm, EmailVerifyConfirm, EmailCodeSend, EmailCodeConfirm, PasswordResetCodeConfirm
 from email_service import send_magic_link, send_setup_link, send_password_reset_link, send_verification_link, send_verification_code, send_password_reset_code, EmailNotConfigured, EmailSendError
@@ -80,6 +81,7 @@ def _serialize_user(doc: dict) -> UserPublic:
         email_bounced=bool(doc.get("email_bounced", False)),
         email_complained=bool(doc.get("email_complained", False)),
         consent_current=has_current_consent(doc),
+        ai_notice_current=has_ai_notice(doc),
     )
 
 

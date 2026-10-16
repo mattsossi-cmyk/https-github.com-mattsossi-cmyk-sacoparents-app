@@ -27,6 +27,7 @@ from motor.motor_asyncio import AsyncIOMotorDatabase
 from pydantic import BaseModel
 
 from auth import UserPublic, get_current_user, get_db
+from ai_notice_routes import require_ai_notice
 from learning_content import (
     HUBS, find_article, get_article, get_hub, hubs_summary,
 )
@@ -232,7 +233,7 @@ def _sanitize_expansion(raw: Any) -> Optional[List[str]]:
 @router.post("/hub/{hub_slug}/article/{article_slug}/coach")
 async def ai_expansion(hub_slug: str, article_slug: str,
                        body: CoachIn = CoachIn(),
-                       user: UserPublic = Depends(get_current_user),
+                       user: UserPublic = Depends(require_ai_notice),
                        db: AsyncIOMotorDatabase = Depends(get_db)) -> Dict[str, Any]:
     """Generate (or return cached) 3-paragraph Claude expansion for the
     given article. Cached forever per user unless `force=true` since the

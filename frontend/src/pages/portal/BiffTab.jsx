@@ -1,6 +1,6 @@
 import React from "react";
 
-import { AiDraftNotice } from "./commBuilder/AiDraftNotice";
+import { AiGuardFrame, useAiGuard } from "../../components/aiNotice/AiGuard";
 import { SuggestUnavailable } from "./commBuilder/SuggestUnavailable";
 
 const PRESET_CHIPS = [
@@ -73,6 +73,9 @@ export function BiffTab({
   safetyFlagged = false,
 }) {
   const ready = biffStatus === "ai" && !!biffOutput;
+  const guard = useAiGuard("biff", rawInput);
+  const suggest = async () => (await guard.confirmSend(rawInput)) && onSuggest();
+  const preset = async (key) => (await guard.confirmSend("")) && applyPreset(key);
   return (
     <div className="space-y-4" data-testid="hub-section-biff">
       <div className="bg-white p-4 rounded-2xl shadow-sm border border-purple-200 space-y-3 card-box">
@@ -111,7 +114,7 @@ export function BiffTab({
               <button
                 key={key}
                 type="button"
-                onClick={() => applyPreset(key)}
+                onClick={() => preset(key)}
                 data-testid={testid}
                 className="bg-slate-100 px-2.5 py-1 rounded-lg border border-slate-200 font-medium"
               >
@@ -122,20 +125,22 @@ export function BiffTab({
         </div>
 
         <div className="space-y-2">
-          <AiDraftNotice testid="biff-ai-notice" />
-          <textarea
-            data-testid="raw-input"
-            aria-label="Draft message"
-            value={rawInput}
-            onChange={(e) => onRawInputChange(e.target.value)}
-            rows={4}
-            className="w-full p-3 border border-slate-300 rounded-xl text-xs focus:ring-2 focus:ring-purple-600 focus:outline-none"
-            placeholder="Type draft message here..."
-          />
+          <AiGuardFrame tp="biff" guard={guard}>
+            <textarea
+              {...guard.inputProps}
+              data-testid="raw-input"
+              aria-label="Draft message"
+              value={rawInput}
+              onChange={(e) => onRawInputChange(e.target.value)}
+              rows={4}
+              className="w-full p-3 border border-slate-300 rounded-xl text-xs focus:ring-2 focus:ring-purple-600 focus:outline-none"
+              placeholder="Type draft message here..."
+            />
+          </AiGuardFrame>
           <button
             type="button"
             data-testid="biff-suggest-btn"
-            onClick={onSuggest}
+            onClick={suggest}
             disabled={biffLoading || !rawInput.trim()}
             className="w-full bg-purple-700 hover:bg-purple-800 disabled:opacity-60 text-white font-bold py-2 rounded-xl text-xs transition shadow"
           >
@@ -152,7 +157,7 @@ export function BiffTab({
           >
             <p className="text-[10px] font-bold uppercase tracking-wider text-purple-700 mb-1">Suggested wording</p>
             {biffStatus === "unavailable" ? (
-              <SuggestUnavailable tp="biff" raw={rawInput} greyRock={safetyFlagged} onRetry={onSuggest} onUseTemplate={onRawInputChange} busy={biffLoading} />
+              <SuggestUnavailable tp="biff" raw={rawInput} greyRock={safetyFlagged} onRetry={suggest} onUseTemplate={onRawInputChange} busy={biffLoading} />
             ) : biffStatus === "loading" ? (
               <p data-testid="biff-loading" className="text-purple-700">Getting suggested wording…</p>
             ) : ready ? (

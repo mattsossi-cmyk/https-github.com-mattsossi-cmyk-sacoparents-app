@@ -29,6 +29,7 @@ import {
 
 import { api } from "../lib/api";
 import { logError } from "../lib/logger";
+import { AiGuardFrame, useAiGuard } from "./aiNotice/AiGuard";
 
 // Client-side ceiling matches server (6 total turns = 3 back-and-forths).
 const MAX_TURNS = 6;
@@ -44,6 +45,7 @@ export default function CoachDemoSection() {
   const [safetyFlagged, setSafetyFlagged] = useState(false);
   const [capReached, setCapReached] = useState(false);
   const scrollerRef = useRef(null);
+  const guard = useAiGuard("guide_chat", composer);
 
   useEffect(() => {
     let alive = true;
@@ -67,6 +69,7 @@ export default function CoachDemoSection() {
       setError(`Please keep the message under ${MAX_USER_MESSAGE_LEN} characters for the demo.`);
       return;
     }
+    if (!(await guard.confirmSend(clean))) return;
     setError("");
     const nextTranscript = [...transcript, { role: "user", content: clean }];
     setTranscript(nextTranscript);
@@ -253,8 +256,10 @@ export default function CoachDemoSection() {
                       <label className="text-[10px] font-bold tracking-[0.16em] uppercase text-[#857E9C]">
                         Or in your own words
                       </label>
-                      <div className="mt-2 relative">
+                      <AiGuardFrame tp="coach-demo-empty" guard={guard} className="mt-2">
+                      <div className="relative">
                         <textarea
+                          {...guard.inputProps}
                           rows={3}
                           value={composer}
                           onChange={(e) => setComposer(e.target.value.slice(0, MAX_USER_MESSAGE_LEN))}
@@ -267,6 +272,7 @@ export default function CoachDemoSection() {
                           {remaining} chars left
                         </div>
                       </div>
+                      </AiGuardFrame>
                       <button
                         type="submit"
                         disabled={pending || !composer.trim()}
@@ -355,8 +361,10 @@ export default function CoachDemoSection() {
                 className="flex items-end gap-2"
                 data-testid="coach-demo-composer"
               >
-                <div className="flex-1 relative">
+                <AiGuardFrame tp="coach-demo" guard={guard} className="flex-1 min-w-0">
+                <div className="relative">
                   <textarea
+                    {...guard.inputProps}
                     rows={2}
                     value={composer}
                     onChange={(e) => setComposer(e.target.value.slice(0, MAX_USER_MESSAGE_LEN))}
@@ -369,6 +377,7 @@ export default function CoachDemoSection() {
                     {remaining} chars left
                   </div>
                 </div>
+                </AiGuardFrame>
                 <button
                   type="submit"
                   disabled={pending || !composer.trim()}

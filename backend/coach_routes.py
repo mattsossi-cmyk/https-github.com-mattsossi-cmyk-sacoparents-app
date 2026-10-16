@@ -29,6 +29,7 @@ from pydantic import BaseModel, Field
 import ai_service
 from auth import get_current_user
 from models import UserPublic
+from ai_notice_routes import require_ai_notice
 
 
 router = APIRouter(prefix="/coach", tags=["coach"])
@@ -209,7 +210,7 @@ async def send_message(
     session_id: str,
     body: SendMessageBody,
     request: Request,
-    current: UserPublic = Depends(get_current_user),
+    current: UserPublic = Depends(require_ai_notice),
 ):
     db = request.app.state.db
     session = await _get_session_or_404(db, current.user_id, session_id)

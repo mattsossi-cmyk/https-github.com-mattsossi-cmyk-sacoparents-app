@@ -1,6 +1,6 @@
 import React from "react";
 
-import { AiDraftNotice } from "./AiDraftNotice";
+import { AiGuardFrame } from "../../../components/aiNotice/AiGuard";
 
 const CHIPS = [
   { key: "schedule_change", label: "Schedule Change", icon: "fa-regular fa-clock" },
@@ -8,24 +8,26 @@ const CHIPS = [
   { key: "expense_request", label: "Expense Notice", icon: "fa-solid fa-receipt" },
 ];
 
-export function DraftCard({ value, onChange, onPreset, onTransform, busy }) {
+export function DraftCard({ value, onChange, onPreset, onTransform, busy, guard }) {
   return (
     <div data-testid="cb-draft-card" className="bg-white rounded-2xl p-6 shadow-md border border-purple-100 mt-6">
       <div className="flex justify-between items-center mb-3 gap-2">
         <h4 className="text-base font-bold text-[#3B1C6B]">Draft Communication Message</h4>
         <span className="text-[11px] font-semibold text-purple-600 bg-purple-50 px-2.5 py-1 rounded-full whitespace-nowrap">BIFF style</span>
       </div>
-      <AiDraftNotice testid="cb-ai-notice" className="mb-3" />
-      <textarea
-        data-testid="cb-draft-input"
-        aria-label="Draft communication message"
-        value={value}
-        onChange={(e) => onChange(e.target.value)}
-        rows={4}
-        maxLength={4000}
-        placeholder="Type or paste your message here (e.g., 'You're late for pickup again and you never tell me in advance!')..."
-        className="w-full text-xs md:text-sm p-3.5 rounded-xl border border-purple-200 focus:outline-none focus:ring-2 focus:ring-purple-500 transition-shadow mb-3"
-      />
+      <AiGuardFrame tp="cb" guard={guard} className="mb-3">
+        <textarea
+          {...guard.inputProps}
+          data-testid="cb-draft-input"
+          aria-label="Draft communication message"
+          value={value}
+          onChange={(e) => onChange(e.target.value)}
+          rows={4}
+          maxLength={4000}
+          placeholder="Type or paste your message here (e.g., 'You're late for pickup again and you never tell me in advance!')..."
+          className="w-full text-xs md:text-sm p-3.5 rounded-xl border border-purple-200 focus:outline-none focus:ring-2 focus:ring-purple-500 transition-shadow"
+        />
+      </AiGuardFrame>
       <div className="flex flex-wrap gap-2 mb-4">
         {CHIPS.map((c) => (
           <button

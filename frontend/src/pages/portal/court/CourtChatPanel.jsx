@@ -1,5 +1,6 @@
 import React, { useEffect, useRef, useState } from "react";
 
+import { AiGuardFrame, useAiGuard } from "../../../components/aiNotice/AiGuard";
 import { CourtDialog } from "./CourtDialog";
 import { CourtDraftPanel } from "./CourtDraftPanel";
 import { AI_GRADIENT } from "./courtContent";
@@ -67,6 +68,7 @@ function ChatHeader({ chat, onClose, tp }) {
 // Chat UI shared by the floating dialog and the inline panel (same saved conversation).
 function ChatBody({ chat, active, draft, fb, onOpenStep4, onClose, tp, className }) {
   const [text, setText] = useState("");
+  const guard = useAiGuard("guide_chat", text);
   const [toStep4, setToStep4] = useState(null);
   const listRef = useRef(null);
   useEffect(() => {
@@ -79,6 +81,7 @@ function ChatBody({ chat, active, draft, fb, onOpenStep4, onClose, tp, className
   const submit = async (value) => {
     const t = (value ?? text).trim();
     if (!t || chat.busy) return;
+    if (!(await guard.confirmSend(t))) return;
     setText("");
     if (!(await chat.send(t))) setText(t);
   };
@@ -128,14 +131,16 @@ function ChatBody({ chat, active, draft, fb, onOpenStep4, onClose, tp, className
           </button>
         ))}
       </div>
+      <AiGuardFrame tp={tp} guard={guard} className="px-[15px] pt-[15px] bg-white border-t border-[#eee]">
       <form
         onSubmit={(e) => {
           e.preventDefault();
           submit();
         }}
-        className="p-[15px] bg-white border-t border-[#eee] flex gap-2.5"
+        className="pb-[15px] bg-white flex gap-2.5"
       >
         <input
+          {...guard.inputProps}
           data-testid={`${tp}-input`}
           value={text}
           maxLength={1000}
@@ -154,6 +159,7 @@ function ChatBody({ chat, active, draft, fb, onOpenStep4, onClose, tp, className
           <i className="fa-solid fa-paper-plane"></i>
         </button>
       </form>
+      </AiGuardFrame>
       <p className="px-5 pb-3 bg-white text-[10px] text-slate-400">Saved to your account · General guidance, not legal advice · In danger? Call 911.</p>
     </div>
   );

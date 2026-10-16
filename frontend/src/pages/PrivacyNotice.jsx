@@ -19,6 +19,7 @@ export default function PrivacyNotice() {
         </Link>
       </header>
       <main className="max-w-3xl mx-auto px-5 sm:px-6 pb-16 text-[15px] leading-relaxed">
+        <h1 data-testid="privacy-notice-title" className="font-serif text-4xl sm:text-5xl text-[#1A1330] mt-4 mb-10">Privacy Notice</h1>
         <PrivacyNoticeContent />
       </main>
     </div>

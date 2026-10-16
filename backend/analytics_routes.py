@@ -426,6 +426,65 @@ async def admin_consent_counts(request: Request, _admin: UserPublic = Depends(re
     }
 
 
+TREND_WEEKS = 12
+TREND_MIN_SIGNUPS = 5
+
+
+def _trend_week_starts(now: datetime) -> list:
+    """Mondays 00:00 UTC for the last TREND_WEEKS weeks, oldest first (the last one is the current week)."""
+    monday = (now - timedelta(days=now.weekday())).replace(hour=0, minute=0, second=0, microsecond=0)
+    return [monday - timedelta(weeks=i) for i in range(TREND_WEEKS - 1, -1, -1)]
+
+
+def _trend_rows(starts: list, buckets: dict) -> list:
+    """One row per week. A week with fewer than TREND_MIN_SIGNUPS sign-ups carries no numbers at all."""
+    rows = []
+    for s in starts:
+        b = buckets.get(s.date(), {})
+        n = b.get("signups", 0)
+        row = {"week_start": s.date().isoformat(), "fewer_than_5": n < TREND_MIN_SIGNUPS}
+        if n >= TREND_MIN_SIGNUPS:
+            row.update({
+                "signups": n,
+                "privacy_notice_accepted": b["accepted"],
+                "sensitive_info_consent": b["sensitive"],
+                "needs_reconsent": n - b["current"],
+            })
+        rows.append(row)
+    return rows
+
+
+@router.get("/admin/consent-trend")
+async def admin_consent_trend(request: Request, _admin: UserPublic = Depends(require_admin)):
+    """Weekly totals only: real accounts (no demo sessions), UTC weeks from Monday, last 12 weeks.
+    Reads the account creation date (to pick the week) and the four saved consent fields. Nothing per person leaves here."""
+    starts = _trend_week_starts(_now())
+    current = {"$eq": ["$privacy_notice_version", PRIVACY_NOTICE_VERSION]}
+
+    def ticked(*fields):
+        return {"$cond": [{"$and": [*({"$eq": [f"${f}", True]} for f in fields), current]}, 1, 0]}
+
+    pipeline = [
+        {"$match": {"is_guest": {"$ne": True}, "created_at": {"$exists": True}}},
+        {"$project": {
+            "_id": 0,
+            "d": {"$convert": {"input": "$created_at", "to": "date", "onError": None, "onNull": None}},
+            "a": ticked("ack_privacy_notice"),
+            "s": ticked("consent_sensitive_info"),
+            "c": ticked("ack_privacy_notice", "consent_sensitive_info"),
+        }},
+        {"$match": {"d": {"$gte": starts[0]}}},
+        {"$bucket": {
+            "groupBy": "$d",
+            "boundaries": [*starts, starts[-1] + timedelta(weeks=1)],
+            "default": "later",
+            "output": {"signups": {"$sum": 1}, "accepted": {"$sum": "$a"}, "sensitive": {"$sum": "$s"}, "current": {"$sum": "$c"}},
+        }},
+    ]
+    buckets = {r["_id"].date(): r async for r in request.app.state.db.users.aggregate(pipeline) if r["_id"] != "later"}
+    return {"current_version": PRIVACY_NOTICE_VERSION, "weeks": _trend_rows(starts, buckets)}
+
+
 @router.get("/admin/overview")
 async def admin_overview(
     request: Request,
