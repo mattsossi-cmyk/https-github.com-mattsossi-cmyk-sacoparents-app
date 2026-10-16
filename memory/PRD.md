@@ -9114,3 +9114,19 @@ dashboard for sharing SELECTED completed reports with any professional.
   cross-linked with /admin/accounts. Self-tested: admin 200, non-admin 403, unauth 401, no "@" in output, 390px no overflow.
 - Consent trend chart: built then REMOVED at user's request ("Don't build the consent chart").
 - AI-warning work: NOT started (user: "Not yet"; approved privacy notice + AI warning instructions to come in separate messages).
+
+
+### 2026-10-16 — AI privacy warning + Consent Trend + Privacy Notice v2 (PREVIEW ONLY, NOT DEPLOYED)
+- AI notice: `backend/ai_notice.py` (AI_NOTICE_VERSION), `ai_notice_routes.py` (`/ack` needs current privacy consent → 409
+  otherwise; `/send-anyway` logs user_id/at/version/feature/labels only), `require_ai_notice` (428) on every AI route.
+  Frontend: `components/aiNotice/*` (Provider, Radix-based TrapModal so it stacks over Radix dialogs like Court chat,
+  sticky checkbox/Continue footer, ack error message), `useAiGuard` lock on all AI inputs, `AiNoticeNeeded` for auto-AI
+  (incl. Parallel Parenting step tips). Consent first: tapping an AI box on an open page (e.g. /legacy) shows
+  "Before you continue" (ConsentGate + provider needConsent), then the AI pop-up opens by itself at the same scroll spot.
+- Consent Trend: `/admin/consent-trend` (admin only, 403 otherwise), 12 UTC Monday weeks, real accounts, <5 sign-ups hides
+  all 4 numbers; linked from /admin/consent and /admin/accounts.
+- Privacy Notice: user's exact text in `PrivacyNoticeContent.jsx` (sections 1, 2, 7, 12 only; anchors #promise #collect #ai
+  #contact); PRIVACY_NOTICE_VERSION 2026-10-16-v2 (everyone re-consents). Known text-vs-app conflicts reported to user, text unchanged.
+- Tests: iteration_138 (HIGH court-chat pop-up + MEDIUM /legacy consent bugs), iteration_139 (both fixed; BIFF-drawer Escape
+  regression → fixed with onEscapeKeyDown stopPropagation, self-verified). Backend 68 tests pass.
+- Left as is (user choice): signed-out first-visit pop-up POST /legal/acknowledge → 401 (harmless).

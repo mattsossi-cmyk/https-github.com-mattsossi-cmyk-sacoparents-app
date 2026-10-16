@@ -14,6 +14,7 @@ function TrapModal({ testid, title, initialRef, onEscape, footer, children }) {
             data-testid={testid}
             aria-describedby={undefined}
             onKeyDown={stopEscape}
+            onEscapeKeyDown={(e) => e.stopPropagation()}
             onPointerDownOutside={(e) => e.preventDefault()}
             onInteractOutside={(e) => e.preventDefault()}
             onOpenAutoFocus={(e) => {

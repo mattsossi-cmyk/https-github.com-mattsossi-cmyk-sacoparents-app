@@ -21,6 +21,7 @@ export function AiNoticeProvider({ children }) {
   const returnRef = useRef(null);
   const skipFocusRef = useRef(false);
   const afterConsentRef = useRef(false);
+  const scrollRef = useRef(0);
   const userRef = useRef(user);
   userRef.current = user;
   // AI stays locked until "Before you continue" is accepted too.
@@ -28,16 +29,21 @@ export function AiNoticeProvider({ children }) {
 
   useEffect(() => setJustAcked(false), [user?.user_id]);
 
-  // "Before you continue" comes first; once it's accepted, the AI pop-up opens by itself.
+  // "Before you continue" comes first; once it's accepted, the AI pop-up opens by itself (same scroll spot).
+  const askConsent = useCallback(() => {
+    afterConsentRef.current = true;
+    scrollRef.current = window.scrollY;
+    setNeedConsent(true);
+  }, []);
+
   const showNotice = useCallback(() => {
     if (userRef.current && !userRef.current.consent_current) {
-      afterConsentRef.current = true;
-      setNeedConsent(true);
+      askConsent();
       return;
     }
     setAckError("");
     setNoticeOpen(true);
-  }, []);
+  }, [askConsent]);
 
   useEffect(() => {
     if (!user) {
@@ -48,6 +54,7 @@ export function AiNoticeProvider({ children }) {
     if (!afterConsentRef.current || !user.consent_current) return;
     afterConsentRef.current = false;
     setNeedConsent(false);
+    requestAnimationFrame(() => window.scrollTo(0, scrollRef.current));
     if (!user.ai_notice_current) showNotice();
   }, [user, showNotice]);
 
@@ -77,8 +84,7 @@ export function AiNoticeProvider({ children }) {
       if (!user) {
         // Signed-out visitors get a demo session first; the consent screen then appears before the AI pop-up.
         if (afterConsentRef.current) return;
-        afterConsentRef.current = true;
-        setNeedConsent(true);
+        askConsent();
         startGuest().catch(() => {
           afterConsentRef.current = false;
           setNeedConsent(false);
@@ -88,7 +94,7 @@ export function AiNoticeProvider({ children }) {
       returnRef.current = el || document.activeElement;
       showNotice();
     },
-    [user, startGuest, showNotice]
+    [user, startGuest, showNotice, askConsent]
   );
 
   const ack = async () => {

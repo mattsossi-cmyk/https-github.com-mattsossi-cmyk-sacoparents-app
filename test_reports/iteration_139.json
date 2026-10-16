@@ -1,0 +1,40 @@
+{
+  "summary": "Retested the iteration_138 fix batch in preview. Backend: 67/67 existing tests pass, plus 1 new public-URL test (guest gets 409 on /ai-notice/ack until /privacy-consent, then 200). Frontend: HIGH (court chat pop-ups) FIXED, MEDIUM (/legacy guest consent first) FIXED, all LOW items pass. 1 NEW REGRESSION (MEDIUM): in the BIFF Coach drawer, pressing Escape on the AI notice pop-up now closes the pop-up AND the drawer (iteration_138 passed this).",
+  "backend_issues": {"critical": [], "minor": []},
+  "frontend_issues": {
+    "ui_bugs": [
+      {"component": "TrapModal (AiNoticeModals.jsx) inside BiffCoachDrawer (JourneyDrawers.jsx DrawerShell)", "issue": "REGRESSION: parent1 not acknowledged -> nav-biff (390px) -> click raw-input -> ai-notice-modal opens -> Escape -> ai-notice-modal AND biff-coach-drawer both close (count 0). Same path applies to ai-confirm-modal Escape and to the Records/Foundation drawers, which use the same DrawerShell.", "selector": "[data-testid=biff-coach-drawer] [data-testid=raw-input] -> [data-testid=ai-notice-modal]", "priority": "MEDIUM"}
+    ],
+    "integration_issues": [],
+    "design_issues": [
+      {"screen": "/legacy after 'Before you continue'", "issues": ["Minor: when the consent screen gives way back to /legacy, the page ends up scrolled to the footer, not the Coach demo, so the user loses their place (the AI pop-up still opens on top)."]}
+    ]
+  },
+  "passed_tests": [
+    "HIGH: court-ai-fab -> court-chat-input click -> ai-notice-modal; focus starts on ai-notice-agree; Tab x6 / Shift+Tab x4 stay inside (privacy-link <-> agree; Continue is skipped while disabled); Escape closes only the pop-up, court-chat stays open, input stays read-only; typing + Enter while locked does nothing; agree + continue unlocks, court dialog stays open, focus goes back to court-chat-input",
+    "Court confirm: 'Call me at 210-555-1234' + Enter -> ai-confirm-modal (Phone number), focus on ai-confirm-edit; Escape = edit (text kept, dialog open); Edit click OK; Send anyway -> POST /ai-notice/send-anyway {feature:'guide_chat',labels:['Phone number']} then POST /court-path/ai/chat; dialog stays open",
+    "Regression OK: cb-draft-input on '/' (pop-up, Tab inside, Escape closes, focus goes back, still locked); journal-recap-ai-needed-open opens the pop-up; BIFF drawer accept unlocks raw-input",
+    "MEDIUM: signed out /legacy -> coach-demo-empty-input -> POST /auth/guest -> consent-screen (AI notice never shown before it) -> both boxes + Continue -> back on /legacy and ai-notice-modal opens by itself; ack unlocks the box",
+    "Stale consent (privacy_notice_version=2000-01-01-v0) signed-in parent1 on /legacy: coach box data-ai-locked=true; tap -> consent-screen first; after consent the AI pop-up opens",
+    "ack failure (route-mocked 500): ai-notice-error shows inside ai-notice-modal, pop-up stays open",
+    "390px sticky footer: box 42-802px, agree 625-643px and Continue 706-778px visible; body scrolls inside (scrollHeight 679 > clientHeight 567)",
+    "Parallel Parenting step 2 and 3: pp-tip-ai-needed shown, pp-tip-ai-needed-open opens the pop-up, Escape keeps PP open, 0 requests to /parallel-parenting/ai/tip",
+    "/admin/accounts admin-counts-trend-link -> /admin/consent-trend; at 390px admin-trend-suppressed 'fewer than 5' is text-align left, starts at x=184 (inside the 390px viewport), no page-level horizontal overflow"
+  ],
+  "test_report_links": ["/app/backend/tests/test_ai_notice.py", "/app/backend/tests/test_ai_ack_consent_public.py", "/app/backend/tests/test_consent_trend.py", "/app/backend/tests/test_privacy_consent.py", "/app/backend/tests/test_comm_builder_batch.py", "/app/test_reports/pytest/pytest_results.xml"],
+  "action_items": [
+    "Fix BIFF drawer Escape regression: in TrapModal add onEscapeKeyDown={(e) => e.stopPropagation()} on Dialog.Content (Radix calls it from its document capture listener, so the DrawerShell window keydown listener never sees the Escape). Stopping propagation does not block other Radix layers on document (court dialog still checks isHighestLayer). Alternatively make DrawerShell skip Escape when e.defaultPrevented. Then retest nav-biff -> raw-input -> Escape (notice and confirm) and the court chat Escape."
+  ],
+  "critical_code_review_comments": [
+    "AiNoticeModals.jsx: stopEscape on Content onKeyDown no longer works: Radix closes the dialog in a document capture listener, React unmounts it before the bubble phase, so the React handler never runs and the native event reaches window listeners (DrawerShell). This causes the regression above.",
+    "AiNoticeProvider: Enter/typing on a locked box (focused by keyboard after Escape) does nothing silently; the pop-up only reopens on click/focus. Acceptable, but a keydown->openNotice on locked inputs would help keyboard users."
+  ],
+  "updated_files": ["/app/backend/tests/test_ai_ack_consent_public.py"],
+  "success_rate": {"backend": "100% (68/68)", "frontend": "~92% (1 regression out of ~12 flows)"},
+  "test_credentials": "parent1@test.com / TestPass123!, admin mattsossi@bsossi.com / AdminPass123! (from /app/memory/test_credentials.md)",
+  "seed_data_creation": "parent1: privacy_notice_version was set old and then re-accepted through the UI (now current); AI notice was accepted in the BIFF test (reset with python /app/tests/ai_reset.py parent1@test.com unset). New guest sessions from /legacy + one test guest. One ai_send_anyway_log row (guide_chat, Phone number). PP plan for parent1 moved to step 3.",
+  "retest_needed": true,
+  "should_main_agent_self_test": true,
+  "context_for_next_testing_agent": "Only open item: BIFF drawer (nav-biff at 390px opens biff-coach-drawer) Escape on ai-notice-modal/ai-confirm-modal must close only the pop-up. Signed-out /legacy: first dismiss legal-acknowledgment-modal (legal-ack-checkbox + legal-ack-continue-button). PP: door-self -> door-self-art-parallel-btn-exchanges opens step 2. Court: door-court -> court-ai-fab -> court-chat-input.",
+  "rca of the issue": "BIFF drawer Escape: TrapModal moved to @radix-ui/react-dialog. Radix DismissableLayer handles Escape in a document keydown CAPTURE listener and calls onOpenChange(false) -> setNoticeOpen(false). The React update runs in the microtask after that listener, so the dialog content unmounts before the target/bubble phase. The onKeyDown={stopEscape} handler on Dialog.Content then never runs, and the native keydown bubbles to window, where DrawerShell (JourneyDrawers.jsx line ~38) calls onClose(). Repro: reset parent1 AI notice, 390px, / -> nav-biff -> tap raw-input -> Escape -> drawer gone. Fix: stopPropagation inside Radix onEscapeKeyDown."
+}
