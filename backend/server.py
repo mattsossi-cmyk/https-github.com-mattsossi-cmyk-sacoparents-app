@@ -34,7 +34,7 @@ from email_utils import send_email, EMAIL_FROM_NAME, MINIMAL_NOTIFICATIONS
 from starlette.middleware.cors import CORSMiddleware
 from auth import get_current_user, is_pro, require_approved_professional
 from joint_ai import effective_joint_report as generate_joint_report
-from joint_helpers import get_joint_report_doc, report_role, invite_expired, _pending_public, joint_public, InviteSpec, _invite_email_content, send_invite_email, create_invitation, _actor_label
+from joint_helpers import get_joint_report_doc, report_role, invite_expired, _pending_public, joint_public, InviteSpec, send_invite_email, create_invitation, _actor_label
 import auth, admin_routes, integrations, cron_jobs
 
 app = FastAPI()
@@ -1173,12 +1173,9 @@ async def reminder_preview(iid: str, user=Depends(get_current_user)):
     report = await get_joint_report_doc(inv["report_id"], user)
     if report.get("created_by") != user["_id"]:
         raise HTTPException(status_code=403, detail="Only the report creator can preview the reminder")
-    subject, html = _invite_email_content(InviteSpec(
-        report_id=inv["report_id"], role=inv["role"], invitee_name=inv["invitee_name"],
-        invitee_email=inv["invitee_email"], inviter_name=inv["inviter_name"],
-        child_name=report["child_name"], subject_label=report["subject_label"], code=inv["code"],
-    ), inv["token"])
-    return {"to": inv["invitee_email"], "subject": subject, "html": html}
+    from safety_invites import build_invite_email
+    subject, html, reply_to = await build_invite_email(inv["report_id"], inv["invitee_name"], inv["inviter_name"], inv["code"], inv["token"])
+    return {"to": inv["invitee_email"], "subject": subject, "html": html, "reply_to": reply_to}
 
 
 class NoteIn(BaseModel):
@@ -1488,8 +1485,9 @@ async def preview_invitations(body: InvitePreviewIn, user=Depends(get_current_us
     for role, name, email in (("a", body.parent_a_name, body.parent_a_email), ("b", body.parent_b_name, body.parent_b_email)):
         spec = InviteSpec(report_id="preview", role=role, invitee_name=name.strip() or f"Parent {role.upper()}", invitee_email=email.strip().lower(),
                           inviter_name=inviter, child_name=body.child_name.strip(), subject_label=label, code="SA-26-XXX-PREVIEW", via_professional=True)
-        subject, html = _invite_email_content(spec, "PREVIEW-TOKEN")
-        out.append({"role": role, "to": spec.invitee_email, "subject": subject, "html": html})
+        from safety_invites import professional_template
+        subject, html = professional_template(spec.invitee_name, inviter, spec.code, "PREVIEW-TOKEN")
+        out.append({"role": role, "to": spec.invitee_email, "subject": subject, "html": html, "reply_to": user.get("email")})
     return {"previews": out}
 
 
@@ -1902,6 +1900,14 @@ app.include_router(_build_pause_router(db, get_current_user, get_joint_report_do
 from safety_screening import comm_router as _comm_router  # noqa: E402
 app.include_router(_comm_router(db, get_current_user, get_joint_report_doc, report_role), prefix="/api")
 from safety_pathway import build_router as _build_pathway_router  # noqa: E402
+from safety_invites import build_router as _build_invites_router  # noqa: E402
+from safety_status_webhook import build_router as _build_webhook_router  # noqa: E402
+from safety_review import build_router as _build_review_router  # noqa: E402
+from safety_screening import _status as _screening_status  # noqa: E402
+_is_case_pro = lambda doc, user: user.get("role") == "admin" or user["_id"] in (doc.get("professional_id"), doc.get("created_by"))  # noqa: E731
+app.include_router(_build_invites_router(get_current_user, get_joint_report_doc, _log_report_access, _is_case_pro), prefix="/api")
+app.include_router(_build_webhook_router(get_current_user), prefix="/api")
+app.include_router(_build_review_router(get_current_user, get_joint_report_doc, _log_report_access, _is_case_pro, _screening_status), prefix="/api")
 app.include_router(_build_pathway_router(db, get_current_user, get_joint_report_doc, _log_report_access, lambda doc, user: user.get("role") == "admin" or user["_id"] in (doc.get("professional_id"), doc.get("created_by"))), prefix="/api")
 from foundation import build_router as _build_foundation_router  # noqa: E402
 app.include_router(_build_foundation_router(db, get_current_user, get_joint_report_doc, report_role), prefix="/api")

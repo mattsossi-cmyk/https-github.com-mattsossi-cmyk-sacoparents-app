@@ -44,7 +44,7 @@ PRO_ROLES = ("professional", "admin")
 def app_url():
     return (_APP_URL_FILE or os.environ["APP_URL"]).rstrip("/")
 
-INVITE_EXPIRY_DAYS = 14
+INVITE_EXPIRY_DAYS = 7
 INVITE_EXPIRING_SOON_DAYS = 4
 PRO_INVITE_TTL_HOURS = 72
 

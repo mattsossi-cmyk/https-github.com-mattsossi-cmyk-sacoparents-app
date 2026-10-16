@@ -26,7 +26,7 @@ const Item = ({ p, i }) => {
 
 export default function PrivacyNotice() {
   const navigate = useNavigate();
-  const { refresh } = useAuth();
+  const { user, refresh } = useAuth();
   const [n, setN] = useState(null);
   const [ok, setOk] = useState(false);
   const [busy, setBusy] = useState(false);

@@ -1,7 +1,7 @@
 """Invitation email preview before sending."""
 import os
 
-from casekit import new_user, new_case
+from casekit import new_case, new_user
 
 BASE_URL = (os.environ.get("REACT_APP_BACKEND_URL") or "https://align-report.preview.emergentagent.com").rstrip("/")
 API = f"{BASE_URL}/api"
@@ -18,7 +18,8 @@ def test_preview_returns_two_distinct_emails_without_sending() -> None:
     assert [p["role"] for p in previews] == ["a", "b"]
     assert previews[0]["to"] == "ann@example.com" and previews[1]["to"] == "bo@example.com"
     for p in previews:
-        assert "Kai" in p["html"] and "Communication" in p["html"] and "Preview Pro" in p["html"]
+        # Safety-first template (2026-10-16): no child name or subject in the email; professional named; reply-to professional
+        assert "Kai" not in p["html"] and "Communication" not in p["html"] and "Preview Pro" in p["html"] and p["reply_to"]
         assert "sacoparentsapp.online/?invite=PREVIEW-TOKEN" in p["html"]
     assert "Ann" in previews[0]["html"] and "Bo" in previews[1]["html"]
     assert all(x["child_name"] != "Kai" for x in pro.get(f"{API}/joint/reports").json())

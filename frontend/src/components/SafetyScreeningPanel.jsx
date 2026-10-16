@@ -47,6 +47,7 @@ export function SafetyScreeningPanel({ rid }) {
         </div>
       )}
       <p className="mt-2 text-[11px] text-muted-foreground">{d.scale_note}</p>
+      <Link to={`/joint/${rid}/safety-review`} className="mt-2 inline-flex items-center gap-1 text-xs font-semibold text-brand-purple hover:underline" data-testid="safety-review-link"><Lock className="h-3 w-3" /> Open safety review (two-column, logged)</Link>
     </div>
   );
 }

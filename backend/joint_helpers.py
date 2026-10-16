@@ -1,35 +1,17 @@
 """Joint case helpers shared by the joint, admin, cron and integration route modules."""
 
-import uuid
-
-
-
 import secrets
-
-from datetime import datetime, timezone, timedelta
+import uuid
 from dataclasses import dataclass
+from datetime import datetime, timedelta, timezone
 from html import escape
-
-
-
 
 from fastapi import HTTPException
 
-
-
-
-
-
-
+from core import INVITE_EXPIRY_DAYS, _parse_iso, app_url, db, invite_link, logger
 from court_workflow import court_stage
-
-
-
-
-
-from email_utils import send_email, EMAIL_FROM_NAME, MINIMAL_NOTIFICATIONS
+from email_utils import EMAIL_FROM_NAME, MINIMAL_NOTIFICATIONS, send_email
 from joint_engine import REDACTION_NOTICE
-from core import db, logger, app_url, _parse_iso, invite_link, INVITE_EXPIRY_DAYS
 
 
 def new_code():
@@ -215,8 +197,9 @@ def _invite_email_content(spec: InviteSpec, token: str) -> tuple[str, str]:
 
 
 async def send_invite_email(spec: InviteSpec, token: str):
-    subject, html = _invite_email_content(spec, token)
-    await send_email(to=spec.invitee_email, subject=subject, html=html, case_id=spec.report_id, kind="invitation", to_role=f"Parent {spec.role.upper()}")
+    from safety_invites import build_invite_email
+    subject, html, reply_to = await build_invite_email(spec.report_id, spec.invitee_name, spec.inviter_name, spec.code, token)
+    await send_email(to=spec.invitee_email, subject=subject, html=html, reply_to=reply_to, case_id=spec.report_id, kind="invitation", to_role=f"Parent {spec.role.upper()}")
 
 
 async def create_invitation(spec: InviteSpec):

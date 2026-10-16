@@ -168,6 +168,9 @@ def build_router(db, get_current_user, get_joint_report_doc, log_access, is_pro)
         rec.update({"by": user["_id"], "at": datetime.now(timezone.utc).isoformat()})
         await db.joint_reports.update_one({"id": rid}, {"$set": {f"safety_pathway.{role}": rec}})
         await log_access(doc, user, f"Safety pathway {rec['status']} for Parent {role.upper()}: {LABEL.get(rec['confirmed'] or suggested)}", "safety_pathway")
+        if rec["status"] == "confirmed":
+            from safety_status_webhook import notify_safety_mode
+            notify_safety_mode(rid, case_pathway({**doc, "safety_pathway": {**(doc.get("safety_pathway") or {}), role: rec}}), user.get("name", ""))
         return {**rec, "label": LABEL.get(rec["confirmed"]) if rec["confirmed"] else None, "case_pathway": case_pathway({**doc, "safety_pathway": {**(doc.get("safety_pathway") or {}), role: rec}})}
 
     return r

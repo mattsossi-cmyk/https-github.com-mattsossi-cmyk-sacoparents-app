@@ -4,33 +4,30 @@
 
 
 
-import secrets
 import asyncio
-from datetime import datetime, timezone, timedelta
-
+import secrets
+from datetime import datetime, timedelta, timezone
 from html import escape
-
-
-
 
 from fastapi import APIRouter, HTTPException, Request
 
-
-
-
-
-
-
+from core import (
+    INVITE_EXPIRING_SOON_DAYS,
+    INVITE_EXPIRY_DAYS,
+    WEBHOOK_CRON_SECRET,
+    _parse_iso,
+    app_url,
+    db,
+    logger,
+)
 from court_workflow import run_hearing_reminders
+from email_utils import (
+    EMAIL_FROM_NAME,
+    MINIMAL_NOTIFICATIONS,
+    NEUTRAL_SUBJECT,
+    send_email,
+)
 from judge_digest import run_judge_digests
-
-
-
-
-from email_utils import send_email, EMAIL_FROM_NAME, MINIMAL_NOTIFICATIONS, NEUTRAL_SUBJECT
-from core import db, logger, app_url, _parse_iso, WEBHOOK_CRON_SECRET, INVITE_EXPIRY_DAYS, INVITE_EXPIRING_SOON_DAYS
-
-
 
 router = APIRouter()
 
@@ -119,6 +116,8 @@ async def cron_follow_up_reminder(request: Request):
     from safety_screening import run_screening_reminders
     asyncio.create_task(run_reassessment_reminders(db, send_email, app_url, EMAIL_FROM_NAME, logger))
     asyncio.create_task(run_screening_reminders(db, send_email, app_url, EMAIL_FROM_NAME, logger))
+    from safety_invites import run_invite_reminders
+    asyncio.create_task(run_invite_reminders())
     # Retention Engine (retention.run_retention) is built but intentionally NOT scheduled — owner has it PAUSED pending report sign-off.
     return ack
 
