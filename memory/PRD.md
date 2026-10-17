@@ -1131,3 +1131,5 @@ Owner rulings: 1 replace A/B/C with 8-domain set; 2 professional-decides (no aut
 - Tests: test_iter117 2 passed.
 
 ## 2026-10-17 — Perplexity key replaced (owner-provided, untracked backend/.env). Direct chat/completions returns 403 for this key (sonar endpoint not enabled) but the app's /v1/agent path returns 200: Local Resources working (Bexar County FJC result). Two earlier pasted keys were invalid — advised owner to revoke them.
+
+## 2026-10-17 — Deploy prep decision: (b) keep .env files git-ignored; owner enters production keys in the deployment Secrets tab. Readiness checker 'fail' on gitignore is by convention; all code checks passed. No deploy yet — owner must say 'deploy'.
