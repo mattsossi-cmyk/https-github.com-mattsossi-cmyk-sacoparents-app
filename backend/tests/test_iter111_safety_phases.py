@@ -36,11 +36,11 @@ def test_templates_neutral_single_use_private_device_and_distinct():
     assert s1 == s2 and "message from" in s1.lower()
     for h in (h1, h2):
         t = _plain(h)
-        assert "works once and expires in 7 days" in t and "device only you can access" in t and "abcd1234" in t and "invite=tok" in h
+        assert "works once and expires in 14 days" in t and "device only you can access" in t and "abcd1234" in t and "invite=tok" in h
         for bad in _FORBIDDEN:
             assert bad not in t, bad
     assert "reply to this email" in _plain(h1) and "reply to this email" not in _plain(h2)
-    assert INVITE_EXPIRY_DAYS == 7
+    assert INVITE_EXPIRY_DAYS == 14
 
 
 def test_reminder_preview_uses_template1_with_reply_to_professional_and_one_email_per_parent():
@@ -58,16 +58,16 @@ def test_reminder_preview_uses_template1_with_reply_to_professional_and_one_emai
 def test_cadence_defaults_and_professional_override_and_reminder_runner(monkeypatch):
     pro, pa, pb, rid = _case()
     d = pro.get(f"{API}/joint/reports/{rid}/invite-cadence").json()
-    assert d["cadence"] == {"reminder_days": [3, 6], "max_reminders": 2, "expiry_days": 7}
+    assert d["cadence"] == {"reminder_days": [3, 6], "max_reminders": 2, "expiry_days": 14}
     assert pa.get(f"{API}/joint/reports/{rid}/invite-cadence").status_code == 403
     r = pro.put(f"{API}/joint/reports/{rid}/invite-cadence", json={"reminder_days": [2, 5, 9], "max_reminders": 5})
-    assert r.json()["cadence"] == {"reminder_days": [2, 5], "max_reminders": 2, "expiry_days": 7}
+    assert r.json()["cadence"] == {"reminder_days": [2, 5, 9], "max_reminders": 2, "expiry_days": 14}
     # runner: plant a pending invite created 4 days ago → reminder 1 sent, second not yet; expired invite skipped
     iid = str(uuid.uuid4())
     now = datetime.now(timezone.utc)
     _db.invitations.insert_one({"id": iid, "report_id": rid, "role": "b", "invitee_name": "Pat", "invitee_email": f"t_pend_{iid[:6]}@example.com", "inviter_name": "Pro", "token": "tk" + iid[:10], "code": "ZZZZ9999", "status": "pending", "created_at": (now - timedelta(days=4)).isoformat()})
     old = str(uuid.uuid4())
-    _db.invitations.insert_one({"id": old, "report_id": rid, "role": "b", "invitee_name": "Old", "invitee_email": f"t_old_{old[:6]}@example.com", "inviter_name": "Pro", "token": "tk" + old[:10], "code": "ZZZZ9998", "status": "pending", "created_at": (now - timedelta(days=9)).isoformat()})
+    _db.invitations.insert_one({"id": old, "report_id": rid, "role": "b", "invitee_name": "Old", "invitee_email": f"t_old_{old[:6]}@example.com", "inviter_name": "Pro", "token": "tk" + old[:10], "code": "ZZZZ9998", "status": "pending", "created_at": (now - timedelta(days=16)).isoformat()})
     import asyncio
 
     async def _twice():
@@ -96,7 +96,7 @@ def test_webhook_payload_signature_allowlist_and_flag_off():
 
 def test_pathway_confirm_does_not_deliver_while_off_and_admin_status_endpoint():
     pro, pa, pb, rid = _case()
-    pa.put(f"{API}/joint/reports/{rid}/safety-screening", json={"responses": {**ALL_NO, "danger": "Yes"}, "safe_contact": None})
+    pa.put(f"{API}/joint/reports/{rid}/safety-screening", json={"responses": {**ALL_NO, "strangle": "In the last 12 months", "weapon_access": "Yes"}, "safe_contact": None})
     before = _db.webhook_deliveries.count_documents({"case_id": rid})
     r = pro.put(f"{API}/joint/reports/{rid}/safety-pathway/a", json={"action": "change", "pathway": "protected_review"})
     assert r.status_code == 200
@@ -113,7 +113,7 @@ def test_safety_review_two_columns_pattern_concern_reasons_provisions_and_logged
     a, b = d["columns"]
     assert a["app_tier"] == "red" and a["app_tier_label"] == "Red" and b["received"] is False and b["entry_status"] == "declined"
     doms = {p["domain"]: p["signals"] for p in a["pattern"]}
-    assert any("Strangulation" in s for sig in doms.values() for s in sig) and all("In the last" not in json.dumps(a["pattern"]) for _ in [0])
+    assert any("Strangulation" in s for sig in doms.values() for s in sig) and "In the last" not in json.dumps(a["pattern"])
     assert d["review"]["concern_level"] == "none" and len(d["provisions"]) >= 12 and {p["group"] for p in d["provisions"]} == {"Exchange", "Communication", "Contact", "Supervision", "Firearms", "No-contact"}
     r = pro.put(f"{API}/joint/reports/{rid}/safety-review", json={"concern_level": "red", "reasons": [], "provisions": []})
     assert r.status_code == 400

@@ -15,9 +15,9 @@ from safety_screening import (
 RAW_A = {"a1": "Frequently", "a2": "Sometimes", "a3": "Never", "a4": "Never", "a5": "Rarely", "a6": "Sometimes", "c1": "Yes", "c2": "Not sure", "a9": "fear of losing custody UNIQUE-FREETEXT-XYZ", "safe": "Somewhat safe"}
 
 
-@pytest.mark.skip(reason="Superseded 2026-10-16: the Family check-in (FV) replaces the A/B/C choice; see test_iter110_family_checkin.py")
 
 
+@pytest.mark.skip(reason="Owner 2026-10-17 (final): the A/B/C choice screen is removed; the 8-domain Family check-in is the single live screening — see test_iter110_family_checkin.py")
 def test_versions_have_required_items_and_no_lethality_items():
     assert [i["id"] for i in VERSIONS["A"]["items"]] == ["a1", "a2", "a3", "a4", "a5", "a6", "c1", "c2", "a9", "safe"]
     assert [i["id"] for i in VERSIONS["B"]["items"]] == [f"b_{n}" for n in range(1, 16)] + ["c1", "c2", "c3", "safe"]
@@ -50,9 +50,9 @@ def test_skips_and_prefer_not_to_say_never_raise_tier():
     assert rec["answered_count"] == 1 and rec["skipped_count"] == 14 and rec["tier"] == 1 and "a9" not in rec["responses"]
 
 
-@pytest.mark.skip(reason="Superseded 2026-10-16: the Family check-in (FV) replaces the A/B/C choice; see test_iter110_family_checkin.py")
 
 
+@pytest.mark.skip(reason="Owner 2026-10-17 (final): the A/B/C choice screen is removed; the 8-domain Family check-in is the single live screening — see test_iter110_family_checkin.py")
 def test_default_version_by_gender():
     # 2026-10-16: no profile/gender inference — every parent sees the same four options.
     assert default_version("Woman") is None and default_version("man") is None

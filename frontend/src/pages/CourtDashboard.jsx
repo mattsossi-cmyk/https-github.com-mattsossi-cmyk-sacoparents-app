@@ -13,7 +13,6 @@ import { CaseSidebar, CaseOverview, ParentStatus, ReportsAvailable, PortalCard, 
 import { JudgeReportGuide } from "@/components/JudgeReportGuide";
 import { WorkflowGuide } from "@/components/WorkflowGuide";
 import { UrgentMessages } from "@/components/UrgentMessages";
-import { UrgentSmsSettings } from "@/components/UrgentSmsSettings";
 import { CourtDirectory } from "@/components/CourtDirectory";
 import { SampleTour, useSampleTour, TourButton, JUDGE_TOUR } from "@/components/SampleTour";
 import { JudgeWelcomeChat } from "@/components/JudgeWelcomeChat";
@@ -126,7 +125,6 @@ export default function CourtDashboard() {
         )}
         <div className="mb-6" data-testid="judge-workflow-guide"><WorkflowGuide kind="judge" /></div>
         <UrgentMessages onOpen={(refId) => { setActive(null); setSelected(refId); window.location.hash = "thread"; }} />
-        <UrgentSmsSettings />
         <CourtDirectory />
         {active ? (
           <>

@@ -1,4 +1,4 @@
-"""Safety-first invitations (owner spec Phase 2): two neutral templates, single-use 7-day link, reply-to the professional, cadence reminders."""
+"""Safety-first invitations: two neutral templates, single-use 14-day link, reply-to the professional, cadence reminders."""
 import uuid
 from datetime import datetime, timedelta, timezone
 from html import escape
@@ -18,7 +18,7 @@ from core import (
 from email_utils import EMAIL_FROM_NAME, NEUTRAL_SUBJECT, send_email
 
 DEFAULT_CADENCE = {"reminder_days": [3, 6], "max_reminders": 2, "expiry_days": INVITE_EXPIRY_DAYS}
-PRIVATE_DEVICE_LINE = "Please open this on a device only you can access. This link works once and expires in 7 days; after that your professional can send a fresh one."
+PRIVATE_DEVICE_LINE = "Please open this on a device only you can access. This link works once and expires in 14 days; after that your professional can send a fresh one."
 
 
 def _wrap(inner: str) -> str:

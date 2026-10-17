@@ -6,7 +6,6 @@ import uuid
 from datetime import datetime, timezone
 from html import escape
 
-from pydantic import BaseModel
 from fastapi import APIRouter, Depends, HTTPException
 
 from agreement_ai import _extract_json
@@ -67,7 +66,7 @@ class Threads:
 
     @staticmethod
     def public(m: dict) -> dict:
-        return {k: m.get(k) for k in ("id", "from_role", "from_name", "text", "at", "triage", "urgent_alert_sent_at", "urgent_sms_sent_at")}
+        return {k: m.get(k) for k in ("id", "from_role", "from_name", "text", "at", "triage", "urgent_alert_sent_at")}
 
     async def thread(self, ref_id: str) -> list[dict]:
         return await self.db.court_messages.find({"referral_id": ref_id}, {"_id": 0}).sort("at", 1).to_list(500)
@@ -117,20 +116,9 @@ class Threads:
         if sent == "urgent":
             msg["urgent_alert_sent_at"] = _now()
             upd = {"urgent_alert_sent_at": msg["urgent_alert_sent_at"]}
-            if await self._urgent_sms(ref):
-                msg["urgent_sms_sent_at"] = upd["urgent_sms_sent_at"] = _now()
             await self.db.court_messages.update_one({"id": msg["id"]}, {"$set": upd})
         return {"message": self.public(msg), "summary": summary}
 
-    async def _urgent_sms(self, ref: dict) -> bool:
-        from sms import send_sms
-        judge = await self.db.users.find_one({"_id": ref.get("judge_id")}, {"profile": 1}) or {}
-        prof = judge.get("profile") or {}
-        if not prof.get("mobile") or not prof.get("sms_urgent_alerts", True):
-            return False
-        body = (f"SA CoParents Align: URGENT safety concern raised by the assigned professional on Cause No. {ref.get('cause_number', '')}. "
-                f"Review and respond in the Judicial Portal: {self.app_url()}/court/case/{ref['id']}")
-        return bool(await send_sms(prof["mobile"], body))
 
     async def _audit(self, ref: dict, user: dict, role: str, at: str) -> None:
         who = "the Court" if role == "court" else "the professional"
@@ -156,56 +144,11 @@ def build_router(db, get_current_user, app_url, send_email, email_from_name, req
     return r
 
 
-class MobileIn(BaseModel):
-    mobile: str = ""
-    sms_urgent_alerts: bool = True
 
-
-def _alert_view(user: dict) -> dict:
-    from sms import sms_configured
-    prof = user.get("profile") or {}
-    return {"configured": sms_configured(), "mobile": prof.get("mobile", ""), "sms_urgent_alerts": prof.get("sms_urgent_alerts", True), "email": user.get("email")}
-
-
-def _alert_routes(r: APIRouter, get_current_user, require_judge, t: Threads) -> None:
-    """Judge mobile number / urgent-safety SMS preferences."""
-
-    @r.get("/court-dashboard/alert-settings")
-    async def alert_settings(user=Depends(get_current_user)):
-        await require_judge(user)
-        return _alert_view(user)
-
-    @r.put("/court-dashboard/alert-settings")
-    async def set_alert_settings(body: MobileIn, user=Depends(get_current_user)):
-        from sms import normalize_mobile
-        await require_judge(user)
-        mobile = ""
-        if body.mobile.strip():
-            mobile = normalize_mobile(body.mobile)
-            if not mobile:
-                raise HTTPException(status_code=400, detail="Enter a valid mobile number, e.g. +1 210 555 0123")
-        await t.db.users.update_one({"_id": user["_id"]}, {"$set": {"profile.mobile": mobile, "profile.sms_urgent_alerts": body.sms_urgent_alerts}})
-        user = await t.db.users.find_one({"_id": user["_id"]})
-        return _alert_view(user)
-
-    @r.post("/court-dashboard/alert-settings/test-sms")
-    async def test_sms(user=Depends(get_current_user)):
-        from sms import send_sms, sms_configured
-        await require_judge(user)
-        mobile = (user.get("profile") or {}).get("mobile")
-        if not mobile:
-            raise HTTPException(status_code=400, detail="Add a mobile number first")
-        if not sms_configured():
-            raise HTTPException(status_code=503, detail="Text alerts are not configured yet (Twilio credentials missing)")
-        sid = await send_sms(mobile, "SA CoParents Align: test message. You will receive a text here when a professional raises an urgent safety concern on one of your cases.")
-        if not sid:
-            raise HTTPException(status_code=502, detail="Could not send the test text — check the number and try again")
-        return {"ok": True}
 
 
 def _judge_routes(r: APIRouter, get_current_user, require_judge, t: Threads) -> None:
     """Judge-facing thread routes (urgent list, per-case messages) + professional thread routes."""
-    _alert_routes(r, get_current_user, require_judge, t)
 
     @r.get("/court-dashboard/urgent-messages")
     async def judge_urgent(user=Depends(get_current_user)):

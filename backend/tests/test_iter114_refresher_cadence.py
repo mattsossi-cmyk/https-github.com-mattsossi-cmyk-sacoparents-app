@@ -35,7 +35,7 @@ def test_yearly_refresher_gates_and_prompts_then_clears_on_reack():
     assert me["safety_training_due"] == "yearly"
     t = pro.get(f"{API}/professional-training").json()
     assert t["current"] is False and t["reason"] == "yearly" and t["refresh_days"] == 365
-    assert pro.get(f"{API}/joint/reports/{rid}/safety-review").status_code == 428
+    assert pro.get(f"{API}/joint/reports/{rid}/safety-review").status_code == 200  # prompt only, never a gate (owner 2026-10-17)
     assert pro.post(f"{API}/professional-training/acknowledge", json={"version": pt.TRAINING_VERSION, "acknowledged": True}).json()["ok"]
     assert pro.get(f"{API}/auth/me").json()["safety_training_due"] is None
     assert pro.get(f"{API}/joint/reports/{rid}/safety-review").status_code == 200
@@ -45,9 +45,9 @@ def test_yearly_refresher_gates_and_prompts_then_clears_on_reack():
 def test_case_reminder_settings_roundtrip_and_validation():
     pro, pa, pb, rid = _case()
     r = pro.put(f"{API}/joint/reports/{rid}/invite-cadence", json={"reminder_days": [1, 4], "max_reminders": 1})
-    assert r.status_code == 200 and r.json()["cadence"] == {"reminder_days": [1, 4], "max_reminders": 1, "expiry_days": 7}
+    assert r.status_code == 200 and r.json()["cadence"] == {"reminder_days": [1, 4], "max_reminders": 1, "expiry_days": 14}
     assert pro.get(f"{API}/joint/reports/{rid}/invite-cadence").json()["cadence"]["max_reminders"] == 1
     r = pro.put(f"{API}/joint/reports/{rid}/invite-cadence", json={"reminder_days": [0, 7, 30], "max_reminders": 2})
-    assert r.json()["cadence"]["reminder_days"] == [] and r.json()["cadence"]["max_reminders"] == 0
+    assert r.json()["cadence"]["reminder_days"] == [7] and r.json()["cadence"]["max_reminders"] == 1
     assert pa.put(f"{API}/joint/reports/{rid}/invite-cadence", json={"reminder_days": [3], "max_reminders": 1}).status_code == 403
     assert any(e["kind"] == "invite_cadence" for e in _db.access_events.find({"report_id": rid}))

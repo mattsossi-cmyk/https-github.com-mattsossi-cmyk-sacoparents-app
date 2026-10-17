@@ -1,15 +1,16 @@
 """Iter-109 (owner-approved 2026-10-16): neutral invitation email, same four choice options for every parent, switch-later line,
 updated content note, and real resume (private draft)."""
 import os
-import pytest
 import re
 
+import pytest
 from dotenv import load_dotenv
 
 load_dotenv("/app/frontend/.env")
 load_dotenv("/app/backend/.env")
 
 from test_iter108_required_step import _case  # noqa: E402
+
 import joint_helpers  # noqa: E402
 from safety_screening import CHOICE_LABEL, CHOICE_SWITCH_NOTE, TRIGGER_WARNING  # noqa: E402
 
@@ -28,6 +29,7 @@ def test_invitation_email_is_neutral_and_mentions_private_check_in():
 
 def _case_with_genders():
     import uuid
+
     from casekit import new_user
     pro = new_user(API, "professional", "Gate Pro", email=f"t_{uuid.uuid4().hex[:8]}@example.com")
     d = pro.post(f"{API}/joint/reports/professional", json={"subject": "education", "child_name": "G.", "parent_a_name": "Alex", "parent_a_email": f"t_pa_{uuid.uuid4().hex[:6]}@example.com",
@@ -42,9 +44,9 @@ def _case_with_genders():
     return pro, ses["a"], ses["b"], d["id"]
 
 
-@pytest.mark.skip(reason="Superseded 2026-10-16: the Family check-in (FV) replaces the A/B/C choice; see test_iter110_family_checkin.py")
 
 
+@pytest.mark.skip(reason="Owner 2026-10-17 (final): the A/B/C choice screen is removed; the 8-domain Family check-in is the single live screening — see test_iter110_family_checkin.py")
 def test_choice_screen_same_four_options_for_everyone_switch_note_and_content_note():
     pro, pa, pb, rid = _case_with_genders()  # genders on file, yet nothing is inferred
     for s in (pa, pb):

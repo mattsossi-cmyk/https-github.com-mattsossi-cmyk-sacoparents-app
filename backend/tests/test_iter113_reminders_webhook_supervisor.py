@@ -27,7 +27,7 @@ def test_reminder_dashboard_lists_unopened_with_next_reminder_and_reissue():
     assert d["count"] == 1
     inv = d["invitations"][0]
     assert inv["id"] == iid and inv["parent_label"] == "Parent B" and inv["reminders_sent"] == 0 and inv["max_reminders"] == 2 and inv["can_reissue"] is True and inv["expired"] is False
-    assert inv["next_reminder_at"][:10] == (now + timedelta(days=2)).isoformat()[:10] and inv["expires_at"][:10] == (now + timedelta(days=6)).isoformat()[:10]
+    assert inv["next_reminder_at"][:10] == (now + timedelta(days=2)).isoformat()[:10] and inv["expires_at"][:10] == (now + timedelta(days=13)).isoformat()[:10]
     assert "token" not in inv
     # one-click fresh link: old → expired, a new pending one appears with a fresh 7-day window
     r = pro.post(f"{API}/joint/invitations/{iid}/reissue")
@@ -35,7 +35,7 @@ def test_reminder_dashboard_lists_unopened_with_next_reminder_and_reissue():
     assert _db.invitations.find_one({"id": iid})["status"] == "expired"
     d = pro.get(f"{API}/professional/invitations").json()
     fresh = [i for i in d["invitations"] if i["role"] == "b" and i["id"] != iid]
-    assert len(fresh) == 1 and fresh[0]["expires_at"][:10] == (now + timedelta(days=7)).isoformat()[:10] and fresh[0]["reminders_sent"] == 0
+    assert len(fresh) == 1 and fresh[0]["expires_at"][:10] == (now + timedelta(days=14)).isoformat()[:10] and fresh[0]["reminders_sent"] == 0
     _db.invitations.delete_many({"report_id": rid, "status": {"$in": ["pending", "expired"]}, "role": "b", "id": {"$ne": None}, "code": {"$in": ["ZZZZ0001"]}})
 
 

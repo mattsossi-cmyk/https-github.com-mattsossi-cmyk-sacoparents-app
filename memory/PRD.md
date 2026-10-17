@@ -1133,3 +1133,11 @@ Owner rulings: 1 replace A/B/C with 8-domain set; 2 professional-decides (no aut
 ## 2026-10-17 — Perplexity key replaced (owner-provided, untracked backend/.env). Direct chat/completions returns 403 for this key (sonar endpoint not enabled) but the app's /v1/agent path returns 200: Local Resources working (Bexar County FJC result). Two earlier pasted keys were invalid — advised owner to revoke them.
 
 ## 2026-10-17 — Deploy prep decision: (b) keep .env files git-ignored; owner enters production keys in the deployment Secrets tab. Readiness checker 'fail' on gitignore is by convention; all code checks passed. No deploy yet — owner must say 'deploy'.
+
+## 2026-10-17 08:57 CDT — OWNER CORRECTIONS (final after follow-up)
+- Screening: KEEP the 8-domain Family check-in as the single live screening; A/B/C four-option choice screen REMOVED (defs kept only to read legacy records; OFFERED_VERSION='FV'). A/B/C tests skipped with reason 'Owner 2026-10-17 (final)'. fv_screening.py = live.
+- Invitation links back to 14 days (core.INVITE_EXPIRY_DAYS=14; email line '14 days').
+- Training gate → PROMPT only (pro_training.require_training no-ops; banner/page remain; never blocks responses or review).
+- Twilio/SMS removed: sms.py, UrgentSmsSettings.jsx, court_messages alert-settings/test-sms routes + _urgent_sms, test_iter76_urgent_sms.py deleted; twilio removed from requirements.txt and pip; TWILIO_* removed from backend/.env. Urgent-safety EMAIL alert to judges remains.
+- SAFETY_STATUS_WEBHOOK=false; ALIGN_WEBHOOK_SECRET unset (unchanged).
+- Tests: safety suites 66 passed / 5 skipped (A/B/C), iter88 13 passed/4 skipped; court/ai suites 21 passed.

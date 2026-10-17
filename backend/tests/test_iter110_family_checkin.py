@@ -7,8 +7,9 @@ from dotenv import load_dotenv
 load_dotenv("/app/frontend/.env")
 load_dotenv("/app/backend/.env")
 
-import fv_screening as fv  # noqa: E402
 from test_iter108_required_step import _case  # noqa: E402
+
+import fv_screening as fv  # noqa: E402
 
 API = f"{(os.environ.get('REACT_APP_BACKEND_URL') or '').rstrip('/')}/api"
 ALL_NO = {i["id"]: ("Never" if i["kind"] == "tf" else "No") for i in fv.ITEMS if i["kind"] in ("tf", "yn")}

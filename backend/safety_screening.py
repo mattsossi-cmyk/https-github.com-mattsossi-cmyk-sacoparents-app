@@ -2,8 +2,8 @@
 
 Routing: a parent's answers go only to the assigned professional — never to the co-parent, never into a report or PDF.
 """
-from datetime import datetime, timezone
 import os
+from datetime import datetime, timezone
 
 from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel
@@ -128,7 +128,8 @@ TIER_LABEL = {1: "Tier 1 — resources only", 2: "Tier 2 — review resources; p
 # Report/PDF/co-parent-safe labels: never name identity. Full names live in VERSION_LABEL_PRO (professional-only screens).
 VERSION_LABEL = {"A": "Version A", "B": "Version B", "C": "Version C", "FV": "Family check-in"}
 VERSION_LABEL_PRO = {"A": "Version A (women)", "B": "Version B (men)", "C": "Version C (LGBTQ+ relationship)", "FV": "Family check-in (8 domains)"}
-OFFERED_VERSION = "FV"  # 2026-10-16: the family check-in replaces the A/B/C choice; identical for every parent
+# 2026-10-17 (owner, final): the 8-domain Family check-in is the single live screening; the A/B/C choice screen is removed (definitions kept only to read legacy records).
+OFFERED_VERSION = "FV"
 # Owner-approved 2026-10-16: every parent sees the SAME four options; nothing is inferred from the profile. Only the version letter is stored.
 CHOICE_LABEL = {"A": "Questions written for women (Version A)", "B": "Questions written for men (Version B)", "C": "Questions written for LGBTQ+ relationships (Version C)"}
 CHOICE_HELP_LABEL = "Prefer not to say (I'll help you choose)"
@@ -344,9 +345,10 @@ def build_router(db, get_current_user, get_joint_report_doc, report_role, log_ac
 
     async def _tier3_alert(doc: dict, role: str, rec: dict) -> None:
         """Immediate professional alert for a Tier 3 screening — receipt, version letter, tier only; never answers, never identity."""
+        from html import escape
+
         from core import _pro_email_wrap, app_url
         from email_utils import EMAIL_FROM_NAME, send_email
-        from html import escape
         pro = await db.users.find_one({"_id": doc.get("professional_id") or doc.get("created_by"), "role": {"$in": ["professional", "admin"]}}, {"email": 1, "name": 1})
         if not pro or doc.get("is_demo"):
             return
@@ -474,7 +476,11 @@ def build_router(db, get_current_user, get_joint_report_doc, report_role, log_ac
         if body.role not in ("a", "b") or body.version not in VERSIONS:
             raise HTTPException(status_code=400, detail="Invalid role or version")
         await db.joint_reports.update_one({"id": rid}, {"$set": {f"safety_version.{body.role}": body.version}})
-        from parent_app_contract import PARENT_APP_LINK_CONTRACT, assign_screening_version, case_context
+        from parent_app_contract import (
+            PARENT_APP_LINK_CONTRACT,
+            assign_screening_version,
+            case_context,
+        )
         if PARENT_APP_LINK_CONTRACT:
             parent_uid = ((doc.get("participants") or {}).get(body.role) or {}).get("user_id")
             link = await db.account_links.find_one({"user_id": parent_uid}) if parent_uid else None
@@ -529,7 +535,8 @@ def build_router(db, get_current_user, get_joint_report_doc, report_role, log_ac
         st = _status(doc)[role]
         st["version_label"] = VERSION_LABEL_PRO.get(scr.get("version") or "", "legacy format")
         st["title"] = scr.get("title")
-        from safety_pathway import LABEL as _PL, PATHWAYS as _PW
+        from safety_pathway import LABEL as _PL
+        from safety_pathway import PATHWAYS as _PW
         decision = (doc.get("safety_pathway") or {}).get(role) or {}
         pathway = {"suggested": scr.get("pathway_suggested") or {"pathway": "standard", "label": "Standard", "triggered": [], "triggered_labels": []}, "decision": decision or None,
                    "options": [{"key": k, "label": _PL[k]} for k in _PW], "note": "Suggested flag only — nothing is restricted automatically. Confirm, change, or dismiss; only your confirmed pathway reaches the report."}

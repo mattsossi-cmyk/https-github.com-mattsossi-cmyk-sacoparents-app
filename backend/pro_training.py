@@ -48,11 +48,8 @@ def training_current(user: dict) -> bool:
 
 
 async def require_training(db, user: dict) -> None:
-    if user.get("role") not in ("professional", "admin"):
-        return
-    full = await db.users.find_one({"_id": user["_id"]}, {"safety_training": 1})
-    if not training_current(full or {}):
-        raise HTTPException(status_code=428, detail={"code": "training_required", "message": "Complete the safety screening training acknowledgment before opening private check-in information.", "version": TRAINING_VERSION})
+    """2026-10-17 (owner): training is a PROMPT, not a gate. Professionals are asked to acknowledge but never blocked."""
+    return None
 
 
 async def is_supervisor(db, user: dict) -> bool:

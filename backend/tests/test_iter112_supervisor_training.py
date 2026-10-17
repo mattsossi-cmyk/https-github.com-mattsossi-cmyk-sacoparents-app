@@ -27,16 +27,16 @@ def _untrain(s):
     _db.users.update_one({"_id": uid}, {"$unset": {"safety_training": ""}})
 
 
-def test_training_gate_blocks_responses_and_review_until_acknowledged():
+def test_training_prompt_never_blocks_and_ack_is_recorded():
     pro, pa, pb, rid = _case()
-    pa.put(f"{API}/joint/reports/{rid}/safety-screening", json={"responses": {**ALL_NO, "danger": "Yes"}, "safe_contact": None})
+    pa.put(f"{API}/joint/reports/{rid}/safety-screening", json={"responses": {**ALL_NO, "strangle": "In the last 12 months", "weapon_access": "Yes"}, "safe_contact": None})
     _untrain(pro)
     t = pro.get(f"{API}/professional-training").json()
     assert t["current"] is False and len(t["training"]["modules"]) == 6 and t["training"]["version"] == pt.TRAINING_VERSION
+    # Owner 2026-10-17: training is a prompt, never a gate — unacknowledged professionals are NOT blocked
     for path in (f"/joint/reports/{rid}/safety-screening/a/responses", f"/joint/reports/{rid}/safety-review", f"/joint/reports/{rid}/safety-review/provisions.pdf"):
-        r = pro.get(f"{API}{path}")
-        assert r.status_code == 428 and r.json()["detail"]["code"] == "training_required", path
-    assert pro.put(f"{API}/joint/reports/{rid}/safety-review", json={"concern_level": "green", "reasons": []}).status_code == 428
+        assert pro.get(f"{API}{path}").status_code == 200, path
+    assert pro.put(f"{API}/joint/reports/{rid}/safety-review", json={"concern_level": "green", "reasons": []}).status_code == 200
     assert pro.post(f"{API}/professional-training/acknowledge", json={"version": "old", "acknowledged": True}).status_code == 409
     assert pro.post(f"{API}/professional-training/acknowledge", json={"version": pt.TRAINING_VERSION, "acknowledged": False}).status_code == 400
     assert pa.post(f"{API}/professional-training/acknowledge", json={"version": pt.TRAINING_VERSION, "acknowledged": True}).status_code == 403
