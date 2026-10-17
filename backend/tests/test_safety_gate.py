@@ -334,9 +334,43 @@ def test_daily_counts_admin_only_counts_only():
     resp = httpx.get(url, headers=admin, timeout=20)
     assert "no-store" in resp.headers.get("cache-control", "")
     days, after = resp.json()["days"], today(resp)
-    assert len(days) == 30 and set(after) == {"date", "applied", "ignored", "downloads"}
+    assert len(days) == 30 and set(after) == {"date", "applied", "ignored", "downloads", "rejected"}
     assert (after["applied"], after["ignored"], after["downloads"]) == (before["applied"] + 1, before["ignored"] + 1, before["downloads"] + 1)
     assert case_id not in resp.text
+
+
+def _admin():
+    r = httpx.post(f"{API}/auth/login", json={"email": "mattsossi@bsossi.com", "password": "AdminPass123!"}, timeout=20)
+    if r.status_code != 200:
+        pytest.skip("admin test account not available")
+    return {"Authorization": f"Bearer {r.json()['access_token']}"}
+
+
+def test_align_status_last_update_and_refusals():
+    _, h = _user()
+    status_url = f"{API}/admin/safety-audit-log/align-status"
+    assert httpx.get(status_url, headers=h, timeout=20).status_code == 403
+    admin = _admin()
+    counts_url = f"{API}/admin/safety-audit-log/daily-counts"
+    before = httpx.get(status_url, headers=admin, timeout=20).json()["rejected_30d"]
+    before_day = httpx.get(counts_url, headers=admin, timeout=20).json()["days"][0]["rejected"]
+    case_id, _, _ = _case()
+    assert _send(_body(case_id, 1), sig="deadbeef").status_code == 401
+    assert _send(_body(case_id, 1, ts=int(time.time()) - 3600)).status_code == 401
+    assert _send(_body(case_id, 1)).status_code == 200
+    s = httpx.get(status_url, headers=admin, timeout=20)
+    assert "no-store" in s.headers.get("cache-control", "")
+    body = s.json()
+    assert body["last_update"]["result"] == "applied" and body["last_applied_at"] == body["last_update"]["at"]
+    assert body["rejected_30d"]["bad_signature"] == before["bad_signature"] + 1
+    assert body["rejected_30d"]["old_timestamp"] == before["old_timestamp"] + 1
+    assert body["last_rejected"]["reason"] == "old_timestamp"
+    assert case_id not in s.text
+    assert _send(_body(case_id, 1, mode="structured")).status_code == 200
+    assert httpx.get(status_url, headers=admin, timeout=20).json()["last_update"]["result"] == "ignored"
+    assert httpx.get(counts_url, headers=admin, timeout=20).json()["days"][0]["rejected"] == before_day + 2
+    for doc in db[cs.REJECTS].find({}).sort("at", -1).limit(2):
+        assert set(doc) == {"_id", "at", "reason", "created"}
 
 
 

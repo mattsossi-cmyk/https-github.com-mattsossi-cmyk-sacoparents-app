@@ -14,6 +14,7 @@ from pymongo.errors import DuplicateKeyError
 COLL = "case_safety"
 AUDIT = "safety_audit_log"
 SEEN = "safety_webhook_seen"
+REJECTS = "safety_webhook_rejects"
 CASES = "joint_alignment_cases"
 
 MODES = ("standard", "structured", "restricted")
@@ -107,6 +108,12 @@ async def ensure_indexes(db) -> None:
     await db[COLL].create_index("case_id", unique=True)
     await db[AUDIT].create_index("at")
     await db[SEEN].create_index("seen_at", expireAfterSeconds=24 * 3600)
+    await db[REJECTS].create_index("created", expireAfterSeconds=35 * 24 * 3600)
+
+
+async def record_reject(db, reason: str) -> None:
+    """Only the time and the reason are kept for a refused Align request."""
+    await db[REJECTS].insert_one({"at": now_iso(), "reason": reason, "created": datetime.now(timezone.utc)})
 
 
 async def audit(db, actor_type: str, actor_id: Optional[str], action: str, case_id: Optional[str]) -> None:

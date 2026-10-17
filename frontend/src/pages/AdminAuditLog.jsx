@@ -5,6 +5,7 @@ import { toast } from "sonner";
 
 import AppShell from "../components/AppShell";
 import { AdminGate } from "../components/AdminGate";
+import { AlignStatusPanel } from "../components/caseSettings/AlignStatusPanel";
 import { DailyCountsTable } from "../components/caseSettings/DailyCountsTable";
 import { api } from "../lib/api";
 
@@ -45,6 +46,7 @@ export default function AdminAuditLog() {
           <button type="button" onClick={download} disabled={busy} data-testid="admin-audit-export" className="btn-gradient inline-flex items-center gap-2 px-6 disabled:opacity-50">
             <Download size={15} /> {busy ? "Preparing…" : "Export CSV"}
           </button>
+          <AlignStatusPanel key={`align-${rev}`} onForbidden={onForbidden} />
           <DailyCountsTable key={rev} onForbidden={onForbidden} />
           <p className="text-xs text-[#6E6787]">
             <Link to="/admin/help-services" className="underline text-[#3D1A78]" data-testid="admin-audit-help-link">Get help: local services</Link>

@@ -4,6 +4,8 @@ POST /api/internal/safety-status     signed server-to-server update from SACOpar
 GET  /api/case-settings              resolved feature flags + plain-language settings (same bytes for both parents)
 GET  /api/support/case-settings/{id} support staff: current mode only
 GET  /api/admin/safety-audit-log/export  admins only; every export is logged
+GET  /api/admin/safety-audit-log/daily-counts  admins only; counts per day, no case details
+GET  /api/admin/safety-audit-log/align-status  admins only; last Align update and refused attempts, no case details
 """
 import csv
 import hashlib
@@ -79,16 +81,20 @@ def _fresh(ts: Union[int, float, str]) -> bool:
 async def receive_safety_status(request: Request, db=Depends(get_db)):
     raw = await request.body()
     if not _signature_ok(raw, request.headers.get(SIGNATURE_HEADER, "")):
+        await cs.record_reject(db, "bad_signature")
         raise _unauthorized()
     try:
         body = SafetyStatusIn.model_validate_json(raw)
     except ValidationError:
+        await cs.record_reject(db, "invalid_body")
         raise HTTPException(status_code=422, detail="Invalid body.")
     if not _fresh(body.timestamp):
+        await cs.record_reject(db, "old_timestamp")
         raise _unauthorized()
     try:
         await db[cs.SEEN].insert_one({"_id": hashlib.sha256(raw).hexdigest(), "seen_at": datetime.now(timezone.utc)})
     except DuplicateKeyError:
+        await cs.record_reject(db, "replay")
         raise HTTPException(status_code=409, detail="Replayed request.")
     await cs.apply_update(db, body.model_dump())
     return {"ok": True}
@@ -144,7 +150,7 @@ async def safety_daily_counts(current: UserPublic = Depends(require_admin), db=D
     await cs.audit(db, "admin", current.user_id, "view_daily_counts", None)
     today = datetime.now(timezone.utc).date()
     days = [(today - timedelta(days=i)).isoformat() for i in range(30)]
-    rows = {d: {"date": d, "applied": 0, "ignored": 0, "downloads": 0} for d in days}
+    rows = {d: {"date": d, "applied": 0, "ignored": 0, "downloads": 0, "rejected": 0} for d in days}
     pipeline = [
         {"$match": {"at": {"$gte": days[-1]}, "action": {"$in": list(COUNT_COLUMNS)}}},
         {"$group": {"_id": {"day": {"$substrBytes": ["$at", 0, 10]}, "action": "$action"}, "n": {"$sum": 1}}},
@@ -153,4 +159,33 @@ async def safety_daily_counts(current: UserPublic = Depends(require_admin), db=D
         day = rows.get(g["_id"]["day"])
         if day:
             day[COUNT_COLUMNS[g["_id"]["action"]]] += g["n"]
+    by_day = [{"$match": {"at": {"$gte": days[-1]}}}, {"$group": {"_id": {"$substrBytes": ["$at", 0, 10]}, "n": {"$sum": 1}}}]
+    async for g in db[cs.REJECTS].aggregate(by_day):
+        if g["_id"] in rows:
+            rows[g["_id"]]["rejected"] = g["n"]
     return JSONResponse({"days": [rows[d] for d in days]}, headers=NO_STORE)
+
+
+APPLIED_ACTIONS = ["write", "write_ignored_stale_version", "write_ignored_until_professional"]
+REJECT_REASONS = ("bad_signature", "old_timestamp", "invalid_body", "replay")
+
+
+@router.get("/admin/safety-audit-log/align-status")
+async def align_status(current: UserPublic = Depends(require_admin), db=Depends(get_db)):
+    """Whether Align's updates are arriving. Times, results and refusal reasons only."""
+    await cs.audit(db, "admin", current.user_id, "view_align_status", None)
+    since = (datetime.now(timezone.utc).date() - timedelta(days=29)).isoformat()
+    last = await db[cs.AUDIT].find_one({"action": {"$in": APPLIED_ACTIONS}}, {"_id": 0, "at": 1, "action": 1}, sort=[("at", -1)])
+    last_applied = await db[cs.AUDIT].find_one({"action": "write"}, {"_id": 0, "at": 1}, sort=[("at", -1)])
+    last_reject = await db[cs.REJECTS].find_one({}, {"_id": 0, "at": 1, "reason": 1}, sort=[("at", -1)])
+    totals = {r: 0 for r in REJECT_REASONS}
+    async for g in db[cs.REJECTS].aggregate([{"$match": {"at": {"$gte": since}}}, {"$group": {"_id": "$reason", "n": {"$sum": 1}}}]):
+        if g["_id"] in totals:
+            totals[g["_id"]] = g["n"]
+    return JSONResponse({
+        "last_update": {"at": last["at"], "result": "applied" if last["action"] == "write" else "ignored"} if last else None,
+        "last_applied_at": last_applied["at"] if last_applied else None,
+        "last_rejected": last_reject,
+        "rejected_30d": totals,
+    }, headers=NO_STORE)
+
