@@ -123,12 +123,12 @@ function ItemInput({ item, value, onChange, scale, qid }) {
   if (t === "single") return <OptionButtons id={tid} value={value} options={item.options} onChange={onChange} />;
   if (t === "multi") return <OptionButtons id={tid} value={value || []} options={item.options} onChange={onChange} multi />;
   if (t === "textarea") return (
-    <textarea data-testid={`snc2-${tid}-input`} rows={3}
+    <textarea data-testid={`snc2-${tid}-input`} rows={3} aria-label={item.prompt || item.label || "Your answer"}
       value={value || ""} onChange={(e) => onChange(e.target.value)}
       className="w-full rounded-2xl border border-[#D6CFE8] bg-white px-4 py-3 text-sm text-[#1A1330] focus:outline-none focus:ring-2 focus:ring-[#3D1A78]/30"/>
   );
   return (
-    <input data-testid={`snc2-${tid}-input`}
+    <input data-testid={`snc2-${tid}-input`} aria-label={item.prompt || item.label || "Your answer"}
       value={value || ""} onChange={(e) => onChange(e.target.value)}
       className="w-full rounded-2xl border border-[#D6CFE8] bg-white px-4 py-3 text-sm text-[#1A1330] focus:outline-none focus:ring-2 focus:ring-[#3D1A78]/30"/>
   );

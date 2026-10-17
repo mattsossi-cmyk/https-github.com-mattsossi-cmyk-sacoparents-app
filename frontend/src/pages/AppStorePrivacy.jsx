@@ -253,7 +253,7 @@ export default function AppStorePrivacy() {
           collect it.
         </p>
 
-        <div className="mt-4 overflow-x-auto rounded-2xl border border-[#E5E0EE] bg-white">
+        <div tabIndex={0} role="region" aria-label="Scrollable table" className="mt-4 overflow-x-auto rounded-2xl border border-[#E5E0EE] bg-white">
           <table
             className="w-full text-[13px] text-left"
             data-testid="app-store-privacy-data-table"
@@ -498,7 +498,7 @@ function GoogleDataSafety() {
         <strong className="text-[#1A1330]">not shared</strong>. Leave every
         other type unselected.
       </p>
-      <div className="mt-4 overflow-x-auto rounded-2xl border border-[#E5E0EE] bg-white">
+      <div tabIndex={0} role="region" aria-label="Scrollable table" className="mt-4 overflow-x-auto rounded-2xl border border-[#E5E0EE] bg-white">
         <table className="w-full text-[13px] text-left" data-testid="app-store-privacy-google-table">
           <thead className="bg-[#F8F7FC] text-[#1A1330]">
             <tr>

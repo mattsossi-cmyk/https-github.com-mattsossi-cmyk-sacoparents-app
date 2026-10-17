@@ -205,8 +205,9 @@ export default function ProblemSolvingWorksheet() {
             <div className="space-y-3">
               {OPTIONS.map((o) => (
                 <div key={o.id}>
-                  <label className="block text-xs font-bold text-[#3D1A78] mb-1">{o.label}</label>
+                  <label htmlFor={`worksheet-${o.id}`} className="block text-xs font-bold text-[#3D1A78] mb-1">{o.label}</label>
                   <textarea
+                    id={`worksheet-${o.id}`}
                     value={data[o.id] || ""}
                     onChange={(e) => set(o.id)(e.target.value)}
                     rows={o.rows}

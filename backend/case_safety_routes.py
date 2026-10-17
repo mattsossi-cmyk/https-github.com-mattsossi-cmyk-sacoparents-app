@@ -11,7 +11,7 @@ import hmac
 import io
 import logging
 import os
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from typing import Literal, Optional, Union
 
 from fastapi import APIRouter, Depends, HTTPException, Request
@@ -128,3 +128,29 @@ async def export_safety_audit_log(current: UserPublic = Depends(require_admin), 
         out.writerow([row.get("at"), row.get("actor_type"), row.get("actor_id"), row.get("action"), row.get("case_id") or ""])
     headers = {**NO_STORE, "Content-Disposition": 'attachment; filename="safety_audit_log.csv"'}
     return Response(buf.getvalue(), media_type="text/csv", headers=headers)
+
+
+COUNT_COLUMNS = {
+    "write": "applied",
+    "write_ignored_stale_version": "ignored",
+    "write_ignored_until_professional": "ignored",
+    "export": "downloads",
+}
+
+
+@router.get("/admin/safety-audit-log/daily-counts")
+async def safety_daily_counts(current: UserPublic = Depends(require_admin), db=Depends(get_db)):
+    """Counts only, per UTC day for the last 30 days. No case IDs or details."""
+    await cs.audit(db, "admin", current.user_id, "view_daily_counts", None)
+    today = datetime.now(timezone.utc).date()
+    days = [(today - timedelta(days=i)).isoformat() for i in range(30)]
+    rows = {d: {"date": d, "applied": 0, "ignored": 0, "downloads": 0} for d in days}
+    pipeline = [
+        {"$match": {"at": {"$gte": days[-1]}, "action": {"$in": list(COUNT_COLUMNS)}}},
+        {"$group": {"_id": {"day": {"$substrBytes": ["$at", 0, 10]}, "action": "$action"}, "n": {"$sum": 1}}},
+    ]
+    async for g in db[cs.AUDIT].aggregate(pipeline):
+        day = rows.get(g["_id"]["day"])
+        if day:
+            day[COUNT_COLUMNS[g["_id"]["action"]]] += g["n"]
+    return JSONResponse({"days": [rows[d] for d in days]}, headers=NO_STORE)

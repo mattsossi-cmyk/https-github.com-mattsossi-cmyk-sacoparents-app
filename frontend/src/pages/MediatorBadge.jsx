@@ -184,7 +184,7 @@ export default function MediatorBadge() {
 
         <div className="grid lg:grid-cols-2 gap-6">
           {/* LEFT — form + style picker */}
-          <div className="space-y-6">
+          <div className="space-y-6 min-w-0">
             <div className="card-soft p-6">
               <div className="eyebrow mb-4">Your details</div>
               <div className="space-y-4">
@@ -262,7 +262,7 @@ export default function MediatorBadge() {
           </div>
 
           {/* RIGHT — preview + embed code */}
-          <div className="space-y-6">
+          <div className="space-y-6 min-w-0">
             <div className="card-soft p-6">
               <div className="flex items-center justify-between mb-4">
                 <div className="eyebrow">Live preview</div>
@@ -334,6 +334,8 @@ export default function MediatorBadge() {
                 </div>
               )}
               <pre
+                tabIndex={0}
+                aria-label="Embed code"
                 className="bg-[#1A1330] text-[#E5E0EE] text-[12px] leading-relaxed p-4 rounded-xl overflow-x-auto whitespace-pre"
                 data-testid="embed-code-block"
               >

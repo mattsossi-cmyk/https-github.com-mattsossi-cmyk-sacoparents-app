@@ -25,6 +25,8 @@ function Code({ children, testid }) {
   return (
     <div className="relative group max-w-full overflow-hidden">
       <pre
+        tabIndex={0}
+        aria-label="Code example"
         className="rounded-2xl bg-[#1A1330] text-[#F1EEF7] text-[12.5px] leading-relaxed p-4 overflow-x-auto font-mono max-w-full whitespace-pre"
         data-testid={testid}
       >

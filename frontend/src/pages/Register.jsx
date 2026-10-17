@@ -94,8 +94,10 @@ export default function Register() {
           <form onSubmit={onSubmit} className="space-y-4">
             <div className="grid sm:grid-cols-2 gap-4">
               <div>
-                <label className="eyebrow block mb-2">Your name</label>
+                <label htmlFor="register-name" className="eyebrow block mb-2">Your name</label>
                 <input
+                  id="register-name"
+                  autoComplete="name"
                   required
                   value={name}
                   onChange={(e) => setName(e.target.value)}
@@ -104,8 +106,10 @@ export default function Register() {
                 />
               </div>
               <div>
-                <label className="eyebrow block mb-2">Email</label>
+                <label htmlFor="register-email" className="eyebrow block mb-2">Email</label>
                 <input
+                  id="register-email"
+                  autoComplete="email"
                   type="email"
                   required
                   value={email}
@@ -116,8 +120,10 @@ export default function Register() {
               </div>
             </div>
             <div>
-              <label className="eyebrow block mb-2">Password (min 8 characters)</label>
+              <label htmlFor="register-password" className="eyebrow block mb-2">Password (min 8 characters)</label>
               <input
+                id="register-password"
+                autoComplete="new-password"
                 type="password"
                 required
                 minLength={8}
@@ -194,8 +200,9 @@ export default function Register() {
                 />
               </div>
               <div>
-                <label className="eyebrow block mb-2">Mediation date (optional)</label>
+                <label htmlFor="register-mediation-date" className="eyebrow block mb-2">Mediation date (optional)</label>
                 <input
+                  id="register-mediation-date"
                   type="date"
                   value={mediationDate}
                   onChange={(e) => setMediationDate(e.target.value)}
@@ -219,7 +226,7 @@ export default function Register() {
 
           <p className="text-sm text-[#4B4567] mt-6 text-center">
             Already with us?{" "}
-            <Link to="/login" className="text-[#3D1A78] hover:underline" data-testid="register-to-login-link">
+            <Link to="/login" className="text-[#3D1A78] font-semibold underline underline-offset-2" data-testid="register-to-login-link">
               Sign in
             </Link>
           </p>

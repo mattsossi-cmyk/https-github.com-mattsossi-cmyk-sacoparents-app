@@ -225,7 +225,7 @@ export default function AdminNDCoordinator() {
                 : "No parents have completed an ND Risk Assessment yet. When they do, their latest assessment will appear here."}
             </div>
           ) : (
-            <div className="rounded-3xl border border-[#E5E0EE] bg-white p-4 sm:p-6 overflow-x-auto">
+            <div tabIndex={0} role="region" aria-label="Scrollable table" className="rounded-3xl border border-[#E5E0EE] bg-white p-4 sm:p-6 overflow-x-auto">
               <div className="min-w-[420px]">
                 <div className="flex items-end gap-1 mb-1">
                   <div className="w-12" />

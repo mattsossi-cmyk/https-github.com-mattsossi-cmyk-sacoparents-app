@@ -311,6 +311,7 @@ export default function CostSplitterPanel({ coparentEmail, coparentName }) {
           <select
             value={form.category}
             onChange={(e) => setForm({ ...form, category: e.target.value })}
+            aria-label="Category"
             data-testid="cost-splitter-input-category"
             className="w-full rounded-xl border border-[#C7E5D3] bg-white px-3 py-2 text-sm focus:outline-none focus:border-[#1E7A55]"
           >
@@ -364,6 +365,7 @@ export default function CostSplitterPanel({ coparentEmail, coparentName }) {
             type="date"
             value={form.incurred_on}
             onChange={(e) => setForm({ ...form, incurred_on: e.target.value })}
+            aria-label="Date"
             data-testid="cost-splitter-input-date"
             className="w-full rounded-xl border border-[#C7E5D3] bg-white px-3 py-2 text-sm focus:outline-none focus:border-[#1E7A55]"
           />

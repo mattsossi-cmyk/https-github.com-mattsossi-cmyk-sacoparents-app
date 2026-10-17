@@ -222,11 +222,16 @@ export default function Orientation() {
                 key={`dot-${i}-${s.eyebrow}`}
                 onClick={() => setIdx(i)}
                 aria-label={`Go to step ${i + 1}`}
-                className={`h-2 rounded-full transition-all ${
-                  i === idx ? "w-8 bg-[#3D1A78]" : "w-2 bg-[#E5E0EE] hover:bg-[#C9C0DC]"
-                }`}
+                aria-current={i === idx ? "step" : undefined}
+                className="h-6 min-w-6 px-1 grid place-items-center group"
                 data-testid={`orientation-dot-${i}`}
-              />
+              >
+                <span
+                  className={`block h-2 rounded-full transition-all ${
+                    i === idx ? "w-8 bg-[#3D1A78]" : "w-2 bg-[#C9C0DC] group-hover:bg-[#857E9C]"
+                  }`}
+                />
+              </button>
             ))}
           </div>
 

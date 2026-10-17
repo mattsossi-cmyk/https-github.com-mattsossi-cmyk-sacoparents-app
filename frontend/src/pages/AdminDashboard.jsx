@@ -800,7 +800,7 @@ export default function AdminDashboard() {
           {recentUsers.length === 0 ? (
             <div className="text-sm text-[#857E9C]">No users yet.</div>
           ) : (
-            <div className="overflow-x-auto">
+            <div tabIndex={0} role="region" aria-label="Scrollable table" className="overflow-x-auto">
               <table className="w-full text-sm" data-testid="admin-recent-users">
                 <thead>
                   <tr className="text-[10px] uppercase tracking-[0.15em] text-[#857E9C]">

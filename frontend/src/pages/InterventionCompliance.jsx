@@ -148,6 +148,7 @@ function InterventionRow({ item, onToggle, onNotesChange, saving }) {
           disabled={saving}
           data-testid={`compliance-toggle-${item.key}`}
           aria-pressed={item.followed}
+          aria-label={`Followed: ${item.text}`}
           className="shrink-0 mt-0.5"
         >
           {item.followed ? (

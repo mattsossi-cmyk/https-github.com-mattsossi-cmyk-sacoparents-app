@@ -67,7 +67,7 @@ export default function AdminConsentTrend() {
           </p>
         </div>
         {err === "error" && <p className="text-sm text-[#B02A2A]" data-testid="admin-trend-error">Couldn&rsquo;t load the totals. Please refresh.</p>}
-        <div className="rounded-2xl border border-[#E5E0EE] bg-white overflow-x-auto" data-testid="admin-trend-table">
+        <div tabIndex={0} role="region" aria-label="Scrollable table" className="rounded-2xl border border-[#E5E0EE] bg-white overflow-x-auto" data-testid="admin-trend-table">
           <table className="w-full text-sm">
             <thead className="bg-[#F8F7FC] text-[11px] uppercase tracking-wider text-[#857E9C]">
               <tr>{HEAD.map((h, i) => <th key={h} className={`px-4 py-2.5 font-bold ${i ? "text-right" : "text-left"}`}>{h}</th>)}</tr>

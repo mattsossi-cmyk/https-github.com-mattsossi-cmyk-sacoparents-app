@@ -213,6 +213,7 @@ export default function SampleCoParentingLanding() {
                 type="color"
                 value={color || "#3d1a78"}
                 onChange={(e) => setColor(e.target.value)}
+                aria-label="Accent color"
                 className="h-8 w-10 rounded cursor-pointer bg-transparent"
                 data-testid="sample-coparenting-color-input"
               />

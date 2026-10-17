@@ -1,16 +1,19 @@
-import React, { useState } from "react";
+import React, { useCallback, useState } from "react";
 import { Link } from "react-router-dom";
 import { Download, FileLock2 } from "lucide-react";
 import { toast } from "sonner";
 
 import AppShell from "../components/AppShell";
 import { AdminGate } from "../components/AdminGate";
+import { DailyCountsTable } from "../components/caseSettings/DailyCountsTable";
 import { api } from "../lib/api";
 
 // Admin-only CSV download of the case-settings audit log. The server logs every export.
 export default function AdminAuditLog() {
   const [err, setErr] = useState("");
   const [busy, setBusy] = useState(false);
+  const [rev, setRev] = useState(0);
+  const onForbidden = useCallback(() => setErr("forbidden"), []);
   const download = async () => {
     setBusy(true);
     try {
@@ -20,6 +23,7 @@ export default function AdminAuditLog() {
       a.click();
       URL.revokeObjectURL(url);
       toast.success("Audit log downloaded. This export was logged.");
+      setRev((n) => n + 1);
     } catch (e) {
       if (e?.response?.status === 403) setErr("forbidden");
       else toast.error("Couldn't export. Please try again.");
@@ -41,6 +45,7 @@ export default function AdminAuditLog() {
           <button type="button" onClick={download} disabled={busy} data-testid="admin-audit-export" className="btn-gradient inline-flex items-center gap-2 px-6 disabled:opacity-50">
             <Download size={15} /> {busy ? "Preparing…" : "Export CSV"}
           </button>
+          <DailyCountsTable key={rev} onForbidden={onForbidden} />
           <p className="text-xs text-[#857E9C]">
             <Link to="/admin/help-services" className="underline text-[#3D1A78]" data-testid="admin-audit-help-link">Get help: local services</Link>
           </p>

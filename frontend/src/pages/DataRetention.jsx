@@ -50,7 +50,7 @@ export default function DataRetention() {
           </div>
 
           <H2>Retention schedule</H2>
-          <div className="overflow-x-auto not-prose my-4">
+          <div tabIndex={0} role="region" aria-label="Scrollable table" className="overflow-x-auto not-prose my-4">
             <table className="w-full text-left text-sm border-collapse" data-testid="retention-table">
               <thead>
                 <tr className="text-[11px] uppercase tracking-[0.12em] text-[#857E9C]">

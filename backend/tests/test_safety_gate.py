@@ -317,6 +317,29 @@ def test_audit_export_admin_only_and_logged():
     assert db[cs.AUDIT].count_documents({"action": "export"}) == before + 1
 
 
+def test_daily_counts_admin_only_counts_only():
+    _, h = _user()
+    assert httpx.get(f"{API}/admin/safety-audit-log/daily-counts", headers=h, timeout=20).status_code == 403
+    r = httpx.post(f"{API}/auth/login", json={"email": "mattsossi@bsossi.com", "password": "AdminPass123!"}, timeout=20)
+    if r.status_code != 200:
+        pytest.skip("admin test account not available")
+    admin = {"Authorization": f"Bearer {r.json()['access_token']}"}
+    url = f"{API}/admin/safety-audit-log/daily-counts"
+    today = lambda resp: resp.json()["days"][0]  # noqa: E731
+    before = today(httpx.get(url, headers=admin, timeout=20))
+    case_id, _, _ = _case()
+    assert _send(_body(case_id, 1)).status_code == 200
+    assert _send(_body(case_id, 1, mode="structured")).status_code == 200
+    httpx.get(f"{API}/admin/safety-audit-log/export", headers=admin, timeout=30)
+    resp = httpx.get(url, headers=admin, timeout=20)
+    assert resp.headers.get("cache-control") == "no-store"
+    days, after = resp.json()["days"], today(resp)
+    assert len(days) == 30 and set(after) == {"date", "applied", "ignored", "downloads"}
+    assert (after["applied"], after["ignored"], after["downloads"]) == (before["applied"] + 1, before["ignored"] + 1, before["downloads"] + 1)
+    assert case_id not in resp.text
+
+
+
 def test_support_sees_mode_only_and_parents_cannot():
     case_id, ha, _ = _case()
     _send(_body(case_id, 1, mode="restricted", set_by="auto_red", referral="parallel_parenting"))

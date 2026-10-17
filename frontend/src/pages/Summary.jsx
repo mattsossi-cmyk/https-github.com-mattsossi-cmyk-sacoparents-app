@@ -1392,7 +1392,7 @@ function OrgContactCard() {
           <div className="flex flex-col sm:flex-row sm:items-center sm:gap-3">
             <a
               href="tel:2102241667"
-              className="text-[#2A0F5F] hover:text-[#3D1A78] hover:underline"
+              className="inline-block py-1 text-[#2A0F5F] hover:text-[#3D1A78] hover:underline"
               data-testid="org-contact-phone"
             >
               210-224-1667
@@ -1400,7 +1400,7 @@ function OrgContactCard() {
             <span className="hidden sm:inline text-[#D6CFE6]">·</span>
             <a
               href="mailto:mattsossi@bsossi.com"
-              className="text-[#2A0F5F] hover:text-[#3D1A78] hover:underline"
+              className="inline-block py-1 text-[#2A0F5F] hover:text-[#3D1A78] hover:underline"
               data-testid="org-contact-email"
             >
               mattsossi@bsossi.com

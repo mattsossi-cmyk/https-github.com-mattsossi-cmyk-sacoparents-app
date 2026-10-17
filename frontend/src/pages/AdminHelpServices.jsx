@@ -16,7 +16,7 @@ function ServiceForm({ value, onChange, onSubmit, onCancel, busy }) {
   const set = (k) => (e) => onChange({ ...value, [k]: e.target.value });
   return (
     <form onSubmit={onSubmit} className="card-soft p-5 grid gap-3" data-testid="admin-help-form">
-      <select value={value.state} onChange={set("state")} className={input} data-testid="admin-help-state">
+      <select value={value.state} onChange={set("state")} className={input} aria-label="State" data-testid="admin-help-state">
         {US_STATES.map(([c, n]) => <option key={c} value={c}>{n}</option>)}
       </select>
       {FIELDS.map(([k, label]) => (
