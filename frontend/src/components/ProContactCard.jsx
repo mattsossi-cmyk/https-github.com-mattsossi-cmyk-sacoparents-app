@@ -34,6 +34,10 @@ const ImageSlot = ({ slot, label, has, onChange }) => {
 
 export const ProContactCard = () => {
   const { user, refresh } = useAuth();
+  const unlinkGoogle = async () => {
+    try { await api.delete("/auth/google/link"); await refresh(); toast.success("Google sign-in unlinked — password sign-in still works"); }
+    catch (e) { toast.error(formatApiError(e)); }
+  };
   const p = user?.profile || {};
   const [form, setForm] = useState({});
   const [open, setOpen] = useState(false);
@@ -56,6 +60,13 @@ export const ProContactCard = () => {
         </div>
         <Button size="sm" variant="outline" onClick={() => setOpen((o) => !o)} data-testid="pro-contact-toggle">{open ? "Close" : "Edit"}</Button>
       </div>
+      {user?.google_linked_at && (
+        <div className="mt-3 flex flex-wrap items-center gap-2 text-xs" data-testid="google-linked-row">
+          <span className="inline-flex items-center gap-1 rounded-full border border-border bg-secondary/60 px-2 py-0.5 font-semibold" data-testid="google-linked-badge"><span className="h-2 w-2 rounded-full bg-[#34A853]" /> Google linked</span>
+          <span className="text-muted-foreground">since {String(user.google_linked_at).slice(0, 10)} · you can sign in with Google or your password</span>
+          <button type="button" className="text-muted-foreground underline hover:text-foreground" onClick={unlinkGoogle} data-testid="google-unlink-btn">Unlink</button>
+        </div>
+      )}
       {open && (
         <form onSubmit={save} className="mt-4 space-y-4">
           <div className="grid gap-3 sm:grid-cols-3">{FIELDS.map(([k, l]) => <label key={k} className={`block text-sm ${k === "address" || k === "organization" ? "sm:col-span-2" : ""}`}><span className="font-medium">{l}</span><Input value={form[k] || ""} onChange={(e) => setForm({ ...form, [k]: e.target.value })} className="mt-1 h-9" data-testid={`pro-contact-${k}`} /></label>)}</div>

@@ -51,6 +51,15 @@ def build_router(set_auth_cookies, public_user) -> APIRouter:
         set_auth_cookies(response, user["_id"], user["email"])
         return public_user(user)
 
+    @r.delete("/auth/google/link")
+    async def unlink(request: Request):
+        from auth import get_current_user
+        user = await get_current_user(request)
+        if not user.get("password_hash"):
+            raise HTTPException(status_code=400, detail="Set a password before unlinking Google so you can still sign in.")
+        await db.users.update_one({"_id": user["_id"]}, {"$unset": {"google_linked_at": "", "google_picture": ""}})
+        return {"ok": True}
+
     @r.get("/auth/google/config")
     async def google_config():
         return {"enabled": os.environ.get("GOOGLE_SIGNIN", "true").lower() == "true", "roles": list(GOOGLE_ROLES)}

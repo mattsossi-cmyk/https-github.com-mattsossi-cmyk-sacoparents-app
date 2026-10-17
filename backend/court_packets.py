@@ -63,6 +63,23 @@ def report_json(doc: dict) -> dict:
             "subject_label": doc.get("subject_label"), "is_safety": bool(doc.get("is_safety")), "report": rep}
 
 
+def _ai_disclosure(doc: dict) -> str:
+    """Exact engines that assisted any enclosed document; professional reviewed everything."""
+    models = []
+    d = doc.get("ai_joint_draft") or {}
+    if d.get("status") == "approved":
+        models.append(d.get("model") or "")
+    if (doc.get("agreement_ai") or {}).get("sections"):
+        models.append((doc.get("agreement_ai") or {}).get("model") or "")
+    for v in (doc.get("ai_drafts") or {}).values():
+        if v.get("model"):
+            models.append(v["model"])
+    names = sorted({m for m in models if m})
+    if not names:
+        return "AI drafting assistance: none. All enclosed text was written by the professional."
+    return f"AI drafting assistance: {', '.join(names)}. Every AI-assisted passage was reviewed, edited where needed and approved by the transmitting professional; AI made no finding or recommendation."
+
+
 def _enclosure_title(d: dict) -> str:
     kind = "Co-Parenting Agreement" if d.get("kind") == "agreement" else "Joint Alignment Report"
     return f"{kind} - {d.get('subject_label')} ({d.get('case_code')})"
@@ -262,7 +279,8 @@ class PacketService:
         docs = await self.packet_reports(p)
         events = await self.db.access_events.find({"report_id": p["report_id"], "kind": "court", "action": {"$regex": "Court Packet"}}, {"_id": 0}).sort("at", 1).to_list(200)
         await self.log(p["report_id"], "Transmittal certificate downloaded", user["_id"], user.get("name", ""), "Assigned professional", kind="download")
-        return build_transmittal_pdf({**p, "professional": await self.pro_profile(p["professional_id"]), "enclosures": [_enclosure_title(d) for d in docs],
+        rep_doc = await self.db.joint_reports.find_one({"id": p["report_id"]}, {"ai_joint_draft": 1, "agreement_ai": 1, "ai_drafts": 1})
+        return build_transmittal_pdf({**p, "professional": await self.pro_profile(p["professional_id"]), "enclosures": [_enclosure_title(d) for d in docs], "ai_disclosure": _ai_disclosure(rep_doc or {}),
                                       "events": [e for e in events if p["judge_name"] in e["action"] or "sent" in e["action"] or "re-sent" in e["action"]]})
 
 

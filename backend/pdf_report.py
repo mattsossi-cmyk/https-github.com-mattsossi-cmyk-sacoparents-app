@@ -808,6 +808,11 @@ def build_transmittal_pdf(p: dict) -> bytes:
     _bullet(pdf, "Professional cover letter with attestation of authority to release")
     for e in p.get("enclosures") or []:
         _bullet(pdf, e)
+    if p.get("ai_disclosure"):
+        pdf.ln(1)
+        pdf.set_font(FONT, "I", 8.5)
+        pdf.set_text_color(*BODY)
+        pdf.multi_cell(0, 4.5, _s(p["ai_disclosure"]), new_x="LMARGIN", new_y="NEXT")
     pdf.ln(3)
     _label(pdf, "COURT ACKNOWLEDGEMENT AND RESPONSES")
     resps = p.get("responses") or []

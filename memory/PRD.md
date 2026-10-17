@@ -1119,3 +1119,8 @@ Owner rulings: 1 replace A/B/C with 8-domain set; 2 professional-decides (no aut
 - Disclosure: joint_ai rep.ai_disclosure; joint_engine agreement view ai_model + ai_disclosure (agreement_ai.MODEL_NAME); pdf_report agreement header prints ai_disclosure; JointReport jr-ai-disclosure; AgreementDocument agreement-ai-disclosure; LegalLensReport per-field hint 'Drafted with <model>'. Legal Lens PDF appendix already per-section.
 - Perplexity: PERPLEXITY_API_KEY in backend/.env returns 401 (invalid) — owner must supply a valid key; not fixable in code.
 - Tests: test_iter115 4 passed.
+
+## 2026-10-17 — Google link badge + transmittal AI line (PREVIEW ONLY)
+- auth/me google_linked_at; DELETE /auth/google/link (requires password_hash); ProContactCard shows 'Google linked' badge + Unlink.
+- court_packets._ai_disclosure(doc): exact models from approved ai_joint_draft, agreement_ai, Legal Lens ai_drafts (or 'none'); printed in italics under Enclosures on the transmittal (pdf_report.build_transmittal_pdf ai_disclosure).
+- Tests: test_iter116 2 passed; packet suites 11 passed.
