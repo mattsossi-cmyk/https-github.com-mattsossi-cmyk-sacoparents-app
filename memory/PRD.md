@@ -1108,3 +1108,7 @@ Owner rulings: 1 replace A/B/C with 8-domain set; 2 professional-decides (no aut
 - STOP building new features on this thread (owner instruction).
 - Wrote /app/PARENT_APP_SAFETY_STATUS_WEBHOOK_CONTRACT.md (document only) for the parent-app builder.
 - Owner asked about a 'Safety Gate message with Get Help line for the sacoparentsapp chat' — does NOT exist in this project; belongs to the other thread.
+
+## 2026-10-17 — AI model update (owner: ChatGPT + Claude integrations; Q1 skipped → default a; models a = GPT-5.5 + Claude Sonnet 5.5)
+- assistant.py MODEL → (openai, gpt-5.5) [Align Assistant; was gemini-3-flash-preview]. ai_tools._claude → claude-sonnet-5-5 (parallel-parenting summary / pro drafting). legal_ai.MODELS openai → gpt-5.5 'GPT-5.5', claude → claude-sonnet-5-5 'Claude Sonnet 5.5'; lens_data.AI_MODELS labels updated. joint_ai (Gemini 3.1 Pro) and Legal Lens default (gemini) unchanged. Perplexity, Jev, TTS unchanged. AI Privacy Warning unchanged (no uploads to AI).
+- Google sign-in: asked owner (roles / new accounts / keep passwords) — NO ANSWER yet; not built.

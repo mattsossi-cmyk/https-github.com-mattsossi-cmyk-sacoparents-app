@@ -1,4 +1,4 @@
-"""Align Assistant — advisory, session-scoped decision-support chat (Gemini 3 Flash). Never files, decides or recommends custody."""
+"""Align Assistant — advisory, session-scoped decision-support chat (GPT-5.5 via Emergent key). Never files, decides or recommends custody."""
 import json
 import os
 import uuid
@@ -13,7 +13,7 @@ from joint_engine import generate_joint_report
 from joint_helpers import case_status
 from lens_data import PATHWAYS, recommended_pathway
 
-MODEL = ("gemini", "gemini-3-flash-preview")
+MODEL = ("openai", "gpt-5.5")
 HISTORY_LIMIT = 24
 SYSTEM = (
     "You are Align Assistant, a decision-support aide for family-law professionals using SA CoParents Align. Three competencies: (1) Case intake & routing — say which parent has "

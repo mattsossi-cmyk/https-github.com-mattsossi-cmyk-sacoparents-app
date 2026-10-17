@@ -34,7 +34,7 @@ def _pro(user):
 
 async def _claude(system: str, payload: dict, session: str) -> str:
     from emergentintegrations.llm.chat import LlmChat, UserMessage
-    chat = LlmChat(api_key=os.environ["EMERGENT_LLM_KEY"], session_id=session, system_message=system).with_model("anthropic", "claude-sonnet-4-6")
+    chat = LlmChat(api_key=os.environ["EMERGENT_LLM_KEY"], session_id=session, system_message=system).with_model("anthropic", "claude-sonnet-5-5")
     return (await chat.send_message(UserMessage(text=json.dumps(payload, ensure_ascii=False)))).strip()
 
 
