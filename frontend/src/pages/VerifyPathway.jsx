@@ -308,7 +308,7 @@ function ReviewerCommentsSection({ sigId }) {
                 {c.reviewer_org && (
                   <span className="text-[11px] text-[#4B4567]">· {c.reviewer_org}</span>
                 )}
-                <span className="text-[11px] text-[#857E9C] ml-auto">
+                <span className="text-[11px] text-[#6E6787] ml-auto">
                   {formatWhen(c.created_at)}
                 </span>
               </div>
@@ -376,7 +376,7 @@ function ReviewerCommentsSection({ sigId }) {
             </div>
             <div>
               <label className="block text-[11px] uppercase tracking-[0.18em] text-[#3D1A78] font-bold mb-1">
-                Organisation <span className="text-[#857E9C] font-normal normal-case tracking-normal">· optional</span>
+                Organisation <span className="text-[#6E6787] font-normal normal-case tracking-normal">· optional</span>
               </label>
               <input
                 type="text"
@@ -403,7 +403,7 @@ function ReviewerCommentsSection({ sigId }) {
               data-testid="verify-pathway-comment-text"
               className="w-full rounded-xl border border-[#E5E0EE] bg-white px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#3D1A78]/30 resize-none"
             />
-            <p className="text-[11px] text-[#857E9C] mt-1">
+            <p className="text-[11px] text-[#6E6787] mt-1">
               Comments are permanent and visible to the parent on their
               dashboard. This is not a clinical record or a legal filing.
             </p>

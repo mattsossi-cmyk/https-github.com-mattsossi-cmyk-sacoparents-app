@@ -40,7 +40,7 @@ function ProgressPill({ answered, total }) {
       </div>
       <span
         className={`text-[10px] uppercase tracking-[0.14em] font-bold whitespace-nowrap ${
-          done ? "text-[#1F5C3B]" : "text-[#857E9C]"
+          done ? "text-[#1F5C3B]" : "text-[#6E6787]"
         }`}
       >
         {done && <CheckCircle2 size={10} className="inline mr-1 -mt-0.5" />}
@@ -76,7 +76,7 @@ function SubjectRow({ subject }) {
       <ProgressPill answered={subject.answered} total={subject.total} />
       <ArrowRight
         size={14}
-        className="text-[#857E9C] group-hover:text-[#3D1A78] shrink-0"
+        className="text-[#6E6787] group-hover:text-[#3D1A78] shrink-0"
       />
     </Link>
   );
@@ -138,7 +138,7 @@ export default function AlignmentReflectionsCard() {
 
       {loading ? (
         <div
-          className="mt-4 grid place-items-center py-6 text-[#857E9C]"
+          className="mt-4 grid place-items-center py-6 text-[#6E6787]"
           data-testid="dashboard-alignment-reflections-loading"
         >
           <Loader2 size={16} className="animate-spin" />

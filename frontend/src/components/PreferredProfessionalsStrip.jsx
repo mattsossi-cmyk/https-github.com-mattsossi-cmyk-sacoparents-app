@@ -90,7 +90,7 @@ export default function PreferredProfessionalsStrip() {
                   {p.credentials}
                 </div>
               )}
-              <div className="mt-2 flex items-center gap-1 text-[11px] text-[#857E9C]">
+              <div className="mt-2 flex items-center gap-1 text-[11px] text-[#6E6787]">
                 <MapPin size={11} />
                 {(p.city && p.state)
                   ? `${p.city}, ${p.state}`
@@ -110,7 +110,7 @@ export default function PreferredProfessionalsStrip() {
         </ul>
 
         <p
-          className="mt-4 text-[11px] text-[#857E9C] leading-relaxed"
+          className="mt-4 text-[11px] text-[#6E6787] leading-relaxed"
           data-testid="for-pros-preferred-strip-fineprint"
         >
           Practitioners listed above have opted into the SA CoParents

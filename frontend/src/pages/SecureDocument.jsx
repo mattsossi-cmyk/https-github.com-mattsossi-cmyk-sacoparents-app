@@ -35,7 +35,7 @@ export default function SecureDocument() {
         </div>
         <section className="rounded-3xl bg-white border border-[#E5E0EE] shadow-sm p-6 sm:p-8">
           {!info && !error && (
-            <p className="text-[#857E9C] flex items-center gap-2" data-testid="secure-doc-loading">
+            <p className="text-[#6E6787] flex items-center gap-2" data-testid="secure-doc-loading">
               <Loader2 size={16} className="animate-spin" /> Loading…
             </p>
           )}
@@ -43,7 +43,7 @@ export default function SecureDocument() {
           {info && !blocked && !grant && <CodeStep token={token} info={info} onGrant={setGrant} />}
           {info && !blocked && grant && <FilesStep token={token} info={info} grant={grant} />}
         </section>
-        <p className="text-[12px] text-[#857E9C] mt-4 leading-relaxed">
+        <p className="text-[12px] text-[#6E6787] mt-4 leading-relaxed">
           Documents sent through SA CoParents are never attached to emails. Only the person they were sent to can open them.
         </p>
       </div>

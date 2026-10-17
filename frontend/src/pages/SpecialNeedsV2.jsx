@@ -52,7 +52,7 @@ function Likert({ id, value, onChange, scale }) {
         })}
       </div>
       {/* Legend under the numbers — one line on mobile, doubles as the scale key. */}
-      <div className="flex justify-between text-[10px] text-[#8471B3] px-1 sm:hidden">
+      <div className="flex justify-between text-[10px] text-[#6A5799] px-1 sm:hidden">
         {numeric.map((opt) => (
           <span key={`legend-${opt.value}`} className="max-w-[52px] text-center leading-tight">
             {opt.label.replace("Strongly ", "").replace("disagree", "SD").replace("Disagree", "D").replace("Unsure", "?").replace("Agree", "A").replace("SA", "SA")}
@@ -168,7 +168,7 @@ function DeepDiveCard({ id, testid, linkTestid, dismissTestid, title, sections, 
   if (dismissed) {
     return (
       <div className="rounded-3xl border border-dashed border-[#D6CFE8] bg-[#FCFBFE] p-5 sm:p-6 opacity-90" data-testid={testid}>
-        <div className="text-[10px] uppercase tracking-[0.22em] font-bold text-[#8471B3] mb-1 flex items-center gap-2">
+        <div className="text-[10px] uppercase tracking-[0.22em] font-bold text-[#6A5799] mb-1 flex items-center gap-2">
           Set aside
         </div>
         <h3 className="font-serif text-base text-[#4B4567]">{title}</h3>
@@ -192,7 +192,7 @@ function DeepDiveCard({ id, testid, linkTestid, dismissTestid, title, sections, 
         onClick={() => setDismiss(true)}
         aria-label={`Set aside ${title}`}
         data-testid={dismissTestid}
-        className="absolute top-3 right-3 inline-flex items-center justify-center w-7 h-7 rounded-full text-[#8471B3] hover:bg-white/70 hover:text-[#3D1A78]"
+        className="absolute top-3 right-3 inline-flex items-center justify-center w-7 h-7 rounded-full text-[#6A5799] hover:bg-white/70 hover:text-[#3D1A78]"
       >
         <X size={14} />
       </button>
@@ -213,7 +213,7 @@ function DeepDiveCard({ id, testid, linkTestid, dismissTestid, title, sections, 
           type="button"
           onClick={() => setDismiss(true)}
           data-testid={`${dismissTestid}-link`}
-          className="text-xs text-[#8471B3] underline hover:text-[#3D1A78]"
+          className="text-xs text-[#6A5799] underline hover:text-[#3D1A78]"
         >
           Not applicable to us
         </button>
@@ -707,15 +707,15 @@ export default function SpecialNeedsV2() {
           </Link>
           <Link to="/special-needs-v2/educational-deep-dive" data-testid="snc2-open-edu-deep-dive"
             className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs border border-[#3D1A78] text-[#3D1A78] hover:bg-[#EEE9F7]">
-            <Sparkles size={13} /> Educational Deep Dive <span className="text-[10px] text-[#8471B3]">(optional)</span>
+            <Sparkles size={13} /> Educational Deep Dive <span className="text-[10px] text-[#6A5799]">(optional)</span>
           </Link>
           <Link to="/special-needs-v2/psychological-deep-dive" data-testid="snc2-open-psych-deep-dive"
             className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs border border-[#3D1A78] text-[#3D1A78] hover:bg-[#EEE9F7]">
-            <Sparkles size={13} /> Psychological Deep Dive <span className="text-[10px] text-[#8471B3]">(optional)</span>
+            <Sparkles size={13} /> Psychological Deep Dive <span className="text-[10px] text-[#6A5799]">(optional)</span>
           </Link>
           <Link to="/special-needs-v2/medical-deep-dive" data-testid="snc2-open-med-deep-dive"
             className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs border border-[#3D1A78] text-[#3D1A78] hover:bg-[#EEE9F7]">
-            <Sparkles size={13} /> Medical Deep Dive <span className="text-[10px] text-[#8471B3]">(optional)</span>
+            <Sparkles size={13} /> Medical Deep Dive <span className="text-[10px] text-[#6A5799]">(optional)</span>
           </Link>
         </div>
         <div className="mb-4 flex items-start justify-between gap-3">

@@ -21,7 +21,7 @@ export function LoginPrivacyBox() {
       <ul className="space-y-2 mb-4">
         {POINTS.map((p, i) => (
           <li key={p} data-testid={`login-privacy-point-${i}`} className="flex items-start gap-2 text-[13px] text-[#4B4567] leading-relaxed">
-            <i className="fa-solid fa-check text-[#2DB5B5] text-[11px] mt-1" aria-hidden="true"></i>
+            <i className="fa-solid fa-check text-[#0F7676] text-[11px] mt-1" aria-hidden="true"></i>
             <span>{p}</span>
           </li>
         ))}

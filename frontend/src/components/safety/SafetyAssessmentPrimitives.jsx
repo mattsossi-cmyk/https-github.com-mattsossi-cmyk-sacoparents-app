@@ -22,7 +22,7 @@ export function StepHeader({ step, total, title, subtitle }) {
   const pct = Math.round(((step + 1) / total) * 100);
   return (
     <div className="mb-6">
-      <div className="flex items-center justify-between text-xs uppercase tracking-[0.2em] text-[#857E9C] mb-2">
+      <div className="flex items-center justify-between text-xs uppercase tracking-[0.2em] text-[#6E6787] mb-2">
         <span>Step {step + 1} of {total}</span>
         <span>{pct}%</span>
       </div>

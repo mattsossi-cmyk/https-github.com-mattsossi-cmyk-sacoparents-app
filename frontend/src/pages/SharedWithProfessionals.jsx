@@ -362,9 +362,9 @@ export default function SharedWithProfessionals() {
                   )}
                   {" "}
                   {prefs.explicit_pref
-                    ? <span className="text-[#857E9C]">Manually set.</span>
+                    ? <span className="text-[#6E6787]">Manually set.</span>
                     : (
-                      <span className="text-[#857E9C]">
+                      <span className="text-[#6E6787]">
                         Auto-elevated to digest once you have{" "}
                         {prefs.auto_threshold}+ active invitations
                         (you currently have {prefs.active_invitation_count}).
@@ -408,7 +408,7 @@ export default function SharedWithProfessionals() {
                   onClick={() => setMode("auto")}
                   disabled={prefsBusy}
                   data-testid="notification-mode-auto"
-                  className="inline-flex items-center gap-1 rounded-full px-3 py-1 text-[11px] font-semibold text-[#857E9C] hover:text-[#3D1A78]"
+                  className="inline-flex items-center gap-1 rounded-full px-3 py-1 text-[11px] font-semibold text-[#6E6787] hover:text-[#3D1A78]"
                 >
                   Use automatic
                 </button>
@@ -432,7 +432,7 @@ export default function SharedWithProfessionals() {
         )}
 
         {invitations === null && (
-          <div className="mt-8 text-center text-[#857E9C]" data-testid="shared-loading">
+          <div className="mt-8 text-center text-[#6E6787]" data-testid="shared-loading">
             <Loader2 className="animate-spin inline mr-2" size={16} />
             Loading your invitations…
           </div>
@@ -442,7 +442,7 @@ export default function SharedWithProfessionals() {
             className="mt-8 rounded-3xl border border-[#E5E0EE] bg-white p-10 text-center"
             data-testid="shared-empty"
           >
-            <Users size={22} className="mx-auto text-[#857E9C]" />
+            <Users size={22} className="mx-auto text-[#6E6787]" />
             <h2 className="font-serif text-2xl text-[#1A1330] mt-3">No invitations yet</h2>
             <p className="text-sm text-[#4B4567] mt-2 max-w-md mx-auto">
               Ready to share what you&rsquo;ve prepared with a mediator,
@@ -480,8 +480,8 @@ export default function SharedWithProfessionals() {
                         <span className="text-sm font-semibold text-[#1A1330]">
                           {inv.professional_first_name} {inv.professional_last_name}
                         </span>
-                        <span className="text-[11px] text-[#857E9C]">·</span>
-                        <span className="text-[11px] text-[#857E9C] capitalize">
+                        <span className="text-[11px] text-[#6E6787]">·</span>
+                        <span className="text-[11px] text-[#6E6787] capitalize">
                           {(inv.professional_role || "").replace("-", " ")}
                         </span>
                         <span
@@ -506,7 +506,7 @@ export default function SharedWithProfessionals() {
                           {(inv.selected_reports || []).map((r) => r.title).join(", ") || "—"}
                         </span>
                       </div>
-                      <div className="mt-2 text-[11px] text-[#857E9C] flex flex-wrap gap-x-3 gap-y-0.5">
+                      <div className="mt-2 text-[11px] text-[#6E6787] flex flex-wrap gap-x-3 gap-y-0.5">
                         <span>Sent {formatDate(inv.created_at)}</span>
                         <span>Access expires {formatDate(inv.access_expiration)}</span>
                         {inv.download_permission
@@ -558,7 +558,7 @@ export default function SharedWithProfessionals() {
                       </button>
                     )}
                     {isRevoked && (
-                      <span className="text-[11px] text-[#857E9C] italic">
+                      <span className="text-[11px] text-[#6E6787] italic">
                         Access was revoked on {formatDate(inv.revoked_at)}
                       </span>
                     )}

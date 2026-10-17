@@ -112,7 +112,7 @@ export default function PathwayReviewerCommentsCard() {
               {c.reviewer_org && (
                 <span className="text-[11px] text-[#4B4567]">· {c.reviewer_org}</span>
               )}
-              <span className="text-[11px] text-[#857E9C] ml-auto">
+              <span className="text-[11px] text-[#6E6787] ml-auto">
                 {formatWhen(c.created_at)}
               </span>
             </div>

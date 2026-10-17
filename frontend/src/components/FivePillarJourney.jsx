@@ -180,7 +180,7 @@ function PillarCard({ pillar, completed, flags }) {
                 <span className={done ? "text-[#1A1330]" : "text-[#4B4567]"}>
                   {t.label}
                 </span>
-                <ChevronRight size={14} className="ml-auto text-[#857E9C]" />
+                <ChevronRight size={14} className="ml-auto text-[#6E6787]" />
               </Link>
             </li>
           );

@@ -103,7 +103,7 @@ export default function AssessmentHistoryCard({
                 ) : (
                   <Link
                     to={s.path || "/dashboard"}
-                    className="inline-flex items-center gap-1 text-xs font-semibold text-[#857E9C] hover:text-[#3D1A78] hover:underline"
+                    className="inline-flex items-center gap-1 text-xs font-semibold text-[#6E6787] hover:text-[#3D1A78] hover:underline"
                     data-testid={`${testidPrefix}-review-${s.key}`}
                   >
                     Review
@@ -118,7 +118,7 @@ export default function AssessmentHistoryCard({
 
       {!ready && (
         <p
-          className="text-[11px] text-[#857E9C] mt-3"
+          className="text-[11px] text-[#6E6787] mt-3"
           data-testid={`${testidPrefix}-waiting-hint`}
         >
           Invite your co-parent to see a Co-Parenting Agreement link appear

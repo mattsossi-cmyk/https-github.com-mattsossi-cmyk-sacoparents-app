@@ -41,7 +41,7 @@ function StatusPill({ status }) {
 }
 
 function BulletList({ items = [], testId }) {
-  if (!items || items.length === 0) return <div className="text-sm text-[#8471B3] italic">—</div>;
+  if (!items || items.length === 0) return <div className="text-sm text-[#6A5799] italic">—</div>;
   return <ul className="list-disc pl-5 text-sm text-[#1A1330] space-y-1" data-testid={testId}>
     {items.map((it, i) => <li key={`${i}-${String(it).slice(0, 40)}`}>{it}</li>)}
   </ul>;
@@ -266,7 +266,7 @@ export default function SpecialNeedsV2Report() {
         {/* 5. Challenges */}
         <Section id="challenges" number={5} title={challenges.title || "Co-Parenting Challenges"}>
           {(challenges.items || []).length === 0 ? (
-            <div className="text-sm text-[#8471B3] italic">Your responses do not surface any pathway-level challenges above the concern threshold.</div>
+            <div className="text-sm text-[#6A5799] italic">Your responses do not surface any pathway-level challenges above the concern threshold.</div>
           ) : (
             <div className="space-y-4">
               {challenges.items.map((c, idx) => (
@@ -289,7 +289,7 @@ export default function SpecialNeedsV2Report() {
 
         {/* 6. Child Impact */}
         <Section id="child-impact" number={6} title={childImpact.title || "Child Impact Summary"}>
-          <div className="text-xs text-[#8471B3] italic mb-2">Possible effects of the current pattern — not assigning blame.</div>
+          <div className="text-xs text-[#6A5799] italic mb-2">Possible effects of the current pattern — not assigning blame.</div>
           <BulletList items={childImpact.possible_effects} testId="snc2-child-impact-list" />
         </Section>
 
@@ -315,7 +315,7 @@ export default function SpecialNeedsV2Report() {
         {/* 8. Parent Alignment */}
         <Section id="alignment" number={8} title={alignment.title || "Parent Alignment Summary"}>
           <BulletList items={alignment.resolved_labels} testId="snc2-alignment-list" />
-          <div className="text-xs text-[#8471B3] italic mt-3">{alignment.note}</div>
+          <div className="text-xs text-[#6A5799] italic mt-3">{alignment.note}</div>
         </Section>
 
         {/* 9. Recommended Structure */}
@@ -335,7 +335,7 @@ export default function SpecialNeedsV2Report() {
 
         <ReportProvenanceFooter variant="snc" className="mt-8" />
 
-        <div className="mt-8 text-xs text-[#8471B3] italic">{r.disclaimer}</div>
+        <div className="mt-8 text-xs text-[#6A5799] italic">{r.disclaimer}</div>
 
         {/* One clear ending — invite the co-parent so the two reports
             can be compared side-by-side into a Joint Alignment view. */}

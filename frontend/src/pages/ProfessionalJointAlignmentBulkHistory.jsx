@@ -90,11 +90,11 @@ function ImportRow({ item, selected, onSelect }) {
           >
             {filename || "Untitled upload"}
           </div>
-          <div className="text-[11px] text-[#857E9C] mt-1">
+          <div className="text-[11px] text-[#6E6787] mt-1">
             {formatTimestamp(started_at)} · {total_rows} row{total_rows === 1 ? "" : "s"}
           </div>
         </div>
-        <ChevronRight size={16} className="text-[#857E9C] mt-1 flex-shrink-0" />
+        <ChevronRight size={16} className="text-[#6E6787] mt-1 flex-shrink-0" />
       </div>
       <div className="mt-3 flex flex-wrap gap-1.5">
         <CountPill tone="ok" count={created_count} label="created"
@@ -115,7 +115,7 @@ function ImportRow({ item, selected, onSelect }) {
 function ImportDetail({ detail, loading, error }) {
   if (loading) {
     return (
-      <div className="p-8 text-center text-[#857E9C]" data-testid="bulk-history-detail-loading">
+      <div className="p-8 text-center text-[#6E6787]" data-testid="bulk-history-detail-loading">
         <Loader2 className="animate-spin inline mr-2" size={16} />
         Loading import details…
       </div>
@@ -156,7 +156,7 @@ function ImportDetail({ detail, loading, error }) {
         ) : null}
       </div>
       {(default_assessment_type || default_reminder_note) && (
-        <div className="mt-2 text-[11px] text-[#857E9C]">
+        <div className="mt-2 text-[11px] text-[#6E6787]">
           {default_assessment_type && (
             <span className="mr-3">
               Default lane: <span className="text-[#3D1A78] font-semibold">{default_assessment_type}</span>
@@ -214,13 +214,13 @@ function ImportDetail({ detail, loading, error }) {
             <MinusCircle size={14} className="text-[#3D1A78]" />
             Skipped duplicates ({skipped_case_ids.length})
           </h3>
-          <p className="text-[11px] text-[#857E9C] mt-1">
+          <p className="text-[11px] text-[#6E6787] mt-1">
             These rows already had an active case with you — nothing sent.
           </p>
           <ul className="mt-2 flex flex-wrap gap-2">
             {skipped_case_ids.map((cid, i) => (
               <li key={`${cid}-${i}`}>
-                <span className="inline-flex rounded-full bg-[#F1EEF7] text-[#857E9C] px-2 py-0.5 text-[11px] font-mono">
+                <span className="inline-flex rounded-full bg-[#F1EEF7] text-[#6E6787] px-2 py-0.5 text-[11px] font-mono">
                   {cid}
                 </span>
               </li>
@@ -250,7 +250,7 @@ function ImportDetail({ detail, loading, error }) {
         (case_ids?.length || 0) === 0 &&
         (skipped_case_ids?.length || 0) === 0 &&
         (errored_rows?.length || 0) === 0 && (
-        <div className="mt-6 text-sm text-[#857E9C]">No row detail was recorded for this import.</div>
+        <div className="mt-6 text-sm text-[#6E6787]">No row detail was recorded for this import.</div>
       )}
     </div>
   );
@@ -374,7 +374,7 @@ export default function ProfessionalJointAlignmentBulkHistory() {
         )}
 
         {imports === null && (
-          <div className="mt-8 text-center text-[#857E9C]" data-testid="bulk-history-loading">
+          <div className="mt-8 text-center text-[#6E6787]" data-testid="bulk-history-loading">
             <Loader2 className="animate-spin inline mr-2" size={16} />
             Loading your bulk imports…
           </div>
@@ -385,7 +385,7 @@ export default function ProfessionalJointAlignmentBulkHistory() {
             className="mt-8 rounded-3xl border border-[#E5E0EE] bg-white p-10 text-center"
             data-testid="bulk-history-empty"
           >
-            <History size={22} className="mx-auto text-[#857E9C]" />
+            <History size={22} className="mx-auto text-[#6E6787]" />
             <h2 className="font-serif text-2xl text-[#1A1330] mt-3">
               No bulk imports yet
             </h2>

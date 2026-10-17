@@ -173,7 +173,7 @@ export default function ParentingScheduleReflection() {
         />
         <Link
           to="/joint-reports"
-          className="inline-flex items-center gap-2 text-sm text-[#B45F13] hover:text-[#7C400C] mb-4"
+          className="inline-flex items-center gap-2 text-sm text-[#904B0E] hover:text-[#7C400C] mb-4"
           data-testid="schedule-reflection-back-picker"
         >
           <ArrowLeft size={14} /> Joint reports
@@ -184,7 +184,7 @@ export default function ParentingScheduleReflection() {
             <CalendarDays size={20} strokeWidth={2.2} />
           </div>
           <div>
-            <div className="text-[10px] uppercase tracking-[0.22em] font-bold text-[#B45F13]">
+            <div className="text-[10px] uppercase tracking-[0.22em] font-bold text-[#904B0E]">
               Private parenting schedule reflection
             </div>
             <h1 className="font-serif text-2xl sm:text-3xl text-[#1A1330] leading-tight mt-1">
@@ -205,7 +205,7 @@ export default function ParentingScheduleReflection() {
             </div>
             <div className="flex items-center gap-3">
               {saving && (
-                <span className="inline-flex items-center gap-1 text-[#B45F13]">
+                <span className="inline-flex items-center gap-1 text-[#904B0E]">
                   <Loader2 size={12} className="animate-spin" /> Saving…
                 </span>
               )}
@@ -230,7 +230,7 @@ export default function ParentingScheduleReflection() {
           className="bg-white rounded-3xl border border-[#E6D8C1] p-6 sm:p-8 shadow-sm animate-[fadeUp_240ms_ease-out]"
           data-testid={`schedule-reflection-q-${q.id}`}
         >
-          <div className="text-[10px] uppercase tracking-[0.22em] font-bold text-[#B45F13] mb-2">
+          <div className="text-[10px] uppercase tracking-[0.22em] font-bold text-[#904B0E] mb-2">
             {(schema.dimensions?.[q.dimension]?.label) || q.dimension}
           </div>
           <label className="block font-serif text-lg sm:text-xl text-[#1A1330] leading-snug mb-6">

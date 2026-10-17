@@ -15,7 +15,7 @@ export default function SafetyAlert({ level, onDismiss }) {
   const palette = isDanger
     ? {
         wrap: "bg-[#C97B63]/10 border-[#C97B63]/40",
-        icon: "text-[#C97B63]",
+        icon: "text-[#9A5D47]",
         title: "text-[#8B4A35]",
         body: "text-[#4B4567]",
       }
@@ -62,7 +62,7 @@ export default function SafetyAlert({ level, onDismiss }) {
               const isPrimary = !!a.primary;
               const cls = isPrimary
                 ? isDanger
-                  ? "bg-[#C97B63] hover:bg-[#B56B53] text-white"
+                  ? "bg-[#9A5D47] hover:bg-[#7F4B39] text-white"
                   : "bg-[#3D1A78] hover:bg-[#2a0f5f] text-white"
                 : "bg-white hover:bg-[#EFE9F9] text-[#1A1330] border border-[#E5E0EE]";
               const className = `inline-flex items-center gap-1.5 text-[13px] px-3.5 py-2 rounded-full transition-colors ${cls}`;

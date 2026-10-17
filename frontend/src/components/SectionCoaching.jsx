@@ -109,7 +109,7 @@ export default function SectionCoaching({ section, data, ready, testid }) {
           <div className="mt-5 space-y-4">
             {state.data.strengths && (
               <div>
-                <div className="flex items-center gap-2 text-[11px] uppercase tracking-[0.18em] font-semibold text-[#2DB5B5]">
+                <div className="flex items-center gap-2 text-[11px] uppercase tracking-[0.18em] font-semibold text-[#0F7676]">
                   <HeartHandshake size={13} /> What you&apos;re doing well
                 </div>
                 <p

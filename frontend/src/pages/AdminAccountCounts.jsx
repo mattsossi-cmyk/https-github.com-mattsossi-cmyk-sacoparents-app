@@ -8,7 +8,7 @@ import { api } from "../lib/api";
 
 const Stat = ({ label, value, sub, testid }) => (
   <div className="rounded-2xl border border-[#E5E0EE] bg-white p-5" data-testid={testid}>
-    <div className="text-[11px] uppercase tracking-[0.18em] font-bold text-[#857E9C]">{label}</div>
+    <div className="text-[11px] uppercase tracking-[0.18em] font-bold text-[#6E6787]">{label}</div>
     <div className="font-serif text-4xl text-[#1A1330] mt-1 tabular-nums" data-testid={`${testid}-value`}>{value ?? "–"}</div>
     {sub && <div className="text-xs text-[#4B4567] mt-1">{sub}</div>}
   </div>
@@ -31,7 +31,7 @@ export default function AdminAccountCounts() {
     return (
       <AppShell>
         <div className="card-soft p-8 text-center max-w-lg mx-auto" data-testid="admin-counts-forbidden">
-          <ShieldCheck size={20} className="mx-auto text-[#B6663B] mb-3" />
+          <ShieldCheck size={20} className="mx-auto text-[#965231] mb-3" />
           <h2 className="font-serif text-2xl text-[#1A1330]">Admin only</h2>
           <p className="text-sm text-[#4B4567] mt-2">This page is restricted to the SA CoParents app owner.</p>
         </div>
@@ -54,7 +54,7 @@ export default function AdminAccountCounts() {
           <Stat label="New · last 30 days" value={data?.created_last_30_days} testid="admin-counts-new30"
             sub={data ? `${data.created_last_30_days_parents} parents · ${data.created_last_30_days_professionals} professionals` : null} />
         </div>
-        <p className="text-xs text-[#857E9C] mt-5 leading-relaxed max-w-2xl" data-testid="admin-counts-note">
+        <p className="text-xs text-[#6E6787] mt-5 leading-relaxed max-w-2xl" data-testid="admin-counts-note">
           Accounts have no role field, so &ldquo;professional&rdquo; means an account that has created a court code or joint case;
           every other account counts as a parent. Guest sessions ({data?.guest_sessions ?? "–"}) aren&rsquo;t included.
           These are the numbers for the site you&rsquo;re signed in to.{" "}

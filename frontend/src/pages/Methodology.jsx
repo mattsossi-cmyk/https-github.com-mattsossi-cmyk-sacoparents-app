@@ -29,7 +29,7 @@ export default function Methodology() {
         <h1 className="font-serif text-3xl sm:text-4xl text-[#1A1330] mb-2 leading-tight">
           How we score you — and what it means.
         </h1>
-        <p className="text-sm text-[#857E9C] mb-8">Last updated: {LAST_UPDATED}</p>
+        <p className="text-sm text-[#6E6787] mb-8">Last updated: {LAST_UPDATED}</p>
 
         <div
           className="rounded-2xl border border-[#F5C147]/40 bg-[#FFF8E6] p-4 flex gap-3 items-start not-prose mb-8"
@@ -182,7 +182,7 @@ export default function Methodology() {
             </div>
           </div>
 
-          <p className="text-xs text-[#857E9C] italic mt-8">
+          <p className="text-xs text-[#6E6787] italic mt-8">
             SA CoParents · 16607 Blanco #703, San Antonio, Texas 78232
           </p>
         </Prose>

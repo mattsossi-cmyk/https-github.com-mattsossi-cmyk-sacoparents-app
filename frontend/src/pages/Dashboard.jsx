@@ -652,7 +652,7 @@ export default function Dashboard() {
                   See sample reports
                 </a>
               </div>
-              <p className="text-[11px] text-[#857E9C] mt-3 italic">
+              <p className="text-[11px] text-[#6E6787] mt-3 italic">
                 For a joint (two-parent) Complete Alignment Report, your
                 mediator, attorney, or therapist creates the case on{" "}
                 sacoparentsalign.com and invites both parents.
@@ -820,7 +820,7 @@ export default function Dashboard() {
                             {cat.formal}
                           </div>
                         )}
-                        <div className="text-[11px] text-[#8471B3] italic">
+                        <div className="text-[11px] text-[#6A5799] italic">
                           {cat.hint}
                         </div>
                       </div>
@@ -929,7 +929,7 @@ export default function Dashboard() {
                   Day {dayOfPrep} of prep
                 </span>
                 {lastTouchedLabel && (
-                  <span className="text-[10px] uppercase tracking-[0.15em] text-[#857E9C]" data-testid="dashboard-last-touched">
+                  <span className="text-[10px] uppercase tracking-[0.15em] text-[#6E6787]" data-testid="dashboard-last-touched">
                     · {lastTouchedLabel}
                   </span>
                 )}
@@ -970,11 +970,11 @@ export default function Dashboard() {
               <div className="mt-6">
                 <div className="flex items-end justify-between mb-2">
                   <div>
-                    <div className="text-xs uppercase tracking-[0.2em] text-[#857E9C]">
+                    <div className="text-xs uppercase tracking-[0.2em] text-[#6E6787]">
                       Today&apos;s progress
                     </div>
                     <div className="font-serif text-3xl text-[#1A1330]">
-                      {done} <span className="text-[#857E9C] text-xl">/ {STEPS.length}</span>
+                      {done} <span className="text-[#6E6787] text-xl">/ {STEPS.length}</span>
                     </div>
                   </div>
                   <div className="text-sm text-[#4B4567]">{pct}%</div>
@@ -988,7 +988,7 @@ export default function Dashboard() {
                 </div>
                 {!allDone && (
                   <div
-                    className="mt-3 text-[11px] uppercase tracking-[0.2em] text-[#857E9C] flex items-center gap-1.5"
+                    className="mt-3 text-[11px] uppercase tracking-[0.2em] text-[#6E6787] flex items-center gap-1.5"
                     data-testid="dashboard-estimated-completion"
                   >
                     <Compass size={12} className="text-[#3D1A78]" />
@@ -1075,7 +1075,7 @@ export default function Dashboard() {
               </Link>
               <Link
                 to="/summary?tab=agreement"
-                className="inline-flex items-center justify-center gap-1.5 rounded-full border border-[#2DB5B5] text-[#2DB5B5] px-3 py-2 text-sm font-semibold hover:bg-[#EAF7F7] transition-colors"
+                className="inline-flex items-center justify-center gap-1.5 rounded-full border border-[#2DB5B5] text-[#0F7676] px-3 py-2 text-sm font-semibold hover:bg-[#EAF7F7] transition-colors"
                 data-testid="dashboard-coparenting-agreement-button"
                 title="Draft a Co-Parenting Agreement you can share with the other parent."
               >
@@ -1084,7 +1084,7 @@ export default function Dashboard() {
             </div>
 
             {!allDone && (
-              <p className="text-[11px] text-[#857E9C] mt-3 text-center leading-relaxed">
+              <p className="text-[11px] text-[#6E6787] mt-3 text-center leading-relaxed">
                 Tip: even 10 minutes of prep moves the needle.
               </p>
             )}
@@ -1257,7 +1257,7 @@ export default function Dashboard() {
                   >
                     <Icon size={18} />
                   </div>
-                  <div className="text-[10px] uppercase tracking-[0.2em] text-[#857E9C]">
+                  <div className="text-[10px] uppercase tracking-[0.2em] text-[#6E6787]">
                     {isDone ? "Today's accomplishment" : "To do"}
                   </div>
                 </div>
@@ -1291,10 +1291,10 @@ export default function Dashboard() {
             data-testid="dashboard-summary-card"
           >
             <div className="flex items-start justify-between mb-4">
-              <div className="w-11 h-11 rounded-full grid place-items-center bg-[#C28771]/15 text-[#C28771]">
+              <div className="w-11 h-11 rounded-full grid place-items-center bg-[#C28771]/15 text-[#9A5D47]">
                 <FileText size={18} />
               </div>
-              <div className="text-[10px] uppercase tracking-[0.2em] text-[#857E9C]">
+              <div className="text-[10px] uppercase tracking-[0.2em] text-[#6E6787]">
                 Final
               </div>
             </div>
@@ -1310,10 +1310,10 @@ export default function Dashboard() {
             data-testid="dashboard-reflection-card"
           >
             <div className="flex items-start justify-between mb-4">
-              <div className="w-11 h-11 rounded-full grid place-items-center bg-[#C28771]/15 text-[#C28771]">
+              <div className="w-11 h-11 rounded-full grid place-items-center bg-[#C28771]/15 text-[#9A5D47]">
                 <Heart size={18} />
               </div>
-              <div className="text-[10px] uppercase tracking-[0.2em] text-[#857E9C]">
+              <div className="text-[10px] uppercase tracking-[0.2em] text-[#6E6787]">
                 Optional
               </div>
             </div>
@@ -1430,7 +1430,7 @@ export default function Dashboard() {
                 </Link>
                 <Link
                   to={`/joint-agreement?share=${encodeURIComponent(sncHighlights.share_id)}`}
-                  className="text-[11px] font-semibold text-[#2DB5B5] underline underline-offset-2 hover:text-[#1F8F8F]"
+                  className="text-[11px] font-semibold text-[#0F7676] underline underline-offset-2 hover:text-[#1F8F8F]"
                   data-testid="dashboard-joint-agreement-link"
                   title="Open the Joint Alignment Agreement — merged from both parents' individual drafts."
                 >
@@ -1484,7 +1484,7 @@ export default function Dashboard() {
                     ? "bg-[#E6F4EC] text-[#1F5C3B] border-[#B5DFC5]"
                     : d.has_assessment
                     ? "bg-[#FFF6E5] text-[#8A5B00] border-[#F0D9A8]"
-                    : "bg-white text-[#8471B3] border-[#E5E0EE]";
+                    : "bg-white text-[#6A5799] border-[#E5E0EE]";
                   const targetRoute = d.has_report ? d.report_route : d.route;
                   return (
                     <li key={d.id} data-testid={`dashboard-deep-dive-${d.id}`}>
@@ -1558,7 +1558,7 @@ export default function Dashboard() {
                     ? "bg-[#1F5C3B] text-white border-[#1F5C3B]"
                     : isActive
                     ? "bg-[#FBEDDA] text-[#8C5A2C] border-[#EDD5B0]"
-                    : "bg-white text-[#8471B3] border-[#E5E0EE]";
+                    : "bg-white text-[#6A5799] border-[#E5E0EE]";
                   const trophies = p.milestones || [];
                   return (
                     <li key={p.id} data-testid={`dashboard-compare-pathway-${p.id}`}>
@@ -1626,11 +1626,11 @@ export default function Dashboard() {
             to="/safety-assessment"
             data-testid="dashboard-safety-assessment-card"
             className="group flex items-center gap-4 rounded-3xl bg-white border border-[#E5E0EE] hover:border-[#C28771] p-5 sm:p-6 shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all"          >
-            <div className="shrink-0 w-12 h-12 rounded-full bg-[#F8EDE4] grid place-items-center text-[#C28771]">
+            <div className="shrink-0 w-12 h-12 rounded-full bg-[#F8EDE4] grid place-items-center text-[#9A5D47]">
               <Shield size={22} />
             </div>
             <div className="flex-1 min-w-0">
-              <div className="text-[10px] uppercase tracking-[0.22em] font-bold text-[#C28771] mb-0.5">
+              <div className="text-[10px] uppercase tracking-[0.22em] font-bold text-[#9A5D47] mb-0.5">
                 Safety Screen
               </div>
               <div className="font-serif text-xl text-[#1A1330] leading-tight mb-1">
@@ -1643,7 +1643,7 @@ export default function Dashboard() {
                 to safer pathways than mediation.
               </p>
             </div>
-            <ChevronRight size={16} className="shrink-0 text-[#C28771]" />
+            <ChevronRight size={16} className="shrink-0 text-[#9A5D47]" />
           </Link>
         </div>
 
@@ -1695,7 +1695,7 @@ export default function Dashboard() {
                   San Antonio-based, child-focused. Posts for divorcing parents.
                 </p>
               </div>
-              <ExternalLink size={16} className="shrink-0 text-[#857E9C]" />
+              <ExternalLink size={16} className="shrink-0 text-[#6E6787]" />
             </a>
           </div>
         </div>

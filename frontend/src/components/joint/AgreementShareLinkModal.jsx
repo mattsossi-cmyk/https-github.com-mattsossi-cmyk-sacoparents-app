@@ -98,7 +98,7 @@ export default function AgreementShareLinkModal({
                 data-testid="joint-agreement-share-link-note-input"
                 className="w-full rounded-xl border border-[#E5E0EE] bg-white px-3 py-2 text-sm text-[#1A1330] leading-relaxed focus:outline-none focus:ring-2 focus:ring-[#3D1A78]/30 disabled:opacity-60 resize-none"
               />
-              <div className="mt-1 text-[11px] text-[#857E9C] text-right">
+              <div className="mt-1 text-[11px] text-[#6E6787] text-right">
                 {shareLinkNote.length}/500
               </div>
             </div>

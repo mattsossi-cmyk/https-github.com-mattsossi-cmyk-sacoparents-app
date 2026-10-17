@@ -7,7 +7,7 @@ import { useCaseSettings } from "../lib/useCaseSettings";
 function SettingRow({ item, i }) {
   return (
     <li className="py-3.5 border-t border-[#F0EDF6] first:border-t-0" data-testid={`case-setting-${i}`}>
-      <p className="text-xs font-bold uppercase tracking-wider text-[#857E9C]">{item.label}</p>
+      <p className="text-xs font-bold uppercase tracking-wider text-[#6E6787]">{item.label}</p>
       <p className="text-sm text-[#1A1330] mt-1">{item.value}</p>
     </li>
   );
@@ -31,7 +31,7 @@ export default function CaseSettingsPage() {
         )}
         <div className="card-soft mt-6 p-5 sm:p-6">
           {!settings ? (
-            <p className="text-sm text-[#857E9C]" data-testid="case-settings-loading">Loading…</p>
+            <p className="text-sm text-[#6E6787]" data-testid="case-settings-loading">Loading…</p>
           ) : (
             <ul data-testid="case-settings-list">
               {settings.settings.map((item, i) => (
@@ -40,7 +40,7 @@ export default function CaseSettingsPage() {
             </ul>
           )}
         </div>
-        <p className="text-xs text-[#857E9C] mt-5">
+        <p className="text-xs text-[#6E6787] mt-5">
           Questions about these settings? Ask your professional. <Link to="/help" className="underline">Get help</Link>
         </p>
       </div>

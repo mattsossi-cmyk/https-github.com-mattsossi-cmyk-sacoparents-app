@@ -425,7 +425,7 @@ export default function SpecialNeedsV2EducationalDeepDiveReport() {
                 <div className="text-[10px] uppercase tracking-[0.22em] font-bold text-[#3D1A78] flex items-center gap-2 mb-1">
                   <Sparkles size={12} /> AI executive summary
                 </div>
-                <p className="text-[11px] text-[#8471B3] italic">Neutral · non-diagnostic · generated from your answers</p>
+                <p className="text-[11px] text-[#6A5799] italic">Neutral · non-diagnostic · generated from your answers</p>
               </div>
               <div className="flex items-center gap-2 flex-wrap">
                 <div className="inline-flex rounded-full border border-[#D6CFE8] overflow-hidden text-[10px] font-semibold" data-testid="psych-deep-length-toggle">
@@ -471,7 +471,7 @@ export default function SpecialNeedsV2EducationalDeepDiveReport() {
             </div>
             <p className="text-sm text-[#1A1330] whitespace-pre-wrap leading-relaxed mt-3">{report.ai_summary}</p>
             {report.ai_summary_regenerated_at && (
-              <p className="text-[10px] text-[#8471B3] italic mt-2" data-testid="psych-deep-regen-timestamp">
+              <p className="text-[10px] text-[#6A5799] italic mt-2" data-testid="psych-deep-regen-timestamp">
                 Last regenerated: {new Date(report.ai_summary_regenerated_at).toLocaleString()}
                 {report.ai_summary_length && ` · ${report.ai_summary_length}`}
                 {report.ai_summary_model && ` · ${report.ai_summary_model === "gpt" ? "GPT 5.6 Terra" : "Claude Sonnet 4.5"}`}
@@ -527,7 +527,7 @@ export default function SpecialNeedsV2EducationalDeepDiveReport() {
               <div className="overflow-x-auto">
                 <table className="w-full text-sm">
                   <thead>
-                    <tr className="text-left text-[10px] uppercase tracking-[0.14em] text-[#8471B3] border-b border-[#E5E0EE]">
+                    <tr className="text-left text-[10px] uppercase tracking-[0.14em] text-[#6A5799] border-b border-[#E5E0EE]">
                       <th className="py-2 pr-3">Meeting</th><th className="py-2 pr-3">Status</th><th className="py-2">Suggested next step</th>
                     </tr>
                   </thead>
@@ -623,7 +623,7 @@ export default function SpecialNeedsV2EducationalDeepDiveReport() {
           <div className="mt-3 overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
-                <tr className="text-left text-[10px] uppercase tracking-[0.14em] text-[#8471B3] border-b border-[#E5E0EE]">
+                <tr className="text-left text-[10px] uppercase tracking-[0.14em] text-[#6A5799] border-b border-[#E5E0EE]">
                   <th className="py-2 pr-2">#</th><th className="py-2 pr-3">Action</th><th className="py-2 pr-3">Detail</th><th className="py-2 pr-3">Owner</th><th className="py-2">Target date</th>
                 </tr>
               </thead>

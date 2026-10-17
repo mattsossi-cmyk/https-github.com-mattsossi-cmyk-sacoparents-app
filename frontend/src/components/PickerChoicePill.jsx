@@ -77,7 +77,7 @@ export default function PickerChoicePill() {
         {meta.icon}
       </div>
       <div className="min-w-0 flex-1">
-        <div className="text-[11px] uppercase tracking-[0.14em] font-bold text-[#857E9C] flex items-center gap-1">
+        <div className="text-[11px] uppercase tracking-[0.14em] font-bold text-[#6E6787] flex items-center gap-1">
           <Compass size={11} /> Your chosen path
         </div>
         <div className={`text-sm font-semibold ${meta.accent} truncate`} data-testid="picker-choice-pill-label">
@@ -96,7 +96,7 @@ export default function PickerChoicePill() {
         type="button"
         onClick={dismiss}
         aria-label="Dismiss"
-        className="shrink-0 text-[#857E9C] hover:text-[#3D1A78] p-1 rounded-full hover:bg-[#F5F2FA]"
+        className="shrink-0 text-[#6E6787] hover:text-[#3D1A78] p-1 rounded-full hover:bg-[#F5F2FA]"
         data-testid="picker-choice-pill-dismiss"
       >
         <X size={14} />

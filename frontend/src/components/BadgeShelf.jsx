@@ -127,7 +127,7 @@ function BadgeChip({ badge, earned, onShare }) {
           </span>
         ) : (
           <span
-            className="absolute -bottom-1 -right-1 w-6 h-6 rounded-full bg-white border border-[#E5E0EE] grid place-items-center text-[#857E9C]"
+            className="absolute -bottom-1 -right-1 w-6 h-6 rounded-full bg-white border border-[#E5E0EE] grid place-items-center text-[#6E6787]"
             aria-label="Locked"
           >
             <Lock size={11} />
@@ -136,7 +136,7 @@ function BadgeChip({ badge, earned, onShare }) {
       </div>
       <div
         className={`mt-3 text-[11px] leading-tight font-bold ${
-          earned ? "text-[#1A1330]" : "text-[#857E9C]"
+          earned ? "text-[#1A1330]" : "text-[#6E6787]"
         } ${capstone ? "sm:text-xs" : ""}`}
       >
         {badge.label}

@@ -132,7 +132,7 @@ export default function ComplianceStreakPanel() {
               {current === 1 ? "week in a row" : "weeks in a row"} at ≥{data.threshold_pct}%
             </span>
           </div>
-          <div className="text-[11px] text-[#8471B3] mt-1">
+          <div className="text-[11px] text-[#6A5799] mt-1">
             Longest streak: <strong>{longest}</strong> · Badges earned:{" "}
             <strong data-testid="streak-earned-count">{earnedCount}</strong> of {data.badges.length}
           </div>
@@ -196,7 +196,7 @@ export default function ComplianceStreakPanel() {
             className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[11px] font-semibold border transition ${
               b.earned
                 ? "bg-[#FFF5DA] text-[#8A5B00] border-[#E8A628]"
-                : "bg-white text-[#8471B3] border-[#E5E0EE] opacity-70"
+                : "bg-white text-[#6A5799] border-[#E5E0EE] opacity-70"
             }`}
           >
             <Award size={12} className={b.earned ? "text-[#E8A628]" : "text-[#B7AECC]"} />

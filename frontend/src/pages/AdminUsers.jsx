@@ -38,7 +38,7 @@ function Badge({ children, tone = "muted", testid }) {
     teal: "bg-[#D5F2F2] text-[#0E7A7A]",
     purple: "bg-[#EFE9F9] text-[#3D1A78]",
     red: "bg-[#FCE3DC] text-[#9A3A23]",
-    amber: "bg-[#FFF1E2] text-[#B6663B]",
+    amber: "bg-[#FFF1E2] text-[#965231]",
   };
   return (
     <span
@@ -169,7 +169,7 @@ export default function AdminUsers() {
           className="card-soft p-8 text-center max-w-lg mx-auto"
           data-testid="admin-users-forbidden"
         >
-          <div className="w-12 h-12 mx-auto rounded-full bg-[#FFF1E2] grid place-items-center text-[#B6663B] mb-3">
+          <div className="w-12 h-12 mx-auto rounded-full bg-[#FFF1E2] grid place-items-center text-[#965231] mb-3">
             <ShieldCheck size={20} />
           </div>
           <h2 className="font-serif text-2xl text-[#1A1330]">Admin only</h2>
@@ -221,7 +221,7 @@ export default function AdminUsers() {
             <div className="relative flex-1">
               <Search
                 size={14}
-                className="absolute left-3 top-1/2 -translate-y-1/2 text-[#857E9C] pointer-events-none"
+                className="absolute left-3 top-1/2 -translate-y-1/2 text-[#6E6787] pointer-events-none"
               />
               <input
                 value={q}
@@ -233,7 +233,7 @@ export default function AdminUsers() {
             </div>
 
             <div className="flex items-center gap-2">
-              <Filter size={14} className="text-[#857E9C]" />
+              <Filter size={14} className="text-[#6E6787]" />
               <div className="inline-flex rounded-lg border border-[#E5E0EE] overflow-hidden" data-testid="admin-users-filter-group">
                 {["active", "suspended", "all"].map((opt) => (
                   <button
@@ -270,20 +270,20 @@ export default function AdminUsers() {
         {/* Table */}
         <div className="card-soft p-0 overflow-hidden">
           {fetching ? (
-            <div className="p-10 text-center text-sm tracking-[0.2em] uppercase text-[#857E9C]">
+            <div className="p-10 text-center text-sm tracking-[0.2em] uppercase text-[#6E6787]">
               <Loader2 size={16} className="inline animate-spin mr-2" /> Loading users…
             </div>
           ) : err ? (
             <div className="p-10 text-center text-sm text-[#9A3A23]">{err}</div>
           ) : users.length === 0 ? (
-            <div className="p-10 text-center text-sm text-[#857E9C]" data-testid="admin-users-empty">
+            <div className="p-10 text-center text-sm text-[#6E6787]" data-testid="admin-users-empty">
               No users match the current filters.
             </div>
           ) : (
             <div className="overflow-x-auto">
               <table className="w-full text-sm" data-testid="admin-users-table">
                 <thead className="bg-[#F7F4FC]">
-                  <tr className="text-[10px] uppercase tracking-[0.15em] text-[#857E9C]">
+                  <tr className="text-[10px] uppercase tracking-[0.15em] text-[#6E6787]">
                     <th className="text-left py-2.5 px-4">Name</th>
                     <th className="text-left py-2.5 px-4">Email</th>
                     <th className="text-left py-2.5 px-4">Auth</th>

@@ -288,9 +288,9 @@ export default function ShareChildNeedsNudge() {
                         <Check size={11} /> {status}
                       </span>
                     ) : isOn || c.coparent_has_consented ? (
-                      <span className="text-[#AA6A00]">{status}</span>
+                      <span className="text-[#8A5500]">{status}</span>
                     ) : (
-                      <span className="text-[#857E9C]">{status}</span>
+                      <span className="text-[#6E6787]">{status}</span>
                     )}
                   </div>
                 </div>
@@ -303,7 +303,7 @@ export default function ShareChildNeedsNudge() {
                 onClick={() => dismissCase(c.case_id)}
                 aria-label={`Hide this share prompt for ${c.case_id}`}
                 data-testid={`child-needs-share-nudge-dismiss-${c.case_id}`}
-                className="absolute top-2 right-2 inline-flex items-center justify-center w-6 h-6 rounded-full text-[#857E9C] hover:bg-[#F1EBFA] hover:text-[#3D1A78] focus:outline-none focus:ring-2 focus:ring-[#3D1A78]/30"
+                className="absolute top-2 right-2 inline-flex items-center justify-center w-6 h-6 rounded-full text-[#6E6787] hover:bg-[#F1EBFA] hover:text-[#3D1A78] focus:outline-none focus:ring-2 focus:ring-[#3D1A78]/30"
               >
                 <X size={12} />
               </button>
@@ -321,7 +321,7 @@ export default function ShareChildNeedsNudge() {
         </div>
       )}
 
-      <p className="mt-3 text-[11px] text-[#857E9C] italic leading-relaxed">
+      <p className="mt-3 text-[11px] text-[#6E6787] italic leading-relaxed">
         Educational and organizational — not a diagnosis, not a court
         submission. You can change this any time from the joint report
         page.

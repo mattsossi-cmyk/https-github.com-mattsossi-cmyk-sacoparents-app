@@ -63,7 +63,7 @@ export default function SignDownloadToggle({
             data-testid={`${testid}-note-input`}
           />
           <div
-            className="text-[10px] text-[#857E9C]"
+            className="text-[10px] text-[#6E6787]"
             data-testid={`${testid}-note-counter`}
           >
             {remaining} chars left · appears above your signature on every page

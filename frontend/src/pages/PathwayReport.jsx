@@ -140,7 +140,7 @@ export default function PathwayReport() {
             <Link
               to="/summary?tab=agreement"
               data-testid="pathway-report-draft-agreement"
-              className="inline-flex items-center gap-1.5 rounded-full bg-white border border-[#2DB5B5] text-[#2DB5B5] px-4 py-2 text-sm font-semibold hover:bg-[#EAF7F7] transition-colors"
+              className="inline-flex items-center gap-1.5 rounded-full bg-white border border-[#2DB5B5] text-[#0F7676] px-4 py-2 text-sm font-semibold hover:bg-[#EAF7F7] transition-colors"
               title="Start a Co-Parenting Agreement Draft you can share with the other parent."
             >
               <Handshake size={14} />

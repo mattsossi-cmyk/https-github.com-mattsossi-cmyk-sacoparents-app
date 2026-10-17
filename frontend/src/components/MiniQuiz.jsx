@@ -94,7 +94,7 @@ const TONE = {
     ring: "border-[#F0D9A1]",
     activeRing: "border-[#AA6A00]",
     activeBg: "bg-[#FCEFD7]",
-    activeText: "text-[#AA6A00]",
+    activeText: "text-[#8A5500]",
   },
   incomplete: {
     label: "Haven't tested it",
@@ -312,7 +312,7 @@ export default function MiniQuiz() {
         </div>
       )}
 
-      <p className="mt-4 text-[11px] text-[#857E9C] italic leading-relaxed">
+      <p className="mt-4 text-[11px] text-[#6E6787] italic leading-relaxed">
         Educational and organizational self-check — not a diagnosis, not a
         court submission, and never a judgment about which parent is right.
       </p>

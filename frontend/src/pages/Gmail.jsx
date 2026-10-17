@@ -29,7 +29,7 @@ function MessageDetail({ msg, onBack, onReply, onDraftReply, drafting }) {
       <div className="text-sm text-[#4B4567] mt-1">
         <span className="font-semibold">From:</span> {msg.from}
       </div>
-      <div className="text-xs text-[#857E9C]">{msg.date}</div>
+      <div className="text-xs text-[#6E6787]">{msg.date}</div>
       <div className="mt-4 whitespace-pre-wrap text-sm text-[#1A1330] leading-relaxed border-t border-[#E5E0EE] pt-4">
         {msg.body || msg.snippet || "(empty message)"}
       </div>
@@ -230,7 +230,7 @@ export default function Gmail() {
         </div>
 
         {loadingStatus ? (
-          <div className="mt-10 text-[#857E9C]" data-testid="gmail-loading">Checking your Gmail connection…</div>
+          <div className="mt-10 text-[#6E6787]" data-testid="gmail-loading">Checking your Gmail connection…</div>
         ) : !status.connected ? (
           <section className="card-soft p-8 mt-8" data-testid="gmail-connect-card">
             <div className="text-center">
@@ -310,7 +310,7 @@ export default function Gmail() {
               >
                 <Mail size={16} /> Connect Gmail
               </button>
-              <p className="text-xs text-[#857E9C] mt-4">
+              <p className="text-xs text-[#6E6787] mt-4">
                 You&apos;ll be redirected to Google to grant permission. You
                 can revoke access anytime from this page or from your Google
                 Account settings.
@@ -359,7 +359,7 @@ export default function Gmail() {
               className="flex gap-2 mb-4"
             >
               <div className="relative flex-1">
-                <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-[#857E9C]" />
+                <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-[#6E6787]" />
                 <input
                   type="text"
                   value={query}
@@ -380,11 +380,11 @@ export default function Gmail() {
 
             <section className="card-soft divide-y divide-[#E5E0EE]" data-testid="gmail-message-list">
               {loadingMessages ? (
-                <div className="p-8 text-center text-[#857E9C] flex items-center justify-center gap-2">
+                <div className="p-8 text-center text-[#6E6787] flex items-center justify-center gap-2">
                   <Loader2 size={14} className="animate-spin" /> Loading messages…
                 </div>
               ) : messages.length === 0 ? (
-                <div className="p-8 text-center text-[#857E9C]">No messages found.</div>
+                <div className="p-8 text-center text-[#6E6787]">No messages found.</div>
               ) : (
                 messages.map((m) => (
                   <button
@@ -403,10 +403,10 @@ export default function Gmail() {
                         <div className={`text-sm truncate ${m.unread ? "font-semibold text-[#1A1330]" : "text-[#4B4567]"}`}>
                           {m.from || "(unknown sender)"}
                         </div>
-                        <div className="text-xs text-[#857E9C] shrink-0">{m.date?.split(" ").slice(0, 4).join(" ")}</div>
+                        <div className="text-xs text-[#6E6787] shrink-0">{m.date?.split(" ").slice(0, 4).join(" ")}</div>
                       </div>
                       <div className="text-sm text-[#1A1330] truncate">{m.subject || "(no subject)"}</div>
-                      <div className="text-xs text-[#857E9C] truncate">{m.snippet}</div>
+                      <div className="text-xs text-[#6E6787] truncate">{m.snippet}</div>
                     </div>
                   </button>
                 ))

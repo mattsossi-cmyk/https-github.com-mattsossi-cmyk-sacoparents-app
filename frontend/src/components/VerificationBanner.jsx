@@ -150,7 +150,7 @@ export default function VerificationBanner() {
               setMode("idle");
               setCode("");
             }}
-            className="w-8 h-8 grid place-items-center rounded-full text-[#857E9C] hover:bg-[#F0EDF7] shrink-0"
+            className="w-8 h-8 grid place-items-center rounded-full text-[#6E6787] hover:bg-[#F0EDF7] shrink-0"
             aria-label="Cancel"
             data-testid="verification-cancel-code-button"
           >
@@ -230,7 +230,7 @@ export default function VerificationBanner() {
         </button>
         <button
           onClick={dismiss}
-          className="w-8 h-8 grid place-items-center rounded-full text-[#857E9C] hover:bg-[#F0EDF7]"
+          className="w-8 h-8 grid place-items-center rounded-full text-[#6E6787] hover:bg-[#F0EDF7]"
           aria-label="Dismiss"
           data-testid="verification-dismiss-button"
         >

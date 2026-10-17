@@ -89,13 +89,13 @@ export default function CancelSubscription() {
             </div>
           </div>
 
-          <p className="text-[12px] text-[#857E9C] mt-8 leading-relaxed">
+          <p className="text-[12px] text-[#6E6787] mt-8 leading-relaxed">
             If a future paid tier is ever added, the cancel option will appear here.
             Until then, you'll never see a charge from us.
           </p>
         </div>
 
-        <div className="text-center mt-8 text-[12px] text-[#857E9C]">
+        <div className="text-center mt-8 text-[12px] text-[#6E6787]">
           Questions?{" "}
           <a
             href="mailto:mattsossi@bsossi.com"

@@ -35,26 +35,26 @@ function AlignPill({ alignment, label, testidPrefix }) {
 }
 
 function LikertCell({ side }) {
-  if (!side) return <span className="text-[#8471B3] italic">—</span>;
+  if (!side) return <span className="text-[#6A5799] italic">—</span>;
   if (side.value === "na") return <span>Not applicable / unknown</span>;
   if (typeof side.value === "number") {
     return <span><span className="font-semibold">{side.value}</span></span>;
   }
-  return <span className="text-[#8471B3] italic">—</span>;
+  return <span className="text-[#6A5799] italic">—</span>;
 }
 
 function ValueCell({ item, side }) {
   const type = item.type;
   const sideObj = item[side] || {};
   if (type === "likert") return <LikertCell side={sideObj} />;
-  if (type === "single") return <span>{sideObj.value || <span className="text-[#8471B3] italic">—</span>}</span>;
+  if (type === "single") return <span>{sideObj.value || <span className="text-[#6A5799] italic">—</span>}</span>;
   if (type === "multi") {
     const arr = sideObj.value || [];
-    if (!arr.length) return <span className="text-[#8471B3] italic">—</span>;
+    if (!arr.length) return <span className="text-[#6A5799] italic">—</span>;
     return <ul className="list-disc pl-5">{arr.map((v) => <li key={v}>{v}</li>)}</ul>;
   }
   const v = sideObj.value || "";
-  return v ? <span className="whitespace-pre-wrap">{v}</span> : <span className="text-[#8471B3] italic">—</span>;
+  return v ? <span className="whitespace-pre-wrap">{v}</span> : <span className="text-[#6A5799] italic">—</span>;
 }
 
 function MultiBreakdown({ item, parentA, parentB }) {
@@ -80,7 +80,7 @@ function MultiBreakdown({ item, parentA, parentB }) {
 // the row is dropped entirely.
 function GapCell({ gap }) {
   if (gap === null || gap === undefined) {
-    return <span className="text-[10px] text-[#8471B3] italic">—</span>;
+    return <span className="text-[10px] text-[#6A5799] italic">—</span>;
   }
   const cls =
     gap <= 1
@@ -146,7 +146,7 @@ function AlignmentMatrix({ sections, parentA, parentB, testidPrefix }) {
             <div className="overflow-x-auto">
               <table className="w-full text-xs border-collapse">
                 <thead>
-                  <tr className="text-left text-[10px] uppercase tracking-[0.14em] text-[#8471B3] border-b border-[#E5E0EE]">
+                  <tr className="text-left text-[10px] uppercase tracking-[0.14em] text-[#6A5799] border-b border-[#E5E0EE]">
                     <th className="py-2 pr-2 w-8">#</th>
                     <th className="py-2 pr-3">Question</th>
                     <th className="py-2 px-2 text-center w-20">{parentA}</th>
@@ -164,15 +164,15 @@ function AlignmentMatrix({ sections, parentA, parentB, testidPrefix }) {
                         className="border-b border-[#F1EEF7] align-top"
                         data-testid={`${testidPrefix}-matrix-row-${sec.id}-${item.id}`}
                       >
-                        <td className="py-2 pr-2 text-[#8471B3] font-bold tabular-nums">
+                        <td className="py-2 pr-2 text-[#6A5799] font-bold tabular-nums">
                           {idx + 1}
                         </td>
                         <td className="py-2 pr-3 text-[#1A1330]">{item.prompt}</td>
                         <td className="py-2 px-2 text-center text-[#1A1330] font-semibold tabular-nums" data-testid={`${testidPrefix}-matrix-a-${sec.id}-${item.id}`}>
-                          {typeof a === "number" ? a : <span className="text-[#8471B3] italic font-normal">—</span>}
+                          {typeof a === "number" ? a : <span className="text-[#6A5799] italic font-normal">—</span>}
                         </td>
                         <td className="py-2 px-2 text-center text-[#1A1330] font-semibold tabular-nums" data-testid={`${testidPrefix}-matrix-b-${sec.id}-${item.id}`}>
-                          {typeof b === "number" ? b : <span className="text-[#8471B3] italic font-normal">—</span>}
+                          {typeof b === "number" ? b : <span className="text-[#6A5799] italic font-normal">—</span>}
                         </td>
                         <td className="py-2 pl-2 text-center" data-testid={`${testidPrefix}-matrix-gap-${sec.id}-${item.id}`}>
                           <GapCell gap={item.gap} />
@@ -200,7 +200,7 @@ function AlignmentList({ testid, title, icon, tint, intro, emptyLabel, items, re
       </div>
       <p className="text-xs text-[#4B4567] italic mt-1 mb-3">{intro}</p>
       {count === 0 ? (
-        <div className="text-xs text-[#857E9C] italic" data-testid={`${testid}-empty`}>{emptyLabel}</div>
+        <div className="text-xs text-[#6E6787] italic" data-testid={`${testid}-empty`}>{emptyLabel}</div>
       ) : (
         <ol className="space-y-2.5" data-testid={`${testid}-list`}>
           {items.map((r) => (
@@ -289,7 +289,7 @@ export default function DeepDiveCompareView({ pathway }) {
         </Link>
         <div className="text-[10px] uppercase tracking-[0.22em] font-bold text-[#3D1A78] mb-1">{pathway.eyebrow}</div>
         <h1 className="font-serif text-3xl sm:text-4xl text-[#1A1330] leading-tight">
-          {parentA} <span className="text-[#8471B3]">·</span> {parentB}
+          {parentA} <span className="text-[#6A5799]">·</span> {parentB}
         </h1>
         <p className="text-sm text-[#4B4567] mt-2 max-w-3xl italic">
           A neutral side-by-side view. Neither parent is labeled correct or wrong.
@@ -408,7 +408,7 @@ export default function DeepDiveCompareView({ pathway }) {
                         <div className="text-[#4B4567] w-28 shrink-0">{new Date(s.created_at).toLocaleDateString()}</div>
                         <div className="text-[#1A1330] font-semibold">{summary.aligned_pct || 0}% aligned</div>
                         <div className="text-[#B02A2A]">{summary.divergent_pct || 0}% different</div>
-                        <div className="text-[#857E9C] ml-auto">{summary.total_items || 0} items</div>
+                        <div className="text-[#6E6787] ml-auto">{summary.total_items || 0} items</div>
                       </li>
                     );
                   })}
@@ -518,7 +518,7 @@ export default function DeepDiveCompareView({ pathway }) {
             {(data.comparison.sections || []).map((sec) => (
               <section key={sec.id} className="mt-6 bg-white rounded-3xl border border-[#E5E0EE] p-5 sm:p-7 shadow-sm" data-testid={`${t}-section-${sec.id}`}>
                 <h2 className="font-serif text-2xl text-[#1A1330] mb-1">Section {sec.number}. {sec.name}</h2>
-                {sec.purpose && <p className="text-xs text-[#8471B3] italic mb-3">{sec.purpose}</p>}
+                {sec.purpose && <p className="text-xs text-[#6A5799] italic mb-3">{sec.purpose}</p>}
                 <div className="space-y-4">
                   {(sec.items || []).map((item) => (
                     <div key={item.id} className="rounded-2xl border border-[#EEE9F7] bg-[#FCFBFE] p-4" data-testid={`${t}-item-${sec.id}-${item.id}`}>

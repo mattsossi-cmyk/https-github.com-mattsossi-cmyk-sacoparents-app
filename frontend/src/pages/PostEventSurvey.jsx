@@ -24,7 +24,7 @@ function QuestionWrapper({ index, total, question, children }) {
           Question {index + 1} of {total}
         </Eyebrow>
         {question.optional && (
-          <span className="text-[10px] uppercase tracking-[0.15em] text-[#857E9C]">
+          <span className="text-[10px] uppercase tracking-[0.15em] text-[#6E6787]">
             Optional
           </span>
         )}
@@ -119,7 +119,7 @@ function Scale010({ question, value, onChange }) {
           );
         })}
       </div>
-      <div className="flex justify-between text-[10px] uppercase tracking-[0.15em] text-[#857E9C] mt-2">
+      <div className="flex justify-between text-[10px] uppercase tracking-[0.15em] text-[#6E6787] mt-2">
         <span>{question.low_label}</span>
         <span>{question.high_label}</span>
       </div>
@@ -240,7 +240,7 @@ export default function PostEventSurvey() {
           <div className="text-[11px] tracking-[0.22em] uppercase font-bold text-[#3D1A78] mb-2">
             One step at a time
           </div>
-          <p className="text-xs text-[#857E9C]">
+          <p className="text-xs text-[#6E6787]">
             — Matt &amp; the SA CoParenting App team
           </p>
           <a
@@ -331,7 +331,7 @@ export default function PostEventSurvey() {
           </button>
         </div>
 
-        <p className="text-[11px] text-[#857E9C] text-center mt-10">
+        <p className="text-[11px] text-[#6E6787] text-center mt-10">
           SA CoParenting App ·{" "}
           <a
             href="https://sacoparentsapp.online"

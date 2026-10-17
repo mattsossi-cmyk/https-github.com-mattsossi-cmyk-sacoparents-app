@@ -54,7 +54,7 @@ export default function CostSplitterTotals({
         </div>
       </div>
       <div className="rounded-2xl border border-[#E5E0EE] bg-[#F5F1FB] p-4">
-        <div className="text-[10px] uppercase tracking-[0.16em] font-bold text-[#8471B3] mb-1">
+        <div className="text-[10px] uppercase tracking-[0.16em] font-bold text-[#6A5799] mb-1">
           {coparentName || "Co-parent"}
         </div>
         <div

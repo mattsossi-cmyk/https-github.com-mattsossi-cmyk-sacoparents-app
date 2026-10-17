@@ -177,7 +177,7 @@ function CourtOrderBanner({ testidPrefix }) {
     >
       <KeyRound
         size={16}
-        className="text-[#B45F13] flex-shrink-0 mt-0.5"
+        className="text-[#904B0E] flex-shrink-0 mt-0.5"
       />
       <div className="flex-1">
         <span className="text-[#5A3C10]">

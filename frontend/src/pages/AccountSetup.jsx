@@ -91,7 +91,7 @@ export default function AccountSetup() {
     return (
       <div className="min-h-screen gentle-bg grid place-items-center">
         <div className="text-center" data-testid="setup-loading">
-          <div className="text-xs uppercase tracking-[0.25em] text-[#857E9C] mb-3">
+          <div className="text-xs uppercase tracking-[0.25em] text-[#6E6787] mb-3">
             Opening your setup link
           </div>
           <div className="font-serif text-2xl text-[#1A1330]">One moment…</div>
@@ -177,7 +177,7 @@ export default function AccountSetup() {
                 password={password}
                 testid="setup-password-strength"
               />
-              <span className="text-[11px] text-[#857E9C] mt-1 block">
+              <span className="text-[11px] text-[#6E6787] mt-1 block">
                 At least 8 characters. You'll use this to sign in next time.
               </span>
             </label>

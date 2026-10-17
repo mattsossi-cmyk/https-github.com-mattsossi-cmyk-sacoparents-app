@@ -41,7 +41,7 @@ function StatusBadge({ status }) {
   // 3-state neutral pill — never adjudicative. Matches PDF palette.
   const map = {
     shared: { text: "Shared", bg: "bg-[#E6F5EC]", fg: "text-[#1E6A42]" },
-    "one-side": { text: "One-side", bg: "bg-[#FCEFD7]", fg: "text-[#AA6A00]" },
+    "one-side": { text: "One-side", bg: "bg-[#FCEFD7]", fg: "text-[#8A5500]" },
     "not-yet": { text: "Not yet", bg: "bg-[#EEEAF5]", fg: "text-[#4B4567]" },
     completed: { text: "Completed", bg: "bg-[#E6F5EC]", fg: "text-[#1E6A42]" },
     pending: { text: "Not yet", bg: "bg-[#EEEAF5]", fg: "text-[#4B4567]" },
@@ -220,7 +220,7 @@ export default function CompleteAlignmentReport() {
             <span className="text-[10px] font-bold tracking-[0.22em] uppercase text-[#3D1A78]">
               {variant === "joint" ? "Joint Report" : "Individual Report"}
             </span>
-            <span className="text-[10px] font-semibold text-[#857E9C]">
+            <span className="text-[10px] font-semibold text-[#6E6787]">
               Same 10-section structure as sacoparentsalign.com
             </span>
           </div>
@@ -240,7 +240,7 @@ export default function CompleteAlignmentReport() {
                   <div className="inline-flex items-center gap-1.5 rounded-full bg-[#E6F5EC] text-[#1E6A42] text-xs font-bold px-3 py-1.5">
                     <CheckCircle2 size={12} /> {counts.shared || 0} shared
                   </div>
-                  <div className="inline-flex items-center gap-1.5 rounded-full bg-[#FCEFD7] text-[#AA6A00] text-xs font-bold px-3 py-1.5">
+                  <div className="inline-flex items-center gap-1.5 rounded-full bg-[#FCEFD7] text-[#8A5500] text-xs font-bold px-3 py-1.5">
                     <Clock size={12} /> {counts.one_side || 0} one-side
                   </div>
                   <div className="text-xs text-[#4B4567]">of {counts.total || 0} lanes</div>
@@ -296,7 +296,7 @@ export default function CompleteAlignmentReport() {
                   ? "This report brings both parents' reflections into one place. It follows the same ten-section structure every SA CoParents Align report uses — a mediator, attorney, or therapist reading it always knows where to look."
                   : "This report brings every reflection you've completed on SA CoParents into one place. It follows the same ten-section structure every SA CoParents Align report uses, so the professional you share it with always knows where to look."}
               </p>
-              <p className="text-xs text-[#857E9C] italic mt-3">
+              <p className="text-xs text-[#6E6787] italic mt-3">
                 Educational and organizational tool — not a diagnosis or court submission.
               </p>
             </Section>
@@ -381,7 +381,7 @@ export default function CompleteAlignmentReport() {
               <p className="text-sm text-[#4B4567] leading-relaxed">
                 One small commitment for the next 2–4 weeks. Keep it specific, keep it reviewable. The follow-up session will start here.
               </p>
-              <p className="text-xs text-[#857E9C] mt-2 italic">Fillable action lines appear in the downloadable PDF.</p>
+              <p className="text-xs text-[#6E6787] mt-2 italic">Fillable action lines appear in the downloadable PDF.</p>
             </Section>
 
             {/* 10 — Summary */}
@@ -389,7 +389,7 @@ export default function CompleteAlignmentReport() {
               <p className="text-sm text-[#4B4567] leading-relaxed">
                 SA CoParents does not decide which parent is right or wrong. This report organizes reflections into a shared starting point so a mediator, attorney, or therapist can guide the next conversation with the child at the center.
               </p>
-              <p className="text-xs text-[#857E9C] italic mt-3">
+              <p className="text-xs text-[#6E6787] italic mt-3">
                 Not a diagnosis, not a court submission, not legal or medical advice. Educational and organizational only.
               </p>
             </Section>
@@ -565,11 +565,11 @@ function ChildNeedsExcerpt({ data, variant, onToggleConsent, consentPending }) {
                   {unlocked ? (
                     <span className="text-[#1E6A42]">Both consented · unlocked</span>
                   ) : myConsentAt && !coparentIn ? (
-                    <span className="text-[#AA6A00]">Waiting on co-parent</span>
+                    <span className="text-[#8A5500]">Waiting on co-parent</span>
                   ) : !myConsentAt && coparentIn ? (
-                    <span className="text-[#AA6A00]">Co-parent has consented · your turn</span>
+                    <span className="text-[#8A5500]">Co-parent has consented · your turn</span>
                   ) : (
-                    <span className="text-[#857E9C]">Neither has consented yet</span>
+                    <span className="text-[#6E6787]">Neither has consented yet</span>
                   )}
                 </span>
               </span>

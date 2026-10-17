@@ -40,7 +40,7 @@ function DimensionBar({ id, dim, narrative }) {
             <div className="font-semibold text-[#1A1330]">{meta.label}</div>
             <div className="text-sm font-mono text-[#4B4567]">
               <span data-testid={`readiness-dim-${id}-score`}>{Math.round(score)}</span>
-              <span className="text-[#857E9C]">/100</span>
+              <span className="text-[#6E6787]">/100</span>
               <span className="ml-2 text-xs font-semibold" style={{ color: tone.hex }}>
                 · {tone.label}
               </span>
@@ -136,7 +136,7 @@ export default function ReadinessDashboard({ readiness, dimensionNarratives = {}
                     {levelTone.label}
                   </div>
                 </div>
-                <div className="text-xs italic text-[#857E9C] mb-2">
+                <div className="text-xs italic text-[#6E6787] mb-2">
                   {p.core_question}
                 </div>
                 <div className="text-sm font-semibold text-[#1A1330] mb-1.5">{p.headline}</div>
@@ -178,7 +178,7 @@ export default function ReadinessDashboard({ readiness, dimensionNarratives = {}
                   </div>
                 )}
                 <div
-                  className="mt-3 text-[11px] uppercase tracking-[0.14em] text-[#857E9C]"
+                  className="mt-3 text-[11px] uppercase tracking-[0.14em] text-[#6E6787]"
                   data-testid={`readiness-profile-${k}-secondary-score`}
                 >
                   Secondary score · {Math.round(p.secondary_score)}/100
@@ -209,7 +209,7 @@ export default function ReadinessDashboard({ readiness, dimensionNarratives = {}
         data-testid="readiness-overall"
       >
         <div>
-          <div className="text-[10px] uppercase tracking-[0.18em] font-bold text-[#857E9C] mb-0.5">
+          <div className="text-[10px] uppercase tracking-[0.18em] font-bold text-[#6E6787] mb-0.5">
             Secondary indicator only
           </div>
           <div className="text-sm text-[#4B4567] leading-relaxed">
@@ -222,7 +222,7 @@ export default function ReadinessDashboard({ readiness, dimensionNarratives = {}
           <div className="text-3xl font-serif font-bold" style={{ color: overallTone.hex }}>
             {overall}
           </div>
-          <div className="text-[10px] text-[#857E9C]">/ 100 · {label}</div>
+          <div className="text-[10px] text-[#6E6787]">/ 100 · {label}</div>
         </div>
       </div>
 

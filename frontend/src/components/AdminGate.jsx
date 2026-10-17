@@ -10,7 +10,7 @@ export function AdminForbidden({ tp }) {
   return (
     <AppShell>
       <div className="card-soft p-8 text-center max-w-lg mx-auto" data-testid={`${tp}-forbidden`}>
-        <ShieldCheck size={20} className="mx-auto text-[#B6663B] mb-3" />
+        <ShieldCheck size={20} className="mx-auto text-[#965231] mb-3" />
         <h2 className="font-serif text-2xl text-[#1A1330]">Admin only</h2>
         <p className="text-sm text-[#4B4567] mt-2">This page is restricted to the SA CoParents app owner.</p>
       </div>

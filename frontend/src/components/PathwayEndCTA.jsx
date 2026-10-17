@@ -41,7 +41,7 @@ const TONE_STYLES = {
   amber: {
     ring: "border-[#B45F13]/25",
     icon: "bg-[#B45F13] text-white",
-    eyebrow: "text-[#B45F13]",
+    eyebrow: "text-[#904B0E]",
     button: "bg-[#B45F13] hover:bg-[#8A4610] text-white",
   },
   blue: {

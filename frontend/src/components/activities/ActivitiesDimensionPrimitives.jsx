@@ -41,7 +41,7 @@ export function DimensionRow({ row, coparentName }) {
         <div className="text-[11px] text-[#4B4567]">
           Delta:{" "}
           <span
-            className={`font-semibold ${row.delta <= 15 ? "text-[#1E7A55]" : "text-[#B45F13]"}`}
+            className={`font-semibold ${row.delta <= 15 ? "text-[#1E7A55]" : "text-[#904B0E]"}`}
           >
             {row.delta}
           </span>
@@ -55,7 +55,7 @@ export function DimensionRow({ row, coparentName }) {
           <ScoreBar value={row.self_score} tone="self" />
         </div>
         <div>
-          <div className="text-[10px] uppercase tracking-[0.16em] font-bold text-[#8471B3] mb-1">
+          <div className="text-[10px] uppercase tracking-[0.16em] font-bold text-[#6A5799] mb-1">
             {coparentName || "Co-parent"} · {row.coparent_score}
           </div>
           <ScoreBar value={row.coparent_score} tone="coparent" />

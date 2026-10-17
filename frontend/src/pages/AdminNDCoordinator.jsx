@@ -351,7 +351,7 @@ export default function AdminNDCoordinator() {
                             {formatWhen(c.created_at)}
                           </div>
                         </div>
-                        <ChevronRight size={16} className="text-[#857E9C]" />
+                        <ChevronRight size={16} className="text-[#6E6787]" />
                       </button>
                     </li>
                   );

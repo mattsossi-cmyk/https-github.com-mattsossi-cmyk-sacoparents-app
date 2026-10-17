@@ -15,7 +15,7 @@ function WeekRow({ w, isCurrent }) {
     <tr className="border-t border-[#F0EDF6]" data-testid="admin-trend-row" data-week={w.week_start}>
       <td className="px-4 py-2.5 font-semibold text-[#1A1330] whitespace-nowrap">{label}</td>
       {w.fewer_than_5 ? (
-        <td colSpan={4} className="px-4 py-2.5 text-left text-[#857E9C] italic" data-testid="admin-trend-suppressed">fewer than 5</td>
+        <td colSpan={4} className="px-4 py-2.5 text-left text-[#6E6787] italic" data-testid="admin-trend-suppressed">fewer than 5</td>
       ) : (
         [w.signups, w.privacy_notice_accepted, w.sensitive_info_consent, w.needs_reconsent].map((n, i) => (
           <td key={HEAD[i + 1]} className="px-4 py-2.5 text-right tabular-nums" data-testid={`admin-trend-cell-${i}`}>{n}</td>
@@ -29,7 +29,7 @@ function Forbidden() {
   return (
     <AppShell>
       <div className="card-soft p-8 text-center max-w-lg mx-auto" data-testid="admin-trend-forbidden">
-        <ShieldCheck size={20} className="mx-auto text-[#B6663B] mb-3" />
+        <ShieldCheck size={20} className="mx-auto text-[#965231] mb-3" />
         <h2 className="font-serif text-2xl text-[#1A1330]">Admin only</h2>
         <p className="text-sm text-[#4B4567] mt-2">This page is restricted to the SA CoParents app owner.</p>
       </div>
@@ -69,7 +69,7 @@ export default function AdminConsentTrend() {
         {err === "error" && <p className="text-sm text-[#B02A2A]" data-testid="admin-trend-error">Couldn&rsquo;t load the totals. Please refresh.</p>}
         <div tabIndex={0} role="region" aria-label="Scrollable table" className="rounded-2xl border border-[#E5E0EE] bg-white overflow-x-auto" data-testid="admin-trend-table">
           <table className="w-full text-sm">
-            <thead className="bg-[#F8F7FC] text-[11px] uppercase tracking-wider text-[#857E9C]">
+            <thead className="bg-[#F8F7FC] text-[11px] uppercase tracking-wider text-[#6E6787]">
               <tr>{HEAD.map((h, i) => <th key={h} className={`px-4 py-2.5 font-bold ${i ? "text-right" : "text-left"}`}>{h}</th>)}</tr>
             </thead>
             <tbody>
@@ -77,7 +77,7 @@ export default function AdminConsentTrend() {
             </tbody>
           </table>
         </div>
-        <p className="text-xs text-[#857E9C] leading-relaxed max-w-3xl" data-testid="admin-trend-note">
+        <p className="text-xs text-[#6E6787] leading-relaxed max-w-3xl" data-testid="admin-trend-note">
           Each account is counted once, in the week it was created. The last three columns are for those accounts as they stand today:
           ticked for the current Privacy Notice version, or still to be asked again. We only keep each person&rsquo;s latest consent, so
           past weeks can&rsquo;t show what was true at the time. Weeks with fewer than 5 sign-ups show no numbers.{" "}

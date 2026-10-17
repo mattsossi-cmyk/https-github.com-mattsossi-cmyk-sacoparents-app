@@ -276,7 +276,7 @@ export default function FoundationStatementVoicePlayer({
             ? "hidden"
             : "inline-flex items-center gap-1 text-[11px] text-[#4B4567]"
         }>
-          <Volume2 size={11} className="text-[#857E9C]" aria-hidden />
+          <Volume2 size={11} className="text-[#6E6787]" aria-hidden />
           <select
             value={voice}
             onChange={(e) => setVoice(e.target.value)}

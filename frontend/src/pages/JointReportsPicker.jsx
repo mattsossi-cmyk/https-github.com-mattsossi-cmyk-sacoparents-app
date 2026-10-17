@@ -127,9 +127,9 @@ function PrivateSharedLegend() {
           Private Reflection
         </span>
       </div>
-      <ArrowRight size={14} className="text-[#857E9C] hidden sm:block shrink-0" />
+      <ArrowRight size={14} className="text-[#6E6787] hidden sm:block shrink-0" />
       <div className="flex items-center gap-2 shrink-0">
-        <Handshake size={16} className="text-[#2DB5B5]" />
+        <Handshake size={16} className="text-[#0F7676]" />
         <span className="text-sm font-semibold text-[#1A1330]">
           Shared Alignment
         </span>
@@ -160,7 +160,7 @@ function BigCircle({ to, primary, title, subtitle, icon: Icon, testid, tone }) {
       <div
         className={`w-20 h-20 sm:w-24 sm:h-24 rounded-full grid place-items-center mb-4 ${
           isSafety
-            ? "bg-white text-[#C74A4A]"
+            ? "bg-white text-[#A93636]"
             : primary
               ? "bg-white/20 text-white"
               : "bg-[#F1EEF7] text-[#3D1A78]"
@@ -194,7 +194,7 @@ function TopicCircle({ tile, shareId }) {
         className="flex flex-col items-center text-center rounded-2xl border border-[#EFECF6] bg-[#FAF8FD] p-4 opacity-70"
         data-testid={`joint-picker-topic-${tile.key}`}
       >
-        <div className="w-14 h-14 rounded-full grid place-items-center bg-white text-[#857E9C] mb-2">
+        <div className="w-14 h-14 rounded-full grid place-items-center bg-white text-[#6E6787] mb-2">
           <Icon size={22} strokeWidth={2} />
         </div>
         <div className="text-sm font-semibold text-[#4B4567]">{tile.label}</div>
@@ -367,13 +367,13 @@ export default function JointReportsPicker() {
           className="mt-3 rounded-2xl border border-[#F3D3D3] bg-[#FDF6F6] px-4 py-3 flex items-center gap-3"
           data-testid="joint-picker-crisis-banner"
         >
-          <Phone size={16} className="text-[#C74A4A] shrink-0" />
+          <Phone size={16} className="text-[#A93636] shrink-0" />
           <p className="text-xs text-[#4B4567] leading-relaxed">
             If you're in immediate danger, dial <strong>911</strong>. National
             Domestic Violence Hotline:{" "}
             <a
               href="tel:18007997233"
-              className="text-[#C74A4A] font-semibold underline"
+              className="text-[#A93636] font-semibold underline"
               data-testid="joint-picker-crisis-phone"
             >
               1-800-799-7233
@@ -381,7 +381,7 @@ export default function JointReportsPicker() {
             {" · "}
             <a
               href="sms:88788?body=START"
-              className="text-[#C74A4A] font-semibold underline"
+              className="text-[#A93636] font-semibold underline"
               data-testid="joint-picker-crisis-text"
             >
               text START to 88788
@@ -407,7 +407,7 @@ export default function JointReportsPicker() {
           </div>
           {loading ? null : !shareId && (
             <p
-              className="mt-4 text-center text-xs text-[#857E9C]"
+              className="mt-4 text-center text-xs text-[#6E6787]"
               data-testid="joint-picker-pair-hint"
             >
               Tiles marked <em>Start</em> begin the pair-and-compare flow.

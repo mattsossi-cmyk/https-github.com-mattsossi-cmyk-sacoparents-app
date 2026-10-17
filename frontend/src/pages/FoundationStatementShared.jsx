@@ -228,7 +228,7 @@ function VoicePlayerBar({ token, onSection }) {
       )}
       {!isPlaying && status !== "loading" && (
         <label className="inline-flex items-center gap-1 text-xs text-[#4B4567]">
-          <Volume2 size={12} className="text-[#857E9C]" />
+          <Volume2 size={12} className="text-[#6E6787]" />
           <select
             value={voice}
             onChange={(e) => setVoice(e.target.value)}
@@ -292,7 +292,7 @@ export default function FoundationStatementShared() {
               This link isn&apos;t available
             </h1>
             <p className="text-[#4B4567] mt-3 text-sm">{error}</p>
-            <p className="text-[#857E9C] mt-2 text-xs">
+            <p className="text-[#6E6787] mt-2 text-xs">
               If you were expecting to view a Foundation Statement, ask the sender to send you a fresh link.
             </p>
           </div>
@@ -381,7 +381,7 @@ export default function FoundationStatementShared() {
                 or first co-parenting conversation makes the discussion
                 calmer and more focused.
                 {expiresLine && (
-                  <span className="block text-[#857E9C] mt-1 text-[11px]">
+                  <span className="block text-[#6E6787] mt-1 text-[11px]">
                     {expiresLine}
                   </span>
                 )}

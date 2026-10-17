@@ -329,7 +329,7 @@ export default function CostSplitterPanel({ coparentEmail, coparentName }) {
           <div className="relative">
             <DollarSign
               size={14}
-              className="absolute left-3 top-1/2 -translate-y-1/2 text-[#857E9C]"
+              className="absolute left-3 top-1/2 -translate-y-1/2 text-[#6E6787]"
             />
             <input
               type="number"

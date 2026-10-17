@@ -113,7 +113,7 @@ export default function JoinCode() {
             <form onSubmit={submit} className="mt-6">
               <label
                 htmlFor="join-code-input"
-                className="text-[11px] uppercase tracking-[0.14em] font-bold text-[#857E9C]"
+                className="text-[11px] uppercase tracking-[0.14em] font-bold text-[#6E6787]"
               >
                 Alignment Code
               </label>

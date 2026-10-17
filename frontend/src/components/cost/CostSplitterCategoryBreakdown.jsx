@@ -54,7 +54,7 @@ export default function CostSplitterCategoryBreakdown({ perCategory, hasCompare 
               <div className="text-xs text-[#1E7A55] font-semibold">
                 {formatMoney(cat.self_cents || 0)}
               </div>
-              <div className="text-[11px] text-[#8471B3]">
+              <div className="text-[11px] text-[#6A5799]">
                 {hasCompare ? formatMoney(cat.coparent_cents || 0) : ""}
               </div>
             </div>

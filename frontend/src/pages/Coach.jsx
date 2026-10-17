@@ -227,7 +227,7 @@ function ChatComposer({ onSend, disabled }) {
         </button>
       </div>
       </AiGuardFrame>
-      <p className="text-[11px] text-[#857E9C] mt-2 text-center">
+      <p className="text-[11px] text-[#6E6787] mt-2 text-center">
         Not legal, medical, or therapy advice. In an emergency call 911 or
         1-800-799-7233.
       </p>
@@ -321,7 +321,7 @@ function SessionList({ sessions, activeId, onOpen, onDelete }) {
               <button
                 type="button"
                 onClick={() => onDelete(s.session_id)}
-                className="opacity-0 group-hover:opacity-100 shrink-0 w-8 h-8 rounded-lg grid place-items-center text-[#857E9C] hover:text-[#C2481F] hover:bg-[#FEF1EC] transition-all"
+                className="opacity-0 group-hover:opacity-100 shrink-0 w-8 h-8 rounded-lg grid place-items-center text-[#6E6787] hover:text-[#C2481F] hover:bg-[#FEF1EC] transition-all"
                 aria-label={`Delete conversation "${s.title}"`}
                 data-testid={`coach-delete-${s.session_id}`}
               >
@@ -549,7 +549,7 @@ export default function Coach() {
                 {session?.safety_flag && <SafetyBanner />}
 
                 {loadingSession ? (
-                  <div className="mt-8 text-sm text-[#857E9C] flex items-center gap-2">
+                  <div className="mt-8 text-sm text-[#6E6787] flex items-center gap-2">
                     <Loader2 size={14} className="animate-spin" /> Loading
                     conversation…
                   </div>
@@ -569,7 +569,7 @@ export default function Coach() {
                     ))}
                     {sending && (
                       <div className="flex justify-start mb-4" data-testid="coach-typing">
-                        <div className="bg-white text-[#857E9C] border border-[#E5E0EE] rounded-2xl rounded-bl-sm px-4 py-3 text-sm flex items-center gap-2">
+                        <div className="bg-white text-[#6E6787] border border-[#E5E0EE] rounded-2xl rounded-bl-sm px-4 py-3 text-sm flex items-center gap-2">
                           <span className="inline-block w-1.5 h-1.5 rounded-full bg-[#3D1A78] animate-pulse" />
                           <span
                             className="inline-block w-1.5 h-1.5 rounded-full bg-[#3D1A78] animate-pulse"

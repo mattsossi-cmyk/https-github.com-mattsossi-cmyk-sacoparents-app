@@ -30,7 +30,7 @@ function Bullets({ items, testid }) {
     <ul data-testid={testid} className="space-y-2">
       {items.map((t) => (
         <li key={t} className="flex items-start gap-2.5 text-[15px] text-[#4B4567] leading-relaxed">
-          <i className="fa-solid fa-circle-check text-[#2DB5B5] text-[13px] mt-1.5" aria-hidden="true"></i>
+          <i className="fa-solid fa-circle-check text-[#0F7676] text-[13px] mt-1.5" aria-hidden="true"></i>
           <span>{t}</span>
         </li>
       ))}
@@ -48,7 +48,7 @@ function MethodCard({ m }) {
         <h3 className="font-bold text-[#1A1330] text-lg leading-tight">{m.title}</h3>
         {m.review && <ReviewTag testid={`pros-see-review-${m.key}`} />}
       </div>
-      <p className="text-[13px] text-[#857E9C] mb-3">{m.lead}</p>
+      <p className="text-[13px] text-[#6E6787] mb-3">{m.lead}</p>
       <Bullets items={m.points} />
     </section>
   );
@@ -88,7 +88,7 @@ export default function WhatProfessionalsSee() {
         </Link>
         <div className="eyebrow mb-3">Privacy, in plain language</div>
         <h1 data-testid="pros-see-title" className="font-serif text-4xl sm:text-5xl text-[#1A1330] mb-3 leading-tight">What professionals can see</h1>
-        <p className="text-sm text-[#857E9C] mb-6">Last updated: {UPDATED}</p>
+        <p className="text-sm text-[#6E6787] mb-6">Last updated: {UPDATED}</p>
         {ATTORNEY_REVIEW_PENDING && (
         <div data-testid="pros-see-draft-label" role="note" className="rounded-2xl border-2 border-dashed border-amber-300 bg-amber-50 p-4 flex items-start gap-3 mb-8">
           <Scale size={18} className="text-amber-800 shrink-0 mt-0.5" />
@@ -112,7 +112,7 @@ export default function WhatProfessionalsSee() {
         <div className="grid gap-3">{Object.entries(SHARING_NOTICES).map(([id, n]) => <NoticeCard key={id} id={id} n={n} />)}</div>
         <H2 id="controls">Your controls</H2>
         <Controls />
-        <p className="mt-10 text-xs text-[#857E9C] flex items-center gap-1.5">
+        <p className="mt-10 text-xs text-[#6E6787] flex items-center gap-1.5">
           <ShieldCheck size={12} /> Private by default. Shared by choice.
         </p>
       </div>

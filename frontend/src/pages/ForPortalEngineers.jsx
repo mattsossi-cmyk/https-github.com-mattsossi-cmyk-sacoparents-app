@@ -121,7 +121,7 @@ export default function ForPortalEngineers() {
 Content-Type: application/json
 Accept: application/json`}
           </Code>
-          <p className="text-[13px] text-[#857E9C]">
+          <p className="text-[13px] text-[#6E6787]">
             Missing or wrong key → <code>401 Invalid integration key</code>.
             Missing secret on our environment → <code>503 Integration not configured</code>{" "}
             (this should never happen in production; if you see it,
@@ -162,7 +162,7 @@ X-Integration-Key: $INTEGRATION_SHARED_SECRET`}
 { "active": false, "reason": "expired",  "permission_id": "…" }
 { "active": false, "reason": "unknown" }`}
           </Code>
-          <p className="text-[13px] text-[#857E9C]">
+          <p className="text-[13px] text-[#6E6787]">
             When <code>active</code> is <code>false</code>, your portal
             must show the professional a "This access has ended" screen
             and stop. Never fall back to a cached previous response.
@@ -210,7 +210,7 @@ Content-Type: application/json
               from the permission-check response.
             </li>
           </ul>
-          <p className="text-[13px] text-[#857E9C]">
+          <p className="text-[13px] text-[#6E6787]">
             Response is <code>{`{ "event_id": "…", "recorded": true }`}</code>.
             Non-200 → retry once with backoff, then log locally.
             Missing X-Integration-Key → <code>401</code>. Unknown
@@ -240,7 +240,7 @@ Content-Type: application/json
   "professional_email": "nomsa@sacoparentsalign.com"
 }`}
           </Code>
-          <p className="text-[13px] text-[#857E9C]">
+          <p className="text-[13px] text-[#6E6787]">
             Signature key is <code>SACOPARENTSALIGN_WEBHOOK_SECRET</code> —
             a DIFFERENT shared secret from <code>INTEGRATION_SHARED_SECRET</code>{" "}
             above. Idempotent: second call returns

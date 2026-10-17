@@ -68,7 +68,7 @@ const STATUS_PILL = {
   in_progress: "bg-[#FFF6E5] text-[#8A5B00] border-[#F0D9A8]",
   both_complete: "bg-[#E6F4EC] text-[#1F5C3B] border-[#B5DFC5]",
   cancelled: "bg-[#F8D7D7] text-[#B02A2A] border-[#EFB4B4]",
-  expired: "bg-[#F1EEF7] text-[#857E9C] border-[#E5E0EE]",
+  expired: "bg-[#F1EEF7] text-[#6E6787] border-[#E5E0EE]",
 };
 
 export default function ProfessionalJointAlignmentMine() {
@@ -387,7 +387,7 @@ export default function ProfessionalJointAlignmentMine() {
           <div className="relative">
             <Search
               size={14}
-              className="absolute left-3 top-1/2 -translate-y-1/2 text-[#857E9C]"
+              className="absolute left-3 top-1/2 -translate-y-1/2 text-[#6E6787]"
               aria-hidden
             />
             <input
@@ -402,7 +402,7 @@ export default function ProfessionalJointAlignmentMine() {
               <button
                 type="button"
                 onClick={() => setSearch("")}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-[#857E9C] hover:text-[#1A1330]"
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-[#6E6787] hover:text-[#1A1330]"
                 data-testid="pj-mine-search-clear"
                 aria-label="Clear search"
               >
@@ -411,7 +411,7 @@ export default function ProfessionalJointAlignmentMine() {
             )}
           </div>
           <div className="flex flex-wrap items-center gap-2" data-testid="pj-mine-filter-chips">
-            <Filter size={12} className="text-[#857E9C]" aria-hidden />
+            <Filter size={12} className="text-[#6E6787]" aria-hidden />
             {STATUS_FILTERS.map((f) => (
               <button
                 key={f.key}
@@ -600,7 +600,7 @@ export default function ProfessionalJointAlignmentMine() {
                           compact
                         />
                         <div className="mt-2 flex items-center justify-between gap-2 flex-wrap">
-                          <span className="text-[11px] text-[#857E9C]">
+                          <span className="text-[11px] text-[#6E6787]">
                             {noteDraft.length}/240 · shown to the parent in the 5-day gentle nudge.
                           </span>
                           <div className="flex items-center gap-2">
@@ -635,7 +635,7 @@ export default function ProfessionalJointAlignmentMine() {
                         >
                           <div className="text-[10px] uppercase tracking-[0.15em] font-bold text-[#3D1A78] mb-1 inline-flex items-center gap-1">
                             <MessageSquare size={10} /> Reminder note
-                            <span className="ml-2 text-[10px] text-[#857E9C] normal-case tracking-normal font-normal group-hover:text-[#3D1A78]">
+                            <span className="ml-2 text-[10px] text-[#6E6787] normal-case tracking-normal font-normal group-hover:text-[#3D1A78]">
                               (tap to edit)
                             </span>
                           </div>
@@ -693,7 +693,7 @@ export default function ProfessionalJointAlignmentMine() {
                           data-testid={`pj-mine-case-notes-textarea-${c.case_id}`}
                         />
                         <div className="flex items-center justify-between text-[11px]">
-                          <span className="text-[#857E9C]">
+                          <span className="text-[#6E6787]">
                             {caseNotesDraft.length}/2000
                           </span>
                           <div className="flex items-center gap-2">
@@ -732,7 +732,7 @@ export default function ProfessionalJointAlignmentMine() {
                       >
                         <div className="text-[10px] uppercase tracking-[0.15em] font-bold text-[#3D1A78] mb-1 inline-flex items-center gap-1">
                           <Lock size={10} /> Private notes · never shared
-                          <span className="ml-2 text-[10px] text-[#857E9C] normal-case tracking-normal font-normal group-hover:text-[#3D1A78]">
+                          <span className="ml-2 text-[10px] text-[#6E6787] normal-case tracking-normal font-normal group-hover:text-[#3D1A78]">
                             (tap to edit)
                           </span>
                         </div>
@@ -777,7 +777,7 @@ export default function ProfessionalJointAlignmentMine() {
                 type="button"
                 onClick={closeDownload}
                 disabled={downloading}
-                className="absolute top-3 right-3 text-[#857E9C] hover:text-[#1A1330] disabled:opacity-40"
+                className="absolute top-3 right-3 text-[#6E6787] hover:text-[#1A1330] disabled:opacity-40"
                 data-testid="pj-download-modal-close"
                 aria-label="Close"
               >
@@ -821,7 +821,7 @@ export default function ProfessionalJointAlignmentMine() {
                 className="mt-1 block w-full rounded-xl border border-[#E5E0EE] bg-white text-[#1A1330] text-sm px-3 py-2 focus:outline-none focus:border-[#3D1A78]"
                 data-testid="pj-download-firm-input"
               />
-              <div className="text-[11px] text-[#857E9C] mt-1">
+              <div className="text-[11px] text-[#6E6787] mt-1">
                 Saved locally for next time.
               </div>
 

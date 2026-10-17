@@ -165,7 +165,7 @@ export default function MasicComparison() {
         </table>
       </div>
 
-      <p className="text-[11px] text-[#8471B3] italic mt-3">
+      <p className="text-[11px] text-[#6A5799] italic mt-3">
         Last coverage audit: February 26, 2026. This table will move rows
         from <em>Gap</em> / <em>Reviewer pending</em> to <em>Covered</em>{" "}
         only after items are approved by the reviewer panel and printed

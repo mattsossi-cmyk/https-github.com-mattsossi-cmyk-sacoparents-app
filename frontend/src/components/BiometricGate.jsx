@@ -93,7 +93,7 @@ export default function BiometricGate({ children }) {
           {checking ? "Checking…" : "Unlock"}
         </button>
         {error && (
-          <p className="text-xs text-[#C28771] mt-4" data-testid="biometric-error">
+          <p className="text-xs text-[#9A5D47] mt-4" data-testid="biometric-error">
             {error}
           </p>
         )}

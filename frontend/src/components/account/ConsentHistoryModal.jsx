@@ -73,7 +73,7 @@ function EventRow({ ev }) {
         </div>
         {ev.user_agent && (
           <div
-            className="text-[10px] text-[#857E9C] mt-0.5 truncate max-w-[520px]"
+            className="text-[10px] text-[#6E6787] mt-0.5 truncate max-w-[520px]"
             title={ev.user_agent}
           >
             {ev.user_agent}

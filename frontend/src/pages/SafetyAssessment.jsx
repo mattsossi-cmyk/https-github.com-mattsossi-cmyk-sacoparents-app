@@ -361,7 +361,7 @@ export default function SafetyAssessment() {
           <button
             type="button"
             onClick={quickExit}
-            className="inline-flex items-center gap-2 rounded-full bg-[#C28771] hover:bg-[#a87560] text-white px-4 py-2 text-sm font-medium shadow-sm"
+            className="inline-flex items-center gap-2 rounded-full bg-[#9A5D47] hover:bg-[#7F4B39] text-white px-4 py-2 text-sm font-medium shadow-sm"
             data-testid="assessment-quick-exit"
             aria-label="Quick exit"
           >
@@ -377,7 +377,7 @@ export default function SafetyAssessment() {
             <DeviceSafetyBanner />
 
             <div className="flex items-center gap-3 mb-4">
-              <div className="w-10 h-10 rounded-full bg-[#C28771]/15 text-[#C28771] grid place-items-center">
+              <div className="w-10 h-10 rounded-full bg-[#C28771]/15 text-[#9A5D47] grid place-items-center">
                 <ShieldAlert size={18} />
               </div>
               <div className="text-[11px] uppercase tracking-[0.22em] text-[#3D1A78] font-bold">
@@ -513,8 +513,8 @@ export default function SafetyAssessment() {
               </p>
               <div className="grid sm:grid-cols-2 gap-3">
                 <div className="rounded-xl border-2 border-[#C28771] bg-white p-3">
-                  <div className="text-[10px] uppercase tracking-[0.18em] font-bold text-[#C28771] mb-1">
-                    Dimension 1 · Safety <span className="text-[#857E9C]">(you are here)</span>
+                  <div className="text-[10px] uppercase tracking-[0.18em] font-bold text-[#9A5D47] mb-1">
+                    Dimension 1 · Safety <span className="text-[#6E6787]">(you are here)</span>
                   </div>
                   <div className="text-sm text-[#1A1330] font-semibold mb-1">Family violence, coercive control, fear</div>
                   <div className="text-xs text-[#4B4567]">→ Safety recommendations &amp; safer pathways</div>
@@ -810,7 +810,7 @@ export default function SafetyAssessment() {
                   data-testid="cosign-modal-qr"
                 />
               </div>
-              <div className="text-[10px] uppercase tracking-[0.18em] text-[#857E9C] font-bold mb-1">Link</div>
+              <div className="text-[10px] uppercase tracking-[0.18em] text-[#6E6787] font-bold mb-1">Link</div>
               <div className="text-xs break-all text-[#4B4567] mb-3" data-testid="cosign-modal-url">
                 {cosignModal.verify_url}
               </div>
@@ -839,7 +839,7 @@ export default function SafetyAssessment() {
 
         {step === 6 && result && (
           <div className="fade-up" data-testid="assessment-results">
-            <div className="mb-5 text-xs uppercase tracking-[0.2em] text-[#857E9C]">
+            <div className="mb-5 text-xs uppercase tracking-[0.2em] text-[#6E6787]">
               Your result · {new Date(result.created_at).toLocaleDateString()}
             </div>
             <SafetyAssessmentResultsCard
@@ -974,7 +974,7 @@ export default function SafetyAssessment() {
                     <Download size={14} /> Download PDF
                   </button>
                 </div>
-                <p className="text-[11px] text-[#8471B3] mt-3 italic">
+                <p className="text-[11px] text-[#6A5799] mt-3 italic">
                   Briefing includes Safety + whichever companion dimensions you've
                   completed — designed for a mediator, parent facilitator ad litem,
                   or trial court.
@@ -993,7 +993,7 @@ export default function SafetyAssessment() {
                 data-testid="safety-concerned-cta"
               >
                 <div
-                  className="text-[10px] uppercase tracking-[0.22em] font-bold text-[#B45F13] mb-2"
+                  className="text-[10px] uppercase tracking-[0.22em] font-bold text-[#904B0E] mb-2"
                   data-testid="safety-concerned-cta-eyebrow"
                 >
                   When you&rsquo;re ready, on your own timeline &mdash; safe paths for when family violence is present
@@ -1018,7 +1018,7 @@ export default function SafetyAssessment() {
                   <Link
                     to="/journal"
                     data-testid="safety-concerned-cta-journal-link"
-                    className="inline-flex items-center gap-2 rounded-full bg-white border-2 border-[#B45F13] text-[#B45F13] hover:bg-[#FFEEDA] px-5 py-2.5 text-sm font-semibold"
+                    className="inline-flex items-center gap-2 rounded-full bg-white border-2 border-[#B45F13] text-[#904B0E] hover:bg-[#FFEEDA] px-5 py-2.5 text-sm font-semibold"
                   >
                     Open my private journal
                   </Link>

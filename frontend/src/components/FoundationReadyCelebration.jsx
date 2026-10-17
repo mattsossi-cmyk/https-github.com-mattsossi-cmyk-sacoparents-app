@@ -168,7 +168,7 @@ export default function FoundationReadyCelebration({ done, total }) {
         <button
           type="button"
           onClick={dismiss}
-          className="shrink-0 text-[#857E9C] hover:text-[#3D1A78] p-1.5 rounded-full hover:bg-white/60"
+          className="shrink-0 text-[#6E6787] hover:text-[#3D1A78] p-1.5 rounded-full hover:bg-white/60"
           aria-label="Dismiss"
           data-testid="foundation-ready-close"
         >

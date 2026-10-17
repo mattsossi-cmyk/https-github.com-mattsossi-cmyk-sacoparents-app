@@ -20,7 +20,7 @@ export default function Accessibility() {
         <h1 className="font-serif text-3xl sm:text-4xl text-[#1A1330] mb-2 leading-tight">
           Built to work for every parent.
         </h1>
-        <p className="text-sm text-[#857E9C] mb-8">Last updated: {LAST_UPDATED}</p>
+        <p className="text-sm text-[#6E6787] mb-8">Last updated: {LAST_UPDATED}</p>
 
         <Prose>
           <p>
@@ -98,7 +98,7 @@ export default function Accessibility() {
             2 business days.
           </p>
 
-          <p className="text-xs text-[#857E9C] italic mt-8">
+          <p className="text-xs text-[#6E6787] italic mt-8">
             SA CoParents · 16607 Blanco #703, San Antonio, Texas 78232
           </p>
         </Prose>

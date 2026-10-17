@@ -48,9 +48,9 @@ const BAR_COLORS = {
   4: "bg-[#2DB5B5]",
 };
 const TEXT_COLORS = {
-  0: "text-[#857E9C]",
+  0: "text-[#6E6787]",
   1: "text-[#D14A2D]",
-  2: "text-[#B6663B]",
+  2: "text-[#965231]",
   3: "text-[#3D9D6E]",
   4: "text-[#0E7A7A]",
 };

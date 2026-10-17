@@ -50,7 +50,7 @@ function LikertRow({ value, onChange, testid, scale }) {
         className={`h-11 rounded-full text-xs font-semibold border transition-all
           ${value === "na"
             ? "bg-[#3D1A78] text-white border-[#3D1A78]"
-            : "bg-white text-[#8471B3] border-[#E5E0EE] hover:border-[#3D1A78]"}`}
+            : "bg-white text-[#6A5799] border-[#E5E0EE] hover:border-[#3D1A78]"}`}
         data-testid={`${testid}-na`}
       >
         N/A
@@ -341,15 +341,15 @@ export default function SpecialNeedsV2EducationalDeepDive() {
         {/* Meta row: section counter + section answered badge + save state */}
         <div className="mt-3 flex items-center gap-3 flex-wrap text-[11px] text-[#4B4567]" data-testid="edu-deep-meta">
           <span className="font-semibold text-[#3D1A78]">Section {current + 1} of {visibleSections.length}</span>
-          <span className="text-[#8471B3]">·</span>
+          <span className="text-[#6A5799]">·</span>
           <span data-testid="edu-deep-section-progress">
             {sectionStats[section.id]?.answered || 0} of {sectionStats[section.id]?.total || 0} answered in this section
           </span>
-          <span className="text-[#8471B3]">·</span>
+          <span className="text-[#6A5799]">·</span>
           <span data-testid="edu-deep-save-state" className={
             saveState === "saving" ? "text-[#8A5B00]"
             : saveState === "saved" ? "text-[#1F5C3B]"
-            : "text-[#8471B3]"
+            : "text-[#6A5799]"
           }>
             {saveState === "saving" ? (<><Loader2 size={10} className="inline animate-spin" /> Saving…</>)
              : saveState === "saved" ? (<><Check size={10} className="inline" /> Saved</>)
@@ -359,7 +359,7 @@ export default function SpecialNeedsV2EducationalDeepDive() {
 
         {/* Overall progress bar */}
         <div className="mt-3" data-testid="edu-deep-overall-progress">
-          <div className="flex items-center gap-2 text-[10px] text-[#8471B3]">
+          <div className="flex items-center gap-2 text-[10px] text-[#6A5799]">
             <div className="flex-1 h-1.5 rounded-full bg-[#EEE9F7] overflow-hidden">
               <div className="h-full bg-gradient-to-r from-[#3D1A78] to-[#6B3FA0] transition-all" style={{ width: `${overallPct}%` }} />
             </div>

@@ -258,7 +258,7 @@ export default function FoundationStatementShareModal({
           type="button"
           onClick={onClose}
           disabled={sending || downloading}
-          className="absolute top-3 right-3 text-[#857E9C] hover:text-[#1A1330] disabled:opacity-40"
+          className="absolute top-3 right-3 text-[#6E6787] hover:text-[#1A1330] disabled:opacity-40"
           aria-label="Close"
           data-testid="foundation-share-modal-close"
         >
@@ -370,7 +370,7 @@ export default function FoundationStatementShareModal({
                 className="mt-1 block w-full rounded-xl border border-[#E5E0EE] bg-white text-[#1A1330] text-sm px-3 py-2 focus:outline-none focus:border-[#3D1A78] resize-none"
                 data-testid="foundation-share-note"
               />
-              <div className="mt-1 text-[11px] text-[#857E9C] text-right">
+              <div className="mt-1 text-[11px] text-[#6E6787] text-right">
                 {note.length}/500
               </div>
             </div>
@@ -468,7 +468,7 @@ export default function FoundationStatementShareModal({
         {tab === "history" && (
           <div className="mt-5" data-testid="foundation-history-panel">
             {historyLoading ? (
-              <div className="text-sm text-[#857E9C] flex items-center gap-2 py-6">
+              <div className="text-sm text-[#6E6787] flex items-center gap-2 py-6">
                 <Loader2 size={13} className="animate-spin" /> Loading your share history…
               </div>
             ) : history.length === 0 ? (
@@ -515,7 +515,7 @@ export default function FoundationStatementShareModal({
                               ? `${s.recipient_name} · ${s.recipient_email}`
                               : s.recipient_email}
                           </div>
-                          <div className="text-[11px] text-[#857E9C] mt-0.5 flex flex-wrap items-center gap-x-2 gap-y-0.5">
+                          <div className="text-[11px] text-[#6E6787] mt-0.5 flex flex-wrap items-center gap-x-2 gap-y-0.5">
                             <span>{when}</span>
                             {s.personal_note && <span>· note included</span>}
                             {statusPill && (
@@ -593,7 +593,7 @@ export default function FoundationStatementShareModal({
                 })}
               </ul>
             )}
-            <p className="mt-3 text-[11px] text-[#857E9C]">
+            <p className="mt-3 text-[11px] text-[#6E6787]">
               Resends use your CURRENT Foundation Statement — if you&rsquo;ve
               updated it, the recipient sees the newest version.
             </p>

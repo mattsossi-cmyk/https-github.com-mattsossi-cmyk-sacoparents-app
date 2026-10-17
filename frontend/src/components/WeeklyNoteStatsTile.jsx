@@ -11,9 +11,9 @@ const weekLabel = (iso) =>
 
 const Big = ({ label, value, hint, testid }) => (
   <div className="rounded-2xl border border-[#E5E0EE] bg-[#FAF8FD] p-4" data-testid={testid}>
-    <div className="text-[10px] uppercase tracking-[0.15em] text-[#857E9C]">{label}</div>
+    <div className="text-[10px] uppercase tracking-[0.15em] text-[#6E6787]">{label}</div>
     <div className="font-serif text-3xl text-[#1A1330] mt-1">{value}</div>
-    <div className="text-xs text-[#857E9C] mt-1">{hint}</div>
+    <div className="text-xs text-[#6E6787] mt-1">{hint}</div>
   </div>
 );
 
@@ -29,10 +29,10 @@ const Row = ({ w }) => (
     </td>
     <td className="py-2 pr-3 text-right">{w.sent}</td>
     <td className="py-2 pr-3 text-right">
-      {w.progressed} <span className="text-[#857E9C]">({pct(w.progressed, w.sent)}%)</span>
+      {w.progressed} <span className="text-[#6E6787]">({pct(w.progressed, w.sent)}%)</span>
     </td>
     <td className="py-2 text-right">
-      {w.clicked} <span className="text-[#857E9C]">({pct(w.clicked, w.sent)}%)</span>
+      {w.clicked} <span className="text-[#6E6787]">({pct(w.clicked, w.sent)}%)</span>
     </td>
   </tr>
 );
@@ -92,7 +92,7 @@ export default function WeeklyNoteStatsTile() {
           <SampleButton />
         </div>
       </div>
-      <p className="text-xs text-[#857E9C] mt-1 mb-4">
+      <p className="text-xs text-[#6E6787] mt-1 mb-4">
         "Made progress" means any Self Journey step within 7 days of the note. "Clicked" means they tapped
         "Open my Self Journey" in the email.
       </p>
@@ -114,7 +114,7 @@ export default function WeeklyNoteStatsTile() {
           <div className="overflow-x-auto">
             <table className="w-full text-xs sm:text-sm" data-testid="admin-weekly-note-table">
               <thead>
-                <tr className="text-[10px] uppercase tracking-[0.15em] text-[#857E9C]">
+                <tr className="text-[10px] uppercase tracking-[0.15em] text-[#6E6787]">
                   <th className="text-left pb-2 font-semibold">Week</th>
                   <th className="text-right pb-2 pr-3 font-semibold">Sent</th>
                   <th className="text-right pb-2 pr-3 font-semibold">Progress</th>

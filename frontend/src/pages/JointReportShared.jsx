@@ -112,7 +112,7 @@ export default function JointReportShared() {
             Joint Co-Parenting Summary
           </h1>
           <p className="text-[#4B4567] leading-relaxed mb-5">{msg}</p>
-          <p className="text-xs text-[#857E9C]">
+          <p className="text-xs text-[#6E6787]">
             If you were sent this link, please ask the parent who shared
             it to generate a fresh link from their SA CoParents account.
           </p>
@@ -200,7 +200,7 @@ export default function JointReportShared() {
               className="mt-2 text-sm text-[#4B4567]"
               data-testid="joint-report-shared-parents"
             >
-              {parentA} <span className="text-[#857E9C] mx-1">·</span> {parentB}
+              {parentA} <span className="text-[#6E6787] mx-1">·</span> {parentB}
             </div>
           </div>
           <button
@@ -287,7 +287,7 @@ export default function JointReportShared() {
           </div>
         )}
 
-        <div className="mt-10 text-[11px] text-[#857E9C] leading-relaxed border-t border-[#E5E0EE] pt-4">
+        <div className="mt-10 text-[11px] text-[#6E6787] leading-relaxed border-t border-[#E5E0EE] pt-4">
           Preparation resource · Not a custody evaluation, diagnosis, or
           recommendation to any court. Rendered via a signed link the
           sending parent created; the link can be revoked at any time

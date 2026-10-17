@@ -39,7 +39,7 @@ export default function Privacy() {
         <h1 className="font-serif text-3xl sm:text-4xl text-[#1A1330] mb-2 leading-tight">
           Private by Default. Shared by Choice.
         </h1>
-        <p className="text-sm text-[#857E9C] mb-8">
+        <p className="text-sm text-[#6E6787] mb-8">
           Effective: {EFFECTIVE_DATE} · Last updated: {LAST_UPDATED}
         </p>
 
@@ -635,7 +635,7 @@ export default function Privacy() {
             <li><Link to="/accessibility" className="text-[#2A0F5F] underline">Accessibility statement</Link>.</li>
             <li><Link to="/terms" className="text-[#2A0F5F] underline">Terms of Use</Link>.</li>
           </ul>
-          <p className="text-xs text-[#857E9C] italic mt-8">
+          <p className="text-xs text-[#6E6787] italic mt-8">
             SA CoParents · 16607 Blanco #703, San Antonio, Texas 78232
           </p>
         </Prose>

@@ -84,7 +84,7 @@ function ReportRow({ row, parentAName, parentBName }) {
             {row.topic}
           </div>
           {row.pathway_label && (
-            <div className="text-[11px] uppercase tracking-[0.18em] text-[#857E9C] mt-0.5">
+            <div className="text-[11px] uppercase tracking-[0.18em] text-[#6E6787] mt-0.5">
               {row.pathway_label}
             </div>
           )}
@@ -121,7 +121,7 @@ function ReportRow({ row, parentAName, parentBName }) {
       )}
       {row.issue_for_discussion && (
         <div className="text-sm border-l-4 border-[#D6A374] pl-3">
-          <div className="text-[11px] uppercase tracking-wider text-[#A26852] font-semibold mb-0.5">
+          <div className="text-[11px] uppercase tracking-wider text-[#85513F] font-semibold mb-0.5">
             For discussion
           </div>
           <div className="text-[#1A1330] italic">{row.issue_for_discussion}</div>
@@ -151,7 +151,7 @@ function Section({ meta, section, parentAName, parentBName }) {
         >
           {section.title}
         </h2>
-        <span className="text-xs text-[#857E9C]">
+        <span className="text-xs text-[#6E6787]">
           {section.row_count} {section.row_count === 1 ? "item" : "items"}
         </span>
       </div>
@@ -449,7 +449,7 @@ export default function JointProfessionalReport() {
             <Link
               to={`/joint-agreement?share=${encodeURIComponent(shareId)}`}
               data-testid="joint-report-open-agreement"
-              className="inline-flex items-center gap-1.5 rounded-full bg-white border border-[#2DB5B5] text-[#2DB5B5] px-4 py-2 text-sm font-semibold hover:bg-[#EAF7F7] transition-colors"
+              className="inline-flex items-center gap-1.5 rounded-full bg-white border border-[#2DB5B5] text-[#0F7676] px-4 py-2 text-sm font-semibold hover:bg-[#EAF7F7] transition-colors"
               title="Open the Joint Alignment Agreement — merged from both parents' individual drafts."
             >
               <ScrollText size={14} /> Joint Alignment Agreement
@@ -511,7 +511,7 @@ export default function JointProfessionalReport() {
           your mediator or attorney. Your co-parent sees the same version.
         </p>
         <div className="mt-2 text-sm text-[#4B4567]" data-testid="joint-report-parents">
-          {parentA} <span className="text-[#857E9C] mx-1">·</span> {parentB}
+          {parentA} <span className="text-[#6E6787] mx-1">·</span> {parentB}
         </div>
 
         {/* NOT-A-CUSTODY-EVALUATION disclaimer — prominent, red. */}
@@ -577,7 +577,7 @@ export default function JointProfessionalReport() {
                 Detailed Comparison
               </div>
             </div>
-            <span className="text-xs text-[#857E9C] font-semibold">
+            <span className="text-xs text-[#6E6787] font-semibold">
               Click to expand
             </span>
           </summary>
@@ -604,7 +604,7 @@ export default function JointProfessionalReport() {
           </div>
         </details>
 
-        <div className="mt-12 text-[11px] text-[#857E9C] leading-relaxed border-t border-[#E5E0EE] pt-4">
+        <div className="mt-12 text-[11px] text-[#6E6787] leading-relaxed border-t border-[#E5E0EE] pt-4">
           Preparation resource · Not a custody evaluation, diagnosis, or
           recommendation to any court. Share ID {d.share_id}.
         </div>
@@ -690,7 +690,7 @@ export default function JointProfessionalReport() {
                       data-testid="joint-report-share-link-note-input"
                       className="w-full rounded-xl border border-[#E5E0EE] bg-white px-3 py-2 text-sm text-[#1A1330] leading-relaxed focus:outline-none focus:ring-2 focus:ring-[#3D1A78]/30 disabled:opacity-60 resize-none"
                     />
-                    <div className="mt-1 text-[11px] text-[#857E9C] text-right">
+                    <div className="mt-1 text-[11px] text-[#6E6787] text-right">
                       {shareLinkNote.length}/500
                     </div>
                   </div>

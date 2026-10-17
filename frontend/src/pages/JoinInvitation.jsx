@@ -385,7 +385,7 @@ export default function JoinInvitation() {
                     </button>
                   </div>
                   <p
-                    className="mt-3 text-[11.5px] text-[#857E9C]"
+                    className="mt-3 text-[11.5px] text-[#6E6787]"
                     data-testid="join-invitation-keyboard-hint"
                   >
                     Press <kbd className="font-mono">Enter</kbd> to continue.
@@ -414,7 +414,7 @@ export default function JoinInvitation() {
 function InfoRow({ label, value, testid }) {
   return (
     <div className="rounded-xl border border-[#E5E0EE] bg-[#FAFAFC] p-3">
-      <div className="text-[10px] uppercase tracking-[0.14em] font-bold text-[#857E9C]">
+      <div className="text-[10px] uppercase tracking-[0.14em] font-bold text-[#6E6787]">
         {label}
       </div>
       <div

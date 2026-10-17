@@ -37,7 +37,7 @@ export default function ScreenGuardrailPanel({ level }) {
           <li className="flex gap-2"><span className="text-[#3D1A78] mt-1">•</span>a <strong>licensed clinician or forensic evaluator</strong> — for clinical judgement</li>
           <li className="flex gap-2"><span className="text-[#3D1A78] mt-1">•</span>a <strong>domestic-violence advocate</strong> — for safety planning</li>
         </ul>
-        <p className="text-[11px] text-[#8471B3] italic">
+        <p className="text-[11px] text-[#6A5799] italic">
           This screen has not been independently validated in custody or
           mediation populations. It is not the Danger Assessment,
           MASIC-S, or HITS. Its scoring is heuristic.

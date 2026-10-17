@@ -78,19 +78,19 @@ function StepCard({ step, index, onDone, onDismiss, onUndo }) {
             </span>
           )}
           {isDismissed && (
-            <span className="inline-flex items-center gap-1 text-xs font-bold text-[#857E9C]">
+            <span className="inline-flex items-center gap-1 text-xs font-bold text-[#6E6787]">
               <X size={12} /> Dismissed
             </span>
           )}
         </div>
-        <div className="flex items-center gap-1 text-xs text-[#857E9C]">
+        <div className="flex items-center gap-1 text-xs text-[#6E6787]">
           <Clock size={12} /> {step.how_long}
         </div>
       </div>
 
       <h3
         className={`font-serif text-2xl mt-4 leading-tight ${
-          isDone || isDismissed ? "line-through text-[#857E9C]" : "text-[#1A1330]"
+          isDone || isDismissed ? "line-through text-[#6E6787]" : "text-[#1A1330]"
         }`}
         data-testid={`next-step-what-${step.step_id}`}
       >
@@ -121,7 +121,7 @@ function StepCard({ step, index, onDone, onDismiss, onUndo }) {
             <button
               type="button"
               onClick={() => onDismiss(step.step_id)}
-              className="inline-flex items-center gap-1.5 text-xs border border-[#E5E0EE] text-[#857E9C] hover:bg-[#F5F2FA] rounded-full px-3 py-1.5"
+              className="inline-flex items-center gap-1.5 text-xs border border-[#E5E0EE] text-[#6E6787] hover:bg-[#F5F2FA] rounded-full px-3 py-1.5"
               data-testid={`next-step-dismiss-${step.step_id}`}
             >
               <X size={12} /> Not right now
@@ -199,7 +199,7 @@ export default function NextSteps() {
   if (!meta) {
     return (
       <AppShell>
-        <div className="max-w-3xl mx-auto px-4 sm:px-6 py-10 text-[#857E9C]">
+        <div className="max-w-3xl mx-auto px-4 sm:px-6 py-10 text-[#6E6787]">
           Unknown assessment.
           <div className="mt-4">
             <Link to="/dashboard" className="text-[#3D1A78] hover:underline">Back to Dashboard</Link>
@@ -254,7 +254,7 @@ export default function NextSteps() {
         </div>
 
         {loading ? (
-          <div className="mt-8 text-[#857E9C] flex items-center gap-2" data-testid="next-steps-loading">
+          <div className="mt-8 text-[#6E6787] flex items-center gap-2" data-testid="next-steps-loading">
             <Loader2 size={14} className="animate-spin" /> Personalising your next moves…
           </div>
         ) : (

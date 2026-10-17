@@ -34,7 +34,7 @@ function pickBestWindow(windows) {
 function DeltaChip({ delta }) {
   if (delta === null || delta === undefined) {
     return (
-      <span className="inline-flex items-center gap-1 text-xs font-semibold text-[#857E9C] bg-[#F5F2FA] px-2 py-0.5 rounded-full">
+      <span className="inline-flex items-center gap-1 text-xs font-semibold text-[#6E6787] bg-[#F5F2FA] px-2 py-0.5 rounded-full">
         <Minus size={11} /> —
       </span>
     );
@@ -45,7 +45,7 @@ function DeltaChip({ delta }) {
     ? "text-[#1F7A5A] bg-[#E4F4EC]"
     : negative
     ? "text-[#C2481F] bg-[#FEF1EC]"
-    : "text-[#857E9C] bg-[#F5F2FA]";
+    : "text-[#6E6787] bg-[#F5F2FA]";
   const Icon = positive ? TrendingUp : negative ? TrendingDown : Minus;
   return (
     <span
@@ -101,7 +101,7 @@ export default function GrowthWidget() {
           <div className="flex items-baseline gap-3 flex-wrap">
             <div className="font-serif text-3xl text-[#1A1330] leading-none">
               <span data-testid="growth-widget-score">{current.overall}</span>
-              <span className="text-base text-[#857E9C]">/100</span>
+              <span className="text-base text-[#6E6787]">/100</span>
             </div>
             {bestWindow && <DeltaChip delta={bestWindow.overall.delta} />}
             {current.label && (
@@ -139,7 +139,7 @@ export default function GrowthWidget() {
             )}
           </div>
           {days_tracked > 0 && (
-            <div className="text-[11px] text-[#857E9C] mt-1">
+            <div className="text-[11px] text-[#6E6787] mt-1">
               Tracking for {days_tracked} day{days_tracked === 1 ? "" : "s"}.
             </div>
           )}

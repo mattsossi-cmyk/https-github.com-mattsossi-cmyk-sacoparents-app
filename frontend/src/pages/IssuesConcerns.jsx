@@ -78,7 +78,7 @@ function IssueRow({ id, label, placeholder, safetyFlag, value, onChange }) {
     >
       <div className="flex items-start gap-3 mb-2">
         {safetyFlag && (
-          <div className="w-7 h-7 rounded-full bg-[#C28771]/15 text-[#C28771] grid place-items-center mt-0.5 shrink-0">
+          <div className="w-7 h-7 rounded-full bg-[#C28771]/15 text-[#9A5D47] grid place-items-center mt-0.5 shrink-0">
             <ShieldAlert size={14} />
           </div>
         )}
@@ -87,7 +87,7 @@ function IssueRow({ id, label, placeholder, safetyFlag, value, onChange }) {
       {safetyFlag && (
         <p className="text-xs text-[#4B4567] mb-3">
           If your child is in immediate danger, please call 911 or visit our{" "}
-          <Link to="/safety" className="underline text-[#C28771]" data-testid={`issue-${id}-safety-link`}>
+          <Link to="/safety" className="underline text-[#9A5D47]" data-testid={`issue-${id}-safety-link`}>
             safety resources
           </Link>
           .

@@ -19,7 +19,7 @@ const CheckRow = ({ r }) => (
       <XCircle size={16} className="text-rose-600 shrink-0 mt-0.5" />
     )}
     <span className="font-semibold text-[#1A1330]">{r.name}</span>
-    <span className={`ml-auto text-xs text-right ${r.ok ? "text-[#857E9C]" : "text-rose-700"}`}>
+    <span className={`ml-auto text-xs text-right ${r.ok ? "text-[#6E6787]" : "text-rose-700"}`}>
       {r.detail} · {r.ms} ms
     </span>
   </li>
@@ -27,7 +27,7 @@ const CheckRow = ({ r }) => (
 
 const History = ({ runs }) => (
   <div className="flex items-center gap-1.5 mt-4" data-testid="admin-release-check-history">
-    <span className="text-[10px] uppercase tracking-[0.15em] text-[#857E9C] mr-1">Recent</span>
+    <span className="text-[10px] uppercase tracking-[0.15em] text-[#6E6787] mr-1">Recent</span>
     {runs.map((r) => (
       <span
         key={r.id}
@@ -83,12 +83,12 @@ export default function ReleaseCheckTile() {
             {!latest ? "No checks yet" : latest.ok ? "All checks passed" : `${failed} problem${failed === 1 ? "" : "s"} found`}
           </div>
           {latest && (
-            <p className="text-xs text-[#857E9C] mt-1" data-testid="admin-release-check-meta">
+            <p className="text-xs text-[#6E6787] mt-1" data-testid="admin-release-check-meta">
               {TRIGGER_LABEL[latest.trigger] || latest.trigger} · {fmt(latest.started_at)} · {latest.base_url}
               {latest.alerted ? " · admin emailed" : ""}
             </p>
           )}
-          <p className="text-xs text-[#857E9C] mt-1">Runs about 90 seconds after every release and once a day. Emails the admin only if something fails.</p>
+          <p className="text-xs text-[#6E6787] mt-1">Runs about 90 seconds after every release and once a day. Emails the admin only if something fails.</p>
         </div>
         <button
           type="button"

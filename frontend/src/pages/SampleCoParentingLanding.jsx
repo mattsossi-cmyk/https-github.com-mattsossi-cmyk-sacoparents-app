@@ -140,7 +140,7 @@ export default function SampleCoParentingLanding() {
               Start your own reflection <ArrowRight size={14} />
             </Link>
           </div>
-          <p className="mt-4 text-xs text-[#857E9C] italic max-w-xl">
+          <p className="mt-4 text-xs text-[#6E6787] italic max-w-xl">
             Fictional data — Alex R. &amp; Sam R. co-parenting a
             9-year-old named Maya. No real names, no real PII.
           </p>
@@ -206,7 +206,7 @@ export default function SampleCoParentingLanding() {
               data-testid="sample-coparenting-firm-input"
             />
             <div className="flex items-center gap-2 rounded-full border border-[#D6CFE8] px-3 py-1">
-              <label className="text-[10px] uppercase tracking-[0.14em] font-bold text-[#857E9C] shrink-0">
+              <label className="text-[10px] uppercase tracking-[0.14em] font-bold text-[#6E6787] shrink-0">
                 Accent
               </label>
               <input

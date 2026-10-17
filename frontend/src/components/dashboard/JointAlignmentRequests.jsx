@@ -210,7 +210,7 @@ export default function JointAlignmentRequests() {
               ? <ChevronDown size={16} className="text-[#4B4567]" />
               : <ChevronRight size={16} className="text-[#4B4567]" />}
           </button>
-          <p className="text-[11.5px] text-[#857E9C] mt-1 leading-relaxed">
+          <p className="text-[11.5px] text-[#6E6787] mt-1 leading-relaxed">
             Cases where both parents recorded release consent and the
             Co-Parenting Agreement has already been handed off to a
             named professional.
@@ -268,7 +268,7 @@ function CaseRow({ caseData, navigate, handedOff = false }) {
             <Icon size={11} />
             {meta.label}
           </span>
-          <span className="text-[11px] text-[#857E9C] font-mono">
+          <span className="text-[11px] text-[#6E6787] font-mono">
             {caseData.case_id}
           </span>
         </div>
@@ -281,7 +281,7 @@ function CaseRow({ caseData, navigate, handedOff = false }) {
               Released to{" "}
               <strong className="text-[#1A1330]">{releasedProNice}</strong>
               {" · "}
-              <span className="text-[#857E9C]">{releasedAtNice}</span>
+              <span className="text-[#6E6787]">{releasedAtNice}</span>
             </>
           ) : (
             <>Requested by <strong className="text-[#1A1330]">{professional}</strong></>

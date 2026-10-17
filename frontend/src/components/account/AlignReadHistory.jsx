@@ -7,7 +7,7 @@ const when = (iso) =>
 export function AlignReadHistory({ reads }) {
   return (
     <div data-testid="align-read-history" className="mt-4 border-t border-[#EFE9F9] pt-3">
-      <p className="text-[11px] font-bold uppercase tracking-[0.14em] text-[#857E9C] mb-2">Recent reads by Align</p>
+      <p className="text-[11px] font-bold uppercase tracking-[0.14em] text-[#6E6787] mb-2">Recent reads by Align</p>
       {reads.length === 0 ? (
         <p data-testid="align-read-history-empty" className="text-xs text-[#4B4567]">Align hasn&rsquo;t read anything from your account yet.</p>
       ) : (

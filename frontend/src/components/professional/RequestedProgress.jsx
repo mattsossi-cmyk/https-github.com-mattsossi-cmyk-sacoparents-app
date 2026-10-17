@@ -17,13 +17,13 @@ const day = (iso) => {
 // Status-only view of what a professional asked a parent to complete. Never shows answers.
 export const RequestedProgress = ({ rows, testid }) => {
   if (!rows) {
-    return <p className="text-[11px] text-[#857E9C] mt-2" data-testid={`${testid}-not-joined`}>Hasn&rsquo;t joined yet</p>;
+    return <p className="text-[11px] text-[#6E6787] mt-2" data-testid={`${testid}-not-joined`}>Hasn&rsquo;t joined yet</p>;
   }
   if (!rows.length) return null;
   const done = rows.filter((r) => r.status === "done").length;
   return (
     <div className="mt-2.5" data-testid={testid}>
-      <div className="text-[10px] uppercase tracking-[0.15em] font-bold text-[#857E9C] mb-1.5" data-testid={`${testid}-count`}>
+      <div className="text-[10px] uppercase tracking-[0.15em] font-bold text-[#6E6787] mb-1.5" data-testid={`${testid}-count`}>
         Requested · {done} of {rows.length} done
       </div>
       <ul className="space-y-1">

@@ -107,8 +107,8 @@ const READINESS_MODERATE_THRESHOLD = 50;
 
 const READINESS_BADGES = {
   prepared: { label: "Prepared for Mediation", color: "#3D1A78" },
-  moderate: { label: "Moderately Ready", color: "#D6A374" },
-  needs_support: { label: "Needs Support", color: "#C28771" },
+  moderate: { label: "Moderately Ready", color: "#8C5E22" },
+  needs_support: { label: "Needs Support", color: "#9A5D47" },
 };
 
 function scoreToLabel(pct) {
@@ -253,7 +253,7 @@ export default function ReadinessCheck() {
             <p className="text-sm text-[#4B4567] mt-3">{readinessAdvice(pct)}</p>
             {answered < TOTAL_QUESTIONS && (
               <p
-                className="text-xs text-[#857E9C] mt-2"
+                className="text-xs text-[#6E6787] mt-2"
                 data-testid="readiness-incomplete-hint"
               >
                 Answer the remaining {TOTAL_QUESTIONS - answered} for a more accurate

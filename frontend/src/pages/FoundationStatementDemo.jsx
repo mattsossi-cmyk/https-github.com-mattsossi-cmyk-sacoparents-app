@@ -96,7 +96,7 @@ function EntryCard({ entry }) {
             </div>
             <DemoBadge />
           </div>
-          <p className="mt-1 text-xs text-[#857E9C] italic">
+          <p className="mt-1 text-xs text-[#6E6787] italic">
             {entry.prompt}
           </p>
           <p className="mt-3 text-[15px] text-[#1A1330] leading-relaxed whitespace-pre-wrap">
@@ -198,7 +198,7 @@ export default function FoundationStatementDemo() {
           </div>
         </div>
 
-        <p className="text-[11px] text-[#857E9C] mt-8 text-center">
+        <p className="text-[11px] text-[#6E6787] mt-8 text-center">
           Example content — not a real parent's words. SA CoParents ·
           sacoparentsapp.online
         </p>

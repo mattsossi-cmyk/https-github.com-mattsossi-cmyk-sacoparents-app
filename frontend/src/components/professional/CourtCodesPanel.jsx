@@ -49,25 +49,25 @@ export const CourtCodesPanel = () => {
       {all.length > 0 && (
         <div className="flex items-center gap-2 flex-wrap mb-3">
           <label className="relative flex-1 min-w-[200px] max-w-sm">
-            <Search size={12} className="absolute left-3 top-1/2 -translate-y-1/2 text-[#857E9C]" aria-hidden />
+            <Search size={12} className="absolute left-3 top-1/2 -translate-y-1/2 text-[#6E6787]" aria-hidden />
             <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search codes by reference or label" aria-label="Search court codes"
               className="w-full rounded-full border border-[#E5E0EE] bg-white pl-8 pr-8 py-1.5 text-xs focus:outline-none focus:border-[#3D1A78]" data-testid="court-codes-search" />
             {q && (
               <button type="button" onClick={() => setQ("")} aria-label="Clear search" data-testid="court-codes-search-clear"
-                className="absolute right-2.5 top-1/2 -translate-y-1/2 text-[#857E9C] hover:text-[#3D1A78]"><X size={12} /></button>
+                className="absolute right-2.5 top-1/2 -translate-y-1/2 text-[#6E6787] hover:text-[#3D1A78]"><X size={12} /></button>
             )}
           </label>
           <ArchiveFinishedButton kind="codes" count={finished} onDone={load} testid="court-codes-archive-finished" />
         </div>
       )}
       {codes === null ? (
-        <p className="text-xs text-[#857E9C]" data-testid="court-codes-loading"><Loader2 size={12} className="animate-spin inline mr-1" /> Loading codes…</p>
+        <p className="text-xs text-[#6E6787]" data-testid="court-codes-loading"><Loader2 size={12} className="animate-spin inline mr-1" /> Loading codes…</p>
       ) : all.length === 0 ? (
-        <p className="text-xs text-[#857E9C]" data-testid="court-codes-empty">No court codes yet.</p>
+        <p className="text-xs text-[#6E6787]" data-testid="court-codes-empty">No court codes yet.</p>
       ) : (
         <>
           {shown.length === 0 && (
-            <p className="text-xs text-[#857E9C]" data-testid={query ? "court-codes-no-match" : "court-codes-all-archived"}>
+            <p className="text-xs text-[#6E6787]" data-testid={query ? "court-codes-no-match" : "court-codes-all-archived"}>
               {query ? "No codes match your search." : "All your court codes are archived."}
             </p>
           )}

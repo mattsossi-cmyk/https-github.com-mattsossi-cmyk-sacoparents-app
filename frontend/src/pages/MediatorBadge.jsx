@@ -249,7 +249,7 @@ export default function MediatorBadge() {
                     }`}
                     data-testid={`variant-${v.id}`}
                   >
-                    <div className="text-[11px] uppercase tracking-[0.15em] text-[#857E9C] mb-1">
+                    <div className="text-[11px] uppercase tracking-[0.15em] text-[#6E6787] mb-1">
                       Style
                     </div>
                     <div className="text-sm font-semibold text-[#1A1330]">
@@ -298,7 +298,7 @@ export default function MediatorBadge() {
                 </a>
               </div>
               {name && (
-                <div className="text-xs text-[#857E9C] mt-3 text-center">
+                <div className="text-xs text-[#6E6787] mt-3 text-center">
                   Clicks open{" "}
                   <span className="text-[#3D1A78] font-medium break-all">
                     {referralUrl}
@@ -329,7 +329,7 @@ export default function MediatorBadge() {
                 </button>
               </div>
               {!canSubmit && (
-                <div className="text-xs text-[#857E9C] mb-3" data-testid="embed-disabled-hint">
+                <div className="text-xs text-[#6E6787] mb-3" data-testid="embed-disabled-hint">
                   Add your name and website above to enable copy.
                 </div>
               )}

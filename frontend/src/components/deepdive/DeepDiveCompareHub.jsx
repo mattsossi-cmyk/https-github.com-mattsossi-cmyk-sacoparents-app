@@ -163,7 +163,7 @@ export default function DeepDiveCompareHub({ pathway }) {
           <form onSubmit={sendLink} className="flex flex-col sm:flex-row gap-3">
             <label className="sr-only" htmlFor={`${t}-email`}>Co-parent email</label>
             <div className="flex-1 flex items-center gap-2 border border-[#E5E0EE] rounded-full px-4 py-2 bg-white focus-within:border-[#3D1A78]">
-              <Mail size={14} className="text-[#8471B3]" />
+              <Mail size={14} className="text-[#6A5799]" />
               <input
                 id={`${t}-email`}
                 type="email"

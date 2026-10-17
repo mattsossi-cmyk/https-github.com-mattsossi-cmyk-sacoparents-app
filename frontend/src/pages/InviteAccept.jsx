@@ -158,7 +158,7 @@ export default function InviteAccept() {
 
           <div className="space-y-4">
             <div>
-              <label className="text-xs uppercase tracking-[0.15em] text-[#857E9C] font-bold">
+              <label className="text-xs uppercase tracking-[0.15em] text-[#6E6787] font-bold">
                 Email
               </label>
               <input
@@ -166,11 +166,11 @@ export default function InviteAccept() {
                 value={info.invitee_email || ""}
                 disabled
                 data-testid="invite-accept-email"
-                className="w-full mt-1.5 px-4 py-3 rounded-2xl border border-[#E5E0EE] text-sm bg-[#F0EDF7]/40 text-[#857E9C]"
+                className="w-full mt-1.5 px-4 py-3 rounded-2xl border border-[#E5E0EE] text-sm bg-[#F0EDF7]/40 text-[#6E6787]"
               />
             </div>
             <div>
-              <label className="text-xs uppercase tracking-[0.15em] text-[#857E9C] font-bold">
+              <label className="text-xs uppercase tracking-[0.15em] text-[#6E6787] font-bold">
                 Your name
               </label>
               <input
@@ -183,7 +183,7 @@ export default function InviteAccept() {
               />
             </div>
             <div>
-              <label className="text-xs uppercase tracking-[0.15em] text-[#857E9C] font-bold">
+              <label className="text-xs uppercase tracking-[0.15em] text-[#6E6787] font-bold">
                 Choose a password
               </label>
               <input
@@ -196,7 +196,7 @@ export default function InviteAccept() {
               />
             </div>
             <div>
-              <label className="text-xs uppercase tracking-[0.15em] text-[#857E9C] font-bold">
+              <label className="text-xs uppercase tracking-[0.15em] text-[#6E6787] font-bold">
                 Confirm password
               </label>
               <input
@@ -238,7 +238,7 @@ export default function InviteAccept() {
             Create my account &amp; start
           </button>
 
-          <div className="mt-5 flex items-start gap-2 text-[11px] text-[#857E9C] leading-relaxed">
+          <div className="mt-5 flex items-start gap-2 text-[11px] text-[#6E6787] leading-relaxed">
             <ShieldCheck size={14} className="text-[#0E7A7A] mt-0.5 shrink-0" />
             <span>
               Your prep is private. {info.inviter_name} won&apos;t see any of your

@@ -26,7 +26,7 @@ export default function DataRetention() {
         <h1 className="font-serif text-3xl sm:text-4xl text-[#1A1330] mb-2 leading-tight">
           Your data. Your timeline.
         </h1>
-        <p className="text-sm text-[#857E9C] mb-8">Last updated: {LAST_UPDATED}</p>
+        <p className="text-sm text-[#6E6787] mb-8">Last updated: {LAST_UPDATED}</p>
 
         <Prose>
           <p>
@@ -53,7 +53,7 @@ export default function DataRetention() {
           <div tabIndex={0} role="region" aria-label="Scrollable table" className="overflow-x-auto not-prose my-4">
             <table className="w-full text-left text-sm border-collapse" data-testid="retention-table">
               <thead>
-                <tr className="text-[11px] uppercase tracking-[0.12em] text-[#857E9C]">
+                <tr className="text-[11px] uppercase tracking-[0.12em] text-[#6E6787]">
                   <Th>Data type</Th>
                   <Th>How long we keep it</Th>
                   <Th>Why</Th>
@@ -177,7 +177,7 @@ export default function DataRetention() {
             <li><strong>Virtru Hosted Gateway</strong> — HIPAA-scoped joint report + agreement emails, enabled once our BAA and tenant provisioning complete. Currently OFF; standard emails route through Resend in the meantime.</li>
             <li><strong>Google (optional)</strong> — only if you sign in with Google. We receive your name + email, nothing more.</li>
           </ul>
-          <p className="text-sm text-[#857E9C] italic">
+          <p className="text-sm text-[#6E6787] italic">
             We have not represented Emergent's proxy as covered by a HIPAA Business Associate Agreement, because that chain is not yet contractually confirmed. Please avoid pasting raw clinical records into free-text fields until we publish BAA confirmation.
           </p>
 
@@ -186,7 +186,7 @@ export default function DataRetention() {
             Email <a href="mailto:mattsossi@bsossi.com" className="text-[#2A0F5F] underline">mattsossi@bsossi.com</a>
             {" "}or call <a href="tel:2102241667" className="text-[#2A0F5F] underline">210-224-1667</a>.
           </p>
-          <p className="text-xs text-[#857E9C] italic mt-8">
+          <p className="text-xs text-[#6E6787] italic mt-8">
             SA CoParents · 16607 Blanco #703, San Antonio, Texas 78232
           </p>
         </Prose>
@@ -212,7 +212,7 @@ function StatCard({ icon, label, value }) {
     <div className="rounded-2xl border border-[#E5E0EE] bg-white p-4">
       <div className="flex items-center gap-2 text-[#3D1A78]">
         {icon}
-        <div className="text-[11px] uppercase tracking-[0.12em] text-[#857E9C]">{label}</div>
+        <div className="text-[11px] uppercase tracking-[0.12em] text-[#6E6787]">{label}</div>
       </div>
       <div className="text-lg font-serif text-[#1A1330] mt-2">{value}</div>
     </div>
@@ -232,7 +232,7 @@ function Row({ type, duration, reason }) {
     <tr className="border-b border-[#F1EDF6]">
       <td className="py-3 px-3 align-top font-semibold text-[#1A1330]">{type}</td>
       <td className="py-3 px-3 align-top">{duration}</td>
-      <td className="py-3 px-3 align-top text-[#857E9C]">{reason}</td>
+      <td className="py-3 px-3 align-top text-[#6E6787]">{reason}</td>
     </tr>
   );
 }

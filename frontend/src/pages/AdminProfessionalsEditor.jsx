@@ -282,7 +282,7 @@ export default function AdminProfessionalsEditor() {
                 testid="admin-form-state"
               />
               <label className="block sm:col-span-2">
-                <span className="text-[11px] uppercase tracking-[0.14em] font-bold text-[#857E9C]">
+                <span className="text-[11px] uppercase tracking-[0.14em] font-bold text-[#6E6787]">
                   Address (one line per row)
                 </span>
                 <textarea
@@ -297,7 +297,7 @@ export default function AdminProfessionalsEditor() {
                 />
               </label>
               <label className="block sm:col-span-2">
-                <span className="text-[11px] uppercase tracking-[0.14em] font-bold text-[#857E9C]">
+                <span className="text-[11px] uppercase tracking-[0.14em] font-bold text-[#6E6787]">
                   Bio
                 </span>
                 <textarea
@@ -377,7 +377,7 @@ export default function AdminProfessionalsEditor() {
                   <div className="text-[13px] text-[#4B4567] leading-snug mt-0.5">
                     {p.credentials}
                   </div>
-                  <div className="text-[12px] text-[#857E9C] mt-1">
+                  <div className="text-[12px] text-[#6E6787] mt-1">
                     {p.email} · sort #{p.sort_order}
                   </div>
                 </div>
@@ -411,7 +411,7 @@ function FormField({
 }) {
   return (
     <label className={`block ${className || ""}`}>
-      <span className="text-[11px] uppercase tracking-[0.14em] font-bold text-[#857E9C]">
+      <span className="text-[11px] uppercase tracking-[0.14em] font-bold text-[#6E6787]">
         {label}
         {required && " *"}
       </span>

@@ -233,7 +233,7 @@ export default function GmailMiniInbox() {
               </span>
             )}
             {status?.google_email && (
-              <span className="text-[10px] font-normal text-[#8471B3] font-sans truncate max-w-[180px] sm:max-w-none">
+              <span className="text-[10px] font-normal text-[#6A5799] font-sans truncate max-w-[180px] sm:max-w-none">
                 {status.google_email}
               </span>
             )}
@@ -292,10 +292,10 @@ export default function GmailMiniInbox() {
                       >
                         {sender}
                       </span>
-                      <span className="text-[10px] text-[#8471B3] shrink-0">{when}</span>
+                      <span className="text-[10px] text-[#6A5799] shrink-0">{when}</span>
                     </div>
                     <div className="text-xs text-[#1A1330] truncate mt-0.5">
-                      {m.subject || <span className="italic text-[#8471B3]">(no subject)</span>}
+                      {m.subject || <span className="italic text-[#6A5799]">(no subject)</span>}
                     </div>
                     <div className="text-[11px] text-[#4B4567] mt-0.5">
                       {truncate(m.snippet, SNIPPET_MAX)}
@@ -313,7 +313,7 @@ export default function GmailMiniInbox() {
                       </div>
                     ) : (
                       <>
-                        <div className="text-xs text-[#8471B3]">
+                        <div className="text-xs text-[#6A5799]">
                           From <span className="text-[#1A1330]">{expandedBody.from}</span>
                         </div>
                         <pre className="mt-2 whitespace-pre-wrap break-words text-xs text-[#1A1330] font-sans max-h-64 overflow-y-auto">

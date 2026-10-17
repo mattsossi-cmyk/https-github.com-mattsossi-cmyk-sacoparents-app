@@ -114,7 +114,7 @@ export default function ReviewerSendDialog({ open, onClose, onSend, sending }) {
           <div>
             <label className="block text-[11px] uppercase tracking-[0.18em] text-[#3D1A78] font-bold mb-1">
               Reviewer name{" "}
-              <span className="text-[#857E9C] font-normal normal-case tracking-normal">· optional</span>
+              <span className="text-[#6E6787] font-normal normal-case tracking-normal">· optional</span>
             </label>
             <input
               type="text"
@@ -129,7 +129,7 @@ export default function ReviewerSendDialog({ open, onClose, onSend, sending }) {
           <div>
             <label className="block text-[11px] uppercase tracking-[0.18em] text-[#3D1A78] font-bold mb-1">
               Personal note{" "}
-              <span className="text-[#857E9C] font-normal normal-case tracking-normal">· optional</span>
+              <span className="text-[#6E6787] font-normal normal-case tracking-normal">· optional</span>
             </label>
             <textarea
               value={note}

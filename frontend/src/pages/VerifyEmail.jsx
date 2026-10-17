@@ -104,7 +104,7 @@ export default function VerifyEmail() {
                 {user ? "Go to dashboard" : "Back to sign in"}
               </Link>
               {user && !user.email_verified && (
-                <p className="text-xs text-[#857E9C] mt-3">
+                <p className="text-xs text-[#6E6787] mt-3">
                   You can request a new verification email from the banner on your
                   dashboard.
                 </p>

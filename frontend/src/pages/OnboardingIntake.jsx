@@ -203,7 +203,7 @@ export default function OnboardingIntake() {
           </div>
         </div>
 
-        <p className="mt-6 text-center text-xs text-[#857E9C]">
+        <p className="mt-6 text-center text-xs text-[#6E6787]">
           Your account is ready. This intake is optional — everything is
           available from the dashboard whenever you&rsquo;re ready.
           <br />

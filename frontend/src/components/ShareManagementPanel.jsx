@@ -147,7 +147,7 @@ function ShareRow({ row, onRevoke, revoking }) {
                 {row.download_count}
               </span>
             )}
-            <span className="inline-flex items-center gap-1 rounded-full px-2 py-0.5 bg-white text-[#857E9C] border border-[#E5E0EE]">
+            <span className="inline-flex items-center gap-1 rounded-full px-2 py-0.5 bg-white text-[#6E6787] border border-[#E5E0EE]">
               <Clock size={11} strokeWidth={2.4} />
               {formatExpiry(row.expires_at)}
             </span>

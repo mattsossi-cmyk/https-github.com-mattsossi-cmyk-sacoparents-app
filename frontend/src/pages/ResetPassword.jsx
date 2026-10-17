@@ -90,7 +90,7 @@ export default function ResetPassword() {
       <div className="w-full max-w-md fade-up">
         <div className="card-soft p-8 sm:p-10" data-testid="reset-password-page">
           {validating ? (
-            <div className="text-center py-10 text-sm tracking-[0.2em] uppercase text-[#857E9C]">
+            <div className="text-center py-10 text-sm tracking-[0.2em] uppercase text-[#6E6787]">
               <Loader2 size={16} className="inline animate-spin mr-2" /> Verifying link…
             </div>
           ) : error ? (

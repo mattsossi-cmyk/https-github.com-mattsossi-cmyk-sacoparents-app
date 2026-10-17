@@ -121,7 +121,7 @@ export default function ReportProvenanceFooter({
                 </li>
               ))}
             </ul>
-            <p className="text-[11px] text-[#857E9C] mt-4 leading-relaxed">
+            <p className="text-[11px] text-[#6E6787] mt-4 leading-relaxed">
               Rule-based sections are deterministic — the same answers always
               produce the same output. Generative sections are drafted with
               technology assistance (Claude, via a neutral, child-focused

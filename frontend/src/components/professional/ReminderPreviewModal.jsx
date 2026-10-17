@@ -111,7 +111,7 @@ export default function ReminderPreviewModal({ open, caseId, onClose }) {
         <button
           type="button"
           onClick={onClose}
-          className="absolute top-3 right-3 text-[#857E9C] hover:text-[#1A1330]"
+          className="absolute top-3 right-3 text-[#6E6787] hover:text-[#1A1330]"
           aria-label="Close"
           data-testid="reminder-preview-close"
         >
@@ -179,7 +179,7 @@ export default function ReminderPreviewModal({ open, caseId, onClose }) {
         </div>
 
         <div className="px-6 py-3 border-b border-[#EEE8F7] flex items-center gap-2 flex-wrap">
-          <div className="text-[10px] uppercase tracking-[0.22em] font-bold text-[#857E9C]">
+          <div className="text-[10px] uppercase tracking-[0.22em] font-bold text-[#6E6787]">
             Subject
           </div>
           <div
@@ -215,7 +215,7 @@ export default function ReminderPreviewModal({ open, caseId, onClose }) {
         <div className="flex-1 overflow-hidden bg-[#F8F7FC] p-3">
           {loading ? (
             <div
-              className="h-full flex items-center justify-center text-sm text-[#857E9C] gap-2"
+              className="h-full flex items-center justify-center text-sm text-[#6E6787] gap-2"
               data-testid="reminder-preview-loading"
             >
               <Loader2 size={14} className="animate-spin" /> Rendering preview…

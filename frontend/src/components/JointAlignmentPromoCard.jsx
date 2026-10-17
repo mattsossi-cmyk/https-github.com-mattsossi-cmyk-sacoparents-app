@@ -221,7 +221,7 @@ export default function JointAlignmentPromoCard({
               data-testid={`${testidPrefix}-gate-required`}
             >
               <div className="flex items-start gap-3">
-                <ShieldAlert size={18} className="text-[#B45F13] shrink-0 mt-0.5" />
+                <ShieldAlert size={18} className="text-[#904B0E] shrink-0 mt-0.5" />
                 <div className="flex-1">
                   <div className="text-sm text-[#5A3C10] leading-relaxed">
                     Complete the short family-violence safety screen first
@@ -296,7 +296,7 @@ export default function JointAlignmentPromoCard({
                 </button>
               </div>
               <p
-                className="text-[11px] text-[#857E9C] mt-2 inline-flex items-center gap-1.5"
+                className="text-[11px] text-[#6E6787] mt-2 inline-flex items-center gap-1.5"
                 data-testid={`${testidPrefix}-one-shot-notice`}
               >
                 <Lock size={11} /> One invitation per co-parent — please double-check the address.

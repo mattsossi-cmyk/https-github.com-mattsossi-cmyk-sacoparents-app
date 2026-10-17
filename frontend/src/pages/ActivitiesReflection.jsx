@@ -41,7 +41,7 @@ function Likert({ id, labels, value, onChange }) {
             className={`min-h-[64px] rounded-2xl border px-2 py-3 flex flex-col items-center justify-center transition-all active:scale-95 ${LIKERT_TONE(v, selected)}`}
           >
             <span className="text-lg font-bold leading-none">{v}</span>
-            <span className={`text-[10px] mt-1 leading-tight text-center ${selected ? "text-white/85" : "text-[#4B4567]"}`}>
+            <span className={`text-[10px] mt-1 leading-tight text-center ${selected ? "text-white" : "text-[#4B4567]"}`}>
               {label}
             </span>
           </button>

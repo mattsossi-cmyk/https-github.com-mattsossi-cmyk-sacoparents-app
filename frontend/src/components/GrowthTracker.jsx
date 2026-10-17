@@ -60,7 +60,7 @@ function DeltaBadge({ delta, size = "sm" }) {
   if (delta === null || delta === undefined) {
     return (
       <span
-        className={`inline-flex items-center gap-0.5 text-[#857E9C] ${
+        className={`inline-flex items-center gap-0.5 text-[#6E6787] ${
           size === "lg" ? "text-sm" : "text-xs"
         }`}
       >
@@ -74,7 +74,7 @@ function DeltaBadge({ delta, size = "sm" }) {
     ? "text-[#1F7A5A] bg-[#E4F4EC]"
     : negative
     ? "text-[#C2481F] bg-[#FEF1EC]"
-    : "text-[#857E9C] bg-[#F5F2FA]";
+    : "text-[#6E6787] bg-[#F5F2FA]";
   const Icon = positive ? TrendingUp : negative ? TrendingDown : Minus;
   const sign = positive ? "+" : "";
   return (
@@ -94,7 +94,7 @@ function DimensionRow({ label, from, to, delta }) {
   return (
     <div className="flex items-center gap-3 py-2 border-b border-[#F0EBF7] last:border-0">
       <div className="flex-1 text-sm text-[#1A1330]">{label}</div>
-      <div className="text-xs text-[#857E9C] tabular-nums">
+      <div className="text-xs text-[#6E6787] tabular-nums">
         {from ?? "—"} → <span className="text-[#1A1330] font-semibold">{to ?? "—"}</span>
       </div>
       <div className="w-16 text-right">
@@ -108,10 +108,10 @@ function WindowCard({ window, title }) {
   if (!window) {
     return (
       <div className="rounded-2xl border border-dashed border-[#E5E0EE] bg-white p-4 text-center">
-        <div className="text-xs uppercase tracking-[0.16em] font-bold text-[#857E9C] mb-1">
+        <div className="text-xs uppercase tracking-[0.16em] font-bold text-[#6E6787] mb-1">
           {title}
         </div>
-        <p className="text-xs text-[#857E9C]">
+        <p className="text-xs text-[#6E6787]">
           Not enough history yet. Complete another Mediation Summary to unlock
           this comparison.
         </p>
@@ -123,7 +123,7 @@ function WindowCard({ window, title }) {
       <div className="flex items-center justify-between mb-3">
         <div>
           <div className="eyebrow text-[#3D1A78]">{title}</div>
-          <div className="text-[11px] text-[#857E9C] mt-0.5">
+          <div className="text-[11px] text-[#6E6787] mt-0.5">
             {formatDate(window.from_at)} → {formatDate(window.to_at)}
           </div>
         </div>
@@ -183,7 +183,7 @@ function GrowthChart({ points }) {
       <div className="flex items-center justify-between mb-3">
         <div>
           <div className="eyebrow text-[#3D1A78]">Readiness over time</div>
-          <div className="text-[11px] text-[#857E9C] mt-0.5">
+          <div className="text-[11px] text-[#6E6787] mt-0.5">
             Higher is more prepared. Threshold to &ldquo;Prepared&rdquo; is 75.
           </div>
         </div>
@@ -277,7 +277,7 @@ export default function GrowthTracker() {
   if (state.loading) {
     return (
       <div
-        className="rounded-3xl border border-[#E5E0EE] bg-white p-6 flex items-center gap-2 text-sm text-[#857E9C]"
+        className="rounded-3xl border border-[#E5E0EE] bg-white p-6 flex items-center gap-2 text-sm text-[#6E6787]"
         data-testid="growth-loading"
       >
         <Loader2 size={14} className="animate-spin" /> Loading your growth
@@ -288,7 +288,7 @@ export default function GrowthTracker() {
 
   if (state.error || !state.data) {
     return (
-      <div className="rounded-3xl border border-[#E5E0EE] bg-white p-6 text-sm text-[#857E9C]">
+      <div className="rounded-3xl border border-[#E5E0EE] bg-white p-6 text-sm text-[#6E6787]">
         Couldn&apos;t load growth tracking. Try refreshing.
       </div>
     );
@@ -338,14 +338,14 @@ export default function GrowthTracker() {
             How you&apos;re growing over time
           </h2>
           <p className="text-sm text-[#4B4567] mt-1 flex items-center gap-1.5">
-            <Calendar size={12} className="text-[#857E9C]" />
+            <Calendar size={12} className="text-[#6E6787]" />
             {days_tracked > 0
               ? `${days_tracked} day${days_tracked === 1 ? "" : "s"} of tracked prep · ${points.length} snapshot${points.length === 1 ? "" : "s"}`
               : `${points.length} snapshot${points.length === 1 ? "" : "s"} so far`}
           </p>
         </div>
         <div className="text-right">
-          <div className="text-xs uppercase tracking-[0.16em] font-bold text-[#857E9C]">
+          <div className="text-xs uppercase tracking-[0.16em] font-bold text-[#6E6787]">
             Current
           </div>
           <div
@@ -353,7 +353,7 @@ export default function GrowthTracker() {
             data-testid="growth-current-score"
           >
             {current.overall}
-            <span className="text-lg text-[#857E9C] font-sans">/100</span>
+            <span className="text-lg text-[#6E6787] font-sans">/100</span>
           </div>
           {current.label && (
             <div className="text-xs text-[#4B4567] mt-1">{current.label}</div>

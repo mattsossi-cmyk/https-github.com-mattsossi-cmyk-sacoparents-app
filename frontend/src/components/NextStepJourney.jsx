@@ -197,7 +197,7 @@ function ProgressRail({ current, doneMap }) {
                 <Circle
                   size={12}
                   className={
-                    isCurrent ? "text-[#3D1A78] shrink-0" : "text-[#857E9C] shrink-0"
+                    isCurrent ? "text-[#3D1A78] shrink-0" : "text-[#6E6787] shrink-0"
                   }
                 />
               )}
@@ -207,7 +207,7 @@ function ProgressRail({ current, doneMap }) {
                     ? "text-[#3D1A78]"
                     : isDone
                     ? "text-[#4B4567]"
-                    : "text-[#857E9C]"
+                    : "text-[#6E6787]"
                 }`}
               >
                 {s.number}. {s.title}
@@ -307,7 +307,7 @@ function UpNextTeaser({ nextStage }) {
       className="mt-4 flex items-center gap-3 text-sm text-[#4B4567]"
       data-testid="journey-up-next"
     >
-      <span className="text-[10px] uppercase tracking-[0.14em] font-bold text-[#857E9C]">
+      <span className="text-[10px] uppercase tracking-[0.14em] font-bold text-[#6E6787]">
         Up next
       </span>
       <span

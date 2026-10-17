@@ -32,11 +32,11 @@ function Heatmap({ threat, vuln }) {
       <div className="grid grid-cols-[max-content_repeat(4,_44px)] gap-1 items-center">
         <div />
         {rows.map((c) => (
-          <div key={`col-${c}`} className="text-[10px] text-center text-[#8471B3] font-bold">V{c}</div>
+          <div key={`col-${c}`} className="text-[10px] text-center text-[#6A5799] font-bold">V{c}</div>
         ))}
         {rows.map((r) => (
           <>
-            <div key={`row-${r}`} className="text-[10px] text-right text-[#8471B3] font-bold pr-1">T{r}</div>
+            <div key={`row-${r}`} className="text-[10px] text-right text-[#6A5799] font-bold pr-1">T{r}</div>
             {rows.map((c) => {
               const p = r * c;
               const tier = tierForProduct(p);
@@ -139,7 +139,7 @@ export default function NDRiskAssessmentResult() {
             <h1 className="font-serif text-3xl sm:text-4xl text-[#1A1330] mt-1">
               {assessment.target_name} × {assessment.coparent_name}
             </h1>
-            <div className="text-xs text-[#8471B3] mt-1">
+            <div className="text-xs text-[#6A5799] mt-1">
               Assessed {new Date(assessment.created_at).toLocaleString()} · ID {assessment.assessment_id}
             </div>
           </div>
@@ -218,7 +218,7 @@ export default function NDRiskAssessmentResult() {
           <NDRiskTimeline highlightId={assessment.assessment_id} />
         </section>
 
-        <p className="mt-8 text-[11px] text-[#8471B3] italic">
+        <p className="mt-8 text-[11px] text-[#6A5799] italic">
           This report is informational preparation support only. It is not legal
           advice, medical diagnosis, or a substitute for a licensed professional.
           The PDF is designed to be brought to your mediator,

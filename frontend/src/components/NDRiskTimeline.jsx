@@ -97,7 +97,7 @@ function DeltaCard({ from, to }) {
       data-testid={`nd-timeline-delta-${to.id}`}
     >
       <div className="flex items-center justify-between gap-3 flex-wrap">
-        <div className="text-[10px] uppercase tracking-[0.2em] font-bold text-[#8471B3]">
+        <div className="text-[10px] uppercase tracking-[0.2em] font-bold text-[#6A5799]">
           {from.dateLong} → {to.dateLong}
         </div>
         <span
@@ -115,7 +115,7 @@ function DeltaCard({ from, to }) {
         >
           {fromMeta.label}
         </span>
-        <span className="text-[#8471B3]">→</span>
+        <span className="text-[#6A5799]">→</span>
         <span
           className="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-bold"
           style={{ background: toMeta.bg, color: toMeta.color }}
@@ -224,7 +224,7 @@ export default function NDRiskTimeline({ highlightId }) {
       {/* Header stats */}
       <div className="grid sm:grid-cols-3 gap-3 mb-4">
         <div className="rounded-2xl border border-[#E5E0EE] bg-white p-4">
-          <div className="text-[10px] uppercase tracking-[0.2em] font-bold text-[#8471B3]">
+          <div className="text-[10px] uppercase tracking-[0.2em] font-bold text-[#6A5799]">
             Latest tier
           </div>
           <div className="mt-1 flex items-baseline gap-2">
@@ -240,7 +240,7 @@ export default function NDRiskTimeline({ highlightId }) {
             </span>
             <span className="text-lg font-bold text-[#1A1330]">{latest.score}/16</span>
           </div>
-          <div className="text-[11px] text-[#8471B3] mt-1">
+          <div className="text-[11px] text-[#6A5799] mt-1">
             {daysSinceLatest === 0
               ? "Assessed today"
               : `${daysSinceLatest} day${daysSinceLatest === 1 ? "" : "s"} ago`}
@@ -248,7 +248,7 @@ export default function NDRiskTimeline({ highlightId }) {
         </div>
 
         <div className="rounded-2xl border border-[#E5E0EE] bg-white p-4">
-          <div className="text-[10px] uppercase tracking-[0.2em] font-bold text-[#8471B3]">
+          <div className="text-[10px] uppercase tracking-[0.2em] font-bold text-[#6A5799]">
             Since first assessment
           </div>
           <div className="mt-1 flex items-baseline gap-2">
@@ -268,7 +268,7 @@ export default function NDRiskTimeline({ highlightId }) {
               {lifetimeDelta} pts
             </span>
           </div>
-          <div className="text-[11px] text-[#8471B3] mt-1">
+          <div className="text-[11px] text-[#6A5799] mt-1">
             {chrono.length} assessment{chrono.length === 1 ? "" : "s"} logged
           </div>
         </div>
@@ -351,7 +351,7 @@ export default function NDRiskTimeline({ highlightId }) {
         </div>
 
         {chrono.length === 1 && (
-          <div className="mt-3 text-xs text-[#8471B3] italic text-center">
+          <div className="mt-3 text-xs text-[#6A5799] italic text-center">
             One data point so far. Re-assess in 30 days to start tracking movement.
           </div>
         )}

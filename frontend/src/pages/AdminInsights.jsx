@@ -33,11 +33,11 @@ function fmtDate(iso) {
 function CountStat({ label, value, hint }) {
   return (
     <div className="card-soft p-4">
-      <div className="text-[10px] uppercase tracking-[0.15em] text-[#857E9C] font-bold">
+      <div className="text-[10px] uppercase tracking-[0.15em] text-[#6E6787] font-bold">
         {label}
       </div>
       <div className="font-serif text-2xl text-[#1A1330] mt-1">{value}</div>
-      {hint && <div className="text-[11px] text-[#857E9C] mt-1">{hint}</div>}
+      {hint && <div className="text-[11px] text-[#6E6787] mt-1">{hint}</div>}
     </div>
   );
 }
@@ -52,7 +52,7 @@ function Block({ icon: Icon, title, items, color, testid }) {
         <h3 className="font-serif text-lg text-[#1A1330]">{title}</h3>
       </div>
       {!items?.length ? (
-        <div className="text-xs text-[#857E9C]">Nothing this week.</div>
+        <div className="text-xs text-[#6E6787]">Nothing this week.</div>
       ) : (
         <ul className="space-y-2.5" data-testid={`${testid}-list`}>
           {items.map((item) => (
@@ -173,7 +173,7 @@ export default function AdminInsights() {
                 A calm, honest narrative drawn from the past 7 days of survey
                 responses, journal entries, sign-ups, and acknowledgments.
               </p>
-              <div className="text-[11px] text-[#857E9C] mt-3">
+              <div className="text-[11px] text-[#6E6787] mt-3">
                 Last generated: {fmtDate(generated_at)}
               </div>
             </div>
@@ -294,8 +294,8 @@ export default function AdminInsights() {
           items={briefing.recommended_actions || []}
           color={{
             bg: "bg-[#FFF1E2]",
-            fg: "text-[#B6663B]",
-            dot: "bg-[#C28771]",
+            fg: "text-[#965231]",
+            dot: "bg-[#9A5D47]",
           }}
           testid="admin-insights-actions"
         />

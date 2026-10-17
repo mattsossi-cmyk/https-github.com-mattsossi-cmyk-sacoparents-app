@@ -1,0 +1,297 @@
+[
+ {
+  "path": "/delete-account",
+  "who": "parent",
+  "violations": [],
+  "final_url": "/delete-account",
+  "overflow": false,
+  "overflow_200": false
+ },
+ {
+  "path": "/methodology",
+  "who": "guest",
+  "violations": [],
+  "final_url": "/methodology",
+  "overflow": false,
+  "overflow_200": false
+ },
+ {
+  "path": "/admin",
+  "who": "admin",
+  "violations": [],
+  "final_url": "/admin",
+  "overflow": false,
+  "overflow_200": false
+ },
+ {
+  "path": "/activities/reflection",
+  "who": "parent",
+  "violations": [],
+  "final_url": "/activities/reflection",
+  "overflow": false,
+  "overflow_200": false
+ },
+ {
+  "path": "/calendar",
+  "who": "guest",
+  "violations": [],
+  "final_url": "/calendar",
+  "overflow": false,
+  "overflow_200": false
+ },
+ {
+  "path": "/admin/bridge-copy",
+  "who": "admin",
+  "violations": [],
+  "final_url": "/admin/bridge-copy",
+  "overflow": false,
+  "overflow_200": false
+ },
+ {
+  "path": "/activities/alignment",
+  "who": "parent",
+  "violations": [],
+  "final_url": "/activities/alignment",
+  "overflow": false,
+  "overflow_200": false
+ },
+ {
+  "path": "/safety",
+  "who": "guest",
+  "violations": [],
+  "final_url": "/safety",
+  "overflow": false,
+  "overflow_200": false
+ },
+ {
+  "path": "/admin/reviewers",
+  "who": "admin",
+  "violations": [],
+  "final_url": "/admin/reviewers",
+  "overflow": false,
+  "overflow_200": false
+ },
+ {
+  "path": "/joint-reports",
+  "who": "parent",
+  "violations": [],
+  "final_url": "/joint-reports",
+  "overflow": false,
+  "overflow_200": false
+ },
+ {
+  "path": "/pathway-report",
+  "who": "parent",
+  "violations": [],
+  "final_url": "/pathway-report",
+  "overflow": false,
+  "overflow_200": false
+ },
+ {
+  "path": "/complete-alignment-report/joint/SA-DEMO01",
+  "who": "parent",
+  "violations": [],
+  "final_url": "/complete-alignment-report/joint/SA-DEMO01",
+  "overflow": false,
+  "overflow_200": false
+ },
+ {
+  "path": "/watch",
+  "who": "guest",
+  "violations": [],
+  "final_url": "/watch",
+  "overflow": false,
+  "overflow_200": false
+ },
+ {
+  "path": "/interventions",
+  "who": "parent",
+  "violations": [],
+  "final_url": "/interventions",
+  "overflow": false,
+  "overflow_200": false
+ },
+ {
+  "path": "/problem-solving",
+  "who": "parent",
+  "violations": [],
+  "final_url": "/problem-solving",
+  "overflow": false,
+  "overflow_200": false
+ },
+ {
+  "path": "/coach",
+  "who": "parent",
+  "violations": [],
+  "final_url": "/coach",
+  "overflow": false,
+  "overflow_200": false
+ },
+ {
+  "path": "/learning",
+  "who": "parent",
+  "violations": [],
+  "final_url": "/learning",
+  "overflow": false,
+  "overflow_200": false
+ },
+ {
+  "path": "/prep/issues",
+  "who": "parent",
+  "violations": [],
+  "final_url": "/prep/issues",
+  "overflow": false,
+  "overflow_200": false
+ },
+ {
+  "path": "/prep/priority",
+  "who": "parent",
+  "violations": [
+   {
+    "id": "color-contrast",
+    "impact": "serious",
+    "n": 1,
+    "help": "Elements must meet minimum color contrast ratio thresholds",
+    "nodes": [
+     {
+      "t": "\"161\"][x-id=\"PriorityRanking_161_18\"] > .ml-auto[x-line-number=\"167\"][x-id=\"PriorityRanking_167_20\"]",
+      "html": "<span class=\"text-xs text-[#6E6787] ml-auto\" x-file-name=\"PriorityRanking\" x-line-number=\"167\" x-column=\"20\" x-component=\"span\" x-id=\"PriorityRanking_167_20\" x-",
+      "d": {
+       "fgColor": "#6e6787",
+       "bgColor": "#efe9f9",
+       "contrastRatio": 4.47,
+       "fontSize": "9.0pt (12px)",
+       "fontWeight": "normal",
+       "messageKey": null,
+       "expectedContrastRatio": "4.5:1",
+       "shadowColor": null
+      }
+     }
+    ]
+   }
+  ],
+  "final_url": "/prep/priority",
+  "overflow": false,
+  "overflow_200": false
+ },
+ {
+  "path": "/prep/readiness",
+  "who": "parent",
+  "violations": [
+   {
+    "id": "color-contrast",
+    "impact": "serious",
+    "n": 1,
+    "help": "Elements must meet minimum color contrast ratio thresholds",
+    "nodes": [
+     {
+      "t": ".text-3xl",
+      "html": "<div class=\"font-serif text-3xl\" x-file-name=\"ReadinessCheck\" x-line-number=\"246\" x-column=\"14\" x-component=\"div\" x-id=\"ReadinessCheck_246_14\" x-dynamic=\"true\" ",
+      "d": {
+       "fgColor": "#c28771",
+       "bgColor": "#faf5f4",
+       "contrastRatio": 2.77,
+       "fontSize": "22.5pt (30px)",
+       "fontWeight": "bold",
+       "messageKey": null,
+       "expectedContrastRatio": "3:1",
+       "shadowColor": null
+      }
+     }
+    ]
+   }
+  ],
+  "final_url": "/prep/readiness",
+  "overflow": false,
+  "overflow_200": false
+ },
+ {
+  "path": "/summary",
+  "who": "parent",
+  "violations": [
+   {
+    "id": "color-contrast",
+    "impact": "serious",
+    "n": 4,
+    "help": "Elements must meet minimum color contrast ratio thresholds",
+    "nodes": [
+     {
+      "t": "r=\"76\"][x-column=\"16\"] > div[x-id=\"NextStepsPanel_77_18\"][x-source-path=\"title\"][x-line-number=\"77\"]",
+      "html": "<div class=\"text-[10px] uppercas...\" x-file-name=\"NextStepsPanel\" x-line-number=\"77\" x-column=\"18\" x-component=\"div\" x-id=\"NextStepsPanel_77_18\" x-dynamic=\"true",
+      "d": {
+       "fgColor": "#2db5b5",
+       "bgColor": "#ffffff",
+       "contrastRatio": 2.5,
+       "fontSize": "7.5pt (10px)",
+       "fontWeight": "bold",
+       "messageKey": null,
+       "expectedContrastRatio": "4.5:1",
+       "shadowColor": null
+      }
+     },
+     {
+      "t": "estid=\"history-sum_5aa5a9a513ce\"] > .text-\\[\\#6E6787\\][x-line-number=\"1046\"][x-id=\"Summary_1046_12\"]",
+      "html": "<span class=\"text-[#6E6787] shrink-0\" x-file-name=\"Summary\" x-line-number=\"1046\" x-column=\"12\" x-component=\"span\" x-id=\"Summary_1046_12\" x-dynamic=\"true\" x-sour",
+      "d": {
+       "fgColor": "#6e6787",
+       "bgColor": "#efe9f9",
+       "contrastRatio": 4.47,
+       "fontSize": "10.5pt (14px)",
+       "fontWeight": "normal",
+       "messageKey": null,
+       "expectedContrastRatio": "4.5:1",
+       "shadowColor": null
+      }
+     },
+     {
+      "t": "estid=\"history-sum_feab0c86b18e\"] > .text-\\[\\#6E6787\\][x-line-number=\"1046\"][x-id=\"Summary_1046_12\"]",
+      "html": "<span class=\"text-[#6E6787] shrink-0\" x-file-name=\"Summary\" x-line-number=\"1046\" x-column=\"12\" x-component=\"span\" x-id=\"Summary_1046_12\" x-dynamic=\"true\" x-sour",
+      "d": {
+       "fgColor": "#6e6787",
+       "bgColor": "#efe9f9",
+       "contrastRatio": 4.47,
+       "fontSize": "10.5pt (14px)",
+       "fontWeight": "normal",
+       "messageKey": null,
+       "expectedContrastRatio": "4.5:1",
+       "shadowColor": null
+      }
+     },
+     {
+      "t": "estid=\"history-sum_0fecdff3cba5\"] > .text-\\[\\#6E6787\\][x-line-number=\"1046\"][x-id=\"Summary_1046_12\"]",
+      "html": "<span class=\"text-[#6E6787] shrink-0\" x-file-name=\"Summary\" x-line-number=\"1046\" x-column=\"12\" x-component=\"span\" x-id=\"Summary_1046_12\" x-dynamic=\"true\" x-sour",
+      "d": {
+       "fgColor": "#6e6787",
+       "bgColor": "#efe9f9",
+       "contrastRatio": 4.47,
+       "fontSize": "10.5pt (14px)",
+       "fontWeight": "normal",
+       "messageKey": null,
+       "expectedContrastRatio": "4.5:1",
+       "shadowColor": null
+      }
+     }
+    ]
+   }
+  ],
+  "final_url": "/summary",
+  "overflow": false,
+  "overflow_200": false
+ },
+ {
+  "path": "/special-needs-v2/educational-deep-dive",
+  "who": "parent",
+  "violations": [],
+  "final_url": "/special-needs-v2/educational-deep-dive",
+  "overflow": false,
+  "overflow_200": false
+ },
+ {
+  "path": "/special-needs-v2/psychological-deep-dive",
+  "who": "parent",
+  "violations": [],
+  "final_url": "/special-needs-v2/psychological-deep-dive",
+  "overflow": false,
+  "overflow_200": false
+ }
+]

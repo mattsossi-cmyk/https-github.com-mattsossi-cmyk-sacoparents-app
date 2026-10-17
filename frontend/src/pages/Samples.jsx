@@ -252,9 +252,9 @@ const TONE_STYLES = {
     eyebrow: "text-[#1E7A55]",
   },
   amber: {
-    icon: "bg-[#FFF6EA] text-[#B45F13]",
+    icon: "bg-[#FFF6EA] text-[#904B0E]",
     ring: "border-[#E6D8C1]",
-    eyebrow: "text-[#B45F13]",
+    eyebrow: "text-[#904B0E]",
   },
   blue: {
     icon: "bg-[#EAF3FA] text-[#1E6FA8]",
@@ -412,7 +412,7 @@ export default function Samples() {
           <div className="relative max-w-xl">
             <Search
               size={16}
-              className="absolute left-4 top-1/2 -translate-y-1/2 text-[#857E9C]"
+              className="absolute left-4 top-1/2 -translate-y-1/2 text-[#6E6787]"
               aria-hidden
             />
             <input
@@ -430,7 +430,7 @@ export default function Samples() {
                 onClick={() => setQuery("")}
                 aria-label="Clear search"
                 data-testid="samples-search-clear"
-                className="absolute right-3 top-1/2 -translate-y-1/2 rounded-full p-1 text-[#857E9C] hover:bg-[#F5F1FB] hover:text-[#3D1A78]"
+                className="absolute right-3 top-1/2 -translate-y-1/2 rounded-full p-1 text-[#6E6787] hover:bg-[#F5F1FB] hover:text-[#3D1A78]"
               >
                 <X size={14} />
               </button>

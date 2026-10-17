@@ -61,7 +61,7 @@ function Card({ title, icon: Icon, children, editHref, testid }) {
 
 function Empty({ text, to, cta }) {
   return (
-    <div className="text-sm text-[#857E9C]">
+    <div className="text-sm text-[#6E6787]">
       {text}{" "}
       {to && (
         <Link to={to} className="text-[#3D1A78] hover:underline font-medium">
@@ -168,14 +168,14 @@ export default function MyPlan() {
         </div>
 
         {loading ? (
-          <div className="mt-10 text-[#857E9C]" data-testid="my-plan-loading">Loading your plan…</div>
+          <div className="mt-10 text-[#6E6787]" data-testid="my-plan-loading">Loading your plan…</div>
         ) : (
           <div className="mt-8 grid gap-5 md:grid-cols-2">
             {/* Progress + Assessments Completed (combined) */}
             <Card title="Assessments Completed" icon={ClipboardCheck} testid="myplan-progress">
               <div className="text-3xl font-serif text-[#1A1330]">
                 {doneCount}
-                <span className="text-lg text-[#857E9C]"> / {totalModules}</span>
+                <span className="text-lg text-[#6E6787]"> / {totalModules}</span>
               </div>
               <ul className="mt-3 space-y-1.5 text-sm">
                 {Object.entries(MODULE_LABELS).map(([k, label]) => (
@@ -184,7 +184,7 @@ export default function MyPlan() {
                       className={
                         completed[k]
                           ? "text-[#3D1A78] font-semibold"
-                          : "text-[#857E9C]"
+                          : "text-[#6E6787]"
                       }
                     >
                       {completed[k] ? "✓" : "◻"}
@@ -310,7 +310,7 @@ export default function MyPlan() {
                   <div className="text-sm text-[#1A1330]">
                     Your Mediation Prep Summary is ready.
                     {summary?.readiness_label && (
-                      <span className="text-[#857E9C]"> · {summary.readiness_label}</span>
+                      <span className="text-[#6E6787]"> · {summary.readiness_label}</span>
                     )}
                   </div>
                   <Link

@@ -259,7 +259,7 @@ export default function Watch() {
               target="_blank"
               rel="noopener noreferrer"
               data-testid="watch-facebook-header-link"
-              className="inline-flex items-center gap-2 rounded-full bg-white border border-[#E5E0EE] text-[#1877F2] px-3 sm:px-4 py-2 text-xs sm:text-sm font-semibold hover:bg-[#F8F7FC]"
+              className="inline-flex items-center gap-2 rounded-full bg-white border border-[#E5E0EE] text-[#1460C8] px-3 sm:px-4 py-2 text-xs sm:text-sm font-semibold hover:bg-[#F8F7FC]"
             >
               <Facebook size={14} />
               <span className="hidden sm:inline">Follow on Facebook</span>
@@ -347,11 +347,11 @@ export default function Watch() {
             className="group rounded-3xl bg-white border border-[#E5E0EE] p-6 sm:p-8 hover:shadow-lg transition-shadow"
           >
             <div className="flex items-start gap-4">
-              <div className="w-12 h-12 rounded-2xl bg-[#1877F2]/10 grid place-items-center text-[#1877F2] group-hover:bg-[#1877F2] group-hover:text-white transition-colors">
+              <div className="w-12 h-12 rounded-2xl bg-[#1877F2]/10 grid place-items-center text-[#1460C8] group-hover:bg-[#1877F2] group-hover:text-white transition-colors">
                 <Facebook size={22} />
               </div>
               <div className="flex-1">
-                <div className="text-[11px] uppercase tracking-[0.22em] text-[#1877F2] font-bold mb-1">
+                <div className="text-[11px] uppercase tracking-[0.22em] text-[#1460C8] font-bold mb-1">
                   Facebook
                 </div>
                 <div className="font-serif text-xl text-[#1A1330] mb-1">
@@ -374,11 +374,11 @@ export default function Watch() {
             className="group rounded-3xl bg-white border border-[#E5E0EE] p-6 sm:p-8 hover:shadow-lg transition-shadow"
           >
             <div className="flex items-start gap-4">
-              <div className="w-12 h-12 rounded-2xl bg-[#2DB5B5]/10 grid place-items-center text-[#2DB5B5] group-hover:bg-[#2DB5B5] group-hover:text-white transition-colors">
+              <div className="w-12 h-12 rounded-2xl bg-[#2DB5B5]/10 grid place-items-center text-[#0F7676] group-hover:bg-[#2DB5B5] group-hover:text-white transition-colors">
                 <Heart size={22} />
               </div>
               <div className="flex-1">
-                <div className="text-[11px] uppercase tracking-[0.22em] text-[#2DB5B5] font-bold mb-1">
+                <div className="text-[11px] uppercase tracking-[0.22em] text-[#0F7676] font-bold mb-1">
                   Website
                 </div>
                 <div className="font-serif text-xl text-[#1A1330] mb-1">
@@ -397,7 +397,7 @@ export default function Watch() {
       </main>
 
       <footer className="border-t border-[#E5E0EE] bg-white/60">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 py-6 flex flex-wrap items-center justify-between gap-4 text-xs text-[#857E9C]">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 py-6 flex flex-wrap items-center justify-between gap-4 text-xs text-[#6E6787]">
           <div>A Seeds for Success project</div>
           <div className="flex items-center gap-4">
             <Link to="/privacy-notice" className="hover:text-[#3D1A78]" data-testid="watch-privacy-link">

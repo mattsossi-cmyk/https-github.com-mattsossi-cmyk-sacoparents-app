@@ -121,11 +121,11 @@ function BucketDifferences({ data }) {
           <div className="grid sm:grid-cols-2 gap-2">
             <div className="rounded-lg bg-[#F7F4FC] p-2 text-sm text-[#1A1330]">
               <div className="text-[10px] uppercase tracking-wider text-[#3D1A78] font-semibold mb-0.5">Parent A</div>
-              {it.parent_a || <em className="text-[#857E9C]">no response</em>}
+              {it.parent_a || <em className="text-[#6E6787]">no response</em>}
             </div>
             <div className="rounded-lg bg-[#EAF7F7] p-2 text-sm text-[#1A1330]">
               <div className="text-[10px] uppercase tracking-wider text-[#0F6F6F] font-semibold mb-0.5">Parent B</div>
-              {it.parent_b || <em className="text-[#857E9C]">no response</em>}
+              {it.parent_b || <em className="text-[#6E6787]">no response</em>}
             </div>
           </div>
         </li>

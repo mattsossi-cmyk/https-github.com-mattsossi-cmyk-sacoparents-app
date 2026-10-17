@@ -126,7 +126,7 @@ export default function SafetyAssessmentResultsCard({
 
         {findings && (
           <div className="mb-6 space-y-3" data-testid="results-three-findings">
-            <div className="text-[11px] uppercase tracking-[0.22em] text-[#857E9C] font-bold">
+            <div className="text-[11px] uppercase tracking-[0.22em] text-[#6E6787] font-bold">
               Three findings
             </div>
             {[
@@ -146,7 +146,7 @@ export default function SafetyAssessmentResultsCard({
                   <div className={`text-[10px] uppercase tracking-[0.22em] font-bold ${label} mb-1`}>
                     {f.title}
                   </div>
-                  <div className="text-xs italic text-[#857E9C] mb-2">
+                  <div className="text-xs italic text-[#6E6787] mb-2">
                     {f.core_question}
                   </div>
                   <div className="text-sm font-semibold text-[#1A1330] mb-1.5">{f.headline}</div>
@@ -205,7 +205,7 @@ export default function SafetyAssessmentResultsCard({
                     </div>
                   )}
                   {f.non_diagnostic_note && (
-                    <p className="mt-2 text-xs italic text-[#857E9C]">{f.non_diagnostic_note}</p>
+                    <p className="mt-2 text-xs italic text-[#6E6787]">{f.non_diagnostic_note}</p>
                   )}
                   {f.feasibility_tier && (
                     <div
@@ -221,7 +221,7 @@ export default function SafetyAssessmentResultsCard({
                       <p className="text-xs text-[#4B4567] leading-relaxed mt-1">
                         {f.feasibility_tier.narrative}
                       </p>
-                      <div className="mt-2 text-[11px] uppercase tracking-[0.14em] text-[#857E9C]">
+                      <div className="mt-2 text-[11px] uppercase tracking-[0.14em] text-[#6E6787]">
                         Review point in {f.feasibility_tier.review_point_days} days
                       </div>
                       {Array.isArray(f.feasibility_tier.triggers) && f.feasibility_tier.triggers.length > 0 && (
@@ -251,7 +251,7 @@ export default function SafetyAssessmentResultsCard({
         )}
 
         <div className="mb-6">
-          <div className="text-[11px] uppercase tracking-[0.2em] text-[#857E9C] font-bold mb-3">
+          <div className="text-[11px] uppercase tracking-[0.2em] text-[#6E6787] font-bold mb-3">
             Recommended pathway
           </div>
           <ul className="space-y-2">

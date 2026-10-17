@@ -26,7 +26,7 @@ export default function PrivacyPractices() {
         <h1 className="font-serif text-3xl sm:text-4xl text-[#1A1330] mb-2 leading-tight">
           How we protect, use, and disclose your information.
         </h1>
-        <p className="text-sm text-[#857E9C] mb-8">Effective: {EFFECTIVE_DATE}</p>
+        <p className="text-sm text-[#6E6787] mb-8">Effective: {EFFECTIVE_DATE}</p>
 
         <Prose>
           <p>
@@ -156,7 +156,7 @@ export default function PrivacyPractices() {
             <li><Link to="/privacy" className="text-[#2A0F5F] underline">Privacy Policy</Link>.</li>
             <li><Link to="/data-retention" className="text-[#2A0F5F] underline">Data retention policy</Link>.</li>
           </ul>
-          <p className="text-xs text-[#857E9C] italic mt-8">
+          <p className="text-xs text-[#6E6787] italic mt-8">
             SA CoParents · 16607 Blanco #703, San Antonio, Texas 78232
           </p>
         </Prose>

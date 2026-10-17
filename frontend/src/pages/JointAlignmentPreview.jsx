@@ -227,7 +227,7 @@ export default function JointAlignmentPreview() {
         </div>
 
         {!preview && !error && (
-          <div className="mt-8 text-center text-[#857E9C]" data-testid="preview-loading">
+          <div className="mt-8 text-center text-[#6E6787]" data-testid="preview-loading">
             <Loader2 className="animate-spin inline mr-2" size={16} />
             Loading your preview…
           </div>
@@ -277,7 +277,7 @@ export default function JointAlignmentPreview() {
                 </div>
               </div>
               {topics.length === 0 ? (
-                <div className="p-6 text-center text-[13px] text-[#857E9C]" data-testid="preview-empty">
+                <div className="p-6 text-center text-[13px] text-[#6E6787]" data-testid="preview-empty">
                   Neither of you produced content for this case yet.
                 </div>
               ) : (
@@ -296,7 +296,7 @@ export default function JointAlignmentPreview() {
                             {t.topic_label}
                           </div>
                           {t.alignment === "incomplete" && (
-                            <div className="text-[11px] text-[#857E9C] mt-0.5">
+                            <div className="text-[11px] text-[#6E6787] mt-0.5">
                               {t.parent_a_completed ? "Parent A ✓" : "Parent A —"}
                               {" · "}
                               {t.parent_b_completed ? "Parent B ✓" : "Parent B —"}
@@ -434,7 +434,7 @@ function ReleaseConsentModal({
             onClick={onClose}
             disabled={submitting}
             aria-label="Close"
-            className="text-[#857E9C] hover:text-[#1A1330] p-1 rounded-full flex-shrink-0"
+            className="text-[#6E6787] hover:text-[#1A1330] p-1 rounded-full flex-shrink-0"
             data-testid="release-modal-close"
           >
             <X size={16} />
@@ -459,7 +459,7 @@ function ReleaseConsentModal({
             data-testid="release-modal-professional-name"
           />
           {profNameLocked && (
-            <p className="text-[11px] text-[#857E9C] mt-1">
+            <p className="text-[11px] text-[#6E6787] mt-1">
               Your co-parent already named this professional. Both consents
               must target the same person before release fires.
             </p>

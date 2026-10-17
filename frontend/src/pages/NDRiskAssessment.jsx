@@ -130,7 +130,7 @@ export default function NDRiskAssessment() {
         {AXES.map((axis) => (
           <section key={axis.key} className="mt-8" data-testid={`nd-risk-axis-${axis.key}`}>
             <h2 className="font-serif text-xl text-[#1A1330]">{axis.title}</h2>
-            <p className="text-xs text-[#8471B3] italic mt-1">{axis.hint}</p>
+            <p className="text-xs text-[#6A5799] italic mt-1">{axis.hint}</p>
             <ul className="mt-4 space-y-3">
               {axis.items.map((item) => (
                 <li key={item.key} className="rounded-2xl border border-[#E5E0EE] bg-white p-4">
@@ -177,7 +177,7 @@ export default function NDRiskAssessment() {
             placeholder="Specific recent examples that support these ratings…"
             data-testid="nd-risk-notes"
           />
-          <div className="text-[10px] text-[#8471B3] mt-1">{notes.length} / 1000</div>
+          <div className="text-[10px] text-[#6A5799] mt-1">{notes.length} / 1000</div>
         </section>
 
         <div className="mt-8 rounded-2xl border border-[#E5E0EE] bg-[#FCFBFE] p-4 flex items-center justify-between gap-3 flex-wrap">

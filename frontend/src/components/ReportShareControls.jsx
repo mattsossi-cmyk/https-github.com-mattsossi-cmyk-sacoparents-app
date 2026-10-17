@@ -202,7 +202,7 @@ export default function ReportShareControls({
 
   if (loading) {
     return (
-      <div className="rounded-3xl border border-[#E5E0EE] bg-white p-6 text-sm text-[#857E9C]" data-testid={`${testIdPrefix}-loading`}>
+      <div className="rounded-3xl border border-[#E5E0EE] bg-white p-6 text-sm text-[#6E6787]" data-testid={`${testIdPrefix}-loading`}>
         Loading share options…
       </div>
     );
@@ -225,9 +225,9 @@ export default function ReportShareControls({
         </div>
         <div className="text-right">
           <div className="text-2xl font-serif text-[#3D1A78]" data-testid={`${testIdPrefix}-visible-count`}>
-            {totalVisible.visible}<span className="text-[#857E9C] text-base">/{totalVisible.total}</span>
+            {totalVisible.visible}<span className="text-[#6E6787] text-base">/{totalVisible.total}</span>
           </div>
-          <div className="text-[11px] uppercase tracking-[0.12em] text-[#857E9C]">sections included</div>
+          <div className="text-[11px] uppercase tracking-[0.12em] text-[#6E6787]">sections included</div>
         </div>
       </div>
 
@@ -271,7 +271,7 @@ export default function ReportShareControls({
                     <div className="text-sm font-semibold text-[#1A1330] flex items-center gap-1.5">
                       {s.label}
                       {locked && (
-                        <span title="Cannot be hidden — safety-critical content." className="text-[#857E9C]">
+                        <span title="Cannot be hidden — safety-critical content." className="text-[#6E6787]">
                           <Lock size={12} />
                         </span>
                       )}
@@ -327,7 +327,7 @@ export default function ReportShareControls({
           data-testid={`${testIdPrefix}-nickname-input`}
           className="w-full max-w-md px-3 py-1.5 rounded-full border border-[#D6CFE8] bg-white text-sm text-[#1A1330] placeholder:text-[#B0A9C7] focus:outline-none focus:border-[#3D1A78]"
         />
-        <p className="text-[10px] text-[#857E9C] mt-1">Shown only to you — helps you find the right link months later.</p>
+        <p className="text-[10px] text-[#6E6787] mt-1">Shown only to you — helps you find the right link months later.</p>
       </div>
 
       <div className="mt-5 flex flex-wrap items-center gap-2">
@@ -360,7 +360,7 @@ export default function ReportShareControls({
             Save preference
           </button>
         )}
-        <div className="text-xs text-[#857E9C] ml-auto" data-testid={`${testIdPrefix}-summary`}>
+        <div className="text-xs text-[#6E6787] ml-auto" data-testid={`${testIdPrefix}-summary`}>
           {totalVisible.hidden === 0
             ? "Sharing the full report."
             : `${totalVisible.hidden} of ${totalVisible.total} section${totalVisible.total === 1 ? "" : "s"} hidden.`}
@@ -392,10 +392,10 @@ export default function ReportShareControls({
                   >
                     <div className="text-xs text-[#4B4567] min-w-0 flex-1">
                       <div className="font-semibold text-[#1A1330]" data-testid={`${testIdPrefix}-row-label-${row.jti}`}>
-                        {row.label || <span className="italic text-[#857E9C]">Untitled link</span>}
+                        {row.label || <span className="italic text-[#6E6787]">Untitled link</span>}
                       </div>
-                      <div className="text-[11px] text-[#857E9C]">Created {created}</div>
-                      <div className="text-[11px] text-[#857E9C]">Expires: {expires}</div>
+                      <div className="text-[11px] text-[#6E6787]">Created {created}</div>
+                      <div className="text-[11px] text-[#6E6787]">Expires: {expires}</div>
                     </div>
                     <button
                       type="button"

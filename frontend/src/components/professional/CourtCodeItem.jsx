@@ -38,7 +38,7 @@ export const CourtCodeItem = ({ c, onChanged }) => {
           <span className={`font-bold ${state === "Active" ? "text-[#1F5C3B]" : "text-[#B02A2A]"}`} data-testid={`court-code-state-${c.case_id}`}>{state}</span>
           {c.label ? ` · ${c.label}` : ""}
           {c.expires_at && state === "Active" ? ` · until ${fmtDay(c.expires_at)}` : ""}
-          {c.archived_at ? <span className="ml-1 font-semibold text-[#857E9C]" data-testid={`court-code-archived-${c.case_id}`}>· Archived</span> : null}
+          {c.archived_at ? <span className="ml-1 font-semibold text-[#6E6787]" data-testid={`court-code-archived-${c.case_id}`}>· Archived</span> : null}
         </div>
         <div className="flex items-center gap-3 flex-wrap">
           <ProgressPdfButton path={`/professional/court-codes/${c.case_id}/progress.pdf`} caseId={c.case_id} testid={`court-code-progress-pdf-${c.case_id}`} />
@@ -52,7 +52,7 @@ export const CourtCodeItem = ({ c, onChanged }) => {
         </div>
       </div>
       {c.parents.length === 0 ? (
-        <p className="text-[11px] text-[#857E9C] mt-2" data-testid={`court-code-waiting-${c.case_id}`}>No parent has entered this code yet.</p>
+        <p className="text-[11px] text-[#6E6787] mt-2" data-testid={`court-code-waiting-${c.case_id}`}>No parent has entered this code yet.</p>
       ) : (
         <div className="mt-1 grid gap-2 sm:grid-cols-2">
           {c.parents.map((p, i) => (

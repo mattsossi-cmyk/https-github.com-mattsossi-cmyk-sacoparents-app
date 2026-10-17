@@ -11,7 +11,7 @@ export const NudgeButton = ({ caseRef, pid, nextAt, lastAt, count = 0, rows, tes
   const [hist, setHist] = useState({ next: nextAt, last: lastAt, count });
   if (!pid || !rows) return null;
   const history = hist.count > 0 && (
-    <p className="text-[11px] text-[#857E9C]" data-testid={`${testid}-history`}>
+    <p className="text-[11px] text-[#6E6787]" data-testid={`${testid}-history`}>
       Last nudged {fmtDay(hist.last)} · {hist.count} {hist.count === 1 ? "nudge" : "nudges"} total
     </p>
   );
@@ -30,7 +30,7 @@ export const NudgeButton = ({ caseRef, pid, nextAt, lastAt, count = 0, rows, tes
   };
   let action = null;
   if (waiting && hist.next && new Date(hist.next) > new Date()) {
-    action = <p className="text-[11px] text-[#857E9C]" data-testid={`${testid}-wait`}>You can nudge again {fmtDay(hist.next)}</p>;
+    action = <p className="text-[11px] text-[#6E6787]" data-testid={`${testid}-wait`}>You can nudge again {fmtDay(hist.next)}</p>;
   } else if (waiting) {
     action = (
       <button type="button" onClick={send} disabled={busy} data-testid={testid}

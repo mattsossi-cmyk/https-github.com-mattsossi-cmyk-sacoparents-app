@@ -22,7 +22,7 @@ export default function AppFooter() {
           <FooterLink to="/accessibility" icon={<A11yIcon size={13} />} testId="footer-accessibility">Accessibility</FooterLink>
           <FooterLink to="/help" icon={<LifeBuoy size={13} />} testId="footer-get-help">Get help</FooterLink>
         </div>
-        <p className="text-[11px] text-[#857E9C] text-center mt-4 max-w-3xl mx-auto leading-relaxed">
+        <p className="text-[11px] text-[#6E6787] text-center mt-4 max-w-3xl mx-auto leading-relaxed">
           SA CoParents is an educational and preparation tool. It is not legal
           advice, therapy, or a substitute for professional mediation. Always
           consult qualified family-law and mental-health professionals for

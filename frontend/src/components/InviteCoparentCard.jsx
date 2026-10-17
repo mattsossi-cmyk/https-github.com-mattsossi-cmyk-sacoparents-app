@@ -138,7 +138,7 @@ export default function InviteCoparentCard({ variant = "dashboard" }) {
           data-testid="invite-coparent-gate-required"
         >
           <div className="flex items-start gap-3">
-            <ShieldAlert size={20} className="text-[#B45F13] shrink-0 mt-0.5" />
+            <ShieldAlert size={20} className="text-[#904B0E] shrink-0 mt-0.5" />
             <div className="flex-1">
               <h4 className="font-serif text-lg text-[#5A3C10]">
                 Complete the family-violence safety screen first
@@ -218,7 +218,7 @@ export default function InviteCoparentCard({ variant = "dashboard" }) {
             <div className="relative flex-1">
               <Mail
                 size={16}
-                className="absolute left-4 top-1/2 -translate-y-1/2 text-[#857E9C]"
+                className="absolute left-4 top-1/2 -translate-y-1/2 text-[#6E6787]"
               />
               <input
                 type="email"
@@ -245,7 +245,7 @@ export default function InviteCoparentCard({ variant = "dashboard" }) {
             </button>
           </div>
           <p
-            className="text-[11px] text-[#857E9C] mt-2 inline-flex items-center gap-1.5"
+            className="text-[11px] text-[#6E6787] mt-2 inline-flex items-center gap-1.5"
             data-testid="invite-coparent-one-shot-notice"
           >
             <Lock size={11} /> One invitation per co-parent — please double-check the address.
@@ -291,7 +291,7 @@ export default function InviteCoparentCard({ variant = "dashboard" }) {
                     <div className="text-sm text-[#1A1330] truncate">
                       {inv.invitee_email}
                     </div>
-                    <div className="text-[11px] text-[#857E9C] mt-0.5 inline-flex items-center gap-1">
+                    <div className="text-[11px] text-[#6E6787] mt-0.5 inline-flex items-center gap-1">
                       <Clock size={11} /> Sent {created || "—"}
                     </div>
                   </div>
@@ -305,7 +305,7 @@ export default function InviteCoparentCard({ variant = "dashboard" }) {
             })}
           </ul>
           {invites[0].status === "expired" || invites[0].status === "rejected" ? (
-            <p className="text-[11px] text-[#857E9C] mt-3 leading-relaxed">
+            <p className="text-[11px] text-[#6E6787] mt-3 leading-relaxed">
               This invitation was not accepted within the 30-day window and is
               now closed. Only one invitation is permitted between parents
               through this app — if you still need to reach your co-parent, a
@@ -317,7 +317,7 @@ export default function InviteCoparentCard({ variant = "dashboard" }) {
               workspace.
             </p>
           ) : (
-            <p className="text-[11px] text-[#857E9C] mt-3 leading-relaxed">
+            <p className="text-[11px] text-[#6E6787] mt-3 leading-relaxed">
               We&rsquo;ll let you know when your co-parent accepts. No further
               invitations can be sent from this app.
             </p>

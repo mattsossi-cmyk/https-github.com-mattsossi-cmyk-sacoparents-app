@@ -55,7 +55,7 @@ export default function CaseAnalyticsCard() {
   if (loading) {
     return (
       <div
-        className="rounded-2xl border border-[#E5E0EE] bg-white p-4 mb-4 text-xs text-[#857E9C]"
+        className="rounded-2xl border border-[#E5E0EE] bg-white p-4 mb-4 text-xs text-[#6E6787]"
         data-testid="pj-analytics-loading"
       >
         Loading analytics…
@@ -160,7 +160,7 @@ export default function CaseAnalyticsCard() {
               >
                 {t.value}
               </div>
-              <div className="text-[11px] text-[#857E9C] leading-relaxed">
+              <div className="text-[11px] text-[#6E6787] leading-relaxed">
                 {t.hint}
               </div>
             </div>

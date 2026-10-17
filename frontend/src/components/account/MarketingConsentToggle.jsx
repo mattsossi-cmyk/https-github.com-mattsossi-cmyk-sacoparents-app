@@ -117,7 +117,7 @@ export default function MarketingConsentToggle() {
           )}
         </button>
       </div>
-      <div className="mt-3 pl-12 flex items-center gap-2 text-[10px] text-[#857E9C] flex-wrap">
+      <div className="mt-3 pl-12 flex items-center gap-2 text-[10px] text-[#6E6787] flex-wrap">
         <span
           className="inline-flex items-center gap-1 rounded-full px-2 py-0.5 border border-[#E5E0EE] bg-[#FCFBFE]"
           data-testid="marketing-consent-state"

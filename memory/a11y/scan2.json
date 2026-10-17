@@ -1,0 +1,1683 @@
+[
+ {
+  "path": "/",
+  "who": "guest",
+  "violations": [],
+  "final_url": "/",
+  "overflow": false,
+  "overflow_200": false
+ },
+ {
+  "path": "/admin",
+  "who": "admin",
+  "violations": [
+   {
+    "id": "color-contrast",
+    "impact": "serious",
+    "n": 2,
+    "help": "Elements must meet minimum color contrast ratio thresholds",
+    "nodes": [
+     {
+      "t": "span[x-id=\"AdminDashboard_670_18\"]",
+      "html": "<span class=\"text-[#B6663B]\" x-file-name=\"AdminDashboard\" x-line-number=\"670\" x-column=\"18\" x-component=\"span\" x-id=\"AdminDashboard_670_18\" x-dynamic=\"true\" x-s",
+      "d": {
+       "fgColor": "#b6663b",
+       "bgColor": "#fffbf3",
+       "contrastRatio": 4.1,
+       "fontSize": "9.0pt (12px)",
+       "fontWeight": "normal",
+       "messageKey": null,
+       "expectedContrastRatio": "4.5:1",
+       "shadowColor": null
+      }
+     },
+     {
+      "t": "span[x-id=\"AdminDashboard_685_18\"]",
+      "html": "<span class=\"text-[#B6663B]\" x-file-name=\"AdminDashboard\" x-line-number=\"685\" x-column=\"18\" x-component=\"span\" x-id=\"AdminDashboard_685_18\" x-dynamic=\"true\" x-s",
+      "d": {
+       "fgColor": "#b6663b",
+       "bgColor": "#fbf6ff",
+       "contrastRatio": 3.98,
+       "fontSize": "9.0pt (12px)",
+       "fontWeight": "normal",
+       "messageKey": null,
+       "expectedContrastRatio": "4.5:1",
+       "shadowColor": null
+      }
+     }
+    ]
+   }
+  ],
+  "final_url": "/admin",
+  "overflow": false,
+  "overflow_200": false
+ },
+ {
+  "path": "/",
+  "who": "parent",
+  "violations": [],
+  "final_url": "/",
+  "overflow": false,
+  "overflow_200": false
+ },
+ {
+  "path": "/legacy",
+  "who": "guest",
+  "violations": [],
+  "final_url": "/legacy",
+  "overflow": false,
+  "overflow_200": false
+ },
+ {
+  "path": "/admin/accounts",
+  "who": "admin",
+  "violations": [],
+  "final_url": "/admin/accounts",
+  "overflow": false,
+  "overflow_200": false
+ },
+ {
+  "path": "/align",
+  "who": "parent",
+  "violations": [],
+  "final_url": "/align",
+  "overflow": false,
+  "overflow_200": false
+ },
+ {
+  "path": "/login",
+  "who": "guest",
+  "violations": [],
+  "final_url": "/login",
+  "overflow": false,
+  "overflow_200": false
+ },
+ {
+  "path": "/admin/consent",
+  "who": "admin",
+  "violations": [],
+  "final_url": "/admin/consent",
+  "overflow": false,
+  "overflow_200": false
+ },
+ {
+  "path": "/account",
+  "who": "parent",
+  "violations": [],
+  "final_url": "/account",
+  "overflow": false,
+  "overflow_200": false
+ },
+ {
+  "path": "/register",
+  "who": "guest",
+  "violations": [],
+  "final_url": "/register",
+  "overflow": false,
+  "overflow_200": false
+ },
+ {
+  "path": "/admin/consent-trend",
+  "who": "admin",
+  "violations": [],
+  "final_url": "/admin/consent-trend",
+  "overflow": false,
+  "overflow_200": false
+ },
+ {
+  "path": "/delete-account",
+  "who": "parent",
+  "violations": [
+   {
+    "id": "color-contrast",
+    "impact": "serious",
+    "n": 1,
+    "help": "Elements must meet minimum color contrast ratio thresholds",
+    "nodes": [
+     {
+      "t": "button",
+      "html": "<button class=\"inline-flex items-ce...\" x-file-name=\"DeleteAccount\" x-line-number=\"193\" x-column=\"6\" x-component=\"Button\" x-id=\"DeleteAccount_193_6\" x-dynamic=\"",
+      "d": {
+       "fgColor": "#ffffff",
+       "bgColor": "#c97b63",
+       "contrastRatio": 3.23,
+       "fontSize": "10.5pt (14px)",
+       "fontWeight": "normal",
+       "messageKey": null,
+       "expectedContrastRatio": "4.5:1",
+       "shadowColor": null
+      }
+     }
+    ]
+   }
+  ],
+  "final_url": "/delete-account",
+  "overflow": false,
+  "overflow_200": false
+ },
+ {
+  "path": "/signup",
+  "who": "guest",
+  "violations": [],
+  "final_url": "/signup",
+  "overflow": false,
+  "overflow_200": false
+ },
+ {
+  "path": "/admin/users",
+  "who": "admin",
+  "violations": [],
+  "final_url": "/admin/users",
+  "overflow": false,
+  "overflow_200": false
+ },
+ {
+  "path": "/cancel-subscription",
+  "who": "parent",
+  "violations": [],
+  "final_url": "/cancel-subscription",
+  "overflow": false,
+  "overflow_200": false
+ },
+ {
+  "path": "/forgot-password",
+  "who": "guest",
+  "violations": [],
+  "final_url": "/forgot-password",
+  "overflow": false,
+  "overflow_200": false
+ },
+ {
+  "path": "/admin/surveys",
+  "who": "admin",
+  "violations": [],
+  "final_url": "/admin/surveys",
+  "overflow": false,
+  "overflow_200": false
+ },
+ {
+  "path": "/case-settings",
+  "who": "parent",
+  "violations": [],
+  "final_url": "/case-settings",
+  "overflow": false,
+  "overflow_200": false
+ },
+ {
+  "path": "/privacy",
+  "who": "guest",
+  "violations": [],
+  "final_url": "/privacy-notice",
+  "overflow": false,
+  "overflow_200": false
+ },
+ {
+  "path": "/admin/insights",
+  "who": "admin",
+  "violations": [],
+  "final_url": "/admin/insights",
+  "overflow": false,
+  "overflow_200": false
+ },
+ {
+  "path": "/plan-options",
+  "who": "parent",
+  "violations": [],
+  "final_url": "/plan-options",
+  "overflow": false,
+  "overflow_200": false
+ },
+ {
+  "path": "/privacy-notice",
+  "who": "guest",
+  "violations": [],
+  "final_url": "/privacy-notice",
+  "overflow": false,
+  "overflow_200": false
+ },
+ {
+  "path": "/admin/nudge-copy",
+  "who": "admin",
+  "violations": [],
+  "final_url": "/admin/nudge-copy",
+  "overflow": false,
+  "overflow_200": false
+ },
+ {
+  "path": "/communication",
+  "who": "parent",
+  "violations": [],
+  "final_url": "/communication",
+  "overflow": false,
+  "overflow_200": false
+ },
+ {
+  "path": "/terms",
+  "who": "guest",
+  "violations": [],
+  "final_url": "/terms",
+  "overflow": false,
+  "overflow_200": false
+ },
+ {
+  "path": "/admin/bridge-copy",
+  "who": "admin",
+  "violations": [
+   {
+    "id": "color-contrast",
+    "impact": "serious",
+    "n": 2,
+    "help": "Elements must meet minimum color contrast ratio thresholds",
+    "nodes": [
+     {
+      "t": "-\\[\\#F1D9B7\\].bg-\\[\\#FFF6EA\\][x-line-number=\"180\"] > .tracking-\\[0\\.16em\\].mb-1[x-line-number=\"189\"]",
+      "html": "<div class=\"text-[10px] uppercas...\" x-file-name=\"AdminBridgeCopy\" x-line-number=\"189\" x-column=\"20\" x-component=\"div\" x-id=\"AdminBridgeCopy_189_...\" x-dynamic=",
+      "d": {
+       "fgColor": "#b45f13",
+       "bgColor": "#fff6ea",
+       "contrastRatio": 4.27,
+       "fontSize": "7.5pt (10px)",
+       "fontWeight": "bold",
+       "messageKey": null,
+       "expectedContrastRatio": "4.5:1",
+       "shadowColor": null
+      }
+     },
+     {
+      "t": ".bg-\\[\\#FFEEDA\\]",
+      "html": "<div class=\"inline-flex items-ce...\" x-file-name=\"AdminBridgeCopy\" x-line-number=\"294\" x-column=\"6\" x-component=\"div\" x-id=\"AdminBridgeCopy_294_...\" x-dynamic=\"",
+      "d": {
+       "fgColor": "#b45f13",
+       "bgColor": "#ffeeda",
+       "contrastRatio": 4.03,
+       "fontSize": "7.5pt (10px)",
+       "fontWeight": "bold",
+       "messageKey": null,
+       "expectedContrastRatio": "4.5:1",
+       "shadowColor": null
+      }
+     }
+    ]
+   }
+  ],
+  "final_url": "/admin/bridge-copy",
+  "overflow": false,
+  "overflow_200": false
+ },
+ {
+  "path": "/communication/reflection",
+  "who": "parent",
+  "violations": [],
+  "final_url": "/communication/reflection",
+  "overflow": false,
+  "overflow_200": false
+ },
+ {
+  "path": "/accessibility",
+  "who": "guest",
+  "violations": [],
+  "final_url": "/accessibility",
+  "overflow": false,
+  "overflow_200": false
+ },
+ {
+  "path": "/admin/audit-log",
+  "who": "admin",
+  "violations": [],
+  "final_url": "/admin/audit-log",
+  "overflow": false,
+  "overflow_200": false
+ },
+ {
+  "path": "/communication/alignment",
+  "who": "parent",
+  "violations": [],
+  "final_url": "/communication/alignment",
+  "overflow": false,
+  "overflow_200": false
+ },
+ {
+  "path": "/methodology",
+  "who": "guest",
+  "violations": [
+   {
+    "id": "color-contrast",
+    "impact": "serious",
+    "n": 1,
+    "help": "Elements must meet minimum color contrast ratio thresholds",
+    "nodes": [
+     {
+      "t": "div[x-line-number=\"201\"]",
+      "html": "<div class=\"text-[11px] text-[#8471B3]\" x-file-name=\"ReviewerPanelCard\" x-line-number=\"201\" x-column=\"8\" x-component=\"div\" x-id=\"ReviewerPanelCard_201_8\" x-dyna",
+      "d": {
+       "fgColor": "#8471b3",
+       "bgColor": "#ffffff",
+       "contrastRatio": 4.2,
+       "fontSize": "8.3pt (11px)",
+       "fontWeight": "normal",
+       "messageKey": null,
+       "expectedContrastRatio": "4.5:1",
+       "shadowColor": null
+      }
+     }
+    ]
+   }
+  ],
+  "final_url": "/methodology",
+  "overflow": false,
+  "overflow_200": false
+ },
+ {
+  "path": "/admin/help-services",
+  "who": "admin",
+  "violations": [],
+  "final_url": "/admin/help-services",
+  "overflow": false,
+  "overflow_200": false
+ },
+ {
+  "path": "/schedule/reflection",
+  "who": "parent",
+  "violations": [],
+  "final_url": "/schedule/reflection",
+  "overflow": false,
+  "overflow_200": false
+ },
+ {
+  "path": "/what-professionals-see",
+  "who": "guest",
+  "violations": [],
+  "final_url": "/what-professionals-see",
+  "overflow": false,
+  "overflow_200": false
+ },
+ {
+  "path": "/admin/reviewers",
+  "who": "admin",
+  "violations": [
+   {
+    "id": "color-contrast",
+    "impact": "serious",
+    "n": 2,
+    "help": "Elements must meet minimum color contrast ratio thresholds",
+    "nodes": [
+     {
+      "t": ".text-\\[\\#8471B3\\]",
+      "html": "<div class=\"text-[11px] text-[#8471B3] mb-6\" x-file-name=\"AdminReviewers\" x-line-number=\"212\" x-column=\"10\" x-component=\"div\" x-id=\"AdminReviewers_212_10\" x-dyn",
+      "d": {
+       "fgColor": "#8471b3",
+       "bgColor": "#ffffff",
+       "contrastRatio": 4.2,
+       "fontSize": "8.3pt (11px)",
+       "fontWeight": "normal",
+       "messageKey": null,
+       "expectedContrastRatio": "4.5:1",
+       "shadowColor": null
+      }
+     },
+     {
+      "t": "strong",
+      "html": "<strong x-file-name=\"AdminReviewers\" x-line-number=\"213\" x-column=\"28\" x-component=\"strong\" x-id=\"AdminReviewers_213_28\" x-dynamic=\"true\" x-source-type=\"compute",
+      "d": {
+       "fgColor": "#8471b3",
+       "bgColor": "#ffffff",
+       "contrastRatio": 4.2,
+       "fontSize": "8.3pt (11px)",
+       "fontWeight": "bold",
+       "messageKey": null,
+       "expectedContrastRatio": "4.5:1",
+       "shadowColor": null
+      }
+     }
+    ]
+   }
+  ],
+  "final_url": "/admin/reviewers",
+  "overflow": false,
+  "overflow_200": false
+ },
+ {
+  "path": "/schedule/alignment",
+  "who": "parent",
+  "violations": [],
+  "final_url": "/schedule/alignment",
+  "overflow": false,
+  "overflow_200": false
+ },
+ {
+  "path": "/legal/hipaa",
+  "who": "guest",
+  "violations": [],
+  "final_url": "/legal/hipaa",
+  "overflow": false,
+  "overflow_200": false
+ },
+ {
+  "path": "/admin/nd-coordinator",
+  "who": "admin",
+  "violations": [],
+  "final_url": "/admin/nd-coordinator",
+  "overflow": false,
+  "overflow_200": false
+ },
+ {
+  "path": "/activities/reflection",
+  "who": "parent",
+  "violations": [
+   {
+    "id": "color-contrast",
+    "impact": "serious",
+    "n": 1,
+    "help": "Elements must meet minimum color contrast ratio thresholds",
+    "nodes": [
+     {
+      "t": ".text-white\\/85",
+      "html": "<span class=\"text-[10px] mt-1 lea...\" x-file-name=\"ActivitiesReflection\" x-line-number=\"44\" x-column=\"12\" x-component=\"span\" x-id=\"ActivitiesReflection...\" x-dy",
+      "d": {
+       "fgColor": "#ddebe6",
+       "bgColor": "#1e7a55",
+       "contrastRatio": 4.3,
+       "fontSize": "7.5pt (10px)",
+       "fontWeight": "normal",
+       "messageKey": null,
+       "expectedContrastRatio": "4.5:1",
+       "shadowColor": null
+      }
+     }
+    ]
+   }
+  ],
+  "final_url": "/activities/reflection",
+  "overflow": false,
+  "overflow_200": false
+ },
+ {
+  "path": "/legal/hb300",
+  "who": "guest",
+  "violations": [],
+  "final_url": "/legal/hb300",
+  "overflow": false,
+  "overflow_200": false
+ },
+ {
+  "path": "/admin/professionals",
+  "who": "admin",
+  "violations": [],
+  "final_url": "/admin/professionals",
+  "overflow": false,
+  "overflow_200": false
+ },
+ {
+  "path": "/activities/alignment",
+  "who": "parent",
+  "violations": [
+   {
+    "id": "color-contrast",
+    "impact": "serious",
+    "n": 1,
+    "help": "Elements must meet minimum color contrast ratio thresholds",
+    "nodes": [
+     {
+      "t": "div[x-id=\"CostSplitterTotals_57_8\"]",
+      "html": "<div class=\"text-[10px] uppercase tracking-[0.16em] font-bold text-[#8471B3] mb-1\" x-file-name=\"CostSplitterTotals\" x-line-number=\"57\" x-column=\"8\" x-component=",
+      "d": {
+       "fgColor": "#8471b3",
+       "bgColor": "#f5f1fb",
+       "contrastRatio": 3.77,
+       "fontSize": "7.5pt (10px)",
+       "fontWeight": "bold",
+       "messageKey": null,
+       "expectedContrastRatio": "4.5:1",
+       "shadowColor": null
+      }
+     }
+    ]
+   }
+  ],
+  "final_url": "/activities/alignment",
+  "overflow": false,
+  "overflow_200": false
+ },
+ {
+  "path": "/legal/privacy-practices",
+  "who": "guest",
+  "violations": [],
+  "final_url": "/legal/privacy-practices",
+  "overflow": false,
+  "overflow_200": false
+ },
+ {
+  "path": "/alignment/subjects",
+  "who": "parent",
+  "violations": [],
+  "final_url": "/alignment/subjects",
+  "overflow": false,
+  "overflow_200": false
+ },
+ {
+  "path": "/legal/app-store-privacy",
+  "who": "guest",
+  "violations": [],
+  "final_url": "/legal/app-store-privacy",
+  "overflow": false,
+  "overflow_200": false
+ },
+ {
+  "path": "/situation",
+  "who": "parent",
+  "violations": [],
+  "final_url": "/situation",
+  "overflow": false,
+  "overflow_200": false
+ },
+ {
+  "path": "/data-retention",
+  "who": "guest",
+  "violations": [],
+  "final_url": "/data-retention",
+  "overflow": false,
+  "overflow_200": false
+ },
+ {
+  "path": "/joint-reports",
+  "who": "parent",
+  "violations": [
+   {
+    "id": "color-contrast",
+    "impact": "serious",
+    "n": 2,
+    "help": "Elements must meet minimum color contrast ratio thresholds",
+    "nodes": [
+     {
+      "t": "a[href=\"tel:18007997233\"]",
+      "html": "<a href=\"tel:18007997233\" class=\"text-[#C74A4A] font-semibold underline\" data-testid=\"joint-picker-crisis-phone\" x-file-name=\"JointReportsPicker\" x-line-number=",
+      "d": {
+       "fgColor": "#c74a4a",
+       "bgColor": "#fdf6f6",
+       "contrastRatio": 4.36,
+       "fontSize": "9.0pt (12px)",
+       "fontWeight": "normal",
+       "messageKey": null,
+       "expectedContrastRatio": "4.5:1",
+       "shadowColor": null
+      }
+     },
+     {
+      "t": "a[href=\"sms:88788?body=START\"]",
+      "html": "<a href=\"sms:88788?body=START\" class=\"text-[#C74A4A] font-semibold underline\" data-testid=\"joint-picker-crisis-text\" x-file-name=\"JointReportsPicker\" x-line-num",
+      "d": {
+       "fgColor": "#c74a4a",
+       "bgColor": "#fdf6f6",
+       "contrastRatio": 4.36,
+       "fontSize": "9.0pt (12px)",
+       "fontWeight": "normal",
+       "messageKey": null,
+       "expectedContrastRatio": "4.5:1",
+       "shadowColor": null
+      }
+     }
+    ]
+   }
+  ],
+  "final_url": "/joint-reports",
+  "overflow": false,
+  "overflow_200": false
+ },
+ {
+  "path": "/professionals",
+  "who": "guest",
+  "violations": [],
+  "final_url": "/professionals",
+  "overflow": false,
+  "overflow_200": false
+ },
+ {
+  "path": "/joint-agreement",
+  "who": "parent",
+  "violations": [],
+  "final_url": "/joint-agreement",
+  "overflow": false,
+  "overflow_200": false
+ },
+ {
+  "path": "/for-professionals",
+  "who": "guest",
+  "violations": [],
+  "final_url": "/for-professionals",
+  "overflow": false,
+  "overflow_200": false
+ },
+ {
+  "path": "/pathway-report",
+  "who": "parent",
+  "violations": [
+   {
+    "id": "color-contrast",
+    "impact": "serious",
+    "n": 1,
+    "help": "Elements must meet minimum color contrast ratio thresholds",
+    "nodes": [
+     {
+      "t": ".border-\\[\\#2DB5B5\\]",
+      "html": "<a data-testid=\"pathway-report-draft...\" class=\"inline-flex items-ce...\" title=\"Start a Co-Parenting...\" href=\"/summary?tab=agreeme...\" data-discover=\"true\">",
+      "d": {
+       "fgColor": "#2db5b5",
+       "bgColor": "#ffffff",
+       "contrastRatio": 2.5,
+       "fontSize": "10.5pt (14px)",
+       "fontWeight": "normal",
+       "messageKey": null,
+       "expectedContrastRatio": "4.5:1",
+       "shadowColor": null
+      }
+     }
+    ]
+   }
+  ],
+  "final_url": "/pathway-report",
+  "overflow": false,
+  "overflow_200": false
+ },
+ {
+  "path": "/for-portal-engineers",
+  "who": "guest",
+  "violations": [],
+  "final_url": "/for-portal-engineers",
+  "overflow": false,
+  "overflow_200": false
+ },
+ {
+  "path": "/complete-alignment-report",
+  "who": "parent",
+  "violations": [],
+  "final_url": "/complete-alignment-report",
+  "overflow": false,
+  "overflow_200": false
+ },
+ {
+  "path": "/samples",
+  "who": "guest",
+  "violations": [],
+  "final_url": "/samples",
+  "overflow": false,
+  "overflow_200": false
+ },
+ {
+  "path": "/complete-alignment-report/joint/SA-DEMO01",
+  "who": "parent",
+  "violations": [
+   {
+    "id": "color-contrast",
+    "impact": "serious",
+    "n": 2,
+    "help": "Elements must meet minimum color contrast ratio thresholds",
+    "nodes": [
+     {
+      "t": "div[x-id=\"CompleteAlignmentReport_243_18\"]",
+      "html": "<div class=\"inline-flex items-ce...\" x-file-name=\"CompleteAlignmentRep...\" x-line-number=\"243\" x-column=\"18\" x-component=\"div\" x-id=\"CompleteAlignmentRep...\" x-",
+      "d": {
+       "fgColor": "#aa6a00",
+       "bgColor": "#fcefd7",
+       "contrastRatio": 3.87,
+       "fontSize": "9.0pt (12px)",
+       "fontWeight": "bold",
+       "messageKey": null,
+       "expectedContrastRatio": "4.5:1",
+       "shadowColor": null
+      }
+     },
+     {
+      "t": "span[data-testid=\"complete-report-badge-one-side\"]",
+      "html": "<span class=\"inline-flex items-ce...\" data-testid=\"complete-report-badg...\" x-file-name=\"CompleteAlignmentRep...\" x-line-number=\"51\" x-column=\"4\" x-component=\"s",
+      "d": {
+       "fgColor": "#aa6a00",
+       "bgColor": "#fcefd7",
+       "contrastRatio": 3.87,
+       "fontSize": "7.5pt (10px)",
+       "fontWeight": "bold",
+       "messageKey": null,
+       "expectedContrastRatio": "4.5:1",
+       "shadowColor": null
+      }
+     }
+    ]
+   }
+  ],
+  "final_url": "/complete-alignment-report/joint/SA-DEMO01",
+  "overflow": false,
+  "overflow_200": false
+ },
+ {
+  "path": "/samples/co-parenting",
+  "who": "guest",
+  "violations": [],
+  "final_url": "/samples/co-parenting",
+  "overflow": false,
+  "overflow_200": false
+ },
+ {
+  "path": "/shared-with-professionals",
+  "who": "parent",
+  "violations": [],
+  "final_url": "/shared-with-professionals",
+  "overflow": false,
+  "overflow_200": false
+ },
+ {
+  "path": "/samples/joint-alignment-preview",
+  "who": "guest",
+  "violations": [],
+  "final_url": "/samples/joint-alignment-preview",
+  "overflow": false,
+  "overflow_200": false
+ },
+ {
+  "path": "/share/professional",
+  "who": "parent",
+  "violations": [],
+  "final_url": "/share/professional",
+  "overflow": false,
+  "overflow_200": false
+ },
+ {
+  "path": "/join",
+  "who": "guest",
+  "violations": [],
+  "final_url": "/join",
+  "overflow": false,
+  "overflow_200": false
+ },
+ {
+  "path": "/nd-risk-assessment",
+  "who": "parent",
+  "violations": [],
+  "final_url": "/nd-risk-assessment",
+  "overflow": false,
+  "overflow_200": false
+ },
+ {
+  "path": "/join/sample-preview",
+  "who": "guest",
+  "violations": [],
+  "final_url": "/join/sample-preview",
+  "overflow": false,
+  "overflow_200": false
+ },
+ {
+  "path": "/companion-assessment",
+  "who": "parent",
+  "violations": [],
+  "final_url": "/companion-assessment",
+  "overflow": false,
+  "overflow_200": false
+ },
+ {
+  "path": "/mediator-badge",
+  "who": "guest",
+  "violations": [],
+  "final_url": "/mediator-badge",
+  "overflow": false,
+  "overflow_200": false
+ },
+ {
+  "path": "/interventions",
+  "who": "parent",
+  "violations": [
+   {
+    "id": "color-contrast",
+    "impact": "serious",
+    "n": 8,
+    "help": "Elements must meet minimum color contrast ratio thresholds",
+    "nodes": [
+     {
+      "t": "v[title=\"2026-08-24: 0%\"] > .text-\\[9px\\][x-line-number=\"113\"][x-id=\"InterventionCompliance_113_14\"]",
+      "html": "<div class=\"text-[9px] text-[#8471B3]\" x-file-name=\"InterventionCompliance\" x-line-number=\"113\" x-column=\"14\" x-component=\"div\" x-id=\"InterventionCompliance_113",
+      "d": {
+       "fgColor": "#8471b3",
+       "bgColor": "#ffffff",
+       "contrastRatio": 4.2,
+       "fontSize": "6.8pt (9px)",
+       "fontWeight": "normal",
+       "messageKey": null,
+       "expectedContrastRatio": "4.5:1",
+       "shadowColor": null
+      }
+     },
+     {
+      "t": "v[title=\"2026-08-31: 0%\"] > .text-\\[9px\\][x-line-number=\"113\"][x-id=\"InterventionCompliance_113_14\"]",
+      "html": "<div class=\"text-[9px] text-[#8471B3]\" x-file-name=\"InterventionCompliance\" x-line-number=\"113\" x-column=\"14\" x-component=\"div\" x-id=\"InterventionCompliance_113",
+      "d": {
+       "fgColor": "#8471b3",
+       "bgColor": "#ffffff",
+       "contrastRatio": 4.2,
+       "fontSize": "6.8pt (9px)",
+       "fontWeight": "normal",
+       "messageKey": null,
+       "expectedContrastRatio": "4.5:1",
+       "shadowColor": null
+      }
+     },
+     {
+      "t": "le=\"2026-09-07: no data\"] > .text-\\[9px\\][x-line-number=\"113\"][x-id=\"InterventionCompliance_113_14\"]",
+      "html": "<div class=\"text-[9px] text-[#8471B3]\" x-file-name=\"InterventionCompliance\" x-line-number=\"113\" x-column=\"14\" x-component=\"div\" x-id=\"InterventionCompliance_113",
+      "d": {
+       "fgColor": "#8471b3",
+       "bgColor": "#ffffff",
+       "contrastRatio": 4.2,
+       "fontSize": "6.8pt (9px)",
+       "fontWeight": "normal",
+       "messageKey": null,
+       "expectedContrastRatio": "4.5:1",
+       "shadowColor": null
+      }
+     },
+     {
+      "t": "le=\"2026-09-14: no data\"] > .text-\\[9px\\][x-line-number=\"113\"][x-id=\"InterventionCompliance_113_14\"]",
+      "html": "<div class=\"text-[9px] text-[#8471B3]\" x-file-name=\"InterventionCompliance\" x-line-number=\"113\" x-column=\"14\" x-component=\"div\" x-id=\"InterventionCompliance_113",
+      "d": {
+       "fgColor": "#8471b3",
+       "bgColor": "#ffffff",
+       "contrastRatio": 4.2,
+       "fontSize": "6.8pt (9px)",
+       "fontWeight": "normal",
+       "messageKey": null,
+       "expectedContrastRatio": "4.5:1",
+       "shadowColor": null
+      }
+     },
+     {
+      "t": "le=\"2026-09-21: no data\"] > .text-\\[9px\\][x-line-number=\"113\"][x-id=\"InterventionCompliance_113_14\"]",
+      "html": "<div class=\"text-[9px] text-[#8471B3]\" x-file-name=\"InterventionCompliance\" x-line-number=\"113\" x-column=\"14\" x-component=\"div\" x-id=\"InterventionCompliance_113",
+      "d": {
+       "fgColor": "#8471b3",
+       "bgColor": "#ffffff",
+       "contrastRatio": 4.2,
+       "fontSize": "6.8pt (9px)",
+       "fontWeight": "normal",
+       "messageKey": null,
+       "expectedContrastRatio": "4.5:1",
+       "shadowColor": null
+      }
+     },
+     {
+      "t": "le=\"2026-09-28: no data\"] > .text-\\[9px\\][x-line-number=\"113\"][x-id=\"InterventionCompliance_113_14\"]",
+      "html": "<div class=\"text-[9px] text-[#8471B3]\" x-file-name=\"InterventionCompliance\" x-line-number=\"113\" x-column=\"14\" x-component=\"div\" x-id=\"InterventionCompliance_113",
+      "d": {
+       "fgColor": "#8471b3",
+       "bgColor": "#ffffff",
+       "contrastRatio": 4.2,
+       "fontSize": "6.8pt (9px)",
+       "fontWeight": "normal",
+       "messageKey": null,
+       "expectedContrastRatio": "4.5:1",
+       "shadowColor": null
+      }
+     },
+     {
+      "t": "le=\"2026-10-05: no data\"] > .text-\\[9px\\][x-line-number=\"113\"][x-id=\"InterventionCompliance_113_14\"]",
+      "html": "<div class=\"text-[9px] text-[#8471B3]\" x-file-name=\"InterventionCompliance\" x-line-number=\"113\" x-column=\"14\" x-component=\"div\" x-id=\"InterventionCompliance_113",
+      "d": {
+       "fgColor": "#8471b3",
+       "bgColor": "#ffffff",
+       "contrastRatio": 4.2,
+       "fontSize": "6.8pt (9px)",
+       "fontWeight": "normal",
+       "messageKey": null,
+       "expectedContrastRatio": "4.5:1",
+       "shadowColor": null
+      }
+     },
+     {
+      "t": "le=\"2026-10-12: no data\"] > .text-\\[9px\\][x-line-number=\"113\"][x-id=\"InterventionCompliance_113_14\"]",
+      "html": "<div class=\"text-[9px] text-[#8471B3]\" x-file-name=\"InterventionCompliance\" x-line-number=\"113\" x-column=\"14\" x-component=\"div\" x-id=\"InterventionCompliance_113",
+      "d": {
+       "fgColor": "#8471b3",
+       "bgColor": "#ffffff",
+       "contrastRatio": 4.2,
+       "fontSize": "6.8pt (9px)",
+       "fontWeight": "normal",
+       "messageKey": null,
+       "expectedContrastRatio": "4.5:1",
+       "shadowColor": null
+      }
+     }
+    ]
+   }
+  ],
+  "final_url": "/interventions",
+  "overflow": false,
+  "overflow_200": false
+ },
+ {
+  "path": "/foundation/demo",
+  "who": "guest",
+  "violations": [],
+  "final_url": "/foundation/demo",
+  "overflow": false,
+  "overflow_200": false
+ },
+ {
+  "path": "/problem-solving",
+  "who": "parent",
+  "violations": [
+   {
+    "id": "color-contrast",
+    "impact": "serious",
+    "n": 1,
+    "help": "Elements must meet minimum color contrast ratio thresholds",
+    "nodes": [
+     {
+      "t": ".bg-\\[\\#C28771\\]",
+      "html": "<button type=\"button\" class=\"inline-flex items-ce...\" data-testid=\"worksheet-quick-exit\" x-file-name=\"ProblemSolvingWorksh...\" x-line-number=\"149\" x-column=\"10\"",
+      "d": {
+       "fgColor": "#ffffff",
+       "bgColor": "#c28771",
+       "contrastRatio": 3,
+       "fontSize": "10.5pt (14px)",
+       "fontWeight": "normal",
+       "messageKey": null,
+       "expectedContrastRatio": "4.5:1",
+       "shadowColor": null
+      }
+     }
+    ]
+   }
+  ],
+  "final_url": "/problem-solving",
+  "overflow": false,
+  "overflow_200": false
+ },
+ {
+  "path": "/help",
+  "who": "guest",
+  "violations": [],
+  "final_url": "/help",
+  "overflow": false,
+  "overflow_200": false
+ },
+ {
+  "path": "/my-plan",
+  "who": "parent",
+  "violations": [],
+  "final_url": "/my-plan",
+  "overflow": false,
+  "overflow_200": false
+ },
+ {
+  "path": "/calendar",
+  "who": "guest",
+  "violations": [
+   {
+    "id": "color-contrast",
+    "impact": "serious",
+    "n": 7,
+    "help": "Elements must meet minimum color contrast ratio thresholds",
+    "nodes": [
+     {
+      "t": ".uppercase.text-slate-400.py-1:nth-child(1)",
+      "html": "<div class=\"text-[11px] font-bol...\" x-file-name=\"CalendarPage\" x-line-number=\"39\" x-column=\"12\" x-component=\"div\" x-id=\"CalendarPage_39_12\" x-dynamic=\"true\" x-",
+      "d": {
+       "fgColor": "#94a3b8",
+       "bgColor": "#ffffff",
+       "contrastRatio": 2.56,
+       "fontSize": "8.3pt (11px)",
+       "fontWeight": "bold",
+       "messageKey": null,
+       "expectedContrastRatio": "4.5:1",
+       "shadowColor": null
+      }
+     },
+     {
+      "t": ".uppercase.text-slate-400.py-1:nth-child(2)",
+      "html": "<div class=\"text-[11px] font-bol...\" x-file-name=\"CalendarPage\" x-line-number=\"39\" x-column=\"12\" x-component=\"div\" x-id=\"CalendarPage_39_12\" x-dynamic=\"true\" x-",
+      "d": {
+       "fgColor": "#94a3b8",
+       "bgColor": "#ffffff",
+       "contrastRatio": 2.56,
+       "fontSize": "8.3pt (11px)",
+       "fontWeight": "bold",
+       "messageKey": null,
+       "expectedContrastRatio": "4.5:1",
+       "shadowColor": null
+      }
+     },
+     {
+      "t": ".uppercase.text-slate-400.py-1:nth-child(3)",
+      "html": "<div class=\"text-[11px] font-bol...\" x-file-name=\"CalendarPage\" x-line-number=\"39\" x-column=\"12\" x-component=\"div\" x-id=\"CalendarPage_39_12\" x-dynamic=\"true\" x-",
+      "d": {
+       "fgColor": "#94a3b8",
+       "bgColor": "#ffffff",
+       "contrastRatio": 2.56,
+       "fontSize": "8.3pt (11px)",
+       "fontWeight": "bold",
+       "messageKey": null,
+       "expectedContrastRatio": "4.5:1",
+       "shadowColor": null
+      }
+     },
+     {
+      "t": ".uppercase.text-slate-400.py-1:nth-child(4)",
+      "html": "<div class=\"text-[11px] font-bol...\" x-file-name=\"CalendarPage\" x-line-number=\"39\" x-column=\"12\" x-component=\"div\" x-id=\"CalendarPage_39_12\" x-dynamic=\"true\" x-",
+      "d": {
+       "fgColor": "#94a3b8",
+       "bgColor": "#ffffff",
+       "contrastRatio": 2.56,
+       "fontSize": "8.3pt (11px)",
+       "fontWeight": "bold",
+       "messageKey": null,
+       "expectedContrastRatio": "4.5:1",
+       "shadowColor": null
+      }
+     },
+     {
+      "t": ".uppercase.text-slate-400.py-1:nth-child(5)",
+      "html": "<div class=\"text-[11px] font-bol...\" x-file-name=\"CalendarPage\" x-line-number=\"39\" x-column=\"12\" x-component=\"div\" x-id=\"CalendarPage_39_12\" x-dynamic=\"true\" x-",
+      "d": {
+       "fgColor": "#94a3b8",
+       "bgColor": "#ffffff",
+       "contrastRatio": 2.56,
+       "fontSize": "8.3pt (11px)",
+       "fontWeight": "bold",
+       "messageKey": null,
+       "expectedContrastRatio": "4.5:1",
+       "shadowColor": null
+      }
+     },
+     {
+      "t": ".uppercase.text-slate-400.py-1:nth-child(6)",
+      "html": "<div class=\"text-[11px] font-bol...\" x-file-name=\"CalendarPage\" x-line-number=\"39\" x-column=\"12\" x-component=\"div\" x-id=\"CalendarPage_39_12\" x-dynamic=\"true\" x-",
+      "d": {
+       "fgColor": "#94a3b8",
+       "bgColor": "#ffffff",
+       "contrastRatio": 2.56,
+       "fontSize": "8.3pt (11px)",
+       "fontWeight": "bold",
+       "messageKey": null,
+       "expectedContrastRatio": "4.5:1",
+       "shadowColor": null
+      }
+     },
+     {
+      "t": ".uppercase.text-slate-400.py-1:nth-child(7)",
+      "html": "<div class=\"text-[11px] font-bol...\" x-file-name=\"CalendarPage\" x-line-number=\"39\" x-column=\"12\" x-component=\"div\" x-id=\"CalendarPage_39_12\" x-dynamic=\"true\" x-",
+      "d": {
+       "fgColor": "#94a3b8",
+       "bgColor": "#ffffff",
+       "contrastRatio": 2.56,
+       "fontSize": "8.3pt (11px)",
+       "fontWeight": "bold",
+       "messageKey": null,
+       "expectedContrastRatio": "4.5:1",
+       "shadowColor": null
+      }
+     }
+    ]
+   }
+  ],
+  "final_url": "/calendar",
+  "overflow": false,
+  "overflow_200": false
+ },
+ {
+  "path": "/coach",
+  "who": "parent",
+  "violations": [
+   {
+    "id": "color-contrast",
+    "impact": "serious",
+    "n": 1,
+    "help": "Elements must meet minimum color contrast ratio thresholds",
+    "nodes": [
+     {
+      "t": ".animate-pulse",
+      "html": "<div class=\"animate-pulse text-sm tracking-[0.2em] uppercase\" x-file-name=\"ProtectedRoute\" x-line-number=\"59\" x-column=\"8\" x-component=\"div\" x-id=\"ProtectedRout",
+      "d": {
+       "fgColor": "#848098",
+       "bgColor": "#f8f7fc",
+       "contrastRatio": 3.56,
+       "fontSize": "10.5pt (14px)",
+       "fontWeight": "normal",
+       "messageKey": null,
+       "expectedContrastRatio": "4.5:1",
+       "shadowColor": null
+      }
+     }
+    ]
+   }
+  ],
+  "final_url": "/coach",
+  "overflow": false,
+  "overflow_200": false
+ },
+ {
+  "path": "/safety",
+  "who": "guest",
+  "violations": [
+   {
+    "id": "color-contrast",
+    "impact": "serious",
+    "n": 2,
+    "help": "Elements must meet minimum color contrast ratio thresholds",
+    "nodes": [
+     {
+      "t": "button",
+      "html": "<button type=\"button\" class=\"inline-flex items-ce...\" data-testid=\"safety-quick-exit-bu...\" aria-label=\"Quick exit \u2014 leave t...\" title=\"Press the ESC key an...\"",
+      "d": {
+       "fgColor": "#ffffff",
+       "bgColor": "#c28771",
+       "contrastRatio": 3,
+       "fontSize": "10.5pt (14px)",
+       "fontWeight": "normal",
+       "messageKey": null,
+       "expectedContrastRatio": "4.5:1",
+       "shadowColor": null
+      }
+     },
+     {
+      "t": "a[href$=\"tel:911\"]",
+      "html": "<a href=\"tel:911\" class=\"inline-flex items-center gap-2 rounded-full bg-white text-[#C28771] px-5 py-2.5 font-medium hover:bg-[#F8F7FC] transition-colors\" data-",
+      "d": {
+       "fgColor": "#c28771",
+       "bgColor": "#ffffff",
+       "contrastRatio": 3,
+       "fontSize": "12.0pt (16px)",
+       "fontWeight": "normal",
+       "messageKey": null,
+       "expectedContrastRatio": "4.5:1",
+       "shadowColor": null
+      }
+     }
+    ]
+   }
+  ],
+  "final_url": "/safety",
+  "overflow": false,
+  "overflow_200": false
+ },
+ {
+  "path": "/learning",
+  "who": "parent",
+  "violations": [
+   {
+    "id": "color-contrast",
+    "impact": "serious",
+    "n": 1,
+    "help": "Elements must meet minimum color contrast ratio thresholds",
+    "nodes": [
+     {
+      "t": ".animate-pulse",
+      "html": "<div class=\"animate-pulse text-sm tracking-[0.2em] uppercase\" x-file-name=\"ProtectedRoute\" x-line-number=\"59\" x-column=\"8\" x-component=\"div\" x-id=\"ProtectedRout",
+      "d": {
+       "fgColor": "#827e96",
+       "bgColor": "#f8f7fc",
+       "contrastRatio": 3.66,
+       "fontSize": "10.5pt (14px)",
+       "fontWeight": "normal",
+       "messageKey": null,
+       "expectedContrastRatio": "4.5:1",
+       "shadowColor": null
+      }
+     }
+    ]
+   }
+  ],
+  "final_url": "/learning",
+  "overflow": false,
+  "overflow_200": false
+ },
+ {
+  "path": "/prep/child-goals",
+  "who": "parent",
+  "violations": [],
+  "final_url": "/prep/child-goals",
+  "overflow": false,
+  "overflow_200": false
+ },
+ {
+  "path": "/prep/issues",
+  "who": "parent",
+  "violations": [
+   {
+    "id": "color-contrast",
+    "impact": "serious",
+    "n": 1,
+    "help": "Elements must meet minimum color contrast ratio thresholds",
+    "nodes": [
+     {
+      "t": "a[href$=\"safety\"]",
+      "html": "<a class=\"underline text-[#C28771]\" data-testid=\"issue-safety_concerns-safety-link\" href=\"/safety\" data-discover=\"true\">safety resources</a>",
+      "d": {
+       "fgColor": "#c28771",
+       "bgColor": "#fcf9f8",
+       "contrastRatio": 2.86,
+       "fontSize": "9.0pt (12px)",
+       "fontWeight": "normal",
+       "messageKey": null,
+       "expectedContrastRatio": "4.5:1",
+       "shadowColor": null
+      }
+     }
+    ]
+   }
+  ],
+  "final_url": "/prep/issues",
+  "overflow": false,
+  "overflow_200": false
+ },
+ {
+  "path": "/prep/priority",
+  "who": "parent",
+  "violations": [
+   {
+    "id": "color-contrast",
+    "impact": "serious",
+    "n": 4,
+    "help": "Elements must meet minimum color contrast ratio thresholds",
+    "nodes": [
+     {
+      "t": "1_18\"][x-line-number=\"171\"] > div[x-line-number=\"173\"][x-column=\"22\"][x-id=\"PriorityRanking_173_22\"]",
+      "html": "<div class=\"text-xs italic text-[#6E6787]\" x-file-name=\"PriorityRanking\" x-line-number=\"173\" x-column=\"22\" x-component=\"div\" x-id=\"PriorityRanking_173_22\" x-dyn",
+      "d": {
+       "fgColor": "#6e6787",
+       "bgColor": "#efe9f9",
+       "contrastRatio": 4.47,
+       "fontSize": "9.0pt (12px)",
+       "fontWeight": "normal",
+       "messageKey": null,
+       "expectedContrastRatio": "4.5:1",
+       "shadowColor": null
+      }
+     },
+     {
+      "t": "1_18\"][x-line-number=\"171\"] > div[x-line-number=\"173\"][x-column=\"22\"][x-id=\"PriorityRanking_173_22\"]",
+      "html": "<div class=\"text-xs italic text-[#6E6787]\" x-file-name=\"PriorityRanking\" x-line-number=\"173\" x-column=\"22\" x-component=\"div\" x-id=\"PriorityRanking_173_22\" x-dyn",
+      "d": {
+       "fgColor": "#6e6787",
+       "bgColor": "#efe9f9",
+       "contrastRatio": 4.47,
+       "fontSize": "9.0pt (12px)",
+       "fontWeight": "normal",
+       "messageKey": null,
+       "expectedContrastRatio": "4.5:1",
+       "shadowColor": null
+      }
+     },
+     {
+      "t": "\"161\"][x-id=\"PriorityRanking_161_18\"] > .ml-auto[x-line-number=\"167\"][x-id=\"PriorityRanking_167_20\"]",
+      "html": "<span class=\"text-xs text-[#6E6787] ml-auto\" x-file-name=\"PriorityRanking\" x-line-number=\"167\" x-column=\"20\" x-component=\"span\" x-id=\"PriorityRanking_167_20\" x-",
+      "d": {
+       "fgColor": "#6e6787",
+       "bgColor": "#efe9f9",
+       "contrastRatio": 4.47,
+       "fontSize": "9.0pt (12px)",
+       "fontWeight": "normal",
+       "messageKey": null,
+       "expectedContrastRatio": "4.5:1",
+       "shadowColor": null
+      }
+     },
+     {
+      "t": "1_18\"][x-line-number=\"171\"] > div[x-line-number=\"173\"][x-column=\"22\"][x-id=\"PriorityRanking_173_22\"]",
+      "html": "<div class=\"text-xs italic text-[#6E6787]\" x-file-name=\"PriorityRanking\" x-line-number=\"173\" x-column=\"22\" x-component=\"div\" x-id=\"PriorityRanking_173_22\" x-dyn",
+      "d": {
+       "fgColor": "#6e6787",
+       "bgColor": "#efe9f9",
+       "contrastRatio": 4.47,
+       "fontSize": "9.0pt (12px)",
+       "fontWeight": "normal",
+       "messageKey": null,
+       "expectedContrastRatio": "4.5:1",
+       "shadowColor": null
+      }
+     }
+    ]
+   }
+  ],
+  "final_url": "/prep/priority",
+  "overflow": false,
+  "overflow_200": false
+ },
+ {
+  "path": "/watch",
+  "who": "guest",
+  "violations": [
+   {
+    "id": "color-contrast",
+    "impact": "serious",
+    "n": 3,
+    "help": "Elements must meet minimum color contrast ratio thresholds",
+    "nodes": [
+     {
+      "t": ".sm\\:hidden",
+      "html": "<span class=\"sm:hidden\" x-file-name=\"Watch\" x-line-number=\"266\" x-column=\"14\" x-component=\"span\" x-id=\"Watch_266_14\" x-dynamic=\"false\">Facebook</span>",
+      "d": {
+       "fgColor": "#1877f2",
+       "bgColor": "#ffffff",
+       "contrastRatio": 4.23,
+       "fontSize": "9.0pt (12px)",
+       "fontWeight": "normal",
+       "messageKey": null,
+       "expectedContrastRatio": "4.5:1",
+       "shadowColor": null
+      }
+     },
+     {
+      "t": "div[x-line-number=\"354\"]",
+      "html": "<div class=\"text-[11px] uppercase tracking-[0.22em] text-[#1877F2] font-bold mb-1\" x-file-name=\"Watch\" x-line-number=\"354\" x-column=\"16\" x-component=\"div\" x-id=",
+      "d": {
+       "fgColor": "#1877f2",
+       "bgColor": "#ffffff",
+       "contrastRatio": 4.23,
+       "fontSize": "8.3pt (11px)",
+       "fontWeight": "bold",
+       "messageKey": null,
+       "expectedContrastRatio": "4.5:1",
+       "shadowColor": null
+      }
+     },
+     {
+      "t": "div[x-line-number=\"381\"]",
+      "html": "<div class=\"text-[11px] uppercase tracking-[0.22em] text-[#2DB5B5] font-bold mb-1\" x-file-name=\"Watch\" x-line-number=\"381\" x-column=\"16\" x-component=\"div\" x-id=",
+      "d": {
+       "fgColor": "#2db5b5",
+       "bgColor": "#ffffff",
+       "contrastRatio": 2.5,
+       "fontSize": "8.3pt (11px)",
+       "fontWeight": "bold",
+       "messageKey": null,
+       "expectedContrastRatio": "4.5:1",
+       "shadowColor": null
+      }
+     }
+    ]
+   }
+  ],
+  "final_url": "/watch",
+  "overflow": false,
+  "overflow_200": false
+ },
+ {
+  "path": "/prep/communication",
+  "who": "parent",
+  "violations": [],
+  "final_url": "/prep/communication",
+  "overflow": false,
+  "overflow_200": false
+ },
+ {
+  "path": "/prep/readiness",
+  "who": "parent",
+  "violations": [
+   {
+    "id": "color-contrast",
+    "impact": "serious",
+    "n": 1,
+    "help": "Elements must meet minimum color contrast ratio thresholds",
+    "nodes": [
+     {
+      "t": ".text-3xl",
+      "html": "<div class=\"font-serif text-3xl\" x-file-name=\"ReadinessCheck\" x-line-number=\"246\" x-column=\"14\" x-component=\"div\" x-id=\"ReadinessCheck_246_14\" x-dynamic=\"true\" ",
+      "d": {
+       "fgColor": "#c28771",
+       "bgColor": "#faf5f4",
+       "contrastRatio": 2.77,
+       "fontSize": "22.5pt (30px)",
+       "fontWeight": "bold",
+       "messageKey": null,
+       "expectedContrastRatio": "3:1",
+       "shadowColor": null
+      }
+     }
+    ]
+   }
+  ],
+  "final_url": "/prep/readiness",
+  "overflow": false,
+  "overflow_200": false
+ },
+ {
+  "path": "/summary",
+  "who": "parent",
+  "violations": [
+   {
+    "id": "color-contrast",
+    "impact": "serious",
+    "n": 5,
+    "help": "Elements must meet minimum color contrast ratio thresholds",
+    "nodes": [
+     {
+      "t": "div[x-id=\"Summary_98_8\"]",
+      "html": "<div class=\"text-xs uppercase tracking-[0.2em] text-[#A26852]\" x-file-name=\"Summary\" x-line-number=\"98\" x-column=\"8\" x-component=\"div\" x-id=\"Summary_98_8\" x-dyn",
+      "d": {
+       "fgColor": "#a26852",
+       "bgColor": "#fbf6f1",
+       "contrastRatio": 4.21,
+       "fontSize": "9.0pt (12px)",
+       "fontWeight": "normal",
+       "messageKey": null,
+       "expectedContrastRatio": "4.5:1",
+       "shadowColor": null
+      }
+     },
+     {
+      "t": "r=\"76\"][x-column=\"16\"] > div[x-id=\"NextStepsPanel_77_18\"][x-source-path=\"title\"][x-line-number=\"77\"]",
+      "html": "<div class=\"text-[10px] uppercas...\" x-file-name=\"NextStepsPanel\" x-line-number=\"77\" x-column=\"18\" x-component=\"div\" x-id=\"NextStepsPanel_77_18\" x-dynamic=\"true",
+      "d": {
+       "fgColor": "#2db5b5",
+       "bgColor": "#ffffff",
+       "contrastRatio": 2.5,
+       "fontSize": "7.5pt (10px)",
+       "fontWeight": "bold",
+       "messageKey": null,
+       "expectedContrastRatio": "4.5:1",
+       "shadowColor": null
+      }
+     },
+     {
+      "t": "estid=\"history-sum_5aa5a9a513ce\"] > .text-\\[\\#6E6787\\][x-line-number=\"1046\"][x-id=\"Summary_1046_12\"]",
+      "html": "<span class=\"text-[#6E6787] shrink-0\" x-file-name=\"Summary\" x-line-number=\"1046\" x-column=\"12\" x-component=\"span\" x-id=\"Summary_1046_12\" x-dynamic=\"true\" x-sour",
+      "d": {
+       "fgColor": "#6e6787",
+       "bgColor": "#efe9f9",
+       "contrastRatio": 4.47,
+       "fontSize": "10.5pt (14px)",
+       "fontWeight": "normal",
+       "messageKey": null,
+       "expectedContrastRatio": "4.5:1",
+       "shadowColor": null
+      }
+     },
+     {
+      "t": "estid=\"history-sum_feab0c86b18e\"] > .text-\\[\\#6E6787\\][x-line-number=\"1046\"][x-id=\"Summary_1046_12\"]",
+      "html": "<span class=\"text-[#6E6787] shrink-0\" x-file-name=\"Summary\" x-line-number=\"1046\" x-column=\"12\" x-component=\"span\" x-id=\"Summary_1046_12\" x-dynamic=\"true\" x-sour",
+      "d": {
+       "fgColor": "#6e6787",
+       "bgColor": "#efe9f9",
+       "contrastRatio": 4.47,
+       "fontSize": "10.5pt (14px)",
+       "fontWeight": "normal",
+       "messageKey": null,
+       "expectedContrastRatio": "4.5:1",
+       "shadowColor": null
+      }
+     },
+     {
+      "t": "estid=\"history-sum_0fecdff3cba5\"] > .text-\\[\\#6E6787\\][x-line-number=\"1046\"][x-id=\"Summary_1046_12\"]",
+      "html": "<span class=\"text-[#6E6787] shrink-0\" x-file-name=\"Summary\" x-line-number=\"1046\" x-column=\"12\" x-component=\"span\" x-id=\"Summary_1046_12\" x-dynamic=\"true\" x-sour",
+      "d": {
+       "fgColor": "#6e6787",
+       "bgColor": "#efe9f9",
+       "contrastRatio": 4.47,
+       "fontSize": "10.5pt (14px)",
+       "fontWeight": "normal",
+       "messageKey": null,
+       "expectedContrastRatio": "4.5:1",
+       "shadowColor": null
+      }
+     }
+    ]
+   }
+  ],
+  "final_url": "/summary",
+  "overflow": false,
+  "overflow_200": false
+ },
+ {
+  "path": "/reflection",
+  "who": "parent",
+  "violations": [],
+  "final_url": "/reflection",
+  "overflow": false,
+  "overflow_200": false
+ },
+ {
+  "path": "/orientation",
+  "who": "parent",
+  "violations": [],
+  "final_url": "/orientation",
+  "overflow": false,
+  "overflow_200": false
+ },
+ {
+  "path": "/progress",
+  "who": "parent",
+  "violations": [],
+  "final_url": "/progress",
+  "overflow": false,
+  "overflow_200": false
+ },
+ {
+  "path": "/special-needs-v2",
+  "who": "parent",
+  "violations": [],
+  "final_url": "/special-needs-v2",
+  "overflow": false,
+  "overflow_200": false
+ },
+ {
+  "path": "/special-needs-v2/report",
+  "who": "parent",
+  "violations": [],
+  "final_url": "/special-needs-v2/report",
+  "overflow": false,
+  "overflow_200": false
+ },
+ {
+  "path": "/special-needs-v2/compare",
+  "who": "parent",
+  "violations": [],
+  "final_url": "/special-needs-v2/compare",
+  "overflow": false,
+  "overflow_200": false
+ },
+ {
+  "path": "/special-needs-v2/educational-deep-dive",
+  "who": "parent",
+  "violations": [
+   {
+    "id": "color-contrast",
+    "impact": "serious",
+    "n": 1,
+    "help": "Elements must meet minimum color contrast ratio thresholds",
+    "nodes": [
+     {
+      "t": "button[data-testid=\"edu-deep-p1_q1-na\"]",
+      "html": "<button type=\"button\" class=\"h-11 rounded-full te...\" data-testid=\"edu-deep-p1_q1-na\" x-file-name=\"SpecialNeedsV2Educat...\" x-line-number=\"47\" x-column=\"6\" x-co",
+      "d": {
+       "fgColor": "#8471b3",
+       "bgColor": "#ffffff",
+       "contrastRatio": 4.2,
+       "fontSize": "9.0pt (12px)",
+       "fontWeight": "normal",
+       "messageKey": null,
+       "expectedContrastRatio": "4.5:1",
+       "shadowColor": null
+      }
+     }
+    ]
+   }
+  ],
+  "final_url": "/special-needs-v2/educational-deep-dive",
+  "overflow": false,
+  "overflow_200": false
+ },
+ {
+  "path": "/special-needs-v2/psychological-deep-dive",
+  "who": "parent",
+  "violations": [
+   {
+    "id": "color-contrast",
+    "impact": "serious",
+    "n": 1,
+    "help": "Elements must meet minimum color contrast ratio thresholds",
+    "nodes": [
+     {
+      "t": "button[data-testid=\"psych-deep-p1_q1-na\"]",
+      "html": "<button type=\"button\" class=\"h-11 rounded-full te...\" data-testid=\"psych-deep-p1_q1-na\" x-file-name=\"SpecialNeedsV2Psycho...\" x-line-number=\"47\" x-column=\"6\" x-",
+      "d": {
+       "fgColor": "#8471b3",
+       "bgColor": "#ffffff",
+       "contrastRatio": 4.2,
+       "fontSize": "9.0pt (12px)",
+       "fontWeight": "normal",
+       "messageKey": null,
+       "expectedContrastRatio": "4.5:1",
+       "shadowColor": null
+      }
+     }
+    ]
+   }
+  ],
+  "final_url": "/special-needs-v2/psychological-deep-dive",
+  "overflow": false,
+  "overflow_200": false
+ },
+ {
+  "path": "/special-needs-v2/medical-deep-dive",
+  "who": "parent",
+  "violations": [],
+  "final_url": "/special-needs-v2/medical-deep-dive",
+  "overflow": false,
+  "overflow_200": false
+ },
+ {
+  "path": "/onboarding/what-do-you-need",
+  "who": "parent",
+  "violations": [],
+  "final_url": "/onboarding/what-do-you-need",
+  "overflow": false,
+  "overflow_200": false
+ },
+ {
+  "path": "/professional/joint-alignment/new",
+  "who": "parent",
+  "violations": [],
+  "final_url": "/professional/joint-alignment/new",
+  "overflow": false,
+  "overflow_200": false
+ },
+ {
+  "path": "/professional/joint-alignment/mine",
+  "who": "parent",
+  "violations": [],
+  "final_url": "/professional/joint-alignment/mine",
+  "overflow": false,
+  "overflow_200": false
+ },
+ {
+  "path": "/gmail",
+  "who": "parent",
+  "violations": [],
+  "final_url": "/gmail",
+  "overflow": false,
+  "overflow_200": false
+ },
+ {
+  "path": "/case/SA-DEMO01",
+  "who": "parent",
+  "violations": [],
+  "final_url": "/case/SA-DEMO01",
+  "overflow": false,
+  "overflow_200": false
+ }
+]

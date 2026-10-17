@@ -16,7 +16,7 @@ const SOURCE_LABELS = {
 
 const Stat = ({ label, value, sub, testid }) => (
   <div className="rounded-2xl border border-[#E5E0EE] bg-white p-5" data-testid={testid}>
-    <div className="text-[11px] uppercase tracking-[0.18em] font-bold text-[#857E9C]">{label}</div>
+    <div className="text-[11px] uppercase tracking-[0.18em] font-bold text-[#6E6787]">{label}</div>
     <div className="font-serif text-4xl text-[#1A1330] mt-1 tabular-nums break-words" data-testid={`${testid}-value`}>{value ?? "–"}</div>
     {sub && <div className="text-xs text-[#4B4567] mt-1">{sub}</div>}
   </div>
@@ -25,12 +25,12 @@ const Stat = ({ label, value, sub, testid }) => (
 const Table = ({ testid, head, rows }) => (
   <div className="rounded-2xl border border-[#E5E0EE] bg-white overflow-x-auto" data-testid={testid}>
     <table className="w-full text-sm">
-      <thead className="bg-[#F8F7FC] text-[11px] uppercase tracking-wider text-[#857E9C]">
+      <thead className="bg-[#F8F7FC] text-[11px] uppercase tracking-wider text-[#6E6787]">
         <tr>{head.map((h, i) => <th key={h} className={`px-4 py-2.5 font-bold ${i ? "text-right" : "text-left"}`}>{h}</th>)}</tr>
       </thead>
       <tbody>
         {rows.length === 0 && (
-          <tr><td colSpan={head.length} className="px-4 py-3 text-[#857E9C]" data-testid={`${testid}-empty`}>None yet</td></tr>
+          <tr><td colSpan={head.length} className="px-4 py-3 text-[#6E6787]" data-testid={`${testid}-empty`}>None yet</td></tr>
         )}
         {rows.map((r) => (
           <tr key={r[0]} className="border-t border-[#F0EDF6]" data-testid={`${testid}-row`}>
@@ -59,7 +59,7 @@ export default function AdminConsentCounts() {
     return (
       <AppShell>
         <div className="card-soft p-8 text-center max-w-lg mx-auto" data-testid="admin-consent-forbidden">
-          <ShieldCheck size={20} className="mx-auto text-[#B6663B] mb-3" />
+          <ShieldCheck size={20} className="mx-auto text-[#965231] mb-3" />
           <h2 className="font-serif text-2xl text-[#1A1330]">Admin only</h2>
           <p className="text-sm text-[#4B4567] mt-2">This page is restricted to the SA CoParents app owner.</p>
         </div>
@@ -95,7 +95,7 @@ export default function AdminConsentCounts() {
           <h2 className="text-sm font-bold text-[#1A1330]">How consent was given (current version)</h2>
           <Table testid="admin-consent-by-source" head={["Where", "Times"]} rows={sources} />
         </section>
-        <p className="text-xs text-[#857E9C] leading-relaxed max-w-2xl" data-testid="admin-consent-note">
+        <p className="text-xs text-[#6E6787] leading-relaxed max-w-2xl" data-testid="admin-consent-note">
           &ldquo;By version&rdquo; counts each account&rsquo;s latest consent. &ldquo;How consent was given&rdquo; counts every time the
           boxes were ticked, so a person can appear more than once. These are the numbers for the site you&rsquo;re signed in to.{" "}
           <Link to="/admin/accounts" className="underline text-[#3D1A78]" data-testid="admin-consent-accounts-link">Account counts</Link>

@@ -97,7 +97,7 @@ export default function AppShell({ children }) {
               <div className="font-sans font-extrabold text-base sm:text-lg whitespace-nowrap text-[#1A1330]">
                 <span className="text-brand-gradient">SA</span> CoParents
               </div>
-              <div className="hidden xl:block text-[10px] uppercase tracking-[0.2em] text-[#857E9C]">
+              <div className="hidden xl:block text-[10px] uppercase tracking-[0.2em] text-[#6E6787]">
                 Mediation Prep
               </div>
             </div>
@@ -128,7 +128,7 @@ export default function AppShell({ children }) {
           <div className="flex items-center gap-2 sm:gap-3">
             <Link
               to="/help"
-              className="inline-flex items-center gap-1.5 text-xs px-2.5 sm:px-3 py-1.5 rounded-full bg-[#C28771]/10 text-[#C28771] hover:bg-[#C28771]/15 transition-colors shrink-0"
+              className="inline-flex items-center gap-1.5 text-xs px-2.5 sm:px-3 py-1.5 rounded-full bg-[#C28771]/10 text-[#9A5D47] hover:bg-[#C28771]/15 transition-colors shrink-0"
               data-testid="header-get-help-link"
               title="Get help"
             >
@@ -137,7 +137,7 @@ export default function AppShell({ children }) {
             </Link>
             <div className="hidden lg:block text-right">
               <div className="text-sm text-[#1A1330] truncate max-w-[160px]">{user?.name}</div>
-              <div className="text-xs text-[#857E9C] truncate max-w-[160px]">{user?.email}</div>
+              <div className="text-xs text-[#6E6787] truncate max-w-[160px]">{user?.email}</div>
             </div>
             {FB_URL && (
               <a
@@ -233,7 +233,7 @@ export default function AppShell({ children }) {
             <div className="border-t border-[#E5E0EE] px-4 py-3">
               <Link
                 to="/delete-account"
-                className="block px-4 py-2.5 rounded-xl text-[13px] text-[#C97B63] hover:bg-[#C97B63]/10"
+                className="block px-4 py-2.5 rounded-xl text-[13px] text-[#9A5D47] hover:bg-[#C97B63]/10"
                 data-testid="mobile-nav-delete-account"
               >
                 Delete my account
@@ -242,7 +242,7 @@ export default function AppShell({ children }) {
             <div className="border-t border-[#E5E0EE] px-4 py-4 flex items-center justify-between gap-3">
               <div className="min-w-0">
                 <div className="text-sm text-[#1A1330] truncate">{user?.name}</div>
-                <div className="text-xs text-[#857E9C] truncate">{user?.email}</div>
+                <div className="text-xs text-[#6E6787] truncate">{user?.email}</div>
               </div>
               <div className="flex items-center gap-2 shrink-0">
                 {FB_URL && (

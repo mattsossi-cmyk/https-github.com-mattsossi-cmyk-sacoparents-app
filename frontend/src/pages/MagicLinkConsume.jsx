@@ -70,7 +70,7 @@ export default function MagicLinkConsume() {
   return (
     <div className="min-h-screen gentle-bg grid place-items-center">
       <div className="text-center" data-testid="magic-loading">
-        <div className="text-xs uppercase tracking-[0.25em] text-[#857E9C] mb-3">
+        <div className="text-xs uppercase tracking-[0.25em] text-[#6E6787] mb-3">
           Signing you in
         </div>
         <div className="font-serif text-2xl text-[#1A1330]">One moment…</div>

@@ -95,17 +95,17 @@ export default function VerifySignature() {
                 </div>
               </div>
               <dl className="mt-4 grid grid-cols-[max-content_1fr] gap-x-3 gap-y-1 text-xs text-[#1A1330]">
-                <dt className="text-[#8471B3] uppercase tracking-widest text-[10px] font-semibold">Signed by</dt>
+                <dt className="text-[#6A5799] uppercase tracking-widest text-[10px] font-semibold">Signed by</dt>
                 <dd className="font-semibold" data-testid="verify-signature-name">{state.data.signed_by}</dd>
-                <dt className="text-[#8471B3] uppercase tracking-widest text-[10px] font-semibold">Signed at</dt>
+                <dt className="text-[#6A5799] uppercase tracking-widest text-[10px] font-semibold">Signed at</dt>
                 <dd data-testid="verify-signature-time">{formattedTime}</dd>
                 {state.data.signed_note && (
                   <>
-                    <dt className="text-[#8471B3] uppercase tracking-widest text-[10px] font-semibold">Note</dt>
+                    <dt className="text-[#6A5799] uppercase tracking-widest text-[10px] font-semibold">Note</dt>
                     <dd className="italic">"{state.data.signed_note}"</dd>
                   </>
                 )}
-                <dt className="text-[#8471B3] uppercase tracking-widest text-[10px] font-semibold">Signature ID</dt>
+                <dt className="text-[#6A5799] uppercase tracking-widest text-[10px] font-semibold">Signature ID</dt>
                 <dd className="font-mono text-[11px] text-[#4B4567]">{state.data.signature_id}</dd>
               </dl>
             </div>

@@ -83,7 +83,7 @@ function Stepper({ step }) {
                   ? "bg-[#3D1A78] text-white"
                   : done
                   ? "bg-[#E6F4EC] text-[#1F5C3B]"
-                  : "bg-[#F1EEF7] text-[#857E9C]"
+                  : "bg-[#F1EEF7] text-[#6E6787]"
               }`}
               aria-current={active ? "step" : undefined}
               data-testid={`wizard-step-${idx}`}
@@ -111,7 +111,7 @@ function Field({ label, htmlFor, required, hint, children, testid }) {
         {label}{required && <span className="text-[#9A3A23] ml-0.5">*</span>}
       </label>
       {children}
-      {hint && <p className="mt-1 text-[11px] text-[#857E9C]">{hint}</p>}
+      {hint && <p className="mt-1 text-[11px] text-[#6E6787]">{hint}</p>}
     </div>
   );
 }
@@ -354,7 +354,7 @@ export default function ShareWithProfessional() {
               individually — there&rsquo;s no "share everything" default.
             </p>
             {catalog === null && (
-              <div className="text-center text-[#857E9C] text-sm py-8" data-testid="reports-loading">
+              <div className="text-center text-[#6E6787] text-sm py-8" data-testid="reports-loading">
                 <Loader2 size={16} className="inline animate-spin mr-2" />
                 Loading your completed reports…
               </div>
@@ -366,7 +366,7 @@ export default function ShareWithProfessional() {
             )}
             {catalog !== null && catalog.length === 0 && !catalogError && (
               <div className="rounded-2xl border border-[#E5E0EE] bg-[#FBF9FE] p-6 text-center" data-testid="reports-empty">
-                <AlertCircle size={20} className="mx-auto text-[#857E9C] mb-2" />
+                <AlertCircle size={20} className="mx-auto text-[#6E6787] mb-2" />
                 <p className="text-sm text-[#4B4567]">
                   You haven&rsquo;t completed any shareable reports yet. Finish
                   a reflection first — then come back here.
@@ -397,7 +397,7 @@ export default function ShareWithProfessional() {
                         <div className="min-w-0 flex-1">
                           <div className="text-sm font-semibold text-[#1A1330]">{r.title}</div>
                           <p className="text-[12px] text-[#4B4567] mt-1 leading-snug">{r.blurb}</p>
-                          <div className="text-[11px] text-[#857E9C] mt-1.5">
+                          <div className="text-[11px] text-[#6E6787] mt-1.5">
                             Completed {r.completed_at ? new Date(r.completed_at).toLocaleDateString() : "—"}
                             {" · "}v{r.version}
                           </div>
@@ -522,15 +522,15 @@ export default function ShareWithProfessional() {
             </h2>
             <dl className="mb-5 rounded-2xl bg-[#FBF9FE] border border-[#E5E0EE] p-4 text-sm">
               <div className="grid gap-y-2 sm:grid-cols-[160px_1fr] gap-x-4">
-                <dt className="text-[#857E9C]">Professional</dt>
+                <dt className="text-[#6E6787]">Professional</dt>
                 <dd className="text-[#1A1330] font-semibold">
                   {form.professional_first_name} {form.professional_last_name} · {form.professional_email}
                 </dd>
-                <dt className="text-[#857E9C]">Role</dt>
+                <dt className="text-[#6E6787]">Role</dt>
                 <dd className="text-[#1A1330]">
                   {ROLES.find((r) => r.value === form.professional_role)?.label || form.professional_role}
                 </dd>
-                <dt className="text-[#857E9C]">Reports</dt>
+                <dt className="text-[#6E6787]">Reports</dt>
                 <dd className="text-[#1A1330]">
                   <ul className="list-disc list-inside">
                     {selectedReports.map((r) => (
@@ -538,13 +538,13 @@ export default function ShareWithProfessional() {
                     ))}
                   </ul>
                 </dd>
-                <dt className="text-[#857E9C]">Download allowed</dt>
+                <dt className="text-[#6E6787]">Download allowed</dt>
                 <dd className="text-[#1A1330]">{form.download_permission ? "Yes" : "No — view-only in portal"}</dd>
-                <dt className="text-[#857E9C]">Access expires</dt>
+                <dt className="text-[#6E6787]">Access expires</dt>
                 <dd className="text-[#1A1330]">{form.access_days} days from now</dd>
                 {form.personal_message && (
                   <>
-                    <dt className="text-[#857E9C]">Your message</dt>
+                    <dt className="text-[#6E6787]">Your message</dt>
                     <dd className="text-[#1A1330] italic">&ldquo;{form.personal_message}&rdquo;</dd>
                   </>
                 )}
@@ -600,28 +600,28 @@ export default function ShareWithProfessional() {
             </p>
             <dl className="mt-4 rounded-xl bg-white border border-[#E5E0EE] p-4 text-sm">
               <div className="grid gap-y-2 sm:grid-cols-[160px_1fr] gap-x-4">
-                <dt className="text-[#857E9C]">Invited</dt>
+                <dt className="text-[#6E6787]">Invited</dt>
                 <dd className="text-[#1A1330] font-semibold">
                   {result.invitation?.professional_first_name}{" "}
                   {result.invitation?.professional_last_name} · {result.invitation?.professional_email}
                 </dd>
-                <dt className="text-[#857E9C]">Reports</dt>
+                <dt className="text-[#6E6787]">Reports</dt>
                 <dd className="text-[#1A1330]">
                   {(result.invitation?.selected_reports || []).map((r) => r.title).join(", ")}
                 </dd>
-                <dt className="text-[#857E9C]">Invitation expires</dt>
+                <dt className="text-[#6E6787]">Invitation expires</dt>
                 <dd className="text-[#1A1330]">
                   {result.invitation?.token_expires_at
                     ? new Date(result.invitation.token_expires_at).toLocaleString()
                     : "—"}
                 </dd>
-                <dt className="text-[#857E9C]">Access expires</dt>
+                <dt className="text-[#6E6787]">Access expires</dt>
                 <dd className="text-[#1A1330]">
                   {result.invitation?.access_expiration
                     ? new Date(result.invitation.access_expiration).toLocaleDateString()
                     : "—"}
                 </dd>
-                <dt className="text-[#857E9C]">Email delivery</dt>
+                <dt className="text-[#6E6787]">Email delivery</dt>
                 <dd className="text-[#1A1330]">
                   {result.delivered ? "Delivered" : (result.delivery_message || "Not attempted")}
                 </dd>

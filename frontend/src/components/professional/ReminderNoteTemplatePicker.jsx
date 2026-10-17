@@ -120,7 +120,7 @@ export default function ReminderNoteTemplatePicker({
             type="button"
             onClick={() => setPickerOpen((v) => !v)}
             disabled={!hasTemplates}
-            className="inline-flex items-center gap-1 rounded-full bg-[#EFE9F9] hover:bg-[#E5DAF7] text-[#3D1A78] disabled:bg-[#F5F1FB] disabled:text-[#857E9C] disabled:cursor-not-allowed px-2.5 py-1 text-[11px] font-semibold transition-colors"
+            className="inline-flex items-center gap-1 rounded-full bg-[#EFE9F9] hover:bg-[#E5DAF7] text-[#3D1A78] disabled:bg-[#F5F1FB] disabled:text-[#6E6787] disabled:cursor-not-allowed px-2.5 py-1 text-[11px] font-semibold transition-colors"
             data-testid={`${testidPrefix}-insert`}
             title={hasTemplates ? "Insert a saved template" : "No templates yet"}
           >
@@ -145,7 +145,7 @@ export default function ReminderNoteTemplatePicker({
                       <div className="text-[12px] font-semibold text-[#1A1330] truncate">
                         {tpl.label}
                       </div>
-                      <div className="text-[11px] text-[#857E9C] truncate">
+                      <div className="text-[11px] text-[#6E6787] truncate">
                         {tpl.body}
                       </div>
                     </button>
@@ -172,7 +172,7 @@ export default function ReminderNoteTemplatePicker({
         <button
           type="button"
           onClick={() => setManageOpen(true)}
-          className="inline-flex items-center gap-1 rounded-full text-[#857E9C] hover:text-[#3D1A78] px-2 py-1 text-[11px] font-semibold transition-colors"
+          className="inline-flex items-center gap-1 rounded-full text-[#6E6787] hover:text-[#3D1A78] px-2 py-1 text-[11px] font-semibold transition-colors"
           data-testid={`${testidPrefix}-manage`}
           title="Manage saved templates"
         >
@@ -249,7 +249,7 @@ export default function ReminderNoteTemplatePicker({
               <button
                 type="button"
                 onClick={() => setManageOpen(false)}
-                className="text-[#857E9C] hover:text-[#1A1330]"
+                className="text-[#6E6787] hover:text-[#1A1330]"
                 data-testid={`${testidPrefix}-manage-close`}
                 aria-label="Close"
               >
@@ -258,7 +258,7 @@ export default function ReminderNoteTemplatePicker({
             </div>
             <div className="p-5 max-h-[60vh] overflow-y-auto">
               {templates === null && (
-                <div className="text-center text-[#857E9C] text-sm py-6">
+                <div className="text-center text-[#6E6787] text-sm py-6">
                   <Loader2 size={14} className="inline animate-spin mr-1.5" />
                   Loading…
                 </div>
@@ -303,7 +303,7 @@ export default function ReminderNoteTemplatePicker({
                   ))}
                 </ul>
               )}
-              <p className="text-[11px] text-[#857E9C] mt-4">
+              <p className="text-[11px] text-[#6E6787] mt-4">
                 Up to 12 templates per account. Templates are private to
                 your account.
               </p>

@@ -176,7 +176,7 @@ export default function ProfessionalsDirectory() {
                 </h2>
 
                 <label className="block mt-5">
-                  <span className="text-[11px] uppercase tracking-[0.14em] font-bold text-[#857E9C]">
+                  <span className="text-[11px] uppercase tracking-[0.14em] font-bold text-[#6E6787]">
                     Which assessment?
                   </span>
                   <select
@@ -196,7 +196,7 @@ export default function ProfessionalsDirectory() {
                 </label>
 
                 <label className="block mt-5">
-                  <span className="text-[11px] uppercase tracking-[0.14em] font-bold text-[#857E9C]">
+                  <span className="text-[11px] uppercase tracking-[0.14em] font-bold text-[#6E6787]">
                     Optional short message to the professional
                   </span>
                   <textarea
@@ -341,7 +341,7 @@ function ProfessionalCard({ professional, selected, onSelect }) {
             {professional.credentials}
           </div>
           {professional.license && (
-            <div className="text-[12px] text-[#857E9C] italic mt-0.5 leading-snug">
+            <div className="text-[12px] text-[#6E6787] italic mt-0.5 leading-snug">
               {professional.license}
             </div>
           )}

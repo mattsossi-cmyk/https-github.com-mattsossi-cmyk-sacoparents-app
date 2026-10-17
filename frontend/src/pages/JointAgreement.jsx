@@ -399,7 +399,7 @@ export default function JointAgreement() {
           )}
         </p>
         <div className="mt-2 text-sm text-[#4B4567]" data-testid="joint-agreement-parents">
-          {parentA} <span className="text-[#857E9C] mx-1">·</span> {parentB}
+          {parentA} <span className="text-[#6E6787] mx-1">·</span> {parentB}
         </div>
 
         {/* Draft-for-discussion disclaimer (yellow). */}
@@ -476,7 +476,7 @@ export default function JointAgreement() {
                 Detailed Comparison
               </div>
             </div>
-            <span className="text-xs text-[#857E9C] font-semibold">
+            <span className="text-xs text-[#6E6787] font-semibold">
               Click to expand
             </span>
           </summary>
@@ -550,7 +550,7 @@ export default function JointAgreement() {
           testId="joint-agreement-end-cta"
         />
 
-        <div className="mt-10 text-[11px] text-[#857E9C] leading-relaxed border-t border-[#E5E0EE] pt-4">
+        <div className="mt-10 text-[11px] text-[#6E6787] leading-relaxed border-t border-[#E5E0EE] pt-4">
           Draft for discussion · Not a court order or legal advice, and not legally binding unless a court
           approves it. Share ID {d.share_id}.
         </div>

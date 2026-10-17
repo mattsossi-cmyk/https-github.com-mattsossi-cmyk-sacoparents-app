@@ -126,7 +126,7 @@ export default function SignUp() {
 
               <div className="flex items-center gap-3 my-6">
                 <div className="flex-1 divider-line" />
-                <span className="text-xs text-[#857E9C]">or</span>
+                <span className="text-xs text-[#6E6787]">or</span>
                 <div className="flex-1 divider-line" />
               </div>
 
@@ -137,7 +137,7 @@ export default function SignUp() {
               >
                 Enter the App without an account
               </Link>
-              <p className="text-xs text-[#857E9C] mt-3 text-center">
+              <p className="text-xs text-[#6E6787] mt-3 text-center">
                 You can always upgrade to a saved account later.
               </p>
             </>
@@ -156,7 +156,7 @@ export default function SignUp() {
               <p className="text-[#4B4567] mt-3 leading-relaxed">
                 We sent a setup link to <strong>{email}</strong>. It will expire in 15 minutes. Open the email on this device and tap the link to finish creating your account.
               </p>
-              <p className="text-sm text-[#857E9C] mt-4">
+              <p className="text-sm text-[#6E6787] mt-4">
                 Don't see it? Check your spam folder. You can also{" "}
                 <button
                   type="button"

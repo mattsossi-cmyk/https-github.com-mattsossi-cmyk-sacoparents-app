@@ -117,7 +117,7 @@ export default function JoinInvitationSamplePreview() {
             <ArrowRight size={14} />
           </button>
         </div>
-        <p className="text-[11px] text-[#857E9C] mt-2">
+        <p className="text-[11px] text-[#6E6787] mt-2">
           Buttons are disabled on this sample. Ask your professional to
           send a real invitation email to see the working version.
         </p>

@@ -35,8 +35,8 @@ function CharCounter({ value, min, max, testid }) {
   const cls = overMax
     ? "text-[#AA0033]"
     : underMin
-    ? "text-[#B6663B]"
-    : "text-[#857E9C]";
+    ? "text-[#965231]"
+    : "text-[#6E6787]";
   return (
     <span
       className={`text-[10px] uppercase tracking-[0.14em] font-bold ${cls}`}
@@ -81,7 +81,7 @@ function relativeTime(iso) {
  * visual highlight.
  */
 function DiffText({ tokens, side, className = "" }) {
-  const baseCurrent = "text-[#857E9C] leading-relaxed";
+  const baseCurrent = "text-[#6E6787] leading-relaxed";
   const baseIncoming = "text-[#4B4567] leading-relaxed";
   const base = side === "current" ? baseCurrent : baseIncoming;
   return (
@@ -344,7 +344,7 @@ export default function AdminNudgeCopy() {
           className="card-soft p-8 text-center max-w-lg mx-auto"
           data-testid="admin-nudge-copy-forbidden"
         >
-          <div className="w-12 h-12 mx-auto rounded-full bg-[#FFF1E2] grid place-items-center text-[#B6663B] mb-3">
+          <div className="w-12 h-12 mx-auto rounded-full bg-[#FFF1E2] grid place-items-center text-[#965231] mb-3">
             <ShieldCheck size={20} />
           </div>
           <h2 className="font-serif text-2xl text-[#1A1330]">Admin only</h2>
@@ -407,7 +407,7 @@ export default function AdminNudgeCopy() {
                 >
                   Compare before you apply
                 </h2>
-                <p className="text-xs text-[#857E9C] mt-1">
+                <p className="text-xs text-[#6E6787] mt-1">
                   Grey = what's in the editor now. Purple = incoming version.
                   Nothing is saved until you click Apply <em>then</em> Save.
                 </p>
@@ -439,7 +439,7 @@ export default function AdminNudgeCopy() {
                 className="rounded-2xl bg-[#F6F4FA] border border-[#EEE8F7] p-4"
                 data-testid="admin-nudge-copy-diff-current"
               >
-                <div className="eyebrow mb-2 text-[#857E9C]">
+                <div className="eyebrow mb-2 text-[#6E6787]">
                   Current headline
                 </div>
                 {headline ? (
@@ -449,9 +449,9 @@ export default function AdminNudgeCopy() {
                     className="text-sm"
                   />
                 ) : (
-                  <p className="text-sm text-[#857E9C] italic">(empty)</p>
+                  <p className="text-sm text-[#6E6787] italic">(empty)</p>
                 )}
-                <div className="eyebrow mt-4 mb-2 text-[#857E9C]">
+                <div className="eyebrow mt-4 mb-2 text-[#6E6787]">
                   Current subhead
                 </div>
                 {subhead ? (
@@ -461,7 +461,7 @@ export default function AdminNudgeCopy() {
                     className="text-[13px] whitespace-pre-line"
                   />
                 ) : (
-                  <p className="text-[13px] text-[#857E9C] italic">(empty)</p>
+                  <p className="text-[13px] text-[#6E6787] italic">(empty)</p>
                 )}
               </div>
               <div
@@ -486,7 +486,7 @@ export default function AdminNudgeCopy() {
                 />
               </div>
             </div>
-            <div className="mt-3 text-[11px] text-[#857E9C] italic flex flex-wrap gap-x-3 gap-y-1">
+            <div className="mt-3 text-[11px] text-[#6E6787] italic flex flex-wrap gap-x-3 gap-y-1">
               <span>
                 <span className="line-through decoration-[#C43C3C] decoration-2 text-[#8A4747] bg-[#FBEAEA] rounded px-0.5 not-italic">
                   removed
@@ -501,7 +501,7 @@ export default function AdminNudgeCopy() {
                 on the incoming side
               </span>
             </div>
-            <div className="mt-2 text-[11px] text-[#857E9C] italic">
+            <div className="mt-2 text-[11px] text-[#6E6787] italic">
               Restore note will be pre-filled:{" "}
               <span className="text-[#3D1A78] font-semibold not-italic">
                 {pendingRestore.reason}
@@ -570,7 +570,7 @@ export default function AdminNudgeCopy() {
                 htmlFor="admin-nudge-copy-note"
                 className="eyebrow block mb-1"
               >
-                Note <span className="lowercase text-[#857E9C] font-normal">(optional · audit trail)</span>
+                Note <span className="lowercase text-[#6E6787] font-normal">(optional · audit trail)</span>
               </label>
               <input
                 id="admin-nudge-copy-note"
@@ -613,7 +613,7 @@ export default function AdminNudgeCopy() {
             <div className="mb-2 flex items-center justify-between gap-2 flex-wrap">
               <div className="eyebrow flex items-center gap-2">
                 Live preview
-                <span className="text-[10px] uppercase tracking-[0.14em] font-bold text-[#857E9C]">
+                <span className="text-[10px] uppercase tracking-[0.14em] font-bold text-[#6E6787]">
                   (as parents see it)
                 </span>
               </div>
@@ -724,13 +724,13 @@ export default function AdminNudgeCopy() {
                               className="font-serif text-lg text-[#1A1330] mt-1 leading-snug"
                               data-testid="admin-nudge-copy-preview-headline"
                             >
-                              {headline || <span className="text-[#857E9C] italic">Headline will appear here</span>}
+                              {headline || <span className="text-[#6E6787] italic">Headline will appear here</span>}
                             </h3>
                             <p
                               className="text-sm text-[#4B4567] mt-2 leading-relaxed whitespace-pre-line"
                               data-testid="admin-nudge-copy-preview-subhead"
                             >
-                              {subhead || <span className="text-[#857E9C] italic">Subhead will appear here</span>}
+                              {subhead || <span className="text-[#6E6787] italic">Subhead will appear here</span>}
                             </p>
                           </div>
                         </div>
@@ -739,11 +739,11 @@ export default function AdminNudgeCopy() {
                             SA-DEMO01
                             <span className="text-[#4B4567] font-normal"> · with Riley Parent</span>
                           </div>
-                          <div className="text-[11px] uppercase tracking-[0.14em] font-bold mt-1 text-[#857E9C]">
+                          <div className="text-[11px] uppercase tracking-[0.14em] font-bold mt-1 text-[#6E6787]">
                             Neither has consented yet
                           </div>
                         </div>
-                        <p className="mt-3 text-[11px] text-[#857E9C] italic leading-relaxed">
+                        <p className="mt-3 text-[11px] text-[#6E6787] italic leading-relaxed">
                           Educational and organizational — not a diagnosis, not a court
                           submission. You can change this any time from the joint report
                           page.
@@ -752,7 +752,7 @@ export default function AdminNudgeCopy() {
                     </div>
                   </div>
                 </div>
-                <p className="text-center text-[10px] uppercase tracking-[0.14em] font-bold text-[#857E9C] mt-3">
+                <p className="text-center text-[10px] uppercase tracking-[0.14em] font-bold text-[#6E6787] mt-3">
                   iPhone · 390px viewport
                 </p>
                 </div>
@@ -774,13 +774,13 @@ export default function AdminNudgeCopy() {
                       className="font-serif text-lg sm:text-xl text-[#1A1330] mt-1 leading-snug"
                       data-testid="admin-nudge-copy-preview-headline"
                     >
-                      {headline || <span className="text-[#857E9C] italic">Headline will appear here</span>}
+                      {headline || <span className="text-[#6E6787] italic">Headline will appear here</span>}
                     </h3>
                     <p
                       className="text-sm text-[#4B4567] mt-2 leading-relaxed whitespace-pre-line"
                       data-testid="admin-nudge-copy-preview-subhead"
                     >
-                      {subhead || <span className="text-[#857E9C] italic">Subhead will appear here</span>}
+                      {subhead || <span className="text-[#6E6787] italic">Subhead will appear here</span>}
                     </p>
                   </div>
                 </div>
@@ -789,11 +789,11 @@ export default function AdminNudgeCopy() {
                     SA-DEMO01
                     <span className="text-[#4B4567] font-normal"> · with Riley Parent</span>
                   </div>
-                  <div className="text-[11px] uppercase tracking-[0.14em] font-bold mt-1 text-[#857E9C]">
+                  <div className="text-[11px] uppercase tracking-[0.14em] font-bold mt-1 text-[#6E6787]">
                     Neither has consented yet
                   </div>
                 </div>
-                <p className="mt-3 text-[11px] text-[#857E9C] italic leading-relaxed">
+                <p className="mt-3 text-[11px] text-[#6E6787] italic leading-relaxed">
                   Educational and organizational — not a diagnosis, not a court
                   submission. You can change this any time from the joint report
                   page.
@@ -813,17 +813,17 @@ export default function AdminNudgeCopy() {
               <History size={12} className="text-[#3D1A78]" />
               Recent versions
             </div>
-            <span className="text-[10px] uppercase tracking-[0.14em] font-bold text-[#857E9C]">
+            <span className="text-[10px] uppercase tracking-[0.14em] font-bold text-[#6E6787]">
               Last {history.length || 0} of 5
             </span>
           </div>
           {!historyLoaded ? (
-            <p className="text-sm text-[#857E9C] animate-pulse">
+            <p className="text-sm text-[#6E6787] animate-pulse">
               Loading revision log…
             </p>
           ) : history.length === 0 ? (
             <p
-              className="text-sm text-[#857E9C] italic"
+              className="text-sm text-[#6E6787] italic"
               data-testid="admin-nudge-copy-history-empty"
             >
               No custom versions saved yet. Your first Save will appear
@@ -845,11 +845,11 @@ export default function AdminNudgeCopy() {
                       {entry.subhead}
                     </div>
                     {entry.note && (
-                      <div className="text-[11px] text-[#857E9C] mt-1 italic truncate">
+                      <div className="text-[11px] text-[#6E6787] mt-1 italic truncate">
                         Note: {entry.note}
                       </div>
                     )}
-                    <div className="text-[10px] uppercase tracking-[0.14em] font-bold text-[#857E9C] mt-2 flex flex-wrap gap-x-3 gap-y-0.5">
+                    <div className="text-[10px] uppercase tracking-[0.14em] font-bold text-[#6E6787] mt-2 flex flex-wrap gap-x-3 gap-y-0.5">
                       <span>{relativeTime(entry.updated_at)}</span>
                       <span>· {entry.updated_by}</span>
                     </div>
@@ -867,7 +867,7 @@ export default function AdminNudgeCopy() {
               ))}
             </ol>
           )}
-          <p className="text-[11px] text-[#857E9C] italic mt-3 leading-relaxed">
+          <p className="text-[11px] text-[#6E6787] italic mt-3 leading-relaxed">
             Restore loads a prior version into the editor without
             saving. Click Save once you've reviewed it to make it live.
           </p>

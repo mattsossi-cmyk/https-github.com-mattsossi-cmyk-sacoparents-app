@@ -66,7 +66,7 @@ function DimensionRow({ row, coparentName }) {
         <div className="text-[11px] text-[#4B4567]">
           Delta:{" "}
           <span
-            className={`font-semibold ${row.delta <= 15 ? "text-[#1E7A55]" : "text-[#B45F13]"}`}
+            className={`font-semibold ${row.delta <= 15 ? "text-[#1E7A55]" : "text-[#904B0E]"}`}
           >
             {row.delta}
           </span>
@@ -74,13 +74,13 @@ function DimensionRow({ row, coparentName }) {
       </div>
       <div className="mt-3 grid gap-3">
         <div>
-          <div className="text-[10px] uppercase tracking-[0.16em] font-bold text-[#B45F13] mb-1">
+          <div className="text-[10px] uppercase tracking-[0.16em] font-bold text-[#904B0E] mb-1">
             You · {row.self_score}
           </div>
           <ScoreBar value={row.self_score} tone="self" />
         </div>
         <div>
-          <div className="text-[10px] uppercase tracking-[0.16em] font-bold text-[#8471B3] mb-1">
+          <div className="text-[10px] uppercase tracking-[0.16em] font-bold text-[#6A5799] mb-1">
             {coparentName || "Co-parent"} · {row.coparent_score}
           </div>
           <ScoreBar value={row.coparent_score} tone="coparent" />
@@ -210,7 +210,7 @@ export default function ParentingScheduleAlignment() {
         />
         <Link
           to="/joint-reports"
-          className="inline-flex items-center gap-2 text-sm text-[#B45F13] hover:text-[#7C400C] mb-4"
+          className="inline-flex items-center gap-2 text-sm text-[#904B0E] hover:text-[#7C400C] mb-4"
         >
           <ArrowLeft size={14} /> Joint reports
         </Link>
@@ -240,7 +240,7 @@ export default function ParentingScheduleAlignment() {
             className="mt-6 rounded-2xl border border-[#F1D9B7] bg-[#FFF6EA] p-5 flex items-start gap-3"
             data-testid="schedule-alignment-need-reflection"
           >
-            <Info size={18} className="text-[#B45F13] shrink-0 mt-0.5" />
+            <Info size={18} className="text-[#904B0E] shrink-0 mt-0.5" />
             <div className="flex-1">
               <div className="font-serif text-lg text-[#5A3C10]">
                 Complete your reflection first
@@ -266,7 +266,7 @@ export default function ParentingScheduleAlignment() {
             data-testid="schedule-alignment-pair-panel"
           >
             <div className="flex items-start gap-3 mb-4">
-              <Users size={20} className="text-[#B45F13] shrink-0 mt-1" />
+              <Users size={20} className="text-[#904B0E] shrink-0 mt-1" />
               <div>
                 <h2 className="font-serif text-xl text-[#1A1330] leading-tight">
                   Pair with your co-parent
@@ -282,7 +282,7 @@ export default function ParentingScheduleAlignment() {
               <div className="relative flex-1">
                 <Mail
                   size={16}
-                  className="absolute left-4 top-1/2 -translate-y-1/2 text-[#857E9C]"
+                  className="absolute left-4 top-1/2 -translate-y-1/2 text-[#6E6787]"
                 />
                 <input
                   type="email"
@@ -316,7 +316,7 @@ export default function ParentingScheduleAlignment() {
             data-testid="schedule-alignment-waiting"
           >
             <div className="flex items-start gap-3">
-              <Sparkles size={20} className="text-[#B45F13] shrink-0 mt-1" />
+              <Sparkles size={20} className="text-[#904B0E] shrink-0 mt-1" />
               <div>
                 <h2 className="font-serif text-xl text-[#1A1330] leading-tight">
                   Waiting on{" "}
@@ -339,7 +339,7 @@ export default function ParentingScheduleAlignment() {
           <div className="mt-6 space-y-6" data-testid="schedule-alignment-ready">
             <div className="rounded-3xl border border-[#E6D8C1] bg-white p-6 sm:p-7 shadow-sm">
               <div className="flex flex-wrap items-center gap-2 mb-2">
-                <span className="text-[10px] uppercase tracking-[0.22em] font-bold text-[#B45F13]">
+                <span className="text-[10px] uppercase tracking-[0.22em] font-bold text-[#904B0E]">
                   Neutral summary
                 </span>
                 {summary && summaryModel && (
@@ -389,7 +389,7 @@ export default function ParentingScheduleAlignment() {
 
             {payload.gaps && payload.gaps.length > 0 && (
               <div>
-                <div className="text-[11px] uppercase tracking-[0.16em] font-bold text-[#B45F13] mb-2 flex items-center gap-2">
+                <div className="text-[11px] uppercase tracking-[0.16em] font-bold text-[#904B0E] mb-2 flex items-center gap-2">
                   <ShieldAlert size={13} /> Where a small tune-up would help
                 </div>
                 <div className="grid gap-3">
@@ -402,7 +402,7 @@ export default function ParentingScheduleAlignment() {
 
             <div className="rounded-3xl border border-[#E6D8C1] bg-white p-6 sm:p-7">
               <div className="flex items-start gap-3 mb-3">
-                <LinkIcon size={20} className="text-[#B45F13] shrink-0 mt-1" />
+                <LinkIcon size={20} className="text-[#904B0E] shrink-0 mt-1" />
                 <div>
                   <h2 className="font-serif text-xl text-[#1A1330] leading-tight">
                     Send this to your mediator or attorney

@@ -56,7 +56,7 @@ export default function ProtectedRoute({ children, requireRealUser = false }) {
   if (loading || bootstrapping || (!user && !bootstrapError)) {
     return (
       <div className="min-h-screen flex items-center justify-center text-[#4B4567]">
-        <div className="animate-pulse text-sm tracking-[0.2em] uppercase">
+        <div role="status" className="text-sm tracking-[0.2em] uppercase">
           Loading
         </div>
       </div>

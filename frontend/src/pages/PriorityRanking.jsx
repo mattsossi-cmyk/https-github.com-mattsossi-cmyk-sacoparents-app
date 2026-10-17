@@ -164,13 +164,13 @@ export default function PriorityRanking() {
                       style={{ background: b.color }}
                     />
                     <div className="font-serif text-lg text-[#1A1330]">{b.label}</div>
-                    <span className="text-xs text-[#857E9C] ml-auto">
+                    <span className="text-xs text-[#4B4567] ml-auto">
                       {bucketItems.length}
                     </span>
                   </div>
                   <div className="space-y-2">
                     {bucketItems.length === 0 && (
-                      <div className="text-xs italic text-[#857E9C]">
+                      <div className="text-xs italic text-[#4B4567]">
                         Drag topics into this bucket.
                       </div>
                     )}
@@ -184,7 +184,7 @@ export default function PriorityRanking() {
                           className="bg-white rounded-xl px-3 py-2 flex items-center gap-2 shadow-sm border border-[#E5E0EE] cursor-grab active:cursor-grabbing"
                           data-testid={`priority-item-${it.id}`}
                         >
-                          <GripVertical size={14} className="text-[#857E9C] shrink-0" />
+                          <GripVertical size={14} className="text-[#6E6787] shrink-0" />
                           <span
                             className={`text-[10px] uppercase tracking-[0.15em] px-1.5 py-0.5 rounded ${meta.chipBg} ${meta.text} shrink-0`}
                             data-testid={`priority-item-${it.id}-chip`}
@@ -196,7 +196,7 @@ export default function PriorityRanking() {
                             <button
                               type="button"
                               onClick={() => removeItem(it.id)}
-                              className="text-[#857E9C] hover:text-[#C28771]"
+                              className="text-[#6E6787] hover:text-[#9A5D47]"
                               aria-label="Remove"
                               data-testid={`priority-item-${it.id}-remove`}
                             >
@@ -212,7 +212,7 @@ export default function PriorityRanking() {
             })}
           </div>
 
-          <div className="text-xs text-[#857E9C] italic">
+          <div className="text-xs text-[#6E6787] italic">
             Tip: drag-and-drop to reorganize. The 11 predefined topics always stay
             on this list — only added items can be removed.
           </div>

@@ -24,7 +24,7 @@ function Stat({ label, value, hint, testid }) {
     <div className="card-soft p-5" data-testid={testid}>
       <div className="eyebrow mb-2">{label}</div>
       <div className="font-serif text-3xl text-[#1A1330] leading-none">{value}</div>
-      {hint && <div className="text-xs text-[#857E9C] mt-1.5">{hint}</div>}
+      {hint && <div className="text-xs text-[#6E6787] mt-1.5">{hint}</div>}
     </div>
   );
 }
@@ -40,7 +40,7 @@ function Distribution({ question, rows }) {
   const total = Object.values(counts).reduce((a, b) => a + b, 0);
   if (!total) {
     return (
-      <div className="text-xs text-[#857E9C]">No responses yet.</div>
+      <div className="text-xs text-[#6E6787]">No responses yet.</div>
     );
   }
   const entries = Object.entries(counts).sort((a, b) => b[1] - a[1]);
@@ -53,7 +53,7 @@ function Distribution({ question, rows }) {
             <div className="flex items-baseline justify-between text-xs mb-1">
               <span className="text-[#1A1330] truncate pr-2">{key}</span>
               <span className="text-[#4B4567] shrink-0">
-                {n} <span className="text-[#857E9C]">({pct}%)</span>
+                {n} <span className="text-[#6E6787]">({pct}%)</span>
               </span>
             </div>
             <div className="h-1.5 bg-[#E5E0EE] rounded-full overflow-hidden">
@@ -111,7 +111,7 @@ export default function AdminSurveys() {
   if (!data) {
     return (
       <AppShell>
-        <div className="card-soft p-8 text-center text-sm tracking-[0.2em] uppercase text-[#857E9C] animate-pulse">
+        <div className="card-soft p-8 text-center text-sm tracking-[0.2em] uppercase text-[#6E6787] animate-pulse">
           Loading surveys…
         </div>
       </AppShell>
@@ -199,7 +199,7 @@ export default function AdminSurveys() {
         <div className="card-soft p-6">
           <div className="eyebrow mb-4">Open responses</div>
           {responded_rows.length === 0 ? (
-            <div className="text-sm text-[#857E9C]">No responses yet.</div>
+            <div className="text-sm text-[#6E6787]">No responses yet.</div>
           ) : (
             <div className="space-y-5" data-testid="survey-open-responses">
               {responded_rows.map((r) => (
@@ -207,7 +207,7 @@ export default function AdminSurveys() {
                   key={r.survey_id}
                   className="border-l-2 border-[#3D1A78]/30 pl-4 py-1"
                 >
-                  <div className="flex items-baseline justify-between text-xs text-[#857E9C] mb-2">
+                  <div className="flex items-baseline justify-between text-xs text-[#6E6787] mb-2">
                     <span>{r.name || r.email}</span>
                     <span>{fmtDate(r.responded_at)}</span>
                   </div>
@@ -237,12 +237,12 @@ export default function AdminSurveys() {
         <div className="card-soft p-6">
           <div className="eyebrow mb-3">Recent surveys</div>
           {rows.length === 0 ? (
-            <div className="text-sm text-[#857E9C]">No surveys scheduled yet.</div>
+            <div className="text-sm text-[#6E6787]">No surveys scheduled yet.</div>
           ) : (
             <div tabIndex={0} role="region" aria-label="Scrollable table" className="overflow-x-auto">
               <table className="w-full text-sm" data-testid="survey-rows-table">
                 <thead>
-                  <tr className="text-[10px] uppercase tracking-[0.15em] text-[#857E9C]">
+                  <tr className="text-[10px] uppercase tracking-[0.15em] text-[#6E6787]">
                     <th className="text-left py-2 pr-3">Parent</th>
                     <th className="text-left py-2 pr-3">Email</th>
                     <th className="text-left py-2 pr-3">Status</th>

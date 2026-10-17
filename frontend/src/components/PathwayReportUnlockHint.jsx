@@ -58,7 +58,7 @@ export default function PathwayReportUnlockHint({ shares = [], testidPrefix = "c
             <Link
               to="/pathway-report"
               data-testid={`${testidPrefix}-pathway-unlock-preview`}
-              className="text-[12px] font-semibold text-[#3D1A78] underline hover:text-[#2DB5B5]"
+              className="text-[12px] font-semibold text-[#3D1A78] underline hover:text-[#0F7676]"
             >
               See a solo preview against your own data →
             </Link>

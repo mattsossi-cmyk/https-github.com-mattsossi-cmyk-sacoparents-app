@@ -121,7 +121,7 @@ export default function PersonalizedRecommendations({ summary }) {
       </p>
 
       <div className="mt-5">
-        <div className="text-xs uppercase tracking-[0.2em] text-[#857E9C] mb-2">
+        <div className="text-xs uppercase tracking-[0.2em] text-[#6E6787] mb-2">
           We recommend
         </div>
         <ul className="space-y-2">

@@ -20,7 +20,7 @@ export default function Terms() {
         <h1 className="font-serif text-3xl sm:text-4xl text-[#1A1330] mb-2 leading-tight">
           Plain-English terms.
         </h1>
-        <p className="text-sm text-[#857E9C] mb-8">Last updated: {LAST_UPDATED}</p>
+        <p className="text-sm text-[#6E6787] mb-8">Last updated: {LAST_UPDATED}</p>
 
         <Prose>
           <p>
@@ -135,7 +135,7 @@ export default function Terms() {
             Email <a href="mailto:mattsossi@bsossi.com" className="text-[#2A0F5F] underline">mattsossi@bsossi.com</a>
             {" "}or call <a href="tel:2102241667" className="text-[#2A0F5F] underline">210-224-1667</a>.
           </p>
-          <p className="text-xs text-[#857E9C] italic mt-8">
+          <p className="text-xs text-[#6E6787] italic mt-8">
             SA CoParents · 16607 Blanco #703, San Antonio, Texas 78232
           </p>
         </Prose>

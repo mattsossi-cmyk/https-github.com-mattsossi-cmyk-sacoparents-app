@@ -96,7 +96,7 @@ export default function AuthCallback() {
   return (
     <div className="min-h-screen gentle-bg grid place-items-center">
       <div className="text-center" data-testid="auth-callback-loading">
-        <div className="text-xs uppercase tracking-[0.25em] text-[#857E9C] mb-3">
+        <div className="text-xs uppercase tracking-[0.25em] text-[#6E6787] mb-3">
           Securing your session
         </div>
         <div className="font-serif text-2xl text-[#1A1330]">One moment…</div>

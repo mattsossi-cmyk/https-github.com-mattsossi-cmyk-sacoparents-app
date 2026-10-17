@@ -98,7 +98,7 @@ export function WeeklyNotePreview() {
             </>
           )}
           <div className="flex items-center justify-between gap-3 flex-wrap">
-            <span className="text-xs text-[#857E9C]">Links in the preview are switched off.</span>
+            <span className="text-xs text-[#6E6787]">Links in the preview are switched off.</span>
             <button
               type="button"
               data-testid="admin-weekly-note-preview-send"

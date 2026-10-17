@@ -230,7 +230,7 @@ export default function ProfessionalsIntroAudio() {
         aria-label="Audio intro voice"
         data-testid="for-pros-intro-audio-voice-picker"
       >
-        <span className="text-[11px] font-semibold text-[#857E9C] uppercase tracking-[0.14em] mr-1">
+        <span className="text-[11px] font-semibold text-[#6E6787] uppercase tracking-[0.14em] mr-1">
           Voice
         </span>
         {supportedVoices.map((v) => {
@@ -306,7 +306,7 @@ export default function ProfessionalsIntroAudio() {
           {playing ? "Pause" : "Play intro"}
         </button>
         <span
-          className="text-xs text-[#857E9C]"
+          className="text-xs text-[#6E6787]"
           data-testid="for-pros-intro-audio-runtime"
         >
           ~60 seconds · ElevenLabs

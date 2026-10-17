@@ -170,7 +170,7 @@ export default function WeeklyEmailPreview() {
           data-testid="weekly-email-preview-body"
         >
           {/* Subject-line mock */}
-          <div className="text-[10px] uppercase tracking-[0.22em] text-[#857E9C] font-bold mb-2">
+          <div className="text-[10px] uppercase tracking-[0.22em] text-[#6E6787] font-bold mb-2">
             Subject
           </div>
           <div className="text-sm font-semibold text-[#1A1330] mb-4">
@@ -377,7 +377,7 @@ export default function WeeklyEmailPreview() {
             </div>
           )}
 
-          <div className="mt-4 text-[11px] text-[#857E9C] italic">
+          <div className="mt-4 text-[11px] text-[#6E6787] italic">
             Small, steady work is what mediators love to see.
           </div>
 

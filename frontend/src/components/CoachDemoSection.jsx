@@ -190,7 +190,7 @@ export default function CoachDemoSection() {
             <div className="flex items-center gap-2 text-[13px] font-semibold text-[#3D1A78]">
               <MessageSquare size={14} /> AI Communication Coach
             </div>
-            <div className="flex items-center gap-3 text-[11px] text-[#857E9C]">
+            <div className="flex items-center gap-3 text-[11px] text-[#6E6787]">
               <span className="inline-flex items-center gap-1">
                 <Lock size={11} /> Nothing here is saved
               </span>
@@ -211,7 +211,7 @@ export default function CoachDemoSection() {
           <div className="grid md:grid-cols-[220px_1fr] min-h-[420px]">
             {/* Starter rail (desktop) */}
             <div className="hidden md:flex flex-col gap-2 p-5 border-r border-[#EFEBF7] bg-gradient-to-b from-white to-[#FBFAFF]">
-              <div className="text-[10px] font-bold tracking-[0.16em] uppercase text-[#857E9C] mb-1">
+              <div className="text-[10px] font-bold tracking-[0.16em] uppercase text-[#6E6787] mb-1">
                 Try one
               </div>
               {starters.map((s) => (
@@ -253,7 +253,7 @@ export default function CoachDemoSection() {
                       className="mt-5 text-left"
                       data-testid="coach-demo-empty-composer"
                     >
-                      <label className="text-[10px] font-bold tracking-[0.16em] uppercase text-[#857E9C]">
+                      <label className="text-[10px] font-bold tracking-[0.16em] uppercase text-[#6E6787]">
                         Or in your own words
                       </label>
                       <AiGuardFrame tp="coach-demo-empty" guard={guard} className="mt-2">
@@ -266,9 +266,9 @@ export default function CoachDemoSection() {
                           placeholder="e.g. My co-parent keeps changing plans last-minute and my daughter is left waiting…"
                           disabled={pending}
                           data-testid="coach-demo-empty-input"
-                          className="w-full resize-none rounded-2xl border border-[#E5E0EE] bg-white px-4 py-3 text-[13.5px] text-[#1A1330] placeholder:text-[#857E9C]/70 focus:outline-none focus:ring-2 focus:ring-[#3D1A78]/30"
+                          className="w-full resize-none rounded-2xl border border-[#E5E0EE] bg-white px-4 py-3 text-[13.5px] text-[#1A1330] placeholder:text-[#6E6787]/70 focus:outline-none focus:ring-2 focus:ring-[#3D1A78]/30"
                         />
-                        <div className="absolute bottom-1.5 right-3 text-[10px] text-[#857E9C]">
+                        <div className="absolute bottom-1.5 right-3 text-[10px] text-[#6E6787]">
                           {remaining} chars left
                         </div>
                       </div>
@@ -288,7 +288,7 @@ export default function CoachDemoSection() {
 
                     {/* Mobile starter list */}
                     <div className="md:hidden mt-6">
-                      <div className="text-[10px] font-bold tracking-[0.16em] uppercase text-[#857E9C] mb-2">
+                      <div className="text-[10px] font-bold tracking-[0.16em] uppercase text-[#6E6787] mb-2">
                         Or try one
                       </div>
                       <div className="flex flex-col gap-2">
@@ -315,7 +315,7 @@ export default function CoachDemoSection() {
               ))}
 
               {pending && (
-                <div className="self-start flex items-center gap-2 text-[12.5px] text-[#857E9C] italic px-2">
+                <div className="self-start flex items-center gap-2 text-[12.5px] text-[#6E6787] italic px-2">
                   <Loader2 size={13} className="animate-spin" />
                   Coach is thinking…
                 </div>
@@ -351,7 +351,7 @@ export default function CoachDemoSection() {
             ) : safetyFlagged ? (
               <SignUpCta reason="safety" />
             ) : isEmpty ? (
-              <div className="text-center text-[12px] text-[#857E9C]">
+              <div className="text-center text-[12px] text-[#6E6787]">
                 Every reply is generated live by the same Coach signed-in
                 parents use — nothing here is retained.
               </div>
@@ -371,9 +371,9 @@ export default function CoachDemoSection() {
                     placeholder="Ask a follow-up (e.g. 'make it firmer' or 'add a rescheduling line')…"
                     disabled={pending}
                     data-testid="coach-demo-input"
-                    className="w-full resize-none rounded-2xl border border-[#E5E0EE] bg-white px-4 py-3 text-[13.5px] text-[#1A1330] placeholder:text-[#857E9C]/70 focus:outline-none focus:ring-2 focus:ring-[#3D1A78]/30"
+                    className="w-full resize-none rounded-2xl border border-[#E5E0EE] bg-white px-4 py-3 text-[13.5px] text-[#1A1330] placeholder:text-[#6E6787]/70 focus:outline-none focus:ring-2 focus:ring-[#3D1A78]/30"
                   />
-                  <div className="absolute bottom-1.5 right-3 text-[10px] text-[#857E9C]">
+                  <div className="absolute bottom-1.5 right-3 text-[10px] text-[#6E6787]">
                     {remaining} chars left
                   </div>
                 </div>
@@ -395,7 +395,7 @@ export default function CoachDemoSection() {
         </div>
 
         {/* Sub-line beneath the panel */}
-        <div className="mt-6 text-center text-[12px] text-[#857E9C] leading-relaxed max-w-xl mx-auto">
+        <div className="mt-6 text-center text-[12px] text-[#6E6787] leading-relaxed max-w-xl mx-auto">
           Same Coach model, safety guardrails, and BIFF-first tone as the
           signed-in experience. This demo is capped at {MAX_TURNS / 2} exchanges;
           create a free account to keep going and save your conversations.
@@ -469,7 +469,7 @@ function BeforeAfterStrip() {
             className="rounded-3xl bg-white/85 backdrop-blur border border-[#E5E0EE] shadow-[0_18px_44px_-28px_rgba(61,26,120,0.35)] overflow-hidden flex flex-col"
           >
             <div className="px-5 pt-5 pb-3 border-b border-[#EFEBF7] bg-gradient-to-b from-white to-[#FBFAFF]">
-              <div className="text-[10px] font-bold tracking-[0.16em] uppercase text-[#857E9C]">
+              <div className="text-[10px] font-bold tracking-[0.16em] uppercase text-[#6E6787]">
                 Scenario
               </div>
               <div className="mt-1 text-[13px] font-semibold text-[#1A1330] leading-snug">
@@ -494,7 +494,7 @@ function BeforeAfterStrip() {
               <div>
                 <div className="flex items-center gap-2 mb-1.5">
                   <span className="inline-block w-1.5 h-1.5 rounded-full bg-[#2DB5B5]" />
-                  <span className="text-[10px] font-bold tracking-[0.14em] uppercase text-[#2DB5B5]">
+                  <span className="text-[10px] font-bold tracking-[0.14em] uppercase text-[#0F7676]">
                     Coach-refined
                   </span>
                 </div>
@@ -506,7 +506,7 @@ function BeforeAfterStrip() {
           </article>
         ))}
       </div>
-      <p className="mt-6 text-center text-[11px] text-[#857E9C] italic max-w-xl mx-auto">
+      <p className="mt-6 text-center text-[11px] text-[#6E6787] italic max-w-xl mx-auto">
         Illustrative examples · names changed · no real messages included.
       </p>
     </div>

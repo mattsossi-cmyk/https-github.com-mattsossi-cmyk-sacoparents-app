@@ -73,7 +73,7 @@ function GuestSaveNudge() {
           <button
             type="button"
             onClick={() => setDismissed(true)}
-            className="text-xs text-[#857E9C] hover:text-[#4B4567]"
+            className="text-xs text-[#6E6787] hover:text-[#4B4567]"
             data-testid="guest-save-nudge-dismiss"
           >
             Not now
@@ -92,10 +92,10 @@ function ChangesSinceLast({ text }) {
       data-testid="changes-since-last"
     >
       <div className="flex items-center gap-2 mb-2">
-        <span className="w-7 h-7 rounded-full bg-[#D6A374]/20 text-[#A26852] grid place-items-center">
+        <span className="w-7 h-7 rounded-full bg-[#D6A374]/20 text-[#85513F] grid place-items-center">
           <TrendingUp size={14} />
         </span>
-        <div className="text-xs uppercase tracking-[0.2em] text-[#A26852]">
+        <div className="text-xs uppercase tracking-[0.2em] text-[#85513F]">
           What's changed since last time
         </div>
       </div>
@@ -130,7 +130,7 @@ function Section({ title, children }) {
 
 function BulletList({ items }) {
   if (!items || !items.length)
-    return <p className="text-sm italic text-[#857E9C]">(none captured)</p>;
+    return <p className="text-sm italic text-[#6E6787]">(none captured)</p>;
   return (
     <ul className="space-y-1.5">
       {items.map((s) => (
@@ -145,7 +145,7 @@ function BulletList({ items }) {
 
 function ClauseList({ items }) {
   if (!items || !items.length)
-    return <p className="text-sm italic text-[#857E9C]">(none captured)</p>;
+    return <p className="text-sm italic text-[#6E6787]">(none captured)</p>;
   return (
     <div className="space-y-3">
       {items.map((it, i) => (
@@ -162,7 +162,7 @@ function ClauseList({ items }) {
 
 function AlignmentList({ items }) {
   if (!items || !items.length)
-    return <p className="text-sm italic text-[#857E9C]">(none captured)</p>;
+    return <p className="text-sm italic text-[#6E6787]">(none captured)</p>;
   return (
     <div className="space-y-3">
       {items.map((it, i) => (
@@ -170,7 +170,7 @@ function AlignmentList({ items }) {
           key={`${it.area}-${i}`}
           className="rounded-xl border-l-4 border-[#2DB5B5] bg-white px-4 py-3"
         >
-          <div className="text-xs uppercase tracking-[0.2em] text-[#2DB5B5] mb-1 font-semibold">
+          <div className="text-xs uppercase tracking-[0.2em] text-[#0F7676] mb-1 font-semibold">
             {it.area}
           </div>
           <div className="text-[#1A1330] leading-relaxed">{it.statement}</div>
@@ -182,7 +182,7 @@ function AlignmentList({ items }) {
 
 function PriorityAgenda({ items }) {
   if (!items?.length)
-    return <p className="text-sm italic text-[#857E9C]">(none captured)</p>;
+    return <p className="text-sm italic text-[#6E6787]">(none captured)</p>;
   return (
     <ol className="space-y-2 list-none">
       {items.map((it, i) => (
@@ -192,7 +192,7 @@ function PriorityAgenda({ items }) {
           </span>
           <div>
             <div className="text-[#1A1330]">{it.topic}</div>
-            <div className="text-xs text-[#857E9C] uppercase tracking-wider">
+            <div className="text-xs text-[#6E6787] uppercase tracking-wider">
               {it.category}
             </div>
           </div>
@@ -348,7 +348,7 @@ function MediationSummaryTab() {
           title={
             <>
               {summary.readiness_label}{" "}
-              <span className="text-[#857E9C] text-base">
+              <span className="text-[#6E6787] text-base">
                 · {summary.readiness_score}/100
               </span>
             </>
@@ -1043,7 +1043,7 @@ function HistoryList({ items, activeId, labelKey, idKey, onSelect }) {
             <span className="truncate max-w-[70%]">
               {h[labelKey] || "Untitled"}
             </span>
-            <span className="text-[#857E9C] shrink-0">
+            <span className="text-[#6E6787] shrink-0">
               {new Date(h.generated_at).toLocaleString()}
             </span>
           </button>
@@ -1132,7 +1132,7 @@ function EmailMediatorDialog({ open, onClose, summaryId, agreementId, defaultDoc
           <button
             type="button"
             onClick={onClose}
-            className="text-[#857E9C] hover:text-[#1A1330] -mr-1 -mt-1 p-1"
+            className="text-[#6E6787] hover:text-[#1A1330] -mr-1 -mt-1 p-1"
             aria-label="Close"
             data-testid="email-mediator-close"
           >
@@ -1154,7 +1154,7 @@ function EmailMediatorDialog({ open, onClose, summaryId, agreementId, defaultDoc
           <div>
             <label
               htmlFor="mediator-email"
-              className="block text-xs uppercase tracking-[0.2em] text-[#857E9C] mb-1.5"
+              className="block text-xs uppercase tracking-[0.2em] text-[#6E6787] mb-1.5"
             >
               Mediator's email
             </label>
@@ -1174,7 +1174,7 @@ function EmailMediatorDialog({ open, onClose, summaryId, agreementId, defaultDoc
           <div>
             <label
               htmlFor="mediator-name"
-              className="block text-xs uppercase tracking-[0.2em] text-[#857E9C] mb-1.5"
+              className="block text-xs uppercase tracking-[0.2em] text-[#6E6787] mb-1.5"
             >
               Mediator's name (optional)
             </label>
@@ -1190,7 +1190,7 @@ function EmailMediatorDialog({ open, onClose, summaryId, agreementId, defaultDoc
           </div>
 
           <div>
-            <div className="text-xs uppercase tracking-[0.2em] text-[#857E9C] mb-2">
+            <div className="text-xs uppercase tracking-[0.2em] text-[#6E6787] mb-2">
               Attach
             </div>
             <div className="space-y-2">
@@ -1261,7 +1261,7 @@ function DocCheckbox({ checked, disabled, onChange, label, hint, testId }) {
       <span>
         <span className="block text-[#1A1330] text-sm font-medium">{label}</span>
         {hint && (
-          <span className="block text-xs text-[#857E9C] mt-0.5">{hint}</span>
+          <span className="block text-xs text-[#6E6787] mt-0.5">{hint}</span>
         )}
       </span>
     </label>
@@ -1384,7 +1384,7 @@ function OrgContactCard() {
       />
       <div className="text-center sm:text-left">
         <div className="font-serif text-xl text-[#1A1330] mb-1">SA CoParents</div>
-        <div className="text-xs uppercase tracking-[0.2em] text-[#857E9C] mb-3">
+        <div className="text-xs uppercase tracking-[0.2em] text-[#6E6787] mb-3">
           Relational Mediation Prep
         </div>
         <address className="not-italic text-sm text-[#4B4567] leading-relaxed space-y-0.5">

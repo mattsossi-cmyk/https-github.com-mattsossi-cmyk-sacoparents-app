@@ -37,26 +37,26 @@ function AlignPill({ alignment, label }) {
 }
 
 function LikertCell({ side }) {
-  if (!side) return <span className="text-[#8471B3] italic">—</span>;
+  if (!side) return <span className="text-[#6A5799] italic">—</span>;
   if (side.value === "na") return <span>Not applicable / unknown</span>;
   if (typeof side.value === "number") {
     return <span><span className="font-semibold">{side.value}</span> — {side.label}</span>;
   }
-  return <span className="text-[#8471B3] italic">—</span>;
+  return <span className="text-[#6A5799] italic">—</span>;
 }
 
 function ValueCell({ item, side }) {
   const type = item.type;
   const sideObj = item[side] || {};
   if (type === "likert") return <LikertCell side={sideObj} />;
-  if (type === "single") return <span>{sideObj.value || <span className="text-[#8471B3] italic">—</span>}</span>;
+  if (type === "single") return <span>{sideObj.value || <span className="text-[#6A5799] italic">—</span>}</span>;
   if (type === "multi") {
     const arr = sideObj.value || [];
-    if (!arr.length) return <span className="text-[#8471B3] italic">—</span>;
+    if (!arr.length) return <span className="text-[#6A5799] italic">—</span>;
     return <ul className="list-disc pl-5">{arr.map((v, i) => <li key={`${i}-${String(v).slice(0, 30)}`}>{v}</li>)}</ul>;
   }
   const v = sideObj.value || "";
-  return v ? <span className="whitespace-pre-wrap">{v}</span> : <span className="text-[#8471B3] italic">—</span>;
+  return v ? <span className="whitespace-pre-wrap">{v}</span> : <span className="text-[#6A5799] italic">—</span>;
 }
 
 function MultiBreakdown({ item, parentA, parentB }) {
@@ -136,7 +136,7 @@ export default function SpecialNeedsV2CompareView() {
         </Link>
         <div className="text-[10px] uppercase tracking-[0.22em] font-bold text-[#3D1A78] mb-1">Co-Parent Comparison</div>
         <h1 className="font-serif text-3xl sm:text-4xl text-[#1A1330] leading-tight">
-          {parentA} <span className="text-[#8471B3]">·</span> {parentB}
+          {parentA} <span className="text-[#6A5799]">·</span> {parentB}
         </h1>
         <p className="text-sm text-[#4B4567] mt-2 max-w-3xl italic">
           A neutral side-by-side view. Neither parent is labeled correct or wrong.

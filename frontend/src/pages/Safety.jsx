@@ -262,7 +262,7 @@ export default function Safety() {
           <button
             type="button"
             onClick={quickExit}
-            className="inline-flex items-center gap-2 rounded-full bg-[#C28771] hover:bg-[#a87560] text-white px-5 py-2.5 text-sm font-medium shadow-sm transition-colors"
+            className="inline-flex items-center gap-2 rounded-full bg-[#9A5D47] hover:bg-[#7F4B39] text-white px-5 py-2.5 text-sm font-medium shadow-sm transition-colors"
             data-testid="safety-quick-exit-button"
             aria-label="Quick exit — leave this page immediately"
             title="Press the ESC key any time to leave this page"
@@ -279,7 +279,7 @@ export default function Safety() {
           <div className="absolute -top-12 -right-12 w-48 h-48 rounded-full bg-[#C28771]/10" />
           <div className="relative">
             <div className="flex items-center gap-3 mb-4">
-              <div className="w-10 h-10 rounded-full bg-[#C28771]/15 text-[#C28771] grid place-items-center">
+              <div className="w-10 h-10 rounded-full bg-[#C28771]/15 text-[#9A5D47] grid place-items-center">
                 <ShieldAlert size={18} />
               </div>
               <div className="eyebrow">Safety resources</div>
@@ -296,7 +296,7 @@ export default function Safety() {
             </p>
 
             <div
-              className="mt-6 rounded-2xl bg-[#C28771] text-white p-5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3"
+              className="mt-6 rounded-2xl bg-[#9A5D47] text-white p-5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3"
               data-testid="safety-emergency-banner"
             >
               <div>
@@ -307,7 +307,7 @@ export default function Safety() {
               </div>
               <a
                 href={EMERGENCY.phoneHref}
-                className="inline-flex items-center gap-2 rounded-full bg-white text-[#C28771] px-5 py-2.5 font-medium hover:bg-[#F8F7FC] transition-colors"
+                className="inline-flex items-center gap-2 rounded-full bg-white text-[#9A5D47] px-5 py-2.5 font-medium hover:bg-[#F8F7FC] transition-colors"
                 data-testid="safety-call-911"
               >
                 <Phone size={16} /> Call 911
@@ -468,7 +468,7 @@ export default function Safety() {
           </ul>
         </div>
 
-        <div className="text-center text-xs text-[#857E9C] italic">
+        <div className="text-center text-xs text-[#6E6787] italic">
           Information current as of 2026. If a number has changed, please visit the
           linked website or call 211 for local resource referrals.
         </div>
@@ -597,13 +597,13 @@ function ParallelParentingSection() {
           other as much as possible while maintaining clear parenting structures.
         </p>
         <div className="rounded-2xl bg-[#EFE9F9] p-5 mb-5">
-          <div className="text-xs uppercase tracking-[0.2em] text-[#857E9C] mb-2">
+          <div className="text-xs uppercase tracking-[0.2em] text-[#6E6787] mb-2">
             The focus shifts from
           </div>
           <div className="font-serif text-lg text-[#1A1330] italic mb-3">
             "How can parents work together?"
           </div>
-          <div className="text-xs uppercase tracking-[0.2em] text-[#857E9C] mb-2">to</div>
+          <div className="text-xs uppercase tracking-[0.2em] text-[#6E6787] mb-2">to</div>
           <div className="font-serif text-lg text-[#2A0F5F] italic">
             "How can the child remain safe and stable with minimal parental interaction?"
           </div>
@@ -764,12 +764,12 @@ function ParallelParentingSection() {
           <p className="text-[#4B4567] text-sm mb-2">Professionals must distinguish:</p>
           <div className="flex flex-col sm:flex-row items-stretch gap-3">
             <div className="flex-1 rounded-xl bg-[#EFE9F9] p-4 text-center">
-              <div className="text-xs uppercase tracking-[0.2em] text-[#857E9C] mb-1">From</div>
+              <div className="text-xs uppercase tracking-[0.2em] text-[#6E6787] mb-1">From</div>
               <div className="text-[#1A1330]">High-conflict relationships</div>
             </div>
-            <div className="self-center text-[#857E9C] text-sm">vs.</div>
+            <div className="self-center text-[#6E6787] text-sm">vs.</div>
             <div className="flex-1 rounded-xl bg-[#C28771]/10 p-4 text-center">
-              <div className="text-xs uppercase tracking-[0.2em] text-[#A26852] mb-1">To</div>
+              <div className="text-xs uppercase tracking-[0.2em] text-[#85513F] mb-1">To</div>
               <div className="text-[#1A1330]">Coercive controlling violence</div>
             </div>
           </div>

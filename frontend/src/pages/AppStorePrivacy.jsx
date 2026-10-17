@@ -180,7 +180,7 @@ export default function AppStorePrivacy() {
         >
           Apple App Privacy &amp; Google Play Data Safety — Reconciled Disclosure
         </h1>
-        <p className="text-sm text-[#857E9C] mb-8">
+        <p className="text-sm text-[#6E6787] mb-8">
           Effective: {EFFECTIVE_DATE} · Last updated: {LAST_UPDATED}
         </p>
 
@@ -279,7 +279,7 @@ export default function AppStorePrivacy() {
                   <td className="px-3 py-3 text-[#1A1330] font-medium">
                     {row.label}
                     {row.note && (
-                      <div className="text-[11px] text-[#857E9C] italic mt-1 leading-snug font-normal">
+                      <div className="text-[11px] text-[#6E6787] italic mt-1 leading-snug font-normal">
                         {row.note}
                       </div>
                     )}
@@ -308,7 +308,7 @@ export default function AppStorePrivacy() {
           </table>
         </div>
 
-        <p className="text-[12px] text-[#857E9C] italic mt-3 leading-relaxed">
+        <p className="text-[12px] text-[#6E6787] italic mt-3 leading-relaxed">
           &ldquo;Linked?&rdquo; matches Apple&rsquo;s &ldquo;Data Linked to
           You&rdquo; and Google&rsquo;s &ldquo;Personal info collected&rdquo;
           flag. &ldquo;Tracking?&rdquo; is <em>No</em> for every row — SA
@@ -471,7 +471,7 @@ export default function AppStorePrivacy() {
           </li>
         </ul>
 
-        <p className="text-xs text-[#857E9C] italic mt-10">
+        <p className="text-xs text-[#6E6787] italic mt-10">
           SA CoParents · 16607 Blanco #703, San Antonio, Texas 78232 ·{" "}
           <a
             href="mailto:mattsossi@bsossi.com"

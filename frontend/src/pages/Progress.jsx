@@ -51,7 +51,7 @@ function StatCard({ icon: Icon, label, value, hint, testid }) {
         <div className="eyebrow">{label}</div>
       </div>
       <div className="font-serif text-3xl text-[#1A1330] leading-none">{value}</div>
-      {hint && <div className="text-xs text-[#857E9C]">{hint}</div>}
+      {hint && <div className="text-xs text-[#6E6787]">{hint}</div>}
     </div>
   );
 }
@@ -59,7 +59,7 @@ function StatCard({ icon: Icon, label, value, hint, testid }) {
 function ReadinessSparkline({ points }) {
   if (!points?.length) {
     return (
-      <div className="text-sm text-[#857E9C]">
+      <div className="text-sm text-[#6E6787]">
         Generate a summary to start tracking your readiness over time.
       </div>
     );
@@ -129,7 +129,7 @@ export default function ProgressPage() {
   if (!data) {
     return (
       <AppShell>
-        <div className="card-soft p-8 text-center text-sm tracking-[0.2em] uppercase text-[#857E9C] animate-pulse">
+        <div className="card-soft p-8 text-center text-sm tracking-[0.2em] uppercase text-[#6E6787] animate-pulse">
           Loading your progress…
         </div>
       </AppShell>
@@ -168,7 +168,7 @@ export default function ProgressPage() {
               <div className="flex items-end justify-between mb-2">
                 <div className="font-serif text-3xl text-[#1A1330]">
                   {progress.steps_done}{" "}
-                  <span className="text-[#857E9C] text-xl">/ {progress.steps_total}</span>
+                  <span className="text-[#6E6787] text-xl">/ {progress.steps_total}</span>
                 </div>
                 <div className="text-sm text-[#4B4567]">{progress.pct}%</div>
               </div>
@@ -212,7 +212,7 @@ export default function ProgressPage() {
                     {user?.name ? `${user.name}'s ` : "Your "}
                     co-parenting prep
                   </h2>
-                  <div className="text-xs text-[#857E9C] mt-1">
+                  <div className="text-xs text-[#6E6787] mt-1">
                     Generated {generatedOn} · sacoparentsapp.online
                   </div>
                 </div>
@@ -233,7 +233,7 @@ export default function ProgressPage() {
                     Completed
                   </div>
                   {completedKeys.length === 0 ? (
-                    <p className="text-sm text-[#857E9C] italic">
+                    <p className="text-sm text-[#6E6787] italic">
                       No steps completed yet. The first step is the hardest.
                     </p>
                   ) : (
@@ -363,14 +363,14 @@ export default function ProgressPage() {
                   </div>
                   <div className="flex-1 min-w-0">
                     <div className="font-serif text-lg text-[#1A1330]">{meta.label}</div>
-                    <div className="text-xs text-[#857E9C]">
+                    <div className="text-xs text-[#6E6787]">
                       {done ? "Today's accomplishment" : "Not yet"}
                     </div>
                   </div>
                   {done ? (
                     <CheckCircle2 size={18} className="text-[#3D1A78]" />
                   ) : (
-                    <Circle size={18} className="text-[#857E9C]" />
+                    <Circle size={18} className="text-[#6E6787]" />
                   )}
                 </Link>
               );
@@ -391,7 +391,7 @@ export default function ProgressPage() {
                 >
                   <div className="min-w-0">
                     <div className="text-sm text-[#1A1330]">{fmtDate(s.generated_at)}</div>
-                    <div className="text-xs text-[#857E9C] truncate">{s.summary_id}</div>
+                    <div className="text-xs text-[#6E6787] truncate">{s.summary_id}</div>
                   </div>
                   {s.readiness_score != null && (
                     <div className="text-xs px-2 py-1 rounded-full bg-[#EFE9F9] text-[#3D1A78]">

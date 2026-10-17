@@ -192,7 +192,7 @@ export default function CommStyle() {
               {analyzing ? "Reflecting…" : "Get AI reflection"}
             </button>
             {!allAnswered && (
-              <span className="text-xs text-[#857E9C]">
+              <span className="text-xs text-[#6E6787]">
                 Answer the three prompts above to unlock reflection.
               </span>
             )}
@@ -211,7 +211,7 @@ export default function CommStyle() {
                   <div className="font-serif text-xl text-[#1A1330]">
                     Style: {analysis.style_label}
                   </div>
-                  <div className="text-xs text-[#857E9C]">
+                  <div className="text-xs text-[#6E6787]">
                     Mediation readiness score: {analysis.score}/10
                   </div>
                 </div>

@@ -16,14 +16,14 @@ export function DailyCountsTable({ onForbidden }) {
   }, [onForbidden]);
 
   if (failed) return <p className="text-sm text-[#7A2E2E]" data-testid="admin-daily-counts-error">Couldn&apos;t load the daily counts.</p>;
-  if (!days) return <p className="text-sm text-[#857E9C]" data-testid="admin-daily-counts-loading">Loading daily counts…</p>;
+  if (!days) return <p className="text-sm text-[#6E6787]" data-testid="admin-daily-counts-loading">Loading daily counts…</p>;
 
   const total = (k) => days.reduce((s, d) => s + d[k], 0);
   return (
     <section data-testid="admin-daily-counts" className="rounded-2xl border border-[#E5E0EE] bg-white overflow-hidden">
       <header className="px-4 py-3 border-b border-[#E5E0EE]">
         <h2 className="text-base md:text-lg font-semibold text-[#1A1330]">Daily changes, last 30 days</h2>
-        <p className="text-xs text-[#857E9C]">Counts only (UTC days). Updates from Align that were applied or ignored, and audit log downloads.</p>
+        <p className="text-xs text-[#6E6787]">Counts only (UTC days). Updates from Align that were applied or ignored, and audit log downloads.</p>
       </header>
       <div tabIndex={0} role="region" aria-label="Daily changes table" className="max-h-96 overflow-auto">
         <table className="w-full text-sm" data-testid="admin-daily-counts-table">

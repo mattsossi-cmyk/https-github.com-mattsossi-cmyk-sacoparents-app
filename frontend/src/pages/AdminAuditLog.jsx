@@ -46,7 +46,7 @@ export default function AdminAuditLog() {
             <Download size={15} /> {busy ? "Preparing…" : "Export CSV"}
           </button>
           <DailyCountsTable key={rev} onForbidden={onForbidden} />
-          <p className="text-xs text-[#857E9C]">
+          <p className="text-xs text-[#6E6787]">
             <Link to="/admin/help-services" className="underline text-[#3D1A78]" data-testid="admin-audit-help-link">Get help: local services</Link>
           </p>
         </div>

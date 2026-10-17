@@ -48,7 +48,7 @@ function Banner({ overall, sharedBy, generatedAt }) {
 
 function EmptyBlockNotice({ label }) {
   return (
-    <div className="text-xs italic text-[#857E9C]">
+    <div className="text-xs italic text-[#6E6787]">
       {label} isn&apos;t included in this shared view.
     </div>
   );
@@ -250,10 +250,10 @@ function SharedCoParentingReport() {
                             {sec.rating}
                           </span>
                         ) : (
-                          <span className="text-xs italic text-[#857E9C]">Not answered</span>
+                          <span className="text-xs italic text-[#6E6787]">Not answered</span>
                         )}
                         {typeof sec.avg === "number" && (
-                          <div className="text-[11px] text-[#857E9C] mt-1">Avg {sec.avg} / 4</div>
+                          <div className="text-[11px] text-[#6E6787] mt-1">Avg {sec.avg} / 4</div>
                         )}
                       </div>
                     </div>
@@ -331,7 +331,7 @@ function SharedCoParentingReport() {
           </div>
         </div>
 
-        <p className="text-[11px] text-[#857E9C] italic text-center px-4">
+        <p className="text-[11px] text-[#6E6787] italic text-center px-4">
           {report?.disclaimer || "Educational reflection tool. Not a diagnosis, custody evaluation, or legal advice."}
         </p>
       </main>

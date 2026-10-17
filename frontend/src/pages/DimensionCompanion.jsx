@@ -123,7 +123,7 @@ function DimensionResultCard({ dim }) {
             style={{ width: `${Math.max(4, pctToStrained * 100)}%` }}
           />
         </div>
-        <div className="text-[11px] text-[#8471B3] mt-1">
+        <div className="text-[11px] text-[#6A5799] mt-1">
           Concern level {dim.score.toFixed(2)} / 5 (lower is better)
         </div>
       </div>
@@ -275,7 +275,7 @@ export default function DimensionCompanion() {
         {/* Step progress */}
         {step >= 1 && step <= 3 && (
           <div className="mb-6" data-testid="companion-progress">
-            <div className="flex items-center justify-between text-[11px] text-[#8471B3] mb-1">
+            <div className="flex items-center justify-between text-[11px] text-[#6A5799] mb-1">
               <span>Step {step} of 3 · Dimension {bundle.dimensions[step - 1].number}</span>
               <span>{Math.round((step / 3) * 100)}%</span>
             </div>

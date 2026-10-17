@@ -51,7 +51,7 @@ function ProCard({ pro, onInvite, testidBase }) {
         <div className="text-[12px] text-[#4B4567] mt-0.5">
           {pro.title}
           {pro.city && (
-            <span className="text-[#857E9C] inline-flex items-center gap-0.5">
+            <span className="text-[#6E6787] inline-flex items-center gap-0.5">
               {" · "}<MapPin size={10} className="inline" /> {pro.city}
             </span>
           )}
@@ -188,7 +188,7 @@ export default function ProfessionalDirectoryModal({ open, caseId, onClose }) {
         <button
           type="button"
           onClick={onClose}
-          className="absolute top-3 right-3 text-[#857E9C] hover:text-[#1A1330]"
+          className="absolute top-3 right-3 text-[#6E6787] hover:text-[#1A1330]"
           aria-label="Close"
           data-testid="pdir-close"
         >
@@ -229,7 +229,7 @@ export default function ProfessionalDirectoryModal({ open, caseId, onClose }) {
                 <div className="relative">
                   <Search
                     size={13}
-                    className="absolute left-3 top-1/2 -translate-y-1/2 text-[#857E9C]"
+                    className="absolute left-3 top-1/2 -translate-y-1/2 text-[#6E6787]"
                     aria-hidden
                   />
                   <input
@@ -247,7 +247,7 @@ export default function ProfessionalDirectoryModal({ open, caseId, onClose }) {
               <div className="flex-1 overflow-y-auto px-6 py-4 bg-[#FBF9FE]">
                 {loading ? (
                   <div
-                    className="flex items-center gap-2 text-sm text-[#857E9C] justify-center py-8"
+                    className="flex items-center gap-2 text-sm text-[#6E6787] justify-center py-8"
                     data-testid="pdir-loading"
                   >
                     <Loader2 size={14} className="animate-spin" /> Loading directory…
@@ -262,7 +262,7 @@ export default function ProfessionalDirectoryModal({ open, caseId, onClose }) {
                   </div>
                 ) : pros.length === 0 ? (
                   <p
-                    className="text-sm text-[#857E9C] text-center py-8"
+                    className="text-sm text-[#6E6787] text-center py-8"
                     data-testid="pdir-empty"
                   >
                     No professionals match your search.
@@ -299,10 +299,10 @@ export default function ProfessionalDirectoryModal({ open, caseId, onClose }) {
                 <div className="text-[12px] text-[#4B4567] mt-0.5">
                   {picked?.title}
                   {picked?.city && (
-                    <span className="text-[#857E9C]"> · {picked.city}</span>
+                    <span className="text-[#6E6787]"> · {picked.city}</span>
                   )}
                 </div>
-                <div className="text-[11px] text-[#857E9C] mt-1">
+                <div className="text-[11px] text-[#6E6787] mt-1">
                   Invitation will be emailed to{" "}
                   <span className="font-mono text-[#3D1A78]">{picked?.contact_email}</span>.
                 </div>
@@ -324,11 +324,11 @@ export default function ProfessionalDirectoryModal({ open, caseId, onClose }) {
                 className="mt-1 block w-full rounded-2xl border border-[#E5E0EE] bg-white text-[#1A1330] text-sm px-3 py-2 focus:outline-none focus:border-[#3D1A78] resize-none"
                 data-testid="pdir-note-input"
               />
-              <div className="text-[10px] text-[#857E9C] mt-1 text-right">
+              <div className="text-[10px] text-[#6E6787] mt-1 text-right">
                 {note.length} / 500
               </div>
 
-              <div className="mt-3 text-[11px] text-[#857E9C] inline-flex items-start gap-1.5">
+              <div className="mt-3 text-[11px] text-[#6E6787] inline-flex items-start gap-1.5">
                 <CheckCircle2 size={11} className="mt-0.5 text-[#1F5C3B]" />
                 <span>
                   They'll accept from{" "}

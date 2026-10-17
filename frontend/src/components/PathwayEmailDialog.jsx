@@ -147,7 +147,7 @@ export default function PathwayEmailDialog({
 
           <div>
             <label className="block text-[11px] uppercase tracking-[0.18em] text-[#3D1A78] font-bold mb-1">
-              Recipient name <span className="text-[#857E9C] font-normal normal-case tracking-normal">· optional</span>
+              Recipient name <span className="text-[#6E6787] font-normal normal-case tracking-normal">· optional</span>
             </label>
             <input
               type="text"
@@ -161,7 +161,7 @@ export default function PathwayEmailDialog({
 
           <div>
             <label className="block text-[11px] uppercase tracking-[0.18em] text-[#3D1A78] font-bold mb-1">
-              Short message <span className="text-[#857E9C] font-normal normal-case tracking-normal">· optional</span>
+              Short message <span className="text-[#6E6787] font-normal normal-case tracking-normal">· optional</span>
             </label>
             <textarea
               value={message}
@@ -174,7 +174,7 @@ export default function PathwayEmailDialog({
             />
           </div>
 
-          <p className="text-[11px] text-[#8471B3] italic">
+          <p className="text-[11px] text-[#6A5799] italic">
             Reply-to is set to your email so the recipient can respond directly.
             The pathway report is generated from a deterministic rule engine —
             informational only, not legal advice.

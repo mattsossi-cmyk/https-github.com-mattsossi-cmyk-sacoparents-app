@@ -97,14 +97,14 @@ export default function DeleteAccount() {
             For legal record-keeping we keep health-information access logs and consent records, with your name,
             email and account replaced by an anonymous code, plus a note of the date your account was deleted.
           </p>
-          <p className="text-[13px] text-[#857E9C] mt-4 italic">
+          <p className="text-[13px] text-[#6E6787] mt-4 italic">
             Copies someone already downloaded, and anything SA CoParents Align already saved, can&rsquo;t be recalled
             from here. Ask Align directly to delete what it holds.
           </p>
         </section>
 
         {loading ? (
-          <div className="text-sm text-[#857E9C]">Loading…</div>
+          <div className="text-sm text-[#6E6787]">Loading…</div>
         ) : user ? (
           <SignedInDeleteCard
             email={user.email}
@@ -114,7 +114,7 @@ export default function DeleteAccount() {
           <SignedOutDeleteCard />
         )}
 
-        <p className="text-xs text-[#857E9C] italic mt-10">
+        <p className="text-xs text-[#6E6787] italic mt-10">
           SA CoParents &middot; 16607 Blanco #703, San Antonio, Texas 78232
           <br />
           This page is provided to satisfy Google Play and Apple App Store
@@ -126,7 +126,7 @@ export default function DeleteAccount() {
         <DialogContent className="sm:max-w-md" data-testid="delete-account-confirm-dialog">
           <DialogHeader>
             <DialogTitle className="font-serif text-2xl text-[#1A1330] flex items-center gap-2">
-              <AlertTriangle size={20} className="text-[#C97B63]" />
+              <AlertTriangle size={20} className="text-[#9A5D47]" />
               Permanently delete?
             </DialogTitle>
             <DialogDescription className="text-[14px] text-[#4B4567] pt-2">
@@ -158,7 +158,7 @@ export default function DeleteAccount() {
             <Button
               onClick={handleDelete}
               disabled={submitting || confirmText.trim().toUpperCase() !== "DELETE"}
-              className="rounded-full px-5 bg-[#C97B63] hover:bg-[#B56B53] text-white"
+              className="rounded-full px-5 bg-[#9A5D47] hover:bg-[#7F4B39] text-white"
               data-testid="delete-account-confirm-button"
             >
               {submitting ? (
@@ -192,7 +192,7 @@ function SignedInDeleteCard({ email, onConfirm }) {
       </p>
       <Button
         onClick={onConfirm}
-        className="rounded-full px-6 py-5 bg-[#C97B63] hover:bg-[#B56B53] text-white text-[14px]"
+        className="rounded-full px-6 py-5 bg-[#9A5D47] hover:bg-[#7F4B39] text-white text-[14px]"
         data-testid="delete-account-trigger-button"
       >
         Delete my account permanently
@@ -216,7 +216,7 @@ function SignedOutDeleteCard() {
 
       <div className="space-y-4">
         <div className="border border-[#E5E0EE] rounded-xl p-5">
-          <div className="text-[13px] uppercase tracking-wider text-[#857E9C] mb-2">
+          <div className="text-[13px] uppercase tracking-wider text-[#6E6787] mb-2">
             Option 1 &mdash; Fastest
           </div>
           <p className="text-[14px] text-[#1A1330] mb-3">
@@ -232,7 +232,7 @@ function SignedOutDeleteCard() {
         </div>
 
         <div className="border border-[#E5E0EE] rounded-xl p-5">
-          <div className="text-[13px] uppercase tracking-wider text-[#857E9C] mb-2">
+          <div className="text-[13px] uppercase tracking-wider text-[#6E6787] mb-2">
             Option 2 &mdash; Email request
           </div>
           <p className="text-[14px] text-[#1A1330] mb-1">
@@ -249,7 +249,7 @@ function SignedOutDeleteCard() {
           >
             {SUPPORT_EMAIL}
           </a>
-          <p className="text-[12px] text-[#857E9C] mt-2">
+          <p className="text-[12px] text-[#6E6787] mt-2">
             Manual requests are processed within 7 days. We'll reply once your
             data is gone.
           </p>

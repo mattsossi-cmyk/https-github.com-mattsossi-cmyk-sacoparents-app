@@ -36,7 +36,7 @@ function ServiceRow({ s, onEdit, onDelete }) {
     <li className="flex items-start justify-between gap-3 py-3 border-t border-[#F0EDF6]" data-testid={`admin-help-row-${s.id}`}>
       <div className="min-w-0">
         <p className="text-sm font-semibold text-[#1A1330]">{s.name}</p>
-        <p className="text-xs text-[#857E9C]">{[stateName(s.state), s.phone, s.text, s.url].filter(Boolean).join(" · ")}</p>
+        <p className="text-xs text-[#6E6787]">{[stateName(s.state), s.phone, s.text, s.url].filter(Boolean).join(" · ")}</p>
       </div>
       <div className="flex gap-2 shrink-0">
         <button type="button" onClick={() => onEdit(s)} aria-label="Edit" data-testid={`admin-help-edit-${s.id}`} className="p-1.5 rounded hover:bg-slate-100"><Pencil size={14} /></button>
@@ -84,7 +84,7 @@ export default function AdminHelpServices() {
             {(data?.services || []).map((s) => (
               <ServiceRow key={s.id} s={s} onEdit={(x) => setForm({ ...EMPTY, ...x })} onDelete={remove} />
             ))}
-            {data && !data.services.length && <li className="py-3 text-sm text-[#857E9C]">No services yet.</li>}
+            {data && !data.services.length && <li className="py-3 text-sm text-[#6E6787]">No services yet.</li>}
           </ul>
         </div>
       </AppShell>

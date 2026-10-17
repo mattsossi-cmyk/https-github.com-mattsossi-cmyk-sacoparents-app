@@ -102,7 +102,7 @@ export default function MethodologyCard({ id, defaultOpen = false }) {
             >
               {style.label}
             </span>
-            <span className="text-[10px] uppercase tracking-[0.16em] font-bold text-[#857E9C] flex items-center gap-1">
+            <span className="text-[10px] uppercase tracking-[0.16em] font-bold text-[#6E6787] flex items-center gap-1">
               <Compass size={11} /> How this assessment works
             </span>
           </div>

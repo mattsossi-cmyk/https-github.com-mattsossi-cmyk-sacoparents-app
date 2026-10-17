@@ -710,7 +710,7 @@ export default function ProfessionalJointAlignmentNew() {
                   placeholder='e.g. "Looking forward to Thursday — this takes ~15 minutes."'
                   data-testid="pj-reminder-note"
                 />
-                <div className="mt-1 flex items-center justify-between text-[11px] text-[#857E9C]">
+                <div className="mt-1 flex items-center justify-between text-[11px] text-[#6E6787]">
                   <span>Shown to the parent if we send the 5-day gentle nudge.</span>
                   <span data-testid="pj-reminder-note-count">{form.reminder_note.length}/240</span>
                 </div>

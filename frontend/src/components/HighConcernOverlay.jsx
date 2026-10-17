@@ -160,7 +160,7 @@ export default function HighConcernOverlay({ open, onContinue, onClose }) {
               Continue the assessment
             </button>
           </div>
-          <p className="text-[10px] text-[#857E9C] mt-3 text-center">
+          <p className="text-[10px] text-[#6E6787] mt-3 text-center">
             Press <kbd className="px-1.5 py-0.5 rounded bg-[#EFE9F9]">ESC</kbd>{" "}
             any time to leave this page.
           </p>

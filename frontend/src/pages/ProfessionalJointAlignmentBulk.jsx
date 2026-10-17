@@ -392,7 +392,7 @@ export default function ProfessionalJointAlignmentBulk() {
             {file ? (
               <div className="mt-3 text-sm text-[#1A1330]" data-testid="bulk-file-name">
                 <span className="font-semibold">{file.name}</span>
-                <span className="text-[#857E9C]"> · {(file.size / 1024).toFixed(1)} KB</span>
+                <span className="text-[#6E6787]"> · {(file.size / 1024).toFixed(1)} KB</span>
               </div>
             ) : (
               <div className="mt-3 text-sm text-[#4B4567]">
@@ -451,7 +451,7 @@ export default function ProfessionalJointAlignmentBulk() {
                 <span className="text-[#4B4567] font-semibold">
                   {progress.done} / {progress.total} rows
                 </span>
-                <span className="text-[#857E9C]">
+                <span className="text-[#6E6787]">
                   <span className="text-[#1F5C3B] font-semibold">{progress.created} ✓</span>
                   {" · "}
                   <span className="text-[#3D1A78] font-semibold">{progress.skipped} 〰</span>
@@ -469,7 +469,7 @@ export default function ProfessionalJointAlignmentBulk() {
                 />
               </div>
               {progress.lastRow && (
-                <p className="mt-2 text-[11px] text-[#857E9C] font-mono truncate" data-testid="bulk-progress-lastrow">
+                <p className="mt-2 text-[11px] text-[#6E6787] font-mono truncate" data-testid="bulk-progress-lastrow">
                   Row {progress.lastRow.row}:{" "}
                   {progress.lastRow.status === "created"
                     ? `${progress.lastRow.case_id} created`
@@ -532,7 +532,7 @@ export default function ProfessionalJointAlignmentBulk() {
                         >
                           {c.case_id}
                         </span>
-                        <span className="text-[#857E9C] text-[11px]">
+                        <span className="text-[#6E6787] text-[11px]">
                           Row {c.row} · {c.assessment_type}
                         </span>
                       </div>
@@ -563,13 +563,13 @@ export default function ProfessionalJointAlignmentBulk() {
                 <h3 className="text-sm font-bold text-[#1A1330] inline-flex items-center gap-1.5">
                   <MinusCircle size={14} className="text-[#3D1A78]" /> Skipped duplicates
                 </h3>
-                <p className="text-[12px] text-[#857E9C] mt-1">
+                <p className="text-[12px] text-[#6E6787] mt-1">
                   These pairs already have an active case with you — nothing sent.
                 </p>
                 <ul className="mt-2 divide-y divide-[#EEE8F7]">
                   {result.skipped.map((s, i) => (
                     <li key={`${s.row}-${i}`} className="py-2 text-sm">
-                      <span className="text-[#857E9C]">Row {s.row}</span>
+                      <span className="text-[#6E6787]">Row {s.row}</span>
                       {s.case_id && (
                         <span className="ml-2 rounded-full bg-[#F1EEF7] text-[#3D1A78] px-2 py-0.5 text-[11px] font-mono">
                           {s.case_id}
@@ -586,7 +586,7 @@ export default function ProfessionalJointAlignmentBulk() {
                 <h3 className="text-sm font-bold text-[#1A1330] inline-flex items-center gap-1.5">
                   <AlertTriangle size={14} className="text-[#9A3A23]" /> Errored rows
                 </h3>
-                <p className="text-[12px] text-[#857E9C] mt-1">
+                <p className="text-[12px] text-[#6E6787] mt-1">
                   Fix these in your CSV and re-upload — the successfully-created
                   rows will be silently skipped as duplicates.
                 </p>

@@ -219,7 +219,7 @@ export default function ActivitiesAlignment() {
               <div className="relative flex-1">
                 <Mail
                   size={16}
-                  className="absolute left-4 top-1/2 -translate-y-1/2 text-[#857E9C]"
+                  className="absolute left-4 top-1/2 -translate-y-1/2 text-[#6E6787]"
                 />
                 <input
                   type="email"
@@ -295,7 +295,7 @@ export default function ActivitiesAlignment() {
 
             {payload.gaps && payload.gaps.length > 0 && (
               <div>
-                <div className="text-[11px] uppercase tracking-[0.16em] font-bold text-[#B45F13] mb-2 flex items-center gap-2">
+                <div className="text-[11px] uppercase tracking-[0.16em] font-bold text-[#904B0E] mb-2 flex items-center gap-2">
                   <ShieldAlert size={13} /> Where a small tune-up would help
                 </div>
                 <div className="grid gap-3">

@@ -16,7 +16,7 @@ export default function GlobalCopyright() {
       className="w-full border-t border-[#E5E0EE] bg-white/70 py-3 text-center"
       data-testid="global-copyright"
     >
-      <span className="text-[11px] text-[#857E9C]">
+      <span className="text-[11px] text-[#6E6787]">
         © {year} SA CoParents · All rights reserved. ·{" "}
         <Link to="/privacy-notice" data-testid="global-footer-privacy-notice" className="text-[#3D1A78] font-semibold underline underline-offset-2">
           Privacy Notice

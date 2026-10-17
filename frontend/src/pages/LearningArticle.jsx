@@ -131,7 +131,7 @@ export default function LearningArticle() {
           </h1>
           <p className="text-lg text-[#4B4567] mt-3">{article.summary}</p>
           <div className="flex flex-wrap items-center gap-3 mt-4">
-            <span className="inline-flex items-center gap-1.5 text-[11px] text-[#857E9C]">
+            <span className="inline-flex items-center gap-1.5 text-[11px] text-[#6E6787]">
               <Clock size={11} /> {article.read_minutes} min read
             </span>
             <button

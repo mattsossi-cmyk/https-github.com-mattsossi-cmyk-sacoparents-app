@@ -70,7 +70,7 @@ function SubjectCard({ subject }) {
         </p>
       </div>
       <div className="flex items-center justify-between pt-2 border-t border-[#EEE8F7]">
-        <span className="text-[10px] uppercase tracking-[0.14em] font-bold text-[#857E9C]">
+        <span className="text-[10px] uppercase tracking-[0.14em] font-bold text-[#6E6787]">
           {subject.prompt_count} prompts
         </span>
         <span className="inline-flex items-center gap-1 text-xs font-semibold text-[#3D1A78] group-hover:translate-x-0.5 transition-transform">
@@ -137,7 +137,7 @@ export default function AlignmentSubjects() {
         {/* Subject grid */}
         {loading ? (
           <div
-            className="grid place-items-center py-12 text-[#857E9C]"
+            className="grid place-items-center py-12 text-[#6E6787]"
             data-testid="alignment-subjects-loading"
           >
             <Loader2 className="animate-spin" size={20} />

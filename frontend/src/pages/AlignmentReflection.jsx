@@ -44,8 +44,8 @@ function PromptField({ prompt, value, onChange, testidBase }) {
           {prompt.prompt}
         </h3>
         {prompt.help && (
-          <p className="mt-2 text-xs text-[#857E9C] leading-relaxed flex items-start gap-1.5">
-            <Info size={12} className="mt-0.5 shrink-0 text-[#857E9C]" />
+          <p className="mt-2 text-xs text-[#6E6787] leading-relaxed flex items-start gap-1.5">
+            <Info size={12} className="mt-0.5 shrink-0 text-[#6E6787]" />
             <span>{prompt.help}</span>
           </p>
         )}
@@ -63,13 +63,13 @@ function PromptField({ prompt, value, onChange, testidBase }) {
       />
       <div className="flex items-center justify-between text-[10px] uppercase tracking-[0.14em] font-bold">
         <span
-          className="text-[#857E9C]"
+          className="text-[#6E6787]"
           data-testid={`${testidBase}-hint`}
         >
           {focused ? "Ctrl-S also saves" : "Autosaved as you type"}
         </span>
         <span
-          className={len > max ? "text-[#AA0033]" : "text-[#857E9C]"}
+          className={len > max ? "text-[#AA0033]" : "text-[#6E6787]"}
           data-testid={`${testidBase}-counter`}
         >
           {len} / {max}
@@ -164,7 +164,7 @@ export default function AlignmentReflection() {
     return (
       <AppShell>
         <div
-          className="max-w-3xl mx-auto p-8 grid place-items-center text-[#857E9C]"
+          className="max-w-3xl mx-auto p-8 grid place-items-center text-[#6E6787]"
           data-testid="alignment-reflection-loading"
         >
           <Loader2 className="animate-spin" size={20} />
@@ -241,7 +241,7 @@ export default function AlignmentReflection() {
           <div className="flex items-center gap-2">
             {savedAt && (
               <span
-                className="text-[10px] uppercase tracking-[0.14em] font-bold text-[#857E9C]"
+                className="text-[10px] uppercase tracking-[0.14em] font-bold text-[#6E6787]"
                 data-testid="alignment-reflection-saved-at"
               >
                 Saved {new Date(savedAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}

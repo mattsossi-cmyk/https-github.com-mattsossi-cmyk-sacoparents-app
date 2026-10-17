@@ -159,7 +159,7 @@ export default function ForgotPassword() {
                 </button>
               </form>
 
-              <p className="text-xs text-[#857E9C] mt-6 text-center">
+              <p className="text-xs text-[#6E6787] mt-6 text-center">
                 Remembered your password?{" "}
                 <Link
                   to="/login"
@@ -243,7 +243,7 @@ export default function ForgotPassword() {
                     setPassword("");
                     setStep("email");
                   }}
-                  className="text-[#857E9C] hover:text-[#3D1A78]"
+                  className="text-[#6E6787] hover:text-[#3D1A78]"
                   data-testid="forgot-change-email-button"
                 >
                   Use a different email
@@ -261,7 +261,7 @@ export default function ForgotPassword() {
 
               <div className="mt-4 pt-4 border-t border-[#EFECF6] text-center">
                 <MailCheck size={12} className="inline text-[#0E7A7A] mr-1" />
-                <span className="text-[11px] text-[#857E9C]">
+                <span className="text-[11px] text-[#6E6787]">
                   Didn't get the email? Check spam, then resend.
                 </span>
               </div>

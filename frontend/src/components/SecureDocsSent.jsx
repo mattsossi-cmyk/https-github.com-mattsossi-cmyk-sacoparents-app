@@ -38,7 +38,7 @@ export function SecureDocsSent() {
             <li key={d.doc_id} className="py-3 flex flex-wrap items-center justify-between gap-2" data-testid={`secure-doc-row-${d.doc_id}`}>
               <div className="min-w-0 flex-1">
                 <div className="text-[13px] font-semibold text-[#1A1330] break-words">{d.label}</div>
-                <div className="text-[11px] text-[#857E9C] break-words">
+                <div className="text-[11px] text-[#6E6787] break-words">
                   To {d.recipient_email} · Sent {day(d.created_at)} · Link ends {day(d.expires_at)}
                 </div>
               </div>

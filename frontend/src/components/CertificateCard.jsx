@@ -138,7 +138,7 @@ export default function CertificateCard() {
         className="rounded-3xl border border-[#E5E0EE] bg-white p-6 shadow-sm"
         data-testid="certificate-card-loading"
       >
-        <div className="flex items-center gap-2 text-sm text-[#857E9C]">
+        <div className="flex items-center gap-2 text-sm text-[#6E6787]">
           <Loader2 size={14} className="animate-spin" /> Checking your progress…
         </div>
       </div>
@@ -158,10 +158,10 @@ export default function CertificateCard() {
       >
         <div className="flex items-start gap-4">
           <div className="shrink-0 w-12 h-12 rounded-2xl bg-[#C28771]/15 grid place-items-center">
-            <Lock size={20} className="text-[#C28771]" />
+            <Lock size={20} className="text-[#9A5D47]" />
           </div>
           <div className="flex-1 min-w-0">
-            <div className="eyebrow text-[#C28771]">Almost there</div>
+            <div className="eyebrow text-[#9A5D47]">Almost there</div>
             <h3 className="font-serif text-xl text-[#1A1330] mt-1">
               Certificate of Completion
             </h3>
@@ -175,7 +175,7 @@ export default function CertificateCard() {
             </p>
             <div className="mt-3 h-1.5 rounded-full bg-[#F3E7DC] overflow-hidden">
               <div
-                className="h-full bg-[#C28771] transition-all"
+                className="h-full bg-[#9A5D47] transition-all"
                 style={{
                   width: `${Math.min(
                     100,
@@ -225,7 +225,7 @@ export default function CertificateCard() {
           />
         </div>
       ) : (
-        <div className="rounded-2xl border border-dashed border-[#E5E0EE] bg-white p-8 text-center text-sm text-[#857E9C]">
+        <div className="rounded-2xl border border-dashed border-[#E5E0EE] bg-white p-8 text-center text-sm text-[#6E6787]">
           Generating your preview…
         </div>
       )}
@@ -284,7 +284,7 @@ export default function CertificateCard() {
 
       {state.isGuest && (
         <p
-          className="text-xs text-[#857E9C] mt-3 italic"
+          className="text-xs text-[#6E6787] mt-3 italic"
           data-testid="certificate-demo-note"
         >
           Demo mode — save your account to have this certificate emailed to

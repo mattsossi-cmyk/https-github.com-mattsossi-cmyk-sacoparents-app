@@ -29,7 +29,7 @@ const SECTION_META = [
     title: "Long-term",
     subtitle: "Intentions to hold for 3+ months",
     Icon: TrendingUp,
-    color: "#2DB5B5",
+    color: "#0F7676",
   },
 ];
 
@@ -77,7 +77,7 @@ export default function NextStepsPanel({ nextSteps, title = "Your next three ste
                   <div className="text-[10px] uppercase tracking-[0.22em] font-bold" style={{ color }}>
                     {meta.title}
                   </div>
-                  <div className="text-[11px] text-[#857E9C]">{meta.subtitle}</div>
+                  <div className="text-[11px] text-[#6E6787]">{meta.subtitle}</div>
                 </div>
               </div>
               <ul className="space-y-2.5">

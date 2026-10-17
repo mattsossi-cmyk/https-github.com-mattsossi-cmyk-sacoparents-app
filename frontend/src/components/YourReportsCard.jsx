@@ -32,7 +32,7 @@ const STATE_STYLES = {
     cta: "Continue",
   },
   not_started: {
-    pill: "bg-[#F5F3F0] text-[#857E9C] border-[#E5E0EE]",
+    pill: "bg-[#F5F3F0] text-[#6E6787] border-[#E5E0EE]",
     icon: (props) => <Circle {...props} className="text-[#C7BFDA]" />,
     cta: "Start",
   },
@@ -270,7 +270,7 @@ function BundleDownloadButton({ readyCount }) {
           : <Download size={14} />}
         {downloading ? "Preparing your bundle…" : label}
       </button>
-      <p className="mt-2 text-[11px] text-[#857E9C] leading-relaxed text-center">
+      <p className="mt-2 text-[11px] text-[#6E6787] leading-relaxed text-center">
         One ZIP with every PDF you've completed and a plain-text manifest —
         nothing is added for assessments you haven't finished yet.
       </p>

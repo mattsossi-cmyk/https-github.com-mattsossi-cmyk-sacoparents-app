@@ -106,13 +106,13 @@ function BucketDifferentIdeas({ data, parentAName, parentBName }) {
               <div className="text-[10px] uppercase tracking-wider text-[#3D1A78] font-semibold mb-0.5">
                 {parentAName}
               </div>
-              {it.parent_a || <em className="text-[#857E9C]">no clause proposed</em>}
+              {it.parent_a || <em className="text-[#6E6787]">no clause proposed</em>}
             </div>
             <div className={`rounded-lg p-2 text-sm text-[#1A1330] ${it.parent_b ? "bg-[#EAF7F7]" : "bg-white/50"}`}>
               <div className="text-[10px] uppercase tracking-wider text-[#0F6F6F] font-semibold mb-0.5">
                 {parentBName}
               </div>
-              {it.parent_b || <em className="text-[#857E9C]">no clause proposed</em>}
+              {it.parent_b || <em className="text-[#6E6787]">no clause proposed</em>}
             </div>
           </div>
         </li>

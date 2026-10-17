@@ -222,7 +222,7 @@ function TopicRow({ topic }) {
         <div className="font-serif text-[15px] text-[#1A1330] leading-snug">
           {topic.title}
         </div>
-        <div className="text-[11px] uppercase tracking-[0.16em] font-semibold text-[#857E9C] mt-0.5">
+        <div className="text-[11px] uppercase tracking-[0.16em] font-semibold text-[#6E6787] mt-0.5">
           {topic.section}
         </div>
         <p className="text-[13px] text-[#4B4567] mt-1.5 leading-relaxed">
@@ -324,7 +324,7 @@ export default function JointAlignmentSamplePreview() {
           })}
         </div>
         <p
-          className="mt-2 text-[12px] text-[#857E9C]"
+          className="mt-2 text-[12px] text-[#6E6787]"
           data-testid="sample-preview-scenario-caption"
         >
           {scenario.caption}
@@ -459,7 +459,7 @@ export default function JointAlignmentSamplePreview() {
 
         {/* Small fine-print / attribution row */}
         <p
-          className="mt-6 text-[11px] text-[#857E9C] leading-relaxed"
+          className="mt-6 text-[11px] text-[#6E6787] leading-relaxed"
           data-testid="sample-preview-fineprint"
         >
           The people, child, and topics on this page are fictional.

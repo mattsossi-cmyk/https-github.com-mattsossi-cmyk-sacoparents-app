@@ -198,7 +198,7 @@ export default function ReviewerPanelCard() {
       )}
 
       <div className="mt-4 pt-3 border-t border-[#EFECF6] flex items-center justify-between gap-3 flex-wrap">
-        <div className="text-[11px] text-[#8471B3]">
+        <div className="text-[11px] text-[#6A5799]">
           Screen version: <strong>{data?.review_scope_version || "v1.0"}</strong>
         </div>
         <div className="flex items-center gap-3 flex-wrap">
@@ -250,7 +250,7 @@ export default function ReviewerPanelCard() {
                   <strong>{s.recipient_name || s.recipient_email}</strong>
                   <span className="text-[#4B4567]"> · {s.recipient_email} · {s.recipient_role}</span>
                 </span>
-                <span className="text-[#8471B3]">
+                <span className="text-[#6A5799]">
                   {s.sent_at ? new Date(s.sent_at).toLocaleString() : ""}
                 </span>
               </li>

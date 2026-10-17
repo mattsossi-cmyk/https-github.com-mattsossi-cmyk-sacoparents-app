@@ -118,15 +118,15 @@ export default function VerifyCourtReport() {
         <div className="rounded-3xl bg-white border border-[#E5E0EE] shadow-sm p-6 sm:p-8 mb-6">
           <div className="grid grid-cols-2 gap-4 mb-4 text-sm">
             <div>
-              <div className="text-[10px] uppercase tracking-[0.18em] text-[#857E9C] font-bold mb-1">Parent</div>
+              <div className="text-[10px] uppercase tracking-[0.18em] text-[#6E6787] font-bold mb-1">Parent</div>
               <div className="font-semibold" data-testid="cosign-parent-name">{meta.parent_name || "-"}</div>
             </div>
             <div>
-              <div className="text-[10px] uppercase tracking-[0.18em] text-[#857E9C] font-bold mb-1">Issued</div>
+              <div className="text-[10px] uppercase tracking-[0.18em] text-[#6E6787] font-bold mb-1">Issued</div>
               <div className="font-semibold" data-testid="cosign-issued-on">{meta.issued_on || "-"}</div>
             </div>
           </div>
-          <div className="text-[10px] uppercase tracking-[0.18em] text-[#857E9C] font-bold mb-2">Findings at a glance</div>
+          <div className="text-[10px] uppercase tracking-[0.18em] text-[#6E6787] font-bold mb-2">Findings at a glance</div>
           <div className="space-y-2 mb-4">
             {Object.entries(meta.findings_headlines || {}).map(([k, v]) => (
               <div key={k} className="text-sm text-[#1A1330]" data-testid={`cosign-headline-${k.replace(/_/g, "-")}`}>
@@ -150,7 +150,7 @@ export default function VerifyCourtReport() {
             {meta.cosigner?.notes && (
               <p className="text-sm text-[#4B4567] italic mt-2">"{meta.cosigner.notes}"</p>
             )}
-            <div className="text-xs text-[#857E9C] mt-2">Signed at {meta.cosigner?.cosigned_at}</div>
+            <div className="text-xs text-[#6E6787] mt-2">Signed at {meta.cosigner?.cosigned_at}</div>
           </div>
         ) : (
           <div className="rounded-3xl bg-white border border-[#E5E0EE] p-6 sm:p-8 mb-6" data-testid="cosign-form-panel">

@@ -592,7 +592,7 @@ export default function FourCircleFrontDoor({ userName, situationChoice = null }
         className="mt-6 flex items-start gap-3 rounded-2xl bg-[#FFF6EA] border border-[#F1D9B7] px-4 py-3 text-[13px] text-[#5A3C10]"
         data-testid="front-door-crisis-strip"
       >
-        <Phone size={16} className="text-[#B45F13] flex-shrink-0 mt-0.5" />
+        <Phone size={16} className="text-[#904B0E] flex-shrink-0 mt-0.5" />
         <p className="!m-0 leading-relaxed">
           <strong>In immediate danger?</strong> Call{" "}
           <a href="tel:911" className="underline font-semibold">

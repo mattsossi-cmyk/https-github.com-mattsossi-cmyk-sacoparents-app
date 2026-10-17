@@ -125,7 +125,7 @@ export default function Login() {
           <div className="font-sans font-extrabold text-3xl text-[#1A1330] tracking-tight">
             <span className="text-brand-gradient">SA</span> CoParents
           </div>
-          <div className="text-[10px] uppercase tracking-[0.2em] text-[#857E9C] mt-1">
+          <div className="text-[10px] uppercase tracking-[0.2em] text-[#6E6787] mt-1">
             Helping families communicate better
           </div>
         </Link>
@@ -153,7 +153,7 @@ export default function Login() {
             {demoLoading ? "Starting demo…" : "Enter demo mode"}
           </button>
 
-          <p className="text-[11px] text-[#857E9C] mt-3 text-center">
+          <p className="text-[11px] text-[#6E6787] mt-3 text-center">
             No account needed · Free to use · Takes 2 seconds
           </p>
 
@@ -164,14 +164,14 @@ export default function Login() {
               <button
                 type="button"
                 onClick={() => setShowEmail(true)}
-                className="w-full text-xs text-[#857E9C] hover:text-[#3D1A78]"
+                className="w-full text-xs text-[#6E6787] hover:text-[#3D1A78]"
                 data-testid="login-show-email-toggle"
               >
                 Have an existing account? <span className="font-semibold underline">Sign in with email</span>
               </button>
             ) : (
               <div>
-                <div className="text-xs text-[#857E9C] mb-4">
+                <div className="text-xs text-[#6E6787] mb-4">
                   Existing account sign-in
                 </div>
                 <form onSubmit={onSubmit} className="space-y-4">
@@ -234,7 +234,7 @@ export default function Login() {
                 <button
                   type="button"
                   onClick={() => setShowEmail(false)}
-                  className="mt-4 w-full text-[11px] text-[#857E9C] hover:text-[#3D1A78]"
+                  className="mt-4 w-full text-[11px] text-[#6E6787] hover:text-[#3D1A78]"
                   data-testid="login-hide-email-toggle"
                 >
                   ← Back to demo mode

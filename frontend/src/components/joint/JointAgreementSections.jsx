@@ -20,10 +20,10 @@ export function Bucket({ label, colour, items, mode, parentAName, parentBName })
         style={{ color: colour }}
       >
         {label}{" "}
-        <span className="text-[#857E9C] font-semibold">· {items.length}</span>
+        <span className="text-[#6E6787] font-semibold">· {items.length}</span>
       </div>
       {items.length === 0 ? (
-        <div className="text-sm text-[#857E9C] italic">(none)</div>
+        <div className="text-sm text-[#6E6787] italic">(none)</div>
       ) : (
         <ul className="space-y-3">
           {items.map((it, i) => {
@@ -32,7 +32,7 @@ export function Bucket({ label, colour, items, mode, parentAName, parentBName })
               return (
                 <li key={rowKey} className="rounded-xl bg-white p-3 border border-white/60">
                   {it.area && (
-                    <div className="text-[10px] uppercase tracking-wider text-[#857E9C] font-semibold mb-1">
+                    <div className="text-[10px] uppercase tracking-wider text-[#6E6787] font-semibold mb-1">
                       {it.area}
                     </div>
                   )}
@@ -60,7 +60,7 @@ export function Bucket({ label, colour, items, mode, parentAName, parentBName })
                 className="rounded-xl bg-white p-3 border border-white/60"
               >
                 {it.area && (
-                  <div className="text-[10px] uppercase tracking-wider text-[#857E9C] font-semibold mb-1">
+                  <div className="text-[10px] uppercase tracking-wider text-[#6E6787] font-semibold mb-1">
                     {it.area}
                   </div>
                 )}
@@ -82,7 +82,7 @@ export function Section({ section, parentAName, parentBName }) {
     >
       <div className="flex items-center gap-2 mb-2">
         <h2 className="font-serif text-2xl text-[#1A1330]">{section.title}</h2>
-        <span className="text-xs text-[#857E9C]">
+        <span className="text-xs text-[#6E6787]">
           {section.counts.both_proposed} both ·{" "}
           {section.counts.parent_a_only} {parentAName} ·{" "}
           {section.counts.parent_b_only} {parentBName}

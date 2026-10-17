@@ -251,7 +251,7 @@ export default function Reflection() {
           reflect on your progress and experiences.
         </p>
 
-        <div className="mt-3 flex items-center gap-2 text-[12px] text-[#857E9C]">
+        <div className="mt-3 flex items-center gap-2 text-[12px] text-[#6E6787]">
           <Lock size={12} className="text-[#3D1A78]" />
           <span>
             Private to you. Never shared, never seen by mediator unless you explicitly include it.{" "}
@@ -321,7 +321,7 @@ export default function Reflection() {
             <div className="mt-10">
               <div className="eyebrow mb-4">Prompts</div>
               {loading ? (
-                <div className="text-sm text-[#857E9C]">Loading…</div>
+                <div className="text-sm text-[#6E6787]">Loading…</div>
               ) : (
                 <div className="space-y-4">
                   {PROMPTS.map((p) => (
@@ -348,11 +348,11 @@ export default function Reflection() {
                       </span>
                     </>
                   ) : hasContent ? (
-                    <span className="italic text-[#857E9C]">
+                    <span className="italic text-[#6E6787]">
                       Autosaving as you type…
                     </span>
                   ) : (
-                    <span className="text-[#857E9C]">
+                    <span className="text-[#6E6787]">
                       Your words stay with you — saved automatically.
                     </span>
                   )}
@@ -494,7 +494,7 @@ function JournalHistory() {
 
   if (loading) {
     return (
-      <div className="mt-8 text-sm text-[#857E9C]" data-testid="journal-loading">
+      <div className="mt-8 text-sm text-[#6E6787]" data-testid="journal-loading">
         Loading your journal…
       </div>
     );
@@ -521,7 +521,7 @@ function JournalHistory() {
           data-testid="journal-draft-textarea"
         />
         <div className="flex items-center justify-between mt-3 gap-3">
-          <div className="text-xs text-[#857E9C]">
+          <div className="text-xs text-[#6E6787]">
             Saved privately to your journal.
           </div>
           <button
@@ -550,7 +550,7 @@ function JournalHistory() {
             <div className="font-serif text-lg text-[#1A1330]">
               Your journal starts here.
             </div>
-            <p className="text-sm text-[#857E9C] mt-1">
+            <p className="text-sm text-[#6E6787] mt-1">
               Daily entries and saved reflections will appear in this stream.
             </p>
           </div>
@@ -572,7 +572,7 @@ function RecapCard({ recap, loading, entries }) {
         data-testid="journal-recap-loading"
       >
         <Loader2 size={14} className="animate-spin text-[#3D1A78]" />
-        <span className="text-sm text-[#857E9C]">Reflecting on your week…</span>
+        <span className="text-sm text-[#6E6787]">Reflecting on your week…</span>
       </div>
     );
   }
@@ -629,7 +629,7 @@ function RecapCard({ recap, loading, entries }) {
         </div>
       )}
       {recap.generated_at && (
-        <div className="text-[10px] text-[#857E9C] mt-3 uppercase tracking-[0.15em]">
+        <div className="text-[10px] text-[#6E6787] mt-3 uppercase tracking-[0.15em]">
           Updated {fmtDate(recap.generated_at)}
         </div>
       )}
@@ -663,14 +663,14 @@ function EntryCard({ entry, onDelete }) {
               </>
             )}
           </span>
-          <span className="text-xs text-[#857E9C]">
+          <span className="text-xs text-[#6E6787]">
             {fmtDate(entry.created_at)}
           </span>
         </div>
         <button
           type="button"
           onClick={onDelete}
-          className="text-[#857E9C] hover:text-[#9B3B3B] p-1 rounded"
+          className="text-[#6E6787] hover:text-[#9B3B3B] p-1 rounded"
           aria-label="Delete entry"
           data-testid={`journal-entry-delete-${entry.entry_id}`}
         >
@@ -678,7 +678,7 @@ function EntryCard({ entry, onDelete }) {
         </button>
       </div>
       {entry.prompt_text && (
-        <div className="text-xs italic text-[#857E9C] mb-2">
+        <div className="text-xs italic text-[#6E6787] mb-2">
           "{entry.prompt_text}"
         </div>
       )}

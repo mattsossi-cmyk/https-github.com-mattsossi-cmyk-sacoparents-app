@@ -79,7 +79,7 @@ export default function Register() {
           <div className="font-sans font-extrabold text-3xl text-[#1A1330] tracking-tight">
             <span className="text-brand-gradient">SA</span> CoParents
           </div>
-          <div className="text-[10px] uppercase tracking-[0.2em] text-[#857E9C] mt-1">
+          <div className="text-[10px] uppercase tracking-[0.2em] text-[#6E6787] mt-1">
             Helping families communicate better
           </div>
         </Link>
@@ -169,7 +169,7 @@ export default function Register() {
                     <button
                       type="button"
                       onClick={() => removeChild(i)}
-                      className="w-10 h-10 rounded-full hover:bg-[#EFE9F9] text-[#857E9C]"
+                      className="w-10 h-10 rounded-full hover:bg-[#EFE9F9] text-[#6E6787]"
                       aria-label="Remove child"
                       data-testid={`register-child-remove-${i}`}
                     >

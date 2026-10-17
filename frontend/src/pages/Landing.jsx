@@ -534,7 +534,7 @@ function SituationPicker() {
         {/* Mediation is a destination, not a substantive category —
             rendered as a distinct link below the tile grid. */}
         <div className="mt-5 pt-5 border-t border-[#E5E0EE] text-center">
-          <p className="text-xs uppercase tracking-[0.16em] font-bold text-[#857E9C] mb-1.5">
+          <p className="text-xs uppercase tracking-[0.16em] font-bold text-[#6E6787] mb-1.5">
             Preparing for mediation or court?
           </p>
           <button
@@ -667,7 +667,7 @@ function PathBInvitedCard() {
         <div className="mt-3 pt-3 border-t border-[#EFE9F9]">
           <Link
             to="/join/sample-preview"
-            className="text-[11px] text-[#857E9C] hover:text-[#3D1A78] hover:underline"
+            className="text-[11px] text-[#6E6787] hover:text-[#3D1A78] hover:underline"
             data-testid="hero-invited-sample-link"
           >
             See a sample invited screen →
@@ -739,7 +739,7 @@ function PathBInvitedCard() {
         <button
           type="button"
           onClick={() => { setExpanded(false); setCode(""); setWarning(null); }}
-          className="text-[11px] text-[#857E9C] hover:text-[#1A1330] hover:underline"
+          className="text-[11px] text-[#6E6787] hover:text-[#1A1330] hover:underline"
           data-testid="hero-path-b-collapse"
         >
           ← Back
@@ -1086,7 +1086,7 @@ function HowItWorks() {
                   {s.title}
                 </h3>
                 <div
-                  className="text-[11px] uppercase tracking-[0.16em] text-[#857E9C] font-semibold mb-3"
+                  className="text-[11px] uppercase tracking-[0.16em] text-[#6E6787] font-semibold mb-3"
                   data-testid={`how-step-${s.n}-formal-subtitle`}
                 >
                   {s.subtitle}
@@ -1323,7 +1323,7 @@ function TrustSignals() {
                 Our mission is to move families from emotionally reactive
                 to child-focused, one conversation at a time.
               </p>
-              <div className="text-xs text-[#857E9C] mt-3">
+              <div className="text-xs text-[#6E6787] mt-3">
                 <a href="mailto:mattsossi@bsossi.com" className="text-[#3D1A78] hover:underline">mattsossi@bsossi.com</a>
                 {" · "}
                 <a href="tel:2102241667" className="text-[#3D1A78] hover:underline">210-224-1667</a>

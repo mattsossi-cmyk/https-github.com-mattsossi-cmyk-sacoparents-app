@@ -110,7 +110,7 @@ function HistoryStrip({ weeks }) {
                 className={`w-full rounded-t ${empty ? "bg-[#F0EEF8]" : "bg-gradient-to-t from-[#3D1A78] to-[#2DB5B5]"}`}
                 style={{ height: `${height}%`, minHeight: 4 }}
               />
-              <div className="text-[9px] text-[#8471B3]">
+              <div className="text-[9px] text-[#6A5799]">
                 {w.week_start.slice(5)}
               </div>
             </div>
@@ -172,7 +172,7 @@ function InterventionRow({ item, onToggle, onNotesChange, saving }) {
               {notesOpen ? "Hide notes" : (item.notes ? "Edit notes" : "Add notes")}
             </button>
             {item.updated_at && (
-              <span className="text-[10px] text-[#8471B3]">
+              <span className="text-[10px] text-[#6A5799]">
                 Updated {new Date(item.updated_at).toLocaleDateString()}
               </span>
             )}

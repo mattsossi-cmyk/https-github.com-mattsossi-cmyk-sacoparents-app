@@ -233,7 +233,7 @@ export default function CaseView() {
           className="mt-8"
           data-testid="case-view-required-section"
         >
-          <div className="text-[11px] uppercase tracking-[0.22em] font-bold text-[#B45F13]">
+          <div className="text-[11px] uppercase tracking-[0.22em] font-bold text-[#904B0E]">
             Required by Your Referral
           </div>
           <h2 className="font-serif text-2xl sm:text-3xl text-[#1A1330] leading-tight mt-1">
@@ -330,7 +330,7 @@ function StepRow({ step, index, optional = false, onStart }) {
     : optional
     ? "border-[#B7E0E0] bg-white"
     : "border-[#F1D9B7] bg-white";
-  const iconColor = isDone ? "text-[#186142]" : "text-[#B45F13]";
+  const iconColor = isDone ? "text-[#186142]" : "text-[#904B0E]";
   const StatusIcon = isDone ? CheckCircle2 : Circle;
   const cta = isDone
     ? "View my report"
@@ -345,7 +345,7 @@ function StepRow({ step, index, optional = false, onStart }) {
       <div className="flex items-start gap-3 flex-1 min-w-0">
         <StatusIcon size={22} className={`flex-shrink-0 mt-0.5 ${iconColor}`} />
         <div className="flex-1 min-w-0">
-          <div className="text-[10px] uppercase tracking-[0.14em] font-bold text-[#857E9C]">
+          <div className="text-[10px] uppercase tracking-[0.14em] font-bold text-[#6E6787]">
             Step {index}
           </div>
           <div
@@ -358,7 +358,7 @@ function StepRow({ step, index, optional = false, onStart }) {
             Status:{" "}
             <strong
               className={
-                isDone ? "text-[#186142]" : isInProgress ? "text-[#B45F13]" : "text-[#3D1A78]"
+                isDone ? "text-[#186142]" : isInProgress ? "text-[#904B0E]" : "text-[#3D1A78]"
               }
               data-testid={`case-view-step-${step.assessment_type}-status`}
             >
@@ -416,7 +416,7 @@ function ErrorState({ icon: Icon, title, body, primary, testid }) {
         data-testid={testid}
       >
         <div className="rounded-3xl bg-white border border-[#E5E0EE] p-8 text-center">
-          <div className="w-14 h-14 mx-auto rounded-full bg-[#FFEEDA] grid place-items-center text-[#B45F13]">
+          <div className="w-14 h-14 mx-auto rounded-full bg-[#FFEEDA] grid place-items-center text-[#904B0E]">
             <Icon size={22} />
           </div>
           <h1 className="font-serif text-2xl text-[#1A1330] mt-4 leading-tight">

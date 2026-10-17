@@ -36,7 +36,7 @@ export default function CalendarPage() {
         </div>
         <div className="grid grid-cols-7 gap-1 text-center" data-testid="calendar-grid">
           {DAYS.map((d) => (
-            <div key={d} className="text-[11px] font-bold uppercase text-slate-400 py-1">{d}</div>
+            <div key={d} className="text-[11px] font-bold uppercase text-slate-500 py-1">{d}</div>
           ))}
           {cells.map((d, i) => (
             <div

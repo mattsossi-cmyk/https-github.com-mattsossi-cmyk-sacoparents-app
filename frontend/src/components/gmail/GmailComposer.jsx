@@ -83,7 +83,7 @@ export default function GmailComposer({ prefill, sourceMessage, onClose, onSent 
           <button
             type="button"
             onClick={onClose}
-            className="text-sm text-[#857E9C] hover:text-[#1A1330]"
+            className="text-sm text-[#6E6787] hover:text-[#1A1330]"
             data-testid="composer-close-btn"
           >
             Close

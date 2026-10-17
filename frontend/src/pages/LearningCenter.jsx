@@ -119,7 +119,7 @@ function HubSection({ hub }) {
                   {a.title}
                 </div>
                 <div className="text-sm text-[#4B4567] mt-0.5">{a.summary}</div>
-                <div className="flex items-center gap-2 mt-1.5 text-[11px] text-[#857E9C]">
+                <div className="flex items-center gap-2 mt-1.5 text-[11px] text-[#6E6787]">
                   <Clock size={11} /> {a.read_minutes} min read
                   {a.read && (
                     <span className="text-[#1F5C3B]">· read</span>

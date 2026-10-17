@@ -235,7 +235,7 @@ export default function SectionCoachCard({
                         {title}
                       </div>
                       {items.length === 0 ? (
-                        <div className="text-xs text-[#857E9C] mt-2">
+                        <div className="text-xs text-[#6E6787] mt-2">
                           {key === "coordination_gaps"
                             ? "Nothing flagged in this section — nice."
                             : "Nothing to add right now."}
@@ -260,7 +260,7 @@ export default function SectionCoachCard({
                 })}
               </div>
 
-              <div className="mt-4 flex flex-wrap items-center justify-between gap-3 text-xs text-[#857E9C]">
+              <div className="mt-4 flex flex-wrap items-center justify-between gap-3 text-xs text-[#6E6787]">
                 <span>
                   {meta.cached
                     ? "Coach card served from your saved cache."
@@ -277,7 +277,7 @@ export default function SectionCoachCard({
                 </button>
               </div>
 
-              <div className="mt-3 text-[11px] text-[#857E9C] italic">
+              <div className="mt-3 text-[11px] text-[#6E6787] italic">
                 This coach is educational — not a diagnosis or medical advice.
               </div>
             </>

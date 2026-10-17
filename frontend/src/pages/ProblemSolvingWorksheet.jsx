@@ -87,7 +87,7 @@ function Textarea({ id, label, hint, rows, value, onChange }) {
         {label}
       </label>
       {hint && (
-        <p className="text-xs text-[#857E9C] mb-2 leading-relaxed">{hint}</p>
+        <p className="text-xs text-[#6E6787] mb-2 leading-relaxed">{hint}</p>
       )}
       <textarea
         id={id}
@@ -149,7 +149,7 @@ export default function ProblemSolvingWorksheet() {
           <button
             type="button"
             onClick={quickExit}
-            className="inline-flex items-center gap-2 rounded-full bg-[#C28771] hover:bg-[#a87560] text-white px-4 py-2 text-sm font-medium shadow-sm"
+            className="inline-flex items-center gap-2 rounded-full bg-[#9A5D47] hover:bg-[#7F4B39] text-white px-4 py-2 text-sm font-medium shadow-sm"
             data-testid="worksheet-quick-exit"
           >
             <Home size={14} />
@@ -199,7 +199,7 @@ export default function ProblemSolvingWorksheet() {
             <div className="text-sm font-bold text-[#1A1330] mb-1">
               6. What are three possible options?
             </div>
-            <p className="text-xs text-[#857E9C] mb-3 leading-relaxed">
+            <p className="text-xs text-[#6E6787] mb-3 leading-relaxed">
               Brainstorm three. They don&rsquo;t need to be perfect.
             </p>
             <div className="space-y-3">
@@ -267,7 +267,7 @@ export default function ProblemSolvingWorksheet() {
 
         {history.length > 0 && (
           <div className="mt-10">
-            <div className="text-[11px] uppercase tracking-[0.2em] text-[#857E9C] font-bold mb-3">
+            <div className="text-[11px] uppercase tracking-[0.2em] text-[#6E6787] font-bold mb-3">
               Recent worksheets
             </div>
             <div className="space-y-3">
@@ -277,7 +277,7 @@ export default function ProblemSolvingWorksheet() {
                   className="rounded-2xl border border-[#E5E0EE] bg-white p-4"
                   data-testid={`worksheet-history-${h.worksheet_id}`}
                 >
-                  <div className="text-xs text-[#857E9C] mb-1">
+                  <div className="text-xs text-[#6E6787] mb-1">
                     {new Date(h.created_at).toLocaleString()}
                   </div>
                   <div className="text-sm text-[#1A1330] font-bold mb-1 truncate">

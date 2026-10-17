@@ -145,7 +145,7 @@ export default function Situation() {
           className="mt-10 mx-auto max-w-3xl rounded-2xl border border-[#F1D9B7] bg-[#FFF6EA] px-5 py-4 flex items-start gap-3 text-[13px] leading-relaxed"
           data-testid="situation-crisis-strip"
         >
-          <Phone size={16} className="text-[#B45F13] flex-shrink-0 mt-0.5" />
+          <Phone size={16} className="text-[#904B0E] flex-shrink-0 mt-0.5" />
           <p className="!m-0 text-[#5A3C10]">
             <strong>In immediate danger?</strong> Call{" "}
             <a href="tel:911" className="underline font-semibold">

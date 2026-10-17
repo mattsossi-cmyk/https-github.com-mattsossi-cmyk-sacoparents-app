@@ -79,7 +79,7 @@ export default function DeepDivePartsNarrative({
               />
             </div>
             {part.purpose && (
-              <p className="mt-2 text-xs text-[#8471B3] italic">
+              <p className="mt-2 text-xs text-[#6A5799] italic">
                 {part.purpose}
               </p>
             )}

@@ -209,7 +209,7 @@ export default function AdminReviewers() {
             )}
           </div>
 
-          <div className="text-[11px] text-[#8471B3] mb-6">
+          <div className="text-[11px] text-[#6A5799] mb-6">
             Screen version: <strong>{panelVersion || "v1.0"}</strong>
             {lastUpdated ? ` · Last updated ${lastUpdated}` : ""}
           </div>

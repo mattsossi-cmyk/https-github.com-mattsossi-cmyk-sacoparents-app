@@ -69,7 +69,7 @@ function Stat({ icon: Icon, label, value, hint, accent = "purple", testid }) {
   const accents = {
     purple: { bg: "bg-[#EFE9F9]", fg: "text-[#3D1A78]" },
     teal: { bg: "bg-[#D5F2F2]", fg: "text-[#0E7A7A]" },
-    amber: { bg: "bg-[#FFF1E2]", fg: "text-[#B6663B]" },
+    amber: { bg: "bg-[#FFF1E2]", fg: "text-[#965231]" },
   };
   const a = accents[accent] || accents.purple;
   return (
@@ -81,7 +81,7 @@ function Stat({ icon: Icon, label, value, hint, accent = "purple", testid }) {
         <div className="eyebrow">{label}</div>
       </div>
       <div className="font-serif text-3xl text-[#1A1330] leading-none">{value}</div>
-      {hint && <div className="text-xs text-[#857E9C] mt-1.5">{hint}</div>}
+      {hint && <div className="text-xs text-[#6E6787] mt-1.5">{hint}</div>}
     </div>
   );
 }
@@ -139,7 +139,7 @@ function SendTestDigestForm() {
       <div className="eyebrow mb-2 flex items-center gap-2">
         <Send size={11} /> Send test digest to any inbox
       </div>
-      <p className="text-[11px] text-[#857E9C] leading-relaxed mb-2">
+      <p className="text-[11px] text-[#6E6787] leading-relaxed mb-2">
         Ships the exact Monday HTML (with a "TEST" banner) to a
         one-off address so you can eyeball the render on your phone.
         Bypasses the Monday dedupe — never affects the real send.
@@ -212,7 +212,7 @@ function DismissSparkline({ series }) {
   if (empty) {
     return (
       <div
-        className="text-[10px] text-[#857E9C] italic mt-1"
+        className="text-[10px] text-[#6E6787] italic mt-1"
         data-testid="admin-nudge-sparkline-empty"
       >
         No dismisses in the last 4 weeks — nothing to plot yet.
@@ -244,8 +244,8 @@ function DismissSparkline({ series }) {
         <path d={toPath("first")} fill="none" stroke="#B6663B" strokeWidth={1.75} />
         <path d={toPath("permanent")} fill="none" stroke="#3D1A78" strokeWidth={1.75} />
       </svg>
-      <div className="text-[9px] uppercase tracking-[0.14em] font-bold text-[#857E9C] leading-tight">
-        <div className="text-[#B6663B]">— retry-hides</div>
+      <div className="text-[9px] uppercase tracking-[0.14em] font-bold text-[#6E6787] leading-tight">
+        <div className="text-[#965231]">— retry-hides</div>
         <div className="text-[#3D1A78]">— permanent</div>
       </div>
     </div>
@@ -285,7 +285,7 @@ function ReminderAnalyticsTile({ data }) {
           <div className="font-serif text-xl text-[#1A1330] mt-1">
             Does the 3-day nudge lift completion?
           </div>
-          <p className="text-xs text-[#857E9C] mt-1">
+          <p className="text-xs text-[#6E6787] mt-1">
             Aggregated from the reminder collection — same numbers as
             <code className="mx-1 px-1 py-0.5 rounded bg-[#F5EFFB] text-[10px] text-[#3D1A78]">
               /api/admin/alignment-reflections/analytics
@@ -303,7 +303,7 @@ function ReminderAnalyticsTile({ data }) {
           <p className="text-sm text-[#4B4567] font-medium">
             No 3-day reminders sent yet
           </p>
-          <p className="text-xs text-[#857E9C] mt-1">
+          <p className="text-xs text-[#6E6787] mt-1">
             Numbers appear here once the reminder sweep finds a
             reflection that&rsquo;s been idle for 3&nbsp;days.
           </p>
@@ -319,7 +319,7 @@ function ReminderAnalyticsTile({ data }) {
               <div className="font-serif text-3xl text-[#1A1330] leading-none">
                 {total.sent}
               </div>
-              <div className="text-xs text-[#857E9C] mt-1.5">
+              <div className="text-xs text-[#6E6787] mt-1.5">
                 Total reminder emails delivered.
               </div>
             </div>
@@ -329,9 +329,9 @@ function ReminderAnalyticsTile({ data }) {
               </div>
               <div className="font-serif text-3xl text-[#1A1330] leading-none">
                 {total.opened}
-                <span className="text-[#857E9C] text-lg"> · {total.open_rate}%</span>
+                <span className="text-[#6E6787] text-lg"> · {total.open_rate}%</span>
               </div>
-              <div className="text-xs text-[#857E9C] mt-1.5">
+              <div className="text-xs text-[#6E6787] mt-1.5">
                 First-touch pixel opens.
               </div>
             </div>
@@ -341,9 +341,9 @@ function ReminderAnalyticsTile({ data }) {
               </div>
               <div className="font-serif text-3xl text-[#1A1330] leading-none">
                 {total.clicked}
-                <span className="text-[#857E9C] text-lg"> · {total.click_rate}%</span>
+                <span className="text-[#6E6787] text-lg"> · {total.click_rate}%</span>
               </div>
-              <div className="text-xs text-[#857E9C] mt-1.5">
+              <div className="text-xs text-[#6E6787] mt-1.5">
                 Redirect-tracked link clicks.
               </div>
             </div>
@@ -354,7 +354,7 @@ function ReminderAnalyticsTile({ data }) {
               <div className="font-serif text-3xl text-[#1A1330] leading-none">
                 {total.click_through_open}%
               </div>
-              <div className="text-xs text-[#857E9C] mt-1.5">
+              <div className="text-xs text-[#6E6787] mt-1.5">
                 Clicks &divide; opens — engagement quality.
               </div>
             </div>
@@ -362,7 +362,7 @@ function ReminderAnalyticsTile({ data }) {
 
           {/* Per-subject rows */}
           <div className="mt-5 rounded-2xl border border-[#E5E0EE] bg-white overflow-hidden">
-            <div className="grid grid-cols-12 px-4 py-2.5 text-[10px] uppercase tracking-[0.14em] font-bold text-[#857E9C] bg-[#FAF8FD] border-b border-[#E5E0EE]">
+            <div className="grid grid-cols-12 px-4 py-2.5 text-[10px] uppercase tracking-[0.14em] font-bold text-[#6E6787] bg-[#FAF8FD] border-b border-[#E5E0EE]">
               <div className="col-span-4">Subject</div>
               <div className="col-span-2 text-right">Sent</div>
               <div className="col-span-2 text-right">Open rate</div>
@@ -384,11 +384,11 @@ function ReminderAnalyticsTile({ data }) {
                   </div>
                   <div className="col-span-2 text-right text-[#4B4567] tabular-nums">
                     {s.open_rate}%{" "}
-                    <span className="text-[#857E9C] text-xs">({s.opened})</span>
+                    <span className="text-[#6E6787] text-xs">({s.opened})</span>
                   </div>
                   <div className="col-span-2 text-right text-[#4B4567] tabular-nums">
                     {s.click_rate}%{" "}
-                    <span className="text-[#857E9C] text-xs">({s.clicked})</span>
+                    <span className="text-[#6E6787] text-xs">({s.clicked})</span>
                   </div>
                   <div className="col-span-2 text-right text-[#4B4567] tabular-nums">
                     {s.click_through_open}%
@@ -397,7 +397,7 @@ function ReminderAnalyticsTile({ data }) {
               ))}
             </ul>
           </div>
-          <p className="text-[11px] text-[#857E9C] mt-4 italic">
+          <p className="text-[11px] text-[#6E6787] mt-4 italic">
             A CTR-of-opens below 25% usually means the email body copy
             isn&rsquo;t clarifying <em>why</em> the reminder came now.
           </p>
@@ -454,7 +454,7 @@ export default function AdminDashboard() {
     return (
       <AppShell>
         <div className="card-soft p-8 text-center max-w-lg mx-auto" data-testid="admin-forbidden">
-          <div className="w-12 h-12 mx-auto rounded-full bg-[#FFF1E2] grid place-items-center text-[#B6663B] mb-3">
+          <div className="w-12 h-12 mx-auto rounded-full bg-[#FFF1E2] grid place-items-center text-[#965231] mb-3">
             <ShieldCheck size={20} />
           </div>
           <h2 className="font-serif text-2xl text-[#1A1330]">Admin only</h2>
@@ -479,7 +479,7 @@ export default function AdminDashboard() {
   if (!overview) {
     return (
       <AppShell>
-        <div className="card-soft p-8 text-center text-sm tracking-[0.2em] uppercase text-[#857E9C] animate-pulse">
+        <div className="card-soft p-8 text-center text-sm tracking-[0.2em] uppercase text-[#6E6787] animate-pulse">
           Loading admin analytics…
         </div>
       </AppShell>
@@ -561,7 +561,7 @@ export default function AdminDashboard() {
               <TrendingUp size={16} className="text-[#3D1A78]" />
             </div>
             <SignupChart series={signups} />
-            <div className="flex justify-between text-[10px] text-[#857E9C] mt-2 uppercase tracking-[0.15em]">
+            <div className="flex justify-between text-[10px] text-[#6E6787] mt-2 uppercase tracking-[0.15em]">
               <span>{signups[0]?.date}</span>
               <span>{signups[signups.length - 1]?.date}</span>
             </div>
@@ -573,7 +573,7 @@ export default function AdminDashboard() {
             <div className="font-serif text-3xl text-[#1A1330]">
               {ML.conversion_pct}%
             </div>
-            <div className="text-xs text-[#857E9C] mb-4">
+            <div className="text-xs text-[#6E6787] mb-4">
               {ML.used} of {ML.requested} requested links used
             </div>
             <div className="flex items-center gap-2 text-xs text-[#4B4567]">
@@ -595,7 +595,7 @@ export default function AdminDashboard() {
                 <div className="font-serif text-xl text-[#1A1330] mt-1">
                   How often the joint Section 5 unlocks
                 </div>
-                <p className="text-xs text-[#857E9C] mt-1">
+                <p className="text-xs text-[#6E6787] mt-1">
                   Same numbers we ship in the Monday admin digest —
                   aggregate only, never names or verbatim answers.
                 </p>
@@ -638,7 +638,7 @@ export default function AdminDashboard() {
                 <div className="font-serif text-3xl text-[#1A1330] leading-none">
                   {CN.parents_consented}
                 </div>
-                <div className="text-xs text-[#857E9C] mt-1.5">
+                <div className="text-xs text-[#6E6787] mt-1.5">
                   Cumulative — across every joint case.
                 </div>
               </div>
@@ -649,9 +649,9 @@ export default function AdminDashboard() {
                 <div className="eyebrow mb-2">Cases fully unlocked</div>
                 <div className="font-serif text-3xl text-[#1A1330] leading-none">
                   {CN.cases_both_consented}
-                  <span className="text-[#857E9C] text-lg"> / {CN.cases_total}</span>
+                  <span className="text-[#6E6787] text-lg"> / {CN.cases_total}</span>
                 </div>
-                <div className="text-xs text-[#857E9C] mt-1.5">
+                <div className="text-xs text-[#6E6787] mt-1.5">
                   Section 5 visible on {CN.unlock_rate_pct}% of cases.
                 </div>
               </div>
@@ -665,9 +665,9 @@ export default function AdminDashboard() {
                 <div className="font-serif text-3xl text-[#1A1330] leading-none">
                   {nudge.first_total}
                 </div>
-                <div className="text-xs text-[#857E9C] mt-1.5">
+                <div className="text-xs text-[#6E6787] mt-1.5">
                   Dismissed once · tile returns after 7d ·
-                  <span className="text-[#B6663B]"> +{nudge.first_7d} this week</span>
+                  <span className="text-[#965231]"> +{nudge.first_7d} this week</span>
                 </div>
               </div>
               <div
@@ -680,9 +680,9 @@ export default function AdminDashboard() {
                 <div className="font-serif text-3xl text-[#1A1330] leading-none">
                   {nudge.permanent_total}
                 </div>
-                <div className="text-xs text-[#857E9C] mt-1.5">
+                <div className="text-xs text-[#6E6787] mt-1.5">
                   Dismissed after the retry ·
-                  <span className="text-[#B6663B]"> +{nudge.permanent_7d} this week</span>
+                  <span className="text-[#965231]"> +{nudge.permanent_7d} this week</span>
                 </div>
               </div>
             </div>
@@ -692,7 +692,7 @@ export default function AdminDashboard() {
               <DismissSparkline series={nudge.weekly_4w} />
             </div>
             <SendTestDigestForm />
-            <p className="text-[11px] text-[#857E9C] mt-4 italic">
+            <p className="text-[11px] text-[#6E6787] mt-4 italic">
               Rising permanent-hides with flat opt-ins means the retry
               cadence isn't converting hesitant parents.{" "}
               <Link
@@ -725,7 +725,7 @@ export default function AdminDashboard() {
                     <div className="flex items-baseline justify-between text-sm mb-1">
                       <span className="text-[#1A1330] font-medium">{s.label}</span>
                       <span className="text-[#4B4567]">
-                        {n} <span className="text-[#857E9C]">({pct}% of top · {dropRate}% kept)</span>
+                        {n} <span className="text-[#6E6787]">({pct}% of top · {dropRate}% kept)</span>
                       </span>
                     </div>
                     <div className="h-2 bg-[#E5E0EE] rounded-full overflow-hidden">
@@ -756,7 +756,7 @@ export default function AdminDashboard() {
 
             <div className="eyebrow mt-5 mb-3">Engagement</div>
             <ul className="space-y-2 text-sm">
-              <li className="flex justify-between"><span>Agreement drafts</span><span className="text-[#4B4567]">{E.agreements_total} (<span className="text-[#857E9C]">+{E.agreements_7d}/wk</span>)</span></li>
+              <li className="flex justify-between"><span>Agreement drafts</span><span className="text-[#4B4567]">{E.agreements_total} (<span className="text-[#6E6787]">+{E.agreements_7d}/wk</span>)</span></li>
               <li className="flex justify-between"><span>Improvement plans</span><span className="text-[#4B4567]">{E.improvement_plans_total}</span></li>
             </ul>
           </div>
@@ -798,12 +798,12 @@ export default function AdminDashboard() {
             </div>
           </div>
           {recentUsers.length === 0 ? (
-            <div className="text-sm text-[#857E9C]">No users yet.</div>
+            <div className="text-sm text-[#6E6787]">No users yet.</div>
           ) : (
             <div tabIndex={0} role="region" aria-label="Scrollable table" className="overflow-x-auto">
               <table className="w-full text-sm" data-testid="admin-recent-users">
                 <thead>
-                  <tr className="text-[10px] uppercase tracking-[0.15em] text-[#857E9C]">
+                  <tr className="text-[10px] uppercase tracking-[0.15em] text-[#6E6787]">
                     <th className="text-left py-2 pr-3">Name</th>
                     <th className="text-left py-2 pr-3">Email</th>
                     <th className="text-left py-2 pr-3">Auth</th>

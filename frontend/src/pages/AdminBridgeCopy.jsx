@@ -145,7 +145,7 @@ export default function AdminBridgeCopy() {
             className="mt-4 rounded-2xl border border-[#F1D9B7] bg-[#FFF6EA] px-4 py-3 text-[13px] text-[#5A3C10] flex items-start gap-2"
             data-testid="admin-bridge-copy-default-banner"
           >
-            <ShieldCheck size={14} className="text-[#B45F13] mt-0.5" />
+            <ShieldCheck size={14} className="text-[#904B0E] mt-0.5" />
             <span>
               You&rsquo;re currently seeing the baked-in defaults. Save any
               edit to switch this key onto the admin override.
@@ -190,7 +190,7 @@ export default function AdminBridgeCopy() {
                       className={`text-[10px] uppercase tracking-[0.16em] font-bold ${
                         v.tone === "purple"
                           ? "text-[#3D1A78]"
-                          : "text-[#B45F13]"
+                          : "text-[#904B0E]"
                       } mb-1`}
                     >
                       {v.label}
@@ -270,7 +270,7 @@ export default function AdminBridgeCopy() {
 function Metric({ icon: Icon, label, value, testid }) {
   return (
     <div className="rounded-xl bg-white border border-[#E5E0EE] p-2">
-      <div className="text-[9px] uppercase tracking-[0.14em] font-bold text-[#857E9C] flex items-center justify-center gap-1">
+      <div className="text-[9px] uppercase tracking-[0.14em] font-bold text-[#6E6787] flex items-center justify-center gap-1">
         <Icon size={10} />
         {label}
       </div>
@@ -285,7 +285,7 @@ function Metric({ icon: Icon, label, value, testid }) {
 }
 
 function VariantEditor({ tone, variantKey, label, values, onChange }) {
-  const chip = tone === "purple" ? "bg-[#EFE9F9] text-[#3D1A78]" : "bg-[#FFEEDA] text-[#B45F13]";
+  const chip = tone === "purple" ? "bg-[#EFE9F9] text-[#3D1A78]" : "bg-[#FFEEDA] text-[#904B0E]";
   return (
     <section
       className="rounded-3xl border border-[#E5E0EE] bg-white p-6"
@@ -353,7 +353,7 @@ function TextField({ label, value, onChange, testid, maxLength, textarea = false
         data-testid={testid}
         className="mt-1 block w-full rounded-xl border border-[#E5E0EE] bg-white text-[#1A1330] text-sm px-3 py-2 focus:outline-none focus:border-[#3D1A78]"
       />
-      <span className="text-[10px] text-[#857E9C] mt-0.5 block">
+      <span className="text-[10px] text-[#6E6787] mt-0.5 block">
         {(value || "").length}/{maxLength}
       </span>
     </label>
