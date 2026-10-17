@@ -1043,7 +1043,7 @@ function HistoryList({ items, activeId, labelKey, idKey, onSelect }) {
             <span className="truncate max-w-[70%]">
               {h[labelKey] || "Untitled"}
             </span>
-            <span className="text-[#6E6787] shrink-0">
+            <span className="text-[#4B4567] shrink-0">
               {new Date(h.generated_at).toLocaleString()}
             </span>
           </button>

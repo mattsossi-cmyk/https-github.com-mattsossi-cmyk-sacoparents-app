@@ -49,7 +49,7 @@ export const WelcomeArtwork = ({ testid, actions }) => {
           className="pointer-events-none absolute flex justify-center"
           style={{ left: "66.5%", width: "31.5%", top: "33.6%" }}
         >
-          <span className="rounded-full bg-sky-700/95 text-white font-bold uppercase tracking-wide shadow px-2 py-0.5 text-[7px] sm:text-[0.625rem] whitespace-nowrap">
+          <span className="rounded-full bg-sky-700/95 text-white font-bold uppercase tracking-wide shadow px-2 py-0.5 text-[0.4375rem] sm:text-[0.625rem] leading-tight text-center">
             Tool for either path
           </span>
         </span>

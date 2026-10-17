@@ -302,6 +302,11 @@ h1, h2, h3, h4, .font-serif {
     border-color: var(--brand-sage);
     box-shadow: 0 0 0 4px rgba(61, 26, 120, 0.15);
 }
+/* Keep the toast area inside the screen on phones (it otherwise adds sideways scroll). */
+@media (max-width: 600px) {
+    [data-sonner-toaster] { width: auto !important; }
+    [data-sonner-toaster] [data-sonner-toast] { width: 100% !important; }
+}
 /* Date fields focus inner segments, so give them a clear outline too. */
 input[type="date"].input-soft:focus,
 input[type="date"].input-soft:focus-within {

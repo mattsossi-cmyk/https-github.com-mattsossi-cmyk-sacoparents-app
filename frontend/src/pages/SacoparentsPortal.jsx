@@ -1677,7 +1677,7 @@ export default function SacoparentsPortal() {
 
       {/* BOTTOM NAV */}
       <nav
-        className="fixed bottom-0 left-0 right-0 bg-white border-t border-purple-200 py-2 px-6 flex justify-around items-center z-40 no-print max-w-md mx-auto shadow-lg"
+        className="fixed bottom-0 left-0 right-0 bg-white border-t border-purple-200 py-2 px-2 gap-1 flex justify-around items-start z-40 no-print max-w-md mx-auto shadow-lg"
         data-testid="bottom-nav"
       >
         <button
@@ -1685,8 +1685,8 @@ export default function SacoparentsPortal() {
           onClick={openDoorGateway}
           className={
             screen === "journey"
-              ? "flex flex-col items-center space-y-0.5 bottom-nav-active"
-              : "flex flex-col items-center space-y-0.5 text-slate-500 hover:text-purple-800"
+              ? "flex flex-1 min-w-0 flex-col items-center space-y-0.5 text-center bottom-nav-active"
+              : "flex flex-1 min-w-0 flex-col items-center space-y-0.5 text-center text-slate-500 hover:text-purple-800"
           }
         >
           <i className="fa-solid fa-compass text-base"></i>
@@ -1703,8 +1703,8 @@ export default function SacoparentsPortal() {
           }}
           className={
             foundationDrawerOpen
-              ? "flex flex-col items-center space-y-0.5 bottom-nav-active"
-              : "flex flex-col items-center space-y-0.5 text-slate-500 hover:text-purple-800"
+              ? "flex flex-1 min-w-0 flex-col items-center space-y-0.5 text-center bottom-nav-active"
+              : "flex flex-1 min-w-0 flex-col items-center space-y-0.5 text-center text-slate-500 hover:text-purple-800"
           }
         >
           <i className="fa-solid fa-scale-balanced text-base"></i>
@@ -1719,8 +1719,8 @@ export default function SacoparentsPortal() {
           }}
           className={
             biffDrawerOpen
-              ? "flex flex-col items-center space-y-0.5 bottom-nav-active"
-              : "flex flex-col items-center space-y-0.5 text-slate-500 hover:text-purple-800"
+              ? "flex flex-1 min-w-0 flex-col items-center space-y-0.5 text-center bottom-nav-active"
+              : "flex flex-1 min-w-0 flex-col items-center space-y-0.5 text-center text-slate-500 hover:text-purple-800"
           }
         >
           <i className="fa-solid fa-comments text-base"></i>
@@ -1729,7 +1729,7 @@ export default function SacoparentsPortal() {
         <button
           data-testid="nav-print"
           onClick={handlePrint}
-          className="flex flex-col items-center space-y-0.5 text-slate-500 hover:text-purple-800"
+          className="flex flex-1 min-w-0 flex-col items-center space-y-0.5 text-center text-slate-500 hover:text-purple-800"
         >
           <i className="fa-solid fa-file-pdf text-base"></i>
           <span className="text-[0.5625rem] font-semibold">PDF Export</span>
@@ -1737,7 +1737,7 @@ export default function SacoparentsPortal() {
         <button
           data-testid="nav-get-help"
           onClick={() => navigate("/help")}
-          className="flex flex-col items-center space-y-0.5 text-slate-500 hover:text-purple-800"
+          className="flex flex-1 min-w-0 flex-col items-center space-y-0.5 text-center text-slate-500 hover:text-purple-800"
         >
           <i className="fa-solid fa-life-ring text-base"></i>
           <span className="text-[0.5625rem] font-semibold">Get help</span>

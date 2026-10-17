@@ -40,7 +40,7 @@ export function AllStepsBanner({ sparkle, defaultName }) {
   return (
     <div data-testid="door-self-all-steps-banner" role="status" className="relative overflow-hidden rounded-2xl bg-[#4a1d7a] text-white px-5 py-4 flex flex-wrap items-center gap-4 shadow-[0_12px_30px_-12px_rgba(74,29,122,0.7)]">
       <i aria-hidden="true" className="fa-solid fa-star absolute right-4 top-2 text-[0.625rem] text-purple-300/70"></i>
-      <i aria-hidden="true" className="fa-solid fa-star absolute right-10 bottom-3 text-[7px] text-purple-200/60"></i>
+      <i aria-hidden="true" className="fa-solid fa-star absolute right-10 bottom-3 text-[0.4375rem] text-purple-200/60"></i>
       <span className="shrink-0 w-12 h-12 rounded-full bg-white text-[#4a1d7a] flex items-center justify-center text-xl shadow-md">
         <i className="fa-solid fa-check"></i>
       </span>

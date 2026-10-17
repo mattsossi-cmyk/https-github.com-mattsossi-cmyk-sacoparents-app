@@ -59,8 +59,8 @@ export default function Register() {
   };
 
   return (
-    <main className="min-h-screen gentle-bg grid place-items-center p-6">
-      <div className="w-full max-w-xl fade-up">
+    <main className="min-h-screen gentle-bg grid place-items-center p-4 sm:p-6">
+      <div className="w-full max-w-xl min-w-0 fade-up">
         <Link to="/" className="block text-center mb-8">
           <svg width={68} height={68} viewBox="0 0 64 64" className="mx-auto mb-3" aria-hidden>
             <defs>
@@ -78,7 +78,7 @@ export default function Register() {
             <circle cx="40" cy="26" r="4" fill="white" opacity="0.95" />
             <path d="M22 36 Q32 44 42 36" stroke="white" strokeWidth="2.5" fill="none" strokeLinecap="round" opacity="0.9" />
           </svg>
-          <div className="font-sans font-extrabold text-3xl text-[#1A1330] tracking-tight">
+          <div className="font-sans font-extrabold text-2xl sm:text-3xl text-[#1A1330] tracking-tight break-words">
             <span className="text-brand-gradient">SA</span> CoParents
           </div>
           <div className="text-[0.625rem] uppercase tracking-[0.2em] text-[#6E6787] mt-1">
@@ -86,7 +86,7 @@ export default function Register() {
           </div>
         </Link>
 
-        <div className="card-soft p-8 sm:p-10">
+        <div className="card-soft p-5 sm:p-10">
           <div className="eyebrow text-[#3D1A78] mb-3">Begin</div>
           <h1 className="font-sans font-extrabold text-4xl text-[#1A1330] mb-2 tracking-tight">Create your account</h1>
           <p className="text-[#4B4567] mb-6">
@@ -155,13 +155,13 @@ export default function Register() {
               <label className="eyebrow block mb-2">Children</label>
               <div className="space-y-2">
                 {children.map((c, i) => (
-                  <div key={c.uid} className="grid grid-cols-[1fr_120px_auto] gap-2 items-center">
+                  <div key={c.uid} className="grid grid-cols-[minmax(0,1fr)_minmax(0,6rem)_auto] gap-2 items-center">
                     <input
                       placeholder="Name"
                       aria-label={`Child ${i + 1} name`}
                       value={c.name}
                       onChange={(e) => updateChild(i, "name", e.target.value)}
-                      className="input-soft"
+                      className="input-soft w-full min-w-0"
                       data-testid={`register-child-name-${i}`}
                     />
                     <input
@@ -169,7 +169,7 @@ export default function Register() {
                       aria-label={`Child ${i + 1} age`}
                       value={c.age}
                       onChange={(e) => updateChild(i, "age", e.target.value)}
-                      className="input-soft"
+                      className="input-soft w-full min-w-0"
                       data-testid={`register-child-age-${i}`}
                     />
                     <button

@@ -226,7 +226,7 @@ export default function Login() {
                     <div className="mt-2 text-right">
                       <Link
                         to="/forgot-password"
-                        className="text-xs text-[#3D1A78] font-semibold hover:underline"
+                        className="inline-flex min-h-6 items-center text-xs text-[#3D1A78] font-semibold hover:underline"
                         data-testid="login-forgot-password-link"
                       >
                         Forgot password?
@@ -250,7 +250,7 @@ export default function Login() {
                 <button
                   type="button"
                   onClick={() => setShowEmail(false)}
-                  className="mt-4 w-full text-[0.6875rem] text-[#6E6787] hover:text-[#3D1A78]"
+                  className="mt-4 w-full min-h-6 py-1 text-[0.6875rem] text-[#6E6787] hover:text-[#3D1A78]"
                   data-testid="login-hide-email-toggle"
                 >
                   ← Back to demo mode

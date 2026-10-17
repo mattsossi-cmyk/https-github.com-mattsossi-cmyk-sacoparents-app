@@ -33,7 +33,7 @@ export function SafetyBanner({ tp = "sa", icon = "fa-shield-heart", label = "Con
 export function PageHeader({ onBack, onQuickExit, tp = "sa", backLabel = "Back to Self Journey", tagline = "Align • Support • Thrive", badgeLabel = "Engineered With", tm = false }) {
   return (
     <header className="flex flex-col md:flex-row justify-between items-center gap-4 bg-white/80 backdrop-blur-md rounded-2xl p-4 sm:p-5 mb-8 shadow-sm border border-purple-100/50">
-      <div className="flex items-center gap-3 w-full md:w-auto min-w-0">
+      <div className="flex flex-wrap items-center gap-3 w-full md:w-auto min-w-0">
         <button
           type="button"
           data-testid={`${tp}-back`}
@@ -46,8 +46,8 @@ export function PageHeader({ onBack, onQuickExit, tp = "sa", backLabel = "Back t
         <div className="shrink-0 w-10 h-10 sm:w-12 sm:h-12 bg-purple-700 text-white rounded-2xl flex items-center justify-center text-xl sm:text-2xl shadow-md shadow-purple-200">
           <i className="fa-solid fa-people-roof"></i>
         </div>
-        <div className="min-w-0">
-          <p className="text-lg sm:text-2xl font-extrabold text-[#3B1C6B] tracking-tight break-words">
+        <div className="min-w-[7rem] flex-1">
+          <p className="text-lg sm:text-2xl font-extrabold text-[#3B1C6B] tracking-tight">
             SA CoParents{tm && <span className="text-[0.5625rem] font-bold align-top text-purple-700 ml-0.5">TM</span>}
           </p>
           <p data-testid={`${tp}-tagline`} className="text-[0.5625rem] sm:text-xs font-semibold tracking-wider text-purple-600 uppercase sm:whitespace-nowrap">{tagline}</p>
@@ -56,13 +56,13 @@ export function PageHeader({ onBack, onQuickExit, tp = "sa", backLabel = "Back t
           type="button"
           data-testid={`${tp}-quick-exit`}
           onClick={onQuickExit}
-          className="md:hidden ml-auto shrink-0 px-2.5 py-1.5 rounded-md text-[0.625rem] font-bold bg-rose-600 hover:bg-rose-700 text-white shadow-sm transition-colors whitespace-nowrap"
+          className="md:hidden ml-auto shrink-0 px-2.5 py-1.5 rounded-md text-[0.625rem] font-bold bg-rose-600 hover:bg-rose-700 text-white shadow-sm transition-colors"
         >
           <i className="fa-solid fa-bolt mr-1"></i>Quick Exit
         </button>
       </div>
-      <div className="flex items-center gap-3 max-w-full">
-        <div data-testid={`${tp}-emergent-badge`} className="flex items-center gap-2 bg-slate-900 text-white px-4 py-2 rounded-xl shadow-md border border-slate-700 max-w-full">
+      <div className="flex flex-wrap justify-center items-center gap-3 max-w-full">
+        <div data-testid={`${tp}-emergent-badge`} className="flex items-center gap-2 bg-slate-900 text-white px-4 py-2 rounded-xl shadow-md border border-slate-700 max-w-full min-w-0">
           <div className="flex flex-col text-right">
             <span className="text-[0.625rem] text-purple-300 font-semibold tracking-wider uppercase">{badgeLabel}</span>
             <span className="text-sm font-bold tracking-wide">Powered by Emergent AI</span>

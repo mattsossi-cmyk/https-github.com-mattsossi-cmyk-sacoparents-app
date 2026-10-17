@@ -10,10 +10,10 @@ const CHIPS = [
 
 export function DraftCard({ value, onChange, onPreset, onTransform, busy, guard }) {
   return (
-    <div data-testid="cb-draft-card" className="bg-white rounded-2xl p-6 shadow-md border border-purple-100 mt-6">
-      <div className="flex justify-between items-center mb-3 gap-2">
+    <div data-testid="cb-draft-card" className="bg-white rounded-2xl p-4 sm:p-6 shadow-md border border-purple-100 mt-6">
+      <div className="flex flex-wrap justify-between items-center mb-3 gap-2">
         <h4 className="text-base font-bold text-[#3B1C6B]">Draft Communication Message</h4>
-        <span className="text-[0.6875rem] font-semibold text-purple-600 bg-purple-50 px-2.5 py-1 rounded-full whitespace-nowrap">BIFF style</span>
+        <span className="text-[0.6875rem] font-semibold text-purple-700 bg-purple-50 px-2.5 py-1 rounded-full">BIFF style</span>
       </div>
       <AiGuardFrame tp="cb" guard={guard} className="mb-3">
         <textarea

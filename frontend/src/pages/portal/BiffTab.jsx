@@ -37,7 +37,7 @@ function ToneRow({ status, riskLabel, flagList }) {
             </span>
           ))
         ) : (
-          <span className="text-emerald-600 font-medium">• AI found no friction cues</span>
+          <span className="text-emerald-800 font-medium">• AI found no friction cues</span>
         )}
       </div>
     </div>
@@ -162,7 +162,7 @@ export function BiffTab({
             ) : ready ? (
               <p className="font-semibold text-purple-950 whitespace-pre-wrap">{biffOutput}</p>
             ) : (
-              <p className="text-slate-400 italic">Suggested wording appears here after you tap Get suggested wording.</p>
+              <p className="text-slate-600 italic">Suggested wording appears here after you tap Get suggested wording.</p>
             )}
           </div>
 
@@ -221,7 +221,7 @@ export function BiffHistory({ biffLogs }) {
       </h3>
       <div className="space-y-2 text-xs" data-testid="biff-history-list">
         {biffLogs.length === 0 ? (
-          <p className="text-slate-400 text-center py-2">
+          <p className="text-slate-600 text-center py-2">
             No archived messages yet.
           </p>
         ) : (
@@ -306,7 +306,7 @@ export function BiffMilestones({
 
       <div className="space-y-2 text-xs pt-1" data-testid="milestone-history-list">
         {milestones.length === 0 ? (
-          <p className="text-slate-400 text-center py-1">
+          <p className="text-slate-600 text-center py-1">
             No milestone events logged.
           </p>
         ) : (
@@ -319,7 +319,7 @@ export function BiffMilestones({
               : m.type === "friction"
               ? "text-[0.5625rem] font-bold px-2 py-0.5 rounded bg-rose-100 text-rose-800"
               : "text-[0.5625rem] font-bold px-2 py-0.5 rounded bg-slate-100 text-slate-700";
-            const tagLabel = isAdvocate ? "ADVOCATE" : String(m.type || "note").toUpperCase();
+            const tagLabel = isAdvocate ? "NOTE" : String(m.type || "note").toUpperCase();
             return (
               <div
                 key={m.id}
@@ -363,7 +363,7 @@ export function BiffMilestones({
             : "Share"}
         </button>
       </div>
-      <p className="text-[0.625rem] text-slate-400 text-center no-print">
+      <p className="text-[0.625rem] text-slate-600 text-center no-print">
         One-page snapshot to share with your pediatrician, mediator, or attorney.
       </p>
     </div>

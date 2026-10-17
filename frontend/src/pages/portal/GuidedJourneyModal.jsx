@@ -564,7 +564,7 @@ export function GuidedJourneyModal({
                 type="button"
                 data-testid={`guided-resume-discard-${topic}`}
                 onClick={discardDraftAndClose}
-                className="w-full text-[0.625rem] text-slate-400 hover:text-rose-600 underline"
+                className="w-full min-h-6 text-[0.625rem] text-slate-600 hover:text-rose-700 underline"
               >
                 Discard draft and close
               </button>

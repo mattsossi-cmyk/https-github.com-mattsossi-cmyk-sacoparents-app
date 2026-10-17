@@ -16,7 +16,7 @@ export function SafetyCrisisStrip() {
     >
       <div className="bg-rose-950/95 text-rose-50 rounded-t-lg px-3 py-1.5 text-[0.625rem] flex items-center gap-2 shadow-lg border-t border-rose-800">
         <i className="fa-solid fa-shield-heart text-rose-300 shrink-0" aria-hidden></i>
-        <div className="flex-1 leading-tight">
+        <div className="flex-1 min-w-0 leading-tight break-words">
           <span className="font-bold">In danger?</span>{" "}
           <a
             href="tel:911"
