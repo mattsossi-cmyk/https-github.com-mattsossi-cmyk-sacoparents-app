@@ -19,7 +19,7 @@ _db = pymongo.MongoClient(os.environ["MONGO_URL"])[os.environ["DB_NAME"]]
 
 def test_google_config_and_bad_session_rejected():
     r = requests.get(f"{API}/auth/google/config")
-    assert r.status_code == 200 and r.json()["roles"] == ["professional", "admin"]
+    assert r.status_code == 200 and r.json()["roles"] == ["professional", "admin", "judge"]
     r = requests.post(f"{API}/auth/google/session", json={"session_id": "not-a-real-session"})
     assert r.status_code in (401, 502) and "access_token" not in r.cookies
     assert requests.post(f"{API}/auth/google/session", json={"session_id": "  "}).status_code == 400
@@ -46,7 +46,7 @@ def test_google_matches_existing_pro_and_admin_only():
         return out
     res = asyncio.run(run())
     assert res["pro"] == pro_email
-    assert res[pa_email][0] == 403 and "existing professional and admin" in res[pa_email][1]
+    assert res[pa_email][0] == 403 and "existing professional, court and admin" in res[pa_email][1]
     assert all(v[0] == 403 for k, v in res.items() if k != "pro")
     assert _db.users.count_documents({}) == before  # never creates accounts
     assert _db.login_attempts.count_documents({"email": pa_email, "method": "google", "ok": False}) >= 1

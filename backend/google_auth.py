@@ -9,7 +9,7 @@ from pydantic import BaseModel
 from core import db, logger
 
 SESSION_DATA_URL = "https://demobackend.emergentagent.com/auth/v1/env/oauth/session-data"
-GOOGLE_ROLES = ("professional", "admin")
+GOOGLE_ROLES = ("professional", "admin", "judge")
 
 
 class GoogleSessionIn(BaseModel):
@@ -21,7 +21,7 @@ async def resolve_google_user(email: str, ip: str = "") -> dict:
     user = await db.users.find_one({"email": email})
     if not user or user.get("role") not in GOOGLE_ROLES:
         await db.login_attempts.insert_one({"email": email, "method": "google", "ok": False, "at": datetime.now(timezone.utc).isoformat(), "ip": ip})
-        raise HTTPException(status_code=403, detail="Google sign-in is available for existing professional and admin accounts only. Parents sign in with their invitation code and password.")
+        raise HTTPException(status_code=403, detail="Google sign-in is available for existing professional, court and admin accounts only. Parents sign in with their invitation code and password.")
     if user.get("role") == "professional" and not user.get("approved"):
         raise HTTPException(status_code=403, detail="Your professional account is awaiting approval.")
     return user

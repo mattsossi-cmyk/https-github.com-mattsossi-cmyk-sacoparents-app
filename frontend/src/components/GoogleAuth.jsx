@@ -21,7 +21,7 @@ export const AuthCallback = () => {
     const sid = new URLSearchParams(location.hash.replace(/^#/, "")).get("session_id");
     window.history.replaceState(null, "", location.pathname);
     api.post("/auth/google/session", { session_id: sid })
-      .then(async () => { await refresh(); navigate("/dashboard", { replace: true }); })
+      .then(async (r) => { await refresh(); navigate(r.data?.role === "judge" ? "/court-dashboard" : "/dashboard", { replace: true }); })
       .catch((e) => { toast.error(formatApiError(e)); navigate("/auth", { replace: true }); });
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
   return <div className="min-h-screen bg-background" data-testid="google-auth-callback" />;

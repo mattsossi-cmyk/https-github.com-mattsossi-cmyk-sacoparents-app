@@ -27,6 +27,7 @@ export const SubmissionReceipt = ({ sub, onClose }) => {
           <div key={k} className="grid gap-1 py-1.5 sm:grid-cols-[14rem_1fr]"><dt className="text-muted-foreground">{k}</dt><dd className="break-all font-mono text-xs sm:text-sm" data-testid={`receipt-${k.toLowerCase().replace(/[^a-z0-9]+/g, "-")}`}>{v || "—"}</dd></div>
         ))}
       </dl>
+      {sub.ai_disclosure && <p className="mt-2 text-[11px] italic text-muted-foreground" data-testid="receipt-ai-disclosure">{sub.ai_disclosure}</p>}
       <p className="mt-2 text-[11px] text-muted-foreground">Both documents are locked and timestamped. Keep this receipt for your file; the same version and hash appear in the Judge Portal.</p>
     </div>
   );

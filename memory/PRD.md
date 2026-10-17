@@ -1124,3 +1124,8 @@ Owner rulings: 1 replace A/B/C with 8-domain set; 2 professional-decides (no aut
 - auth/me google_linked_at; DELETE /auth/google/link (requires password_hash); ProContactCard shows 'Google linked' badge + Unlink.
 - court_packets._ai_disclosure(doc): exact models from approved ai_joint_draft, agreement_ai, Legal Lens ai_drafts (or 'none'); printed in italics under Enclosures on the transmittal (pdf_report.build_transmittal_pdf ai_disclosure).
 - Tests: test_iter116 2 passed; packet suites 11 passed.
+
+## 2026-10-17 — Google for judges + AI line in receipt/court email (PREVIEW ONLY)
+- google_auth GOOGLE_ROLES += judge; AuthCallback routes judge → /court-dashboard; Auth.jsx note updated.
+- court_workflow: submission record sub.ai_disclosure (court_packets._ai_disclosure); SubmissionReceipt shows receipt-ai-disclosure; court notification email gets the italic AI line after the summary.
+- Tests: test_iter117 2 passed.

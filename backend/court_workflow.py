@@ -857,18 +857,22 @@ async def _persist_submission(db, s: Submission, doc: dict, combined: bytes, leg
         await db.court_packets.update_many({"report_id": s.rid, "submission_version": {"$exists": True}}, {"$set": {"superseded": True}})
     await db.court_packets.insert_one(_frozen_packet(s))
     sub = _submission_record(s)
+    from court_packets import _ai_disclosure
+    sub["ai_disclosure"] = _ai_disclosure(doc)
     await db.joint_reports.update_one({"id": s.rid}, {"$push": {"court_submissions": sub}, "$set": {"report_generated_at": doc.get("report_generated_at") or _iso(s.now)}})
     if doc.get("court_referral_id"):
         await db.court_referrals.update_one({"id": doc["court_referral_id"]}, {"$set": {"status": "submitted", "submitted_at": _iso(s.now)}})
     return sub
 
 
-def _submission_email_html(user: dict, court: dict, version: int, app_url, email_from_name: str, court_summary: str | None = None) -> str:
+def _submission_email_html(user: dict, court: dict, version: int, app_url, email_from_name: str, court_summary: str | None = None, ai_disclosure: str | None = None) -> str:
     summary = ""
     if court_summary:
         paras = "".join(f"<p style='margin:0 0 8px'>{escape(p.strip())}</p>" for p in court_summary.split("\n") if p.strip())
         summary = (f'<div style="margin:16px 0;padding:14px 16px;border:2px solid #5B2A86;border-radius:8px;background:#f8f5ff">'
                    f'<p style="margin:0 0 8px;font-size:12px;font-weight:700;letter-spacing:.04em;color:#5B2A86;text-transform:uppercase">Concise Court / Referral Summary — from the professional\'s report</p>{paras}</div>')
+    if ai_disclosure:
+        summary += f'<p style="margin:12px 0 0;font-size:12px;color:#555;font-style:italic">{escape(ai_disclosure)}</p>'
     return ('<table role="presentation" width="100%"><tr><td style="padding:24px;font-family:Arial,sans-serif">'
             f"<p>Your Honor,</p><p>{escape(user.get('name', ''))} has submitted the Joint Alignment Report and Professional Assessment Statement for Cause No. {escape(court.get('cause_number', ''))}"
             f" (version {version}). Both documents are locked and hash-sealed; open them in your Court Dashboard.</p>{summary}"
@@ -1035,7 +1039,7 @@ async def _log_submission(c: Ctx, rid: str, user: dict, court: dict, version: in
 async def _notify_court(c: Ctx, user: dict, court: dict, doc: dict, version: int, legal_summary: dict | None) -> None:
     try:
         await c.send_email(to=court["judge_email"], case_id=doc["id"], kind="court_submission", to_role="Court", subject=f"Submission received - Cause No. {court.get('cause_number', '')} (v{version})",
-                           html=_submission_email_html(user, court, version, c.app_url, c.email_from_name, (legal_summary or {}).get("court_summary")))
+                           html=_submission_email_html(user, court, version, c.app_url, c.email_from_name, (legal_summary or {}).get("court_summary"), __import__("court_packets")._ai_disclosure(doc)))
     except Exception as exc:
         c.logger.warning("submission email failed: %s", exc)
 
