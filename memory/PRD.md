@@ -1129,3 +1129,5 @@ Owner rulings: 1 replace A/B/C with 8-domain set; 2 professional-decides (no aut
 - google_auth GOOGLE_ROLES += judge; AuthCallback routes judge → /court-dashboard; Auth.jsx note updated.
 - court_workflow: submission record sub.ai_disclosure (court_packets._ai_disclosure); SubmissionReceipt shows receipt-ai-disclosure; court notification email gets the italic AI line after the summary.
 - Tests: test_iter117 2 passed.
+
+## 2026-10-17 — Perplexity key replaced (owner-provided, untracked backend/.env). Direct chat/completions returns 403 for this key (sonar endpoint not enabled) but the app's /v1/agent path returns 200: Local Resources working (Bexar County FJC result). Two earlier pasted keys were invalid — advised owner to revoke them.
