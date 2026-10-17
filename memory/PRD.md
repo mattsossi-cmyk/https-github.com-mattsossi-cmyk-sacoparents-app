@@ -1102,3 +1102,9 @@ Owner rulings: 1 replace A/B/C with 8-domain set; 2 professional-decides (no aut
 - components/InviteCadenceSettings.jsx on JointReport (pro view, non-foundation): edit reminder days + max (0-2) via GET/PUT invite-cadence.
 - Webhook secret: NOT set — needs owner/parent-app builder value (ALIGN_WEBHOOK_SECRET in backend/.env).
 - Tests: test_iter114 3 passed (+iter112 4).
+
+## 2026-10-17 — Owner decisions
+- (c) ALIGN_WEBHOOK_SECRET stays UNSET; SAFETY_STATUS_WEBHOOK=false; never generate/print a secret. Webhook paused until owner decides.
+- STOP building new features on this thread (owner instruction).
+- Wrote /app/PARENT_APP_SAFETY_STATUS_WEBHOOK_CONTRACT.md (document only) for the parent-app builder.
+- Owner asked about a 'Safety Gate message with Get Help line for the sacoparentsapp chat' — does NOT exist in this project; belongs to the other thread.
