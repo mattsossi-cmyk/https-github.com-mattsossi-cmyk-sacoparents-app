@@ -31,6 +31,13 @@ export default function ProfessionalTraining() {
         <p className="mt-2 text-xs font-mono text-[#3D1A78]/70" data-testid="training-version">Version {t.version}{d.current ? " · acknowledged" : ""}</p></div></header>
       <main className="mx-auto max-w-2xl px-4 py-8 sm:px-6">
         <p className="text-sm leading-relaxed text-slate-700 md:text-base" data-testid="training-intro">{t.intro}</p>
+        {d.reason === "yearly" && <p className="mt-4 rounded-xl border border-amber-300 bg-amber-50 p-3 text-sm" data-testid="training-yearly-note">Yearly refresher: you last acknowledged this training on {d.acknowledged_at?.slice(0, 10)}. The content is unchanged; please re-read and re-acknowledge.</p>}
+        {d.changes_since?.length > 0 && d.last_version && (
+          <div className="mt-4 rounded-xl border border-[#3D1A78]/20 bg-white p-4" data-testid="training-changes">
+            <p className="text-sm font-bold">What changed since your last version ({d.last_version})</p>
+            <ul className="mt-2 list-disc space-y-1 pl-5 text-sm text-slate-700">{d.changes_since.flatMap((c) => c.changes.map((x, i) => <li key={c.version + i}><span className="font-mono text-xs text-slate-500">{c.version}</span> — {x}</li>))}</ul>
+          </div>
+        )}
         <ol className="mt-6 space-y-3" data-testid="training-modules">
           {t.modules.map((m, i) => (
             <li key={m.heading} className="flex gap-4 rounded-2xl border border-[#3D1A78]/10 bg-white p-4 shadow-sm" data-testid={`training-module-${i + 1}`}>

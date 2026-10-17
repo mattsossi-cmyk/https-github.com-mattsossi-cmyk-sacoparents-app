@@ -57,6 +57,7 @@ def public_user(u: dict) -> dict:
         "privacy_notice_version": (u.get("privacy_notice") or {}).get("version"),
         "professional_notice_version": (u.get("professional_notice") or {}).get("version"),
         "safety_training_version": (u.get("safety_training") or {}).get("version"),
+        "safety_training_due": (__import__("pro_training").training_state(u)["reason"] if u.get("role") in ("professional", "admin") else None),
         "is_supervisor": bool(u.get("is_supervisor")) or u.get("role") == "admin",
         "profile": u.get("profile", {}),
     }

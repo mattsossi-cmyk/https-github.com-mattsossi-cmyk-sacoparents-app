@@ -1,5 +1,7 @@
 """Phase 5a: safety training acknowledgment gate + supervising-professional role. Gate applies to screening responses and the safety review."""
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
+
+from core import _parse_iso
 
 from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel
@@ -21,8 +23,28 @@ TRAINING = {
 }
 
 
+REFRESH_DAYS = 365
+CHANGELOG = [
+    {"version": "2026-10-16.1", "changes": ["First release: fixed Red/Amber/Green rules, parent-facing neutrality, export scan, supervisor sign-off for lowering a Red, mandatory-reporting reminder."]},
+]
+
+
+def training_state(user: dict) -> dict:
+    """current=True only if the latest version was acknowledged within REFRESH_DAYS. Also returns why a refresh is due and what changed."""
+    rec = user.get("safety_training") or {}
+    ack_at = _parse_iso(rec.get("acknowledged_at"))
+    version_ok = rec.get("version") == TRAINING_VERSION
+    age_ok = bool(ack_at) and datetime.now(timezone.utc) - ack_at < timedelta(days=REFRESH_DAYS)
+    reason = None if (version_ok and age_ok) else ("never" if not rec else ("version" if not version_ok else "yearly"))
+    seen = {c["version"] for c in CHANGELOG}
+    changes = [c for c in CHANGELOG if rec.get("version") not in seen or c["version"] > rec.get("version", "")]
+    due_at = (ack_at + timedelta(days=REFRESH_DAYS)).isoformat() if ack_at else None
+    return {"current": reason is None, "reason": reason, "last_version": rec.get("version"), "acknowledged_at": rec.get("acknowledged_at"), "refresh_due_at": due_at,
+            "changes_since": changes if reason in ("version", "never") else []}
+
+
 def training_current(user: dict) -> bool:
-    return (user.get("safety_training") or {}).get("version") == TRAINING_VERSION
+    return training_state(user)["current"]
 
 
 async def require_training(db, user: dict) -> None:
@@ -55,7 +77,8 @@ def build_router(db, get_current_user) -> APIRouter:
     @r.get("/professional-training")
     async def get_training(user=Depends(get_current_user)):
         full = await db.users.find_one({"_id": user["_id"]}, {"safety_training": 1, "is_supervisor": 1, "role": 1}) or {}
-        return {"training": TRAINING, "current": training_current(full), "acknowledged": full.get("safety_training"), "is_supervisor": await is_supervisor(db, user)}
+        st = training_state(full)
+        return {"training": TRAINING, **st, "acknowledged": full.get("safety_training"), "is_supervisor": await is_supervisor(db, user), "refresh_days": REFRESH_DAYS}
 
     @r.post("/professional-training/acknowledge")
     async def ack(body: AckIn, user=Depends(get_current_user)):

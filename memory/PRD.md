@@ -1096,3 +1096,9 @@ Owner rulings: 1 replace A/B/C with 8-domain set; 2 professional-decides (no aut
 - Reminder dashboard: GET /professional/invitations (pro's open cases, pending invites, next_reminder_at from cadence, expires_at, expired, can_reissue; no token). components/InviteReminderPanel.jsx on professional dashboard (under ProContactCard) with 'Send fresh link' → existing POST /joint/invitations/{iid}/reissue.
 - Webhook live check: POST /admin/safety-status-webhook/test → deliver(test=True) single attempt, response_snippet (300 chars), case_id ALIGN-TEST-PING, works while flag OFF, no admin alert email on failure; components/AdminWebhookCheck.jsx on admin Acceptance Log tab (button disabled until ALIGN_WEBHOOK_SECRET set).
 - Tests: test_iter113 3 passed (+iter111 9). Browser: admin toggle buttons + webhook card verified; reminder panel verified.
+
+## 2026-10-16 — Training refresher + case reminder settings DONE (PREVIEW ONLY)
+- pro_training.training_state(): current only if latest version AND acknowledged < REFRESH_DAYS(365); reason never|version|yearly; CHANGELOG changes_since; auth/me safety_training_due. Gate (428) also enforces yearly. components/TrainingRefresherBanner.jsx on pro dashboard; ProfessionalTraining shows yearly note / what changed.
+- components/InviteCadenceSettings.jsx on JointReport (pro view, non-foundation): edit reminder days + max (0-2) via GET/PUT invite-cadence.
+- Webhook secret: NOT set — needs owner/parent-app builder value (ALIGN_WEBHOOK_SECRET in backend/.env).
+- Tests: test_iter114 3 passed (+iter112 4).

@@ -35,6 +35,7 @@ import { AdminAcceptanceLog } from "@/components/AdminAcceptanceLog";
 import { AdminSafetyAudit } from "@/components/AdminSafetyAudit";
 import { AdminWebhookCheck } from "@/components/AdminWebhookCheck";
 import { InviteReminderPanel } from "@/components/InviteReminderPanel";
+import { TrainingRefresherBanner } from "@/components/TrainingRefresherBanner";
 import { SenderStatusBadge } from "@/components/SenderStatusBadge";
 import { ProTopNav } from "@/components/dashboard/ProTopNav";
 import { ProHero } from "@/components/dashboard/ProHero";
@@ -424,6 +425,7 @@ export default function Dashboard() {
         )}
 
         {isPro && user?.role === "professional" && <ProZipPrompt />}
+        {isPro && <TrainingRefresherBanner />}
         {isPro && <ProContactCard />}
         {isPro && <InviteReminderPanel />}
         {isPro && user?.role === "professional" && <PublicListingCard />}

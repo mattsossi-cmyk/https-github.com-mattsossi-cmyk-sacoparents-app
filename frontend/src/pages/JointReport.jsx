@@ -14,6 +14,7 @@ import { FoundationStatements } from "@/components/FoundationStatements";
 import { CaseAttachments } from "@/components/FoundationAttachments";
 import { ShareFoundation } from "@/components/ShareFoundation";
 import { SafetyScreeningPanel } from "@/components/SafetyScreeningPanel";
+import { InviteCadenceSettings } from "@/components/InviteCadenceSettings";
 const NO_REPORT = new Set(["agreement", "foundation"]);
 import { CompareView } from "@/components/CompareView";
 import { SampleWalkthrough } from "@/components/SampleWalkthrough";
@@ -175,6 +176,7 @@ export default function JointReport() {
             </p>
           )}
           {detail.kind !== "foundation" && <SafetyScreeningPanel rid={id} />}
+          {!detail.my_role && detail.kind !== "foundation" && <InviteCadenceSettings rid={id} />}
           {detail.my_role && !detail.is_creator && <ShareFoundation rid={id} shared={detail.my_foundation_shared} onShared={() => setDetail((d) => ({ ...d, my_foundation_shared: true }))} />}
           {ready && detail.my_role && (
             <div className="mt-5 pt-4 border-t border-border">
