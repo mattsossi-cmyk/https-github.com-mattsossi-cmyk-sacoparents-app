@@ -88,16 +88,16 @@ export default function DeleteAccount() {
             <li>Anything saved in this browser for the app</li>
           </ul>
           <h3 className="font-semibold text-[#1A1330] text-[14px] mt-5 mb-1.5">Shared records</h3>
-          <p data-testid="delete-account-shared-note" className="text-[13px] text-[#4B4567] leading-relaxed">
+          <p data-testid="delete-account-shared-note" className="text-[0.8125rem] text-[#4B4567] leading-relaxed">
             In a case or comparison you share with your co-parent or a professional, your part is removed and it shows
             &ldquo;A parent deleted their account&rdquo;. Their own information stays with them.
           </p>
           <h3 className="font-semibold text-[#1A1330] text-[14px] mt-4 mb-1.5">What we keep</h3>
-          <p data-testid="delete-account-kept-note" className="text-[13px] text-[#4B4567] leading-relaxed">
+          <p data-testid="delete-account-kept-note" className="text-[0.8125rem] text-[#4B4567] leading-relaxed">
             For legal record-keeping we keep health-information access logs and consent records, with your name,
             email and account replaced by an anonymous code, plus a note of the date your account was deleted.
           </p>
-          <p className="text-[13px] text-[#6E6787] mt-4 italic">
+          <p className="text-[0.8125rem] text-[#6E6787] mt-4 italic">
             Copies someone already downloaded, and anything SA CoParents Align already saved, can&rsquo;t be recalled
             from here. Ask Align directly to delete what it holds.
           </p>
@@ -216,7 +216,7 @@ function SignedOutDeleteCard() {
 
       <div className="space-y-4">
         <div className="border border-[#E5E0EE] rounded-xl p-5">
-          <div className="text-[13px] uppercase tracking-wider text-[#6E6787] mb-2">
+          <div className="text-[0.8125rem] uppercase tracking-wider text-[#6E6787] mb-2">
             Option 1 &mdash; Fastest
           </div>
           <p className="text-[14px] text-[#1A1330] mb-3">
@@ -232,7 +232,7 @@ function SignedOutDeleteCard() {
         </div>
 
         <div className="border border-[#E5E0EE] rounded-xl p-5">
-          <div className="text-[13px] uppercase tracking-wider text-[#6E6787] mb-2">
+          <div className="text-[0.8125rem] uppercase tracking-wider text-[#6E6787] mb-2">
             Option 2 &mdash; Email request
           </div>
           <p className="text-[14px] text-[#1A1330] mb-1">
@@ -249,7 +249,7 @@ function SignedOutDeleteCard() {
           >
             {SUPPORT_EMAIL}
           </a>
-          <p className="text-[12px] text-[#6E6787] mt-2">
+          <p className="text-[0.75rem] text-[#6E6787] mt-2">
             Manual requests are processed within 7 days. We'll reply once your
             data is gone.
           </p>

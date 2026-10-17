@@ -105,7 +105,7 @@ export default function SampleCoParentingLanding() {
       {/* Hero */}
       <section className="max-w-6xl mx-auto px-4 sm:px-6 pt-8 pb-14">
         <div className="max-w-3xl">
-          <div className="text-[10px] uppercase tracking-[0.22em] font-bold text-[#3D1A78] flex items-center gap-2">
+          <div className="text-[0.625rem] uppercase tracking-[0.22em] font-bold text-[#3D1A78] flex items-center gap-2">
             <FileText size={12} />
             Sample · Co-Parenting Agreement
           </div>
@@ -183,7 +183,7 @@ export default function SampleCoParentingLanding() {
         data-testid="sample-coparenting-branding"
       >
         <div className="rounded-3xl border border-[#D6CFE8] bg-white p-5 sm:p-6">
-          <div className="flex items-center gap-2 text-[10px] uppercase tracking-[0.22em] font-bold text-[#3D1A78]">
+          <div className="flex items-center gap-2 text-[0.625rem] uppercase tracking-[0.22em] font-bold text-[#3D1A78]">
             <Sparkles size={12} /> For mediators · Brand this sample
           </div>
           <h3 className="mt-2 font-serif text-xl text-[#1A1330]">
@@ -206,7 +206,7 @@ export default function SampleCoParentingLanding() {
               data-testid="sample-coparenting-firm-input"
             />
             <div className="flex items-center gap-2 rounded-full border border-[#D6CFE8] px-3 py-1">
-              <label className="text-[10px] uppercase tracking-[0.14em] font-bold text-[#6E6787] shrink-0">
+              <label className="text-[0.625rem] uppercase tracking-[0.14em] font-bold text-[#6E6787] shrink-0">
                 Accent
               </label>
               <input
@@ -276,7 +276,7 @@ export default function SampleCoParentingLanding() {
       <section className="max-w-6xl mx-auto px-4 sm:px-6 pb-16">
         <div className="rounded-3xl border-2 border-[#D6CFE8] bg-white shadow-lg overflow-hidden">
           <div className="flex items-center justify-between px-4 py-3 border-b border-[#EEE8F7] bg-[#FAF6FF]">
-            <div className="text-[10px] uppercase tracking-[0.22em] font-bold text-[#3D1A78] flex items-center gap-2">
+            <div className="text-[0.625rem] uppercase tracking-[0.22em] font-bold text-[#3D1A78] flex items-center gap-2">
               <FileText size={12} /> Preview · 17-page sample
               {isBranded && (
                 <span className="text-[#1F5C3B]">· branded</span>

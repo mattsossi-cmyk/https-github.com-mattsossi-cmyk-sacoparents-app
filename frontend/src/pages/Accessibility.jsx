@@ -113,7 +113,7 @@ function H2({ children }) {
 
 function Prose({ children }) {
   return (
-    <div className="prose-soft space-y-3 text-[#1A1330] leading-relaxed [&_p]:text-[#4B4567] [&_ul]:list-disc [&_ul]:pl-5 [&_ul]:space-y-1.5 [&_li]:text-[#4B4567] [&_strong]:text-[#1A1330] [&_kbd]:bg-[#EFE9F9] [&_kbd]:text-[#3D1A78] [&_kbd]:rounded [&_kbd]:px-1.5 [&_kbd]:py-0.5 [&_kbd]:text-[11px] [&_kbd]:font-mono [&_code]:bg-[#EFE9F9] [&_code]:text-[#3D1A78] [&_code]:rounded [&_code]:px-1 [&_code]:text-[13px] text-[15px]">
+    <div className="prose-soft space-y-3 text-[#1A1330] leading-relaxed [&_p]:text-[#4B4567] [&_ul]:list-disc [&_ul]:pl-5 [&_ul]:space-y-1.5 [&_li]:text-[#4B4567] [&_strong]:text-[#1A1330] [&_kbd]:bg-[#EFE9F9] [&_kbd]:text-[#3D1A78] [&_kbd]:rounded [&_kbd]:px-1.5 [&_kbd]:py-0.5 [&_kbd]:text-[0.6875rem] [&_kbd]:font-mono [&_code]:bg-[#EFE9F9] [&_code]:text-[#3D1A78] [&_code]:rounded [&_code]:px-1 [&_code]:text-[0.8125rem] text-[15px]">
       {children}
     </div>
   );
@@ -130,7 +130,7 @@ function Feature({ icon, title, children }) {
         {icon}
         <div className="text-sm font-semibold text-[#1A1330]">{title}</div>
       </div>
-      <p className="text-[13px] text-[#4B4567] mt-2 leading-relaxed">{children}</p>
+      <p className="text-[0.8125rem] text-[#4B4567] mt-2 leading-relaxed">{children}</p>
     </div>
   );
 }

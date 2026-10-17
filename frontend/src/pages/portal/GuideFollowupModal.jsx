@@ -53,7 +53,7 @@ export function GuideFollowupModal({
               <i className="fa-solid fa-hands-holding-child text-white text-sm"></i>
             </div>
             <div className="min-w-0">
-              <div className="text-[9px] font-bold text-purple-800 uppercase tracking-wider">
+              <div className="text-[0.5625rem] font-bold text-purple-800 uppercase tracking-wider">
                 Checking in
               </div>
               <h3 className="font-bold text-slate-800 text-sm truncate">
@@ -76,15 +76,15 @@ export function GuideFollowupModal({
           className="p-3 space-y-3 bg-slate-50"
           data-testid="guide-followup-body"
         >
-          <div className="p-2.5 bg-white border border-slate-200 rounded-2xl rounded-tl-sm text-[12px] text-slate-800 leading-snug shadow-sm">
+          <div className="p-2.5 bg-white border border-slate-200 rounded-2xl rounded-tl-sm text-[0.75rem] text-slate-800 leading-snug shadow-sm">
             {greeting} how’s it going?
           </div>
-          <div className="p-2.5 bg-white border border-slate-200 rounded-2xl rounded-tl-sm text-[12px] text-slate-800 leading-snug shadow-sm">
+          <div className="p-2.5 bg-white border border-slate-200 rounded-2xl rounded-tl-sm text-[0.75rem] text-slate-800 leading-snug shadow-sm">
             You picked the <b>{label}</b>{" "}
             {days === 1 ? "yesterday" : `${days} days ago`} and I don’t
             think you’ve opened your first assessment yet.
           </div>
-          <div className="p-2.5 bg-white border border-slate-200 rounded-2xl rounded-tl-sm text-[12px] text-slate-800 leading-snug shadow-sm">
+          <div className="p-2.5 bg-white border border-slate-200 rounded-2xl rounded-tl-sm text-[0.75rem] text-slate-800 leading-snug shadow-sm">
             No pressure — every family moves at its own pace. When
             you’re ready, I’ll take you straight there so you don’t
             have to hunt for it.
@@ -109,7 +109,7 @@ export function GuideFollowupModal({
             type="button"
             data-testid="guide-followup-dismiss-week"
             onClick={onDismissForWeek}
-            className="w-full py-1.5 text-[11px] text-slate-500 hover:text-slate-700 underline"
+            className="w-full py-1.5 text-[0.6875rem] text-slate-500 hover:text-slate-700 underline"
           >
             Not now, thanks — remind me next week
           </button>

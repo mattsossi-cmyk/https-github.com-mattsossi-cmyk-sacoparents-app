@@ -13,7 +13,7 @@ const LINKS = [
 export function PrivacyLinks({ tp, only }) {
   const items = only ? LINKS.filter((l) => only.includes(l.key)) : LINKS;
   return (
-    <ul className="flex flex-wrap gap-x-4 gap-y-1.5 text-[13px]">
+    <ul className="flex flex-wrap gap-x-4 gap-y-1.5 text-[0.8125rem]">
       {items.map((l) => (
         <li key={l.key}>
           <Link to={l.to} data-testid={`${tp}-link-${l.key}`} className="text-[#3D1A78] font-semibold underline underline-offset-2 hover:text-[#2A0F5F]">

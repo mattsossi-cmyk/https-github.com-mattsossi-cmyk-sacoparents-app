@@ -40,7 +40,7 @@ function Pillars() {
           </div>
           <div className="min-w-0 flex-1">
             <div className="text-sm font-bold text-slate-900 leading-tight">{p.title}</div>
-            <p className="text-[11px] text-slate-600 mt-0.5 leading-snug">{p.body}</p>
+            <p className="text-[0.6875rem] text-slate-600 mt-0.5 leading-snug">{p.body}</p>
           </div>
         </div>
       ))}
@@ -65,7 +65,7 @@ function BuilderDialog({ open, onOpenChange, fb, parentName }) {
         <div className="space-y-3">
           {CONTENT.fields.map((f) => (
             <label key={f.key} className="block">
-              <span className="text-[12px] font-bold text-slate-700">{f.label}</span>
+              <span className="text-[0.75rem] font-bold text-slate-700">{f.label}</span>
               {f.type === "text" ? (
                 <input type="text" data-testid={`foundation-field-${f.key.replace(/_/g, "-")}`} value={value(f.key)} onChange={(e) => fb.update(f.key, e.target.value)} placeholder={f.placeholder} maxLength={3000} className={fieldCls} />
               ) : (
@@ -74,12 +74,12 @@ function BuilderDialog({ open, onOpenChange, fb, parentName }) {
             </label>
           ))}
           {STATUS_COPY[fb.status] && (
-            <p data-testid="foundation-save-status" data-status={fb.status} className="text-[10px] text-slate-500 text-center">
+            <p data-testid="foundation-save-status" data-status={fb.status} className="text-[0.625rem] text-slate-500 text-center">
               {STATUS_COPY[fb.status]}
             </p>
           )}
           <div className="pt-2 border-t border-slate-200 space-y-1.5">
-            <p className="text-[11px] text-slate-500">The PDF ends with signature lines for both parents and a notary section.</p>
+            <p className="text-[0.6875rem] text-slate-500">The PDF ends with signature lines for both parents and a notary section.</p>
             <ESignField testid="foundation-esign" name={esignName} onName={setEsignName} agreed={esignAgreed} onAgree={setEsignAgreed} />
           </div>
           <div className="flex items-center gap-2">
@@ -103,7 +103,7 @@ export function FoundationStatementView({ onBack = () => {}, backLabel = "Back t
     <div data-testid="journey-shell" className="space-y-4">
       <section data-testid="door-view-foundation" className="space-y-4">
         <div className="flex items-center justify-between gap-2 flex-wrap">
-          <button type="button" data-testid="foundation-back" onClick={onBack} className="text-[12px] font-semibold text-purple-700 hover:text-purple-900">
+          <button type="button" data-testid="foundation-back" onClick={onBack} className="text-[0.75rem] font-semibold text-purple-700 hover:text-purple-900">
             <i className="fa-solid fa-arrow-left mr-1"></i>
             {backLabel}
           </button>
@@ -111,7 +111,7 @@ export function FoundationStatementView({ onBack = () => {}, backLabel = "Back t
         </div>
         <section data-testid="foundation-brand" className="text-center bg-white border border-slate-200 rounded-2xl py-4 px-4 shadow-sm">
           <div className="text-[22px] font-extrabold text-purple-800 leading-none">SA CoParents</div>
-          <div className="text-[9px] font-bold tracking-[0.18em] uppercase text-purple-700 mt-1">Start With Alignment, End With Agreement</div>
+          <div className="text-[0.5625rem] font-bold tracking-[0.18em] uppercase text-purple-700 mt-1">Start With Alignment, End With Agreement</div>
         </section>
         <section data-testid="foundation-hero" className="bg-white border border-slate-200 rounded-2xl p-4 shadow-sm">
           <div className="italic text-purple-700 font-bold text-base" style={{ fontFamily: 'Georgia, "Times New Roman", serif' }}>
@@ -136,7 +136,7 @@ export function FoundationStatementView({ onBack = () => {}, backLabel = "Back t
             <div className="italic text-purple-800 font-bold text-base" style={{ fontFamily: 'Georgia, "Times New Roman", serif' }}>
               {CONTENT.footer_title}
             </div>
-            <div className="text-[10px] font-extrabold tracking-wider uppercase text-slate-500 mt-1">{CONTENT.footer_tags}</div>
+            <div className="text-[0.625rem] font-extrabold tracking-wider uppercase text-slate-500 mt-1">{CONTENT.footer_tags}</div>
           </div>
         </section>
       </section>

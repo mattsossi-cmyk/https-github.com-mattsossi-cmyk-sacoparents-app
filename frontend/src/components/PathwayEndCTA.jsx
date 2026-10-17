@@ -85,7 +85,7 @@ export default function PathwayEndCTA({
         <div className="flex-1 min-w-0">
           {eyebrow && (
             <div
-              className={`text-[10px] uppercase tracking-[0.22em] font-bold ${style.eyebrow} mb-1`}
+              className={`text-[0.625rem] uppercase tracking-[0.22em] font-bold ${style.eyebrow} mb-1`}
               data-testid={`${testId}-eyebrow`}
             >
               {eyebrow}

@@ -32,7 +32,7 @@ export const CourtCodesPanel = () => {
     <section className="rounded-2xl border border-[#E5E0EE] bg-white p-4 sm:p-5 mb-4" data-testid="court-codes-panel">
       <div className="flex items-start justify-between gap-3 flex-wrap mb-3">
         <div>
-          <div className="text-[11px] uppercase tracking-[0.22em] font-bold text-[#3D1A78] inline-flex items-center gap-2">
+          <div className="text-[0.6875rem] uppercase tracking-[0.22em] font-bold text-[#3D1A78] inline-flex items-center gap-2">
             <KeyRound size={12} /> Court codes
           </div>
           <p className="text-sm text-[#4B4567] mt-1 max-w-xl leading-relaxed">

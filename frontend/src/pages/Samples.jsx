@@ -291,7 +291,7 @@ function SampleCard({ sample, tone, DefaultIcon }) {
             {sample.title}
           </div>
           {sample.blurb && (
-            <p className="text-[12px] text-[#4B4567] mt-1 leading-snug">
+            <p className="text-[0.75rem] text-[#4B4567] mt-1 leading-snug">
               {sample.blurb}
             </p>
           )}
@@ -330,7 +330,7 @@ function CategoryBlock({ category }) {
           <Icon size={20} strokeWidth={2.2} />
         </div>
         <div>
-          <div className={`text-[10px] uppercase tracking-[0.22em] font-bold mb-1 ${style.eyebrow}`}>
+          <div className={`text-[0.625rem] uppercase tracking-[0.22em] font-bold mb-1 ${style.eyebrow}`}>
             {category.samples.length} sample{category.samples.length === 1 ? "" : "s"}
           </div>
           <h2 className="font-serif text-xl sm:text-2xl text-[#1A1330] leading-tight">

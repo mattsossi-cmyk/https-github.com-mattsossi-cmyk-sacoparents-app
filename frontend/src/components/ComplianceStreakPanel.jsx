@@ -117,7 +117,7 @@ export default function ComplianceStreakPanel() {
     >
       <div className="flex items-start justify-between gap-4 flex-wrap">
         <div>
-          <div className="text-[10px] uppercase tracking-[0.22em] font-bold text-[#3D1A78]">
+          <div className="text-[0.625rem] uppercase tracking-[0.22em] font-bold text-[#3D1A78]">
             Streak &amp; rewards
           </div>
           <div className="mt-1 flex items-baseline gap-2 flex-wrap">
@@ -132,12 +132,12 @@ export default function ComplianceStreakPanel() {
               {current === 1 ? "week in a row" : "weeks in a row"} at ≥{data.threshold_pct}%
             </span>
           </div>
-          <div className="text-[11px] text-[#6A5799] mt-1">
+          <div className="text-[0.6875rem] text-[#6A5799] mt-1">
             Longest streak: <strong>{longest}</strong> · Badges earned:{" "}
             <strong data-testid="streak-earned-count">{earnedCount}</strong> of {data.badges.length}
           </div>
         </div>
-        <div className="inline-flex items-center gap-1.5 text-[11px] text-[#4B4567] italic">
+        <div className="inline-flex items-center gap-1.5 text-[0.6875rem] text-[#4B4567] italic">
           <Sparkles size={12} className="text-[#3D1A78]" />
           Missing a week resets the streak — silence isn&rsquo;t credit.
         </div>
@@ -151,13 +151,13 @@ export default function ComplianceStreakPanel() {
         >
           <div className="flex items-center justify-between gap-3 flex-wrap">
             <div>
-              <div className="text-[10px] uppercase tracking-[0.2em] font-bold text-[#3D1A78]">
+              <div className="text-[0.625rem] uppercase tracking-[0.2em] font-bold text-[#3D1A78]">
                 Next badge
               </div>
               <div className="font-serif text-lg text-[#1A1330] mt-0.5">
                 {nb.label}
               </div>
-              <div className="text-[11px] text-[#4B4567] mt-0.5">
+              <div className="text-[0.6875rem] text-[#4B4567] mt-0.5">
                 {nb.weeks_to_go === 0
                   ? "Complete this week at ≥80% to unlock it!"
                   : `${nb.weeks_to_go} week${nb.weeks_to_go === 1 ? "" : "s"} to go`}
@@ -193,7 +193,7 @@ export default function ComplianceStreakPanel() {
             data-testid={`streak-badge-${b.key}`}
             data-earned={b.earned ? "1" : "0"}
             title={b.description}
-            className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[11px] font-semibold border transition ${
+            className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[0.6875rem] font-semibold border transition ${
               b.earned
                 ? "bg-[#FFF5DA] text-[#8A5B00] border-[#E8A628]"
                 : "bg-white text-[#6A5799] border-[#E5E0EE] opacity-70"
@@ -201,7 +201,7 @@ export default function ComplianceStreakPanel() {
           >
             <Award size={12} className={b.earned ? "text-[#E8A628]" : "text-[#B7AECC]"} />
             {b.label}
-            {b.earned && <span className="text-[9px] uppercase tracking-[0.15em]">Earned</span>}
+            {b.earned && <span className="text-[0.5625rem] uppercase tracking-[0.15em]">Earned</span>}
           </div>
         ))}
       </div>

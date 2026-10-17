@@ -57,7 +57,7 @@ function StatusPill({ tone, label, count, testid }) {
       className={`rounded-2xl border px-4 py-3 ${palette[tone]}`}
       data-testid={testid}
     >
-      <div className="text-[10px] uppercase tracking-[0.22em] font-bold opacity-70">{label}</div>
+      <div className="text-[0.625rem] uppercase tracking-[0.22em] font-bold opacity-70">{label}</div>
       <div className="text-2xl font-serif mt-1">{count}</div>
     </div>
   );
@@ -266,7 +266,7 @@ export default function ProfessionalJointAlignmentBulk() {
             View past imports →
           </Link>
         </div>
-        <div className="text-[10px] uppercase tracking-[0.22em] font-bold text-[#3D1A78] flex items-center gap-1.5">
+        <div className="text-[0.625rem] uppercase tracking-[0.22em] font-bold text-[#3D1A78] flex items-center gap-1.5">
           <Sparkles size={12} /> Bulk import
         </div>
         <h1
@@ -287,7 +287,7 @@ export default function ProfessionalJointAlignmentBulk() {
           className="mt-8 rounded-3xl border border-[#E5E0EE] bg-white p-6 shadow-sm"
           data-testid="bulk-step-template"
         >
-          <div className="flex items-center gap-2 text-[10px] uppercase tracking-[0.22em] font-bold text-[#3D1A78]">
+          <div className="flex items-center gap-2 text-[0.625rem] uppercase tracking-[0.22em] font-bold text-[#3D1A78]">
             <FileSpreadsheet size={12} /> Step 1
           </div>
           <h2 className="font-serif text-2xl text-[#1A1330] mt-1">Grab the template</h2>
@@ -315,7 +315,7 @@ export default function ProfessionalJointAlignmentBulk() {
           className="mt-6 rounded-3xl border border-[#E5E0EE] bg-white p-6 shadow-sm"
           data-testid="bulk-step-defaults"
         >
-          <div className="text-[10px] uppercase tracking-[0.22em] font-bold text-[#3D1A78]">
+          <div className="text-[0.625rem] uppercase tracking-[0.22em] font-bold text-[#3D1A78]">
             Step 2 (optional)
           </div>
           <h2 className="font-serif text-2xl text-[#1A1330] mt-1">Set your defaults</h2>
@@ -328,7 +328,7 @@ export default function ProfessionalJointAlignmentBulk() {
             <div>
               <label
                 htmlFor="bulk-default-lane"
-                className="text-[11px] uppercase tracking-[0.15em] font-bold text-[#3D1A78]"
+                className="text-[0.6875rem] uppercase tracking-[0.15em] font-bold text-[#3D1A78]"
               >
                 Default assessment lane
               </label>
@@ -347,7 +347,7 @@ export default function ProfessionalJointAlignmentBulk() {
             <div>
               <label
                 htmlFor="bulk-default-note"
-                className="text-[11px] uppercase tracking-[0.15em] font-bold text-[#3D1A78]"
+                className="text-[0.6875rem] uppercase tracking-[0.15em] font-bold text-[#3D1A78]"
               >
                 Default reminder note
               </label>
@@ -370,7 +370,7 @@ export default function ProfessionalJointAlignmentBulk() {
           className="mt-6 rounded-3xl border border-[#E5E0EE] bg-white p-6 shadow-sm"
           data-testid="bulk-step-upload"
         >
-          <div className="text-[10px] uppercase tracking-[0.22em] font-bold text-[#3D1A78]">
+          <div className="text-[0.625rem] uppercase tracking-[0.22em] font-bold text-[#3D1A78]">
             Step 3
           </div>
           <h2 className="font-serif text-2xl text-[#1A1330] mt-1">Upload your CSV</h2>
@@ -447,7 +447,7 @@ export default function ProfessionalJointAlignmentBulk() {
 
           {uploading && progress.total > 0 && (
             <div className="mt-4" data-testid="bulk-progress">
-              <div className="flex items-center justify-between text-[11px] mb-1">
+              <div className="flex items-center justify-between text-[0.6875rem] mb-1">
                 <span className="text-[#4B4567] font-semibold">
                   {progress.done} / {progress.total} rows
                 </span>
@@ -469,7 +469,7 @@ export default function ProfessionalJointAlignmentBulk() {
                 />
               </div>
               {progress.lastRow && (
-                <p className="mt-2 text-[11px] text-[#6E6787] font-mono truncate" data-testid="bulk-progress-lastrow">
+                <p className="mt-2 text-[0.6875rem] text-[#6E6787] font-mono truncate" data-testid="bulk-progress-lastrow">
                   Row {progress.lastRow.row}:{" "}
                   {progress.lastRow.status === "created"
                     ? `${progress.lastRow.case_id} created`
@@ -516,7 +516,7 @@ export default function ProfessionalJointAlignmentBulk() {
                   <button
                     type="button"
                     onClick={copyAllInvitationUrls}
-                    className="inline-flex items-center gap-1 rounded-full bg-[#EFE9F9] hover:bg-[#E5DAF7] text-[#3D1A78] px-3 py-1 text-[11px] font-semibold"
+                    className="inline-flex items-center gap-1 rounded-full bg-[#EFE9F9] hover:bg-[#E5DAF7] text-[#3D1A78] px-3 py-1 text-[0.6875rem] font-semibold"
                     data-testid="bulk-copy-urls"
                   >
                     <Copy size={11} /> Copy all invitation URLs
@@ -527,16 +527,16 @@ export default function ProfessionalJointAlignmentBulk() {
                     <li key={c.case_id} className="py-2 text-sm">
                       <div className="flex items-center gap-2 flex-wrap">
                         <span
-                          className="rounded-full bg-[#EFE9F9] text-[#3D1A78] px-2 py-0.5 text-[11px] font-mono font-semibold"
+                          className="rounded-full bg-[#EFE9F9] text-[#3D1A78] px-2 py-0.5 text-[0.6875rem] font-mono font-semibold"
                           data-testid={`bulk-created-case-${c.case_id}`}
                         >
                           {c.case_id}
                         </span>
-                        <span className="text-[#6E6787] text-[11px]">
+                        <span className="text-[#6E6787] text-[0.6875rem]">
                           Row {c.row} · {c.assessment_type}
                         </span>
                       </div>
-                      <div className="text-[12px] text-[#4B4567] mt-1">
+                      <div className="text-[0.75rem] text-[#4B4567] mt-1">
                         {(c.parents || []).map((p) => (
                           <div key={p.email}>
                             {p.email}
@@ -563,7 +563,7 @@ export default function ProfessionalJointAlignmentBulk() {
                 <h3 className="text-sm font-bold text-[#1A1330] inline-flex items-center gap-1.5">
                   <MinusCircle size={14} className="text-[#3D1A78]" /> Skipped duplicates
                 </h3>
-                <p className="text-[12px] text-[#6E6787] mt-1">
+                <p className="text-[0.75rem] text-[#6E6787] mt-1">
                   These pairs already have an active case with you — nothing sent.
                 </p>
                 <ul className="mt-2 divide-y divide-[#EEE8F7]">
@@ -571,7 +571,7 @@ export default function ProfessionalJointAlignmentBulk() {
                     <li key={`${s.row}-${i}`} className="py-2 text-sm">
                       <span className="text-[#6E6787]">Row {s.row}</span>
                       {s.case_id && (
-                        <span className="ml-2 rounded-full bg-[#F1EEF7] text-[#3D1A78] px-2 py-0.5 text-[11px] font-mono">
+                        <span className="ml-2 rounded-full bg-[#F1EEF7] text-[#3D1A78] px-2 py-0.5 text-[0.6875rem] font-mono">
                           {s.case_id}
                         </span>
                       )}
@@ -586,7 +586,7 @@ export default function ProfessionalJointAlignmentBulk() {
                 <h3 className="text-sm font-bold text-[#1A1330] inline-flex items-center gap-1.5">
                   <AlertTriangle size={14} className="text-[#9A3A23]" /> Errored rows
                 </h3>
-                <p className="text-[12px] text-[#6E6787] mt-1">
+                <p className="text-[0.75rem] text-[#6E6787] mt-1">
                   Fix these in your CSV and re-upload — the successfully-created
                   rows will be silently skipped as duplicates.
                 </p>

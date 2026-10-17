@@ -88,7 +88,7 @@ export default function AdminNDCoordinator() {
       <div className="min-h-screen bg-[#FCFBFE] px-4 py-12"
         data-testid="admin-nd-coordinator-forbidden">
         <div className="max-w-lg mx-auto rounded-3xl border border-[#E5E0EE] bg-white p-6 sm:p-8">
-          <div className="text-[10px] uppercase tracking-[0.22em] font-bold text-[#3D1A78]">
+          <div className="text-[0.625rem] uppercase tracking-[0.22em] font-bold text-[#3D1A78]">
             Admin only
           </div>
           <h1 className="mt-1 font-serif text-2xl text-[#1A1330]">
@@ -142,7 +142,7 @@ export default function AdminNDCoordinator() {
           <ArrowLeft size={12} /> SA CoParents home
         </Link>
 
-        <div className="text-[10px] uppercase tracking-[0.22em] font-bold text-[#3D1A78]">
+        <div className="text-[0.625rem] uppercase tracking-[0.22em] font-bold text-[#3D1A78]">
           Admin · ND Risk Coordinator
         </div>
         <h1 className="mt-1 font-serif text-3xl sm:text-4xl text-[#1A1330] leading-tight">
@@ -156,7 +156,7 @@ export default function AdminNDCoordinator() {
 
         {/* Trailing-days filter — hides stale risk without archiving data */}
         <div className="mt-5" data-testid="admin-nd-coordinator-window-filter">
-          <div className="text-[10px] uppercase tracking-[0.22em] font-bold text-[#3D1A78] mb-2 inline-flex items-center gap-1.5">
+          <div className="text-[0.625rem] uppercase tracking-[0.22em] font-bold text-[#3D1A78] mb-2 inline-flex items-center gap-1.5">
             <Clock size={12} />
             Time window
             {state.loading && (
@@ -180,7 +180,7 @@ export default function AdminNDCoordinator() {
                   disabled={state.loading}
                   data-testid={`admin-nd-window-${opt.key ?? "all"}`}
                   aria-pressed={active}
-                  className={`text-[12px] px-3 py-1.5 rounded-full border transition ${
+                  className={`text-[0.75rem] px-3 py-1.5 rounded-full border transition ${
                     active
                       ? "bg-[#3D1A78] text-white border-[#3D1A78] font-semibold shadow-sm"
                       : "bg-white text-[#4B4567] border-[#E5E0EE] hover:border-[#3D1A78] hover:text-[#3D1A78]"
@@ -214,7 +214,7 @@ export default function AdminNDCoordinator() {
 
         {/* Heat map */}
         <section className="mt-8" data-testid="admin-nd-coordinator-heatmap">
-          <div className="text-[10px] uppercase tracking-[0.22em] font-bold text-[#3D1A78] mb-2">
+          <div className="text-[0.625rem] uppercase tracking-[0.22em] font-bold text-[#3D1A78] mb-2">
             Threat × Vulnerability heat map
           </div>
           {totalParents === 0 ? (
@@ -229,12 +229,12 @@ export default function AdminNDCoordinator() {
               <div className="min-w-[420px]">
                 <div className="flex items-end gap-1 mb-1">
                   <div className="w-12" />
-                  <div className="text-[10px] uppercase tracking-[0.18em] text-[#4B4567] flex-1 text-center">
+                  <div className="text-[0.625rem] uppercase tracking-[0.18em] text-[#4B4567] flex-1 text-center">
                     Threat score →
                   </div>
                 </div>
                 <div className="flex gap-1">
-                  <div className="w-12 flex flex-col justify-between text-[10px] uppercase tracking-[0.14em] text-[#4B4567] py-1">
+                  <div className="w-12 flex flex-col justify-between text-[0.625rem] uppercase tracking-[0.14em] text-[#4B4567] py-1">
                     <span className="rotate-[-90deg] whitespace-nowrap origin-left translate-y-24">
                       ← Vulnerability
                     </span>
@@ -258,7 +258,7 @@ export default function AdminNDCoordinator() {
                             }}
                             title={`Threat ${cell.threat} × Vuln ${cell.vulnerability} = ${cell.total_score} (${meta.label})`}
                           >
-                            <div className="text-[9px] uppercase tracking-[0.12em] font-bold"
+                            <div className="text-[0.5625rem] uppercase tracking-[0.12em] font-bold"
                               style={{ color: meta.ink }}>
                               T{cell.threat}·V{cell.vulnerability}
                             </div>
@@ -276,7 +276,7 @@ export default function AdminNDCoordinator() {
                   </div>
                 </div>
                 {/* Legend */}
-                <div className="flex flex-wrap items-center gap-3 mt-4 text-[11px] text-[#4B4567]">
+                <div className="flex flex-wrap items-center gap-3 mt-4 text-[0.6875rem] text-[#4B4567]">
                   {["low", "medium", "high", "critical"].map((k) => {
                     const m = TIER_META[k];
                     return (
@@ -298,7 +298,7 @@ export default function AdminNDCoordinator() {
 
         {/* Active cases */}
         <section className="mt-8" data-testid="admin-nd-coordinator-cases">
-          <div className="text-[10px] uppercase tracking-[0.22em] font-bold text-[#3D1A78] mb-2">
+          <div className="text-[0.625rem] uppercase tracking-[0.22em] font-bold text-[#3D1A78] mb-2">
             Active cases · High &amp; Critical
           </div>
           {active.length === 0 ? (
@@ -330,7 +330,7 @@ export default function AdminNDCoordinator() {
                         className="w-full text-left px-4 sm:px-5 py-3 flex flex-wrap items-center gap-3 hover:bg-[#F8F7FC] transition-colors focus:outline-none focus:bg-[#F5F1FB]"
                       >
                         <span
-                          className="text-[10px] uppercase tracking-[0.16em] font-bold px-2 py-1 rounded-full"
+                          className="text-[0.625rem] uppercase tracking-[0.16em] font-bold px-2 py-1 rounded-full"
                           style={{
                             background: meta.bg,
                             color: meta.ink,
@@ -343,7 +343,7 @@ export default function AdminNDCoordinator() {
                           <div className="text-sm font-semibold text-[#1A1330] truncate">
                             {c.target_name}
                           </div>
-                          <div className="text-[11px] text-[#4B4567] truncate">
+                          <div className="text-[0.6875rem] text-[#4B4567] truncate">
                             Co-parent: {c.coparent_name || "—"}
                             {" · "}
                             Score {c.total_score} (T{c.threat_score}·V{c.vulnerability_score})
@@ -361,7 +361,7 @@ export default function AdminNDCoordinator() {
           )}
         </section>
 
-        <p className="text-[11px] text-[#4B4567] italic mt-8">
+        <p className="text-[0.6875rem] text-[#4B4567] italic mt-8">
           Read-only overview. This dashboard aggregates the latest
           assessment per parent &mdash; historical assessments are still stored
           per-parent and remain accessible via each parent&rsquo;s account.
@@ -388,7 +388,7 @@ function Kpi({ testid, icon, label, value, tone = "neutral" }) {
       data-testid={testid}
       className={`rounded-2xl border p-3 ${toneCls}`}
     >
-      <div className="text-[10px] uppercase tracking-[0.18em] font-bold text-[#3D1A78] inline-flex items-center gap-1.5">
+      <div className="text-[0.625rem] uppercase tracking-[0.18em] font-bold text-[#3D1A78] inline-flex items-center gap-1.5">
         {icon}
         {label}
       </div>
@@ -487,7 +487,7 @@ function CaseDrilldown({ open, targetUserId, fallbackName, onClose }) {
       >
         <div className="sticky top-0 z-10 bg-white/95 backdrop-blur border-b border-[#F0EBF7] px-5 py-4 flex items-start justify-between gap-3">
           <div className="min-w-0">
-            <div className="text-[10px] uppercase tracking-[0.22em] font-bold text-[#3D1A78]">
+            <div className="text-[0.625rem] uppercase tracking-[0.22em] font-bold text-[#3D1A78]">
               Case history
             </div>
             <h2 className="font-serif text-xl text-[#1A1330] leading-snug truncate mt-0.5"
@@ -495,7 +495,7 @@ function CaseDrilldown({ open, targetUserId, fallbackName, onClose }) {
               {name}
             </h2>
             {d?.assessment_count > 0 && (
-              <p className="text-[11px] text-[#4B4567] mt-0.5"
+              <p className="text-[0.6875rem] text-[#4B4567] mt-0.5"
                 data-testid="admin-nd-drilldown-count">
                 {d.assessment_count} assessment{d.assessment_count === 1 ? "" : "s"} on file
                 {d.alerts?.length > 0 && (
@@ -553,7 +553,7 @@ function CaseDrilldown({ open, targetUserId, fallbackName, onClose }) {
             <>
               {d.alerts?.length > 0 && (
                 <section className="mb-6" data-testid="admin-nd-drilldown-alerts">
-                  <div className="text-[10px] uppercase tracking-[0.22em] font-bold text-[#3D1A78] mb-2">
+                  <div className="text-[0.625rem] uppercase tracking-[0.22em] font-bold text-[#3D1A78] mb-2">
                     Coordinator alert audit
                   </div>
                   <ul className="space-y-1.5">
@@ -566,7 +566,7 @@ function CaseDrilldown({ open, targetUserId, fallbackName, onClose }) {
                             ? <MailCheck size={14} className="text-[#1F5C3B]" />
                             : <MailX size={14} className="text-[#B02A2A]" />}
                           <span
-                            className="text-[9px] uppercase tracking-[0.16em] font-bold px-1.5 py-0.5 rounded-full"
+                            className="text-[0.5625rem] uppercase tracking-[0.16em] font-bold px-1.5 py-0.5 rounded-full"
                             style={{
                               background: meta.bg,
                               color: meta.ink,
@@ -592,7 +592,7 @@ function CaseDrilldown({ open, targetUserId, fallbackName, onClose }) {
               )}
 
               <section data-testid="admin-nd-drilldown-history">
-                <div className="text-[10px] uppercase tracking-[0.22em] font-bold text-[#3D1A78] mb-2">
+                <div className="text-[0.625rem] uppercase tracking-[0.22em] font-bold text-[#3D1A78] mb-2">
                   Assessments · newest first
                 </div>
                 <ol className="space-y-3">
@@ -611,7 +611,7 @@ function CaseDrilldown({ open, targetUserId, fallbackName, onClose }) {
                       >
                         <div className="flex flex-wrap items-center gap-2">
                           <span
-                            className="text-[10px] uppercase tracking-[0.16em] font-bold px-2 py-1 rounded-full"
+                            className="text-[0.625rem] uppercase tracking-[0.16em] font-bold px-2 py-1 rounded-full"
                             style={{
                               background: "#fff",
                               color: meta.ink,
@@ -621,11 +621,11 @@ function CaseDrilldown({ open, targetUserId, fallbackName, onClose }) {
                             {meta.label}
                           </span>
                           {isLatest && (
-                            <span className="text-[10px] uppercase tracking-[0.16em] font-bold text-[#3D1A78]">
+                            <span className="text-[0.625rem] uppercase tracking-[0.16em] font-bold text-[#3D1A78]">
                               Latest
                             </span>
                           )}
-                          <span className="text-[11px] text-[#4B4567] inline-flex items-center gap-1 ml-auto">
+                          <span className="text-[0.6875rem] text-[#4B4567] inline-flex items-center gap-1 ml-auto">
                             <Clock size={11} /> {formatWhen(h.created_at)}
                           </span>
                         </div>
@@ -635,15 +635,15 @@ function CaseDrilldown({ open, targetUserId, fallbackName, onClose }) {
                           Threat {h.threat_score} · Vulnerability {h.vulnerability_score}
                         </div>
                         {h.coparent_name && (
-                          <div className="text-[11px] text-[#4B4567] mt-0.5">
+                          <div className="text-[0.6875rem] text-[#4B4567] mt-0.5">
                             Co-parent: {h.coparent_name}
                           </div>
                         )}
                         {h.sub_scores && (h.sub_scores.threat || h.sub_scores.vulnerability) && (
-                          <div className="mt-3 grid grid-cols-2 gap-2 text-[11px] text-[#4B4567]">
+                          <div className="mt-3 grid grid-cols-2 gap-2 text-[0.6875rem] text-[#4B4567]">
                             {h.sub_scores.threat && (
                               <div>
-                                <div className="uppercase tracking-[0.16em] text-[9px] font-bold text-[#3D1A78] mb-1">
+                                <div className="uppercase tracking-[0.16em] text-[0.5625rem] font-bold text-[#3D1A78] mb-1">
                                   Threat sub-scores
                                 </div>
                                 {Object.entries(h.sub_scores.threat).map(([k, v]) => (
@@ -658,7 +658,7 @@ function CaseDrilldown({ open, targetUserId, fallbackName, onClose }) {
                             )}
                             {h.sub_scores.vulnerability && (
                               <div>
-                                <div className="uppercase tracking-[0.16em] text-[9px] font-bold text-[#3D1A78] mb-1">
+                                <div className="uppercase tracking-[0.16em] text-[0.5625rem] font-bold text-[#3D1A78] mb-1">
                                   Vulnerability sub-scores
                                 </div>
                                 {Object.entries(h.sub_scores.vulnerability).map(([k, v]) => (
@@ -674,7 +674,7 @@ function CaseDrilldown({ open, targetUserId, fallbackName, onClose }) {
                           </div>
                         )}
                         {h.notes && (
-                          <div className="mt-3 rounded-xl bg-white/70 border border-[#E5E0EE] p-2 text-[11px] text-[#4B4567] italic">
+                          <div className="mt-3 rounded-xl bg-white/70 border border-[#E5E0EE] p-2 text-[0.6875rem] text-[#4B4567] italic">
                             &ldquo;{h.notes}&rdquo;
                           </div>
                         )}
@@ -744,10 +744,10 @@ function TierSparkline({ history }) {
     >
       <div className="flex items-start justify-between gap-3 mb-2">
         <div>
-          <div className="text-[10px] uppercase tracking-[0.22em] font-bold text-[#3D1A78]">
+          <div className="text-[0.625rem] uppercase tracking-[0.22em] font-bold text-[#3D1A78]">
             Escalation arc
           </div>
-          <div className="text-[11px] text-[#4B4567] mt-0.5">
+          <div className="text-[0.6875rem] text-[#4B4567] mt-0.5">
             Total score (0-16) across {total} assessment{total === 1 ? "" : "s"}
             {total > 1 && (
               <>
@@ -828,7 +828,7 @@ function TierSparkline({ history }) {
         })}
       </svg>
 
-      <div className="flex items-center justify-between text-[10px] uppercase tracking-[0.14em] text-[#4B4567] mt-1">
+      <div className="flex items-center justify-between text-[0.625rem] uppercase tracking-[0.14em] text-[#4B4567] mt-1">
         <span data-testid="admin-nd-drilldown-sparkline-first">
           {(first.created_at || "").slice(0, 10) || "oldest"}
         </span>

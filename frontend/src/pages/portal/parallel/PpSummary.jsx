@@ -82,10 +82,10 @@ export function PpSummary({ content, plan, tipBusy, onEdit, onEditCheck, onDownl
     <div data-testid="pp-summary" className="bg-white rounded-3xl border border-purple-100 shadow-lg p-5 sm:p-8 space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
         <div>
-          <p className="text-[11px] font-bold uppercase tracking-wider text-[#8251b8]">Your plan</p>
+          <p className="text-[0.6875rem] font-bold uppercase tracking-wider text-[#8251b8]">Your plan</p>
           <h2 className="text-2xl sm:text-3xl font-extrabold text-[#2d1548]">Your Parallel Parenting Plan</h2>
           <p className="text-sm text-slate-600 mt-1">{content.banner_title}</p>
-          <span data-testid="pp-summary-count" className="inline-block mt-2 text-[10px] font-bold uppercase tracking-wider text-[#4a2574] bg-[#f4f0fa] border border-purple-100 px-2 py-0.5 rounded-full">
+          <span data-testid="pp-summary-count" className="inline-block mt-2 text-[0.625rem] font-bold uppercase tracking-wider text-[#4a2574] bg-[#f4f0fa] border border-purple-100 px-2 py-0.5 rounded-full">
             {made} of {total} choices made
           </span>
         </div>

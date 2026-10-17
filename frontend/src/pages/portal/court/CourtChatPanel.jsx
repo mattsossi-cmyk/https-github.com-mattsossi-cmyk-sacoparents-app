@@ -14,7 +14,7 @@ const PROMPTS = [
 ];
 
 const DRAFT_MIN_WORDS = 40;
-const draftBtn = "text-[11px] font-bold px-2.5 py-1 rounded-full bg-white border border-[#e7dbf8] hover:border-[#7b2cbf] text-[#3b1566] transition-colors";
+const draftBtn = "text-[0.6875rem] font-bold px-2.5 py-1 rounded-full bg-white border border-[#e7dbf8] hover:border-[#7b2cbf] text-[#3b1566] transition-colors";
 
 function Msg({ m, i, onDraft, tp }) {
   const mine = m.role === "user";
@@ -51,7 +51,7 @@ function ChatHeader({ chat, onClose, tp }) {
       </div>
       <div className="flex items-center gap-1.5">
         {chat.messages.length > 0 && (
-          <button type="button" data-testid={`${tp}-new`} onClick={chat.reset} className="text-[11px] font-bold px-3 py-1.5 rounded-full bg-white/15 hover:bg-white/25 transition-colors">
+          <button type="button" data-testid={`${tp}-new`} onClick={chat.reset} className="text-[0.6875rem] font-bold px-3 py-1.5 rounded-full bg-white/15 hover:bg-white/25 transition-colors">
             <i className="fa-solid fa-plus mr-1"></i>Start new chat
           </button>
         )}
@@ -160,7 +160,7 @@ function ChatBody({ chat, active, draft, fb, onOpenStep4, onClose, tp, className
         </button>
       </form>
       </AiGuardFrame>
-      <p className="px-5 pb-3 bg-white text-[10px] text-slate-400">Saved to your account · General guidance, not legal advice · In danger? Call 911.</p>
+      <p className="px-5 pb-3 bg-white text-[0.625rem] text-slate-400">Saved to your account · General guidance, not legal advice · In danger? Call 911.</p>
     </div>
   );
 }

@@ -80,13 +80,13 @@ export default function PolicyRefreshBanner() {
           <ShieldCheck size={16} />
         </div>
         <div className="flex-1 min-w-0">
-          <div className="text-[10px] uppercase tracking-[0.22em] font-bold text-[#3D1A78]">
+          <div className="text-[0.625rem] uppercase tracking-[0.22em] font-bold text-[#3D1A78]">
             Privacy policy refreshed
           </div>
           <div className="text-sm text-[#1A1330] font-semibold leading-snug">
             Private by Default. Shared by Choice.
           </div>
-          <div className="text-[12px] text-[#4B4567] leading-snug mt-0.5">
+          <div className="text-[0.75rem] text-[#4B4567] leading-snug mt-0.5">
             We rewrote the policy in plain English before you next share
             a report — take a minute to skim what&apos;s protected, what
             isn&apos;t, and how sharing actually works.

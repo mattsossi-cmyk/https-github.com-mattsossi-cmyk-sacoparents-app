@@ -34,7 +34,7 @@ export default function LearningCenter() {
     <AppShell>
       <div className="max-w-5xl mx-auto px-4 sm:px-6 pt-6 pb-16">
         <header className="mb-8" data-testid="learning-header">
-          <div className="flex items-center gap-2 text-[10px] uppercase tracking-[0.22em] text-[#3D1A78] font-bold">
+          <div className="flex items-center gap-2 text-[0.625rem] uppercase tracking-[0.22em] text-[#3D1A78] font-bold">
             <BookOpen size={12} /> Learning center
           </div>
           <h1 className="font-serif text-4xl sm:text-5xl font-extrabold text-[#1A1330] mt-2 leading-tight">
@@ -88,7 +88,7 @@ function HubSection({ hub }) {
           <p className="text-sm text-[#4B4567] mt-1">{hub.tagline}</p>
         </div>
         <span
-          className={`text-[11px] font-semibold px-2.5 py-1 rounded-full ${
+          className={`text-[0.6875rem] font-semibold px-2.5 py-1 rounded-full ${
             complete
               ? "bg-[#F1F9F4] text-[#1F5C3B] border border-[#B5DFC5]"
               : "bg-[#F5F1FB] text-[#3D1A78] border border-[#E5E0EE]"
@@ -119,7 +119,7 @@ function HubSection({ hub }) {
                   {a.title}
                 </div>
                 <div className="text-sm text-[#4B4567] mt-0.5">{a.summary}</div>
-                <div className="flex items-center gap-2 mt-1.5 text-[11px] text-[#6E6787]">
+                <div className="flex items-center gap-2 mt-1.5 text-[0.6875rem] text-[#6E6787]">
                   <Clock size={11} /> {a.read_minutes} min read
                   {a.read && (
                     <span className="text-[#1F5C3B]">· read</span>

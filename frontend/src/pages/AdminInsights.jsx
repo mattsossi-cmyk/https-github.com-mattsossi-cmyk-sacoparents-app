@@ -33,11 +33,11 @@ function fmtDate(iso) {
 function CountStat({ label, value, hint }) {
   return (
     <div className="card-soft p-4">
-      <div className="text-[10px] uppercase tracking-[0.15em] text-[#6E6787] font-bold">
+      <div className="text-[0.625rem] uppercase tracking-[0.15em] text-[#6E6787] font-bold">
         {label}
       </div>
       <div className="font-serif text-2xl text-[#1A1330] mt-1">{value}</div>
-      {hint && <div className="text-[11px] text-[#6E6787] mt-1">{hint}</div>}
+      {hint && <div className="text-[0.6875rem] text-[#6E6787] mt-1">{hint}</div>}
     </div>
   );
 }
@@ -173,7 +173,7 @@ export default function AdminInsights() {
                 A calm, honest narrative drawn from the past 7 days of survey
                 responses, journal entries, sign-ups, and acknowledgments.
               </p>
-              <div className="text-[11px] text-[#6E6787] mt-3">
+              <div className="text-[0.6875rem] text-[#6E6787] mt-3">
                 Last generated: {fmtDate(generated_at)}
               </div>
             </div>

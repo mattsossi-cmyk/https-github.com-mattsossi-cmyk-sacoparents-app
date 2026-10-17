@@ -24,7 +24,7 @@ export default function ReportReviewNotice({ variant = "individual", className =
     >
       <AlertCircle size={18} className="shrink-0 mt-0.5 text-[#8A6B12]" aria-hidden />
       <div>
-        <div className="text-[10px] uppercase tracking-[0.22em] text-[#8A6B12] font-bold">
+        <div className="text-[0.625rem] uppercase tracking-[0.22em] text-[#8A6B12] font-bold">
           Please review before sharing
         </div>
         <p className="text-sm sm:text-[15px] text-[#3B2A05] leading-relaxed mt-1.5">

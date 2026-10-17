@@ -40,7 +40,7 @@ export default function CostSplitterTotals({
       data-testid="cost-splitter-totals"
     >
       <div className="rounded-2xl border border-[#C7E5D3] bg-[#F1F9F4] p-4">
-        <div className="text-[10px] uppercase tracking-[0.16em] font-bold text-[#1E7A55] mb-1">
+        <div className="text-[0.625rem] uppercase tracking-[0.16em] font-bold text-[#1E7A55] mb-1">
           You
         </div>
         <div
@@ -49,12 +49,12 @@ export default function CostSplitterTotals({
         >
           {formatMoney(selfTotal)}
         </div>
-        <div className="text-[11px] text-[#4B4567] mt-0.5">
+        <div className="text-[0.6875rem] text-[#4B4567] mt-0.5">
           {entryLabel(selfCount)}
         </div>
       </div>
       <div className="rounded-2xl border border-[#E5E0EE] bg-[#F5F1FB] p-4">
-        <div className="text-[10px] uppercase tracking-[0.16em] font-bold text-[#6A5799] mb-1">
+        <div className="text-[0.625rem] uppercase tracking-[0.16em] font-bold text-[#6A5799] mb-1">
           {coparentName || "Co-parent"}
         </div>
         <div
@@ -63,12 +63,12 @@ export default function CostSplitterTotals({
         >
           {hasCompare ? formatMoney(coparentTotal) : "—"}
         </div>
-        <div className="text-[11px] text-[#4B4567] mt-0.5">
+        <div className="text-[0.6875rem] text-[#4B4567] mt-0.5">
           {hasCompare ? entryLabel(coparentCount) : "Not linked yet"}
         </div>
       </div>
       <div className="rounded-2xl border border-[#D6CFE8] bg-white p-4">
-        <div className="text-[10px] uppercase tracking-[0.16em] font-bold text-[#3D1A78] mb-1">
+        <div className="text-[0.625rem] uppercase tracking-[0.16em] font-bold text-[#3D1A78] mb-1">
           Combined
         </div>
         <div
@@ -77,7 +77,7 @@ export default function CostSplitterTotals({
         >
           {formatMoney(combinedTotal)}
         </div>
-        <div className="text-[11px] text-[#4B4567] mt-0.5">
+        <div className="text-[0.6875rem] text-[#4B4567] mt-0.5">
           {hasCompare ? "Both accounts tallied" : "Log more to see the split"}
         </div>
       </div>

@@ -123,12 +123,12 @@ export default function CaseAnalyticsCard() {
     >
       <div className="flex items-baseline gap-2 flex-wrap mb-3">
         <BarChart3 size={14} className="text-[#3D1A78]" />
-        <div className="text-[11px] uppercase tracking-[0.2em] font-bold text-[#3D1A78]">
+        <div className="text-[0.6875rem] uppercase tracking-[0.2em] font-bold text-[#3D1A78]">
           Intake funnel · at a glance
         </div>
         {stats.most_common_assessment_type && (
           <div
-            className="ml-auto text-[11px] text-[#4B4567] inline-flex items-center gap-1"
+            className="ml-auto text-[0.6875rem] text-[#4B4567] inline-flex items-center gap-1"
             data-testid="pj-analytics-top-lane"
           >
             <Sparkles size={11} className="text-[#3D1A78]" />
@@ -150,7 +150,7 @@ export default function CaseAnalyticsCard() {
                 <div className="w-7 h-7 rounded-lg bg-white text-[#3D1A78] grid place-items-center shrink-0">
                   <Icon size={14} />
                 </div>
-                <div className="text-[10px] uppercase tracking-[0.14em] font-bold text-[#4B4567]">
+                <div className="text-[0.625rem] uppercase tracking-[0.14em] font-bold text-[#4B4567]">
                   {t.label}
                 </div>
               </div>
@@ -160,7 +160,7 @@ export default function CaseAnalyticsCard() {
               >
                 {t.value}
               </div>
-              <div className="text-[11px] text-[#6E6787] leading-relaxed">
+              <div className="text-[0.6875rem] text-[#6E6787] leading-relaxed">
                 {t.hint}
               </div>
             </div>
@@ -170,7 +170,7 @@ export default function CaseAnalyticsCard() {
 
       {laneEntries.length > 1 && (
         <div className="mt-4" data-testid="pj-analytics-lane-breakdown">
-          <div className="text-[10px] uppercase tracking-[0.14em] font-bold text-[#4B4567] mb-2">
+          <div className="text-[0.625rem] uppercase tracking-[0.14em] font-bold text-[#4B4567] mb-2">
             Assessment lane breakdown
           </div>
           <ul className="space-y-1.5">

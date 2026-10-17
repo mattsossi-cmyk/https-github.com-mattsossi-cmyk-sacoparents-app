@@ -19,7 +19,7 @@ export default function CaseSettingsPage() {
   return (
     <main data-testid="case-settings-page" className="min-h-screen gentle-bg py-8 sm:py-12">
       <div className="max-w-xl mx-auto px-4">
-        <button type="button" onClick={() => navigate(-1)} data-testid="case-settings-back" className="inline-flex items-center gap-1.5 text-sm font-semibold text-[#3D1A78] mb-6">
+        <button type="button" onClick={() => navigate(-1)} data-testid="case-settings-back" className="inline-flex min-h-6 items-center gap-1.5 text-sm font-semibold text-[#3D1A78] mb-6">
           <ArrowLeft size={15} /> Back
         </button>
         <h1 className="font-sans font-extrabold text-3xl sm:text-4xl text-[#1A1330] tracking-tight">Your case settings</h1>

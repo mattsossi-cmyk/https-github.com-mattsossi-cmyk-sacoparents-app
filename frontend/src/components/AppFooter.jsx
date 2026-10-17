@@ -14,7 +14,7 @@ export default function AppFooter() {
       data-testid="app-footer"
     >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 py-6">
-        <div className="flex flex-wrap gap-x-6 gap-y-3 items-center justify-center text-[13px] text-[#4B4567]">
+        <div className="flex flex-wrap gap-x-6 gap-y-3 items-center justify-center text-[0.8125rem] text-[#4B4567]">
           <FooterLink to="/privacy-notice" icon={<ShieldCheck size={13} />} testId="footer-privacy">Privacy Notice</FooterLink>
           <FooterLink to="/terms" icon={<FileText size={13} />} testId="footer-terms">Terms</FooterLink>
           <FooterLink to="/data-retention" icon={<HardDrive size={13} />} testId="footer-data-retention">Data retention</FooterLink>
@@ -22,7 +22,7 @@ export default function AppFooter() {
           <FooterLink to="/accessibility" icon={<A11yIcon size={13} />} testId="footer-accessibility">Accessibility</FooterLink>
           <FooterLink to="/help" icon={<LifeBuoy size={13} />} testId="footer-get-help">Get help</FooterLink>
         </div>
-        <p className="text-[11px] text-[#6E6787] text-center mt-4 max-w-3xl mx-auto leading-relaxed">
+        <p className="text-[0.6875rem] text-[#6E6787] text-center mt-4 max-w-3xl mx-auto leading-relaxed">
           SA CoParents is an educational and preparation tool. It is not legal
           advice, therapy, or a substitute for professional mediation. Always
           consult qualified family-law and mental-health professionals for

@@ -24,11 +24,11 @@ export function ConsentFields({ tp, value, onChange }) {
   const set = (key) => (v) => onChange({ ...value, [key]: v });
   return (
     <div data-testid={`${tp}-consent`} className="space-y-3 rounded-2xl border border-[#E5E0EE] bg-[#F8F7FC] p-4">
-      <p className="text-[13px] text-[#1A1330] leading-relaxed">
+      <p className="text-[0.8125rem] text-[#1A1330] leading-relaxed">
         SA CoParents provides educational conflict-management and mediation-preparation tools. It does not provide legal advice, therapy, or create an
         attorney-client relationship.
       </p>
-      <p className="text-[12px] text-[#4B4567] leading-relaxed">
+      <p className="text-[0.75rem] text-[#4B4567] leading-relaxed">
         Full details are in our{" "}
         <Link to="/terms" target="_blank" rel="noopener noreferrer" data-testid={`${tp}-consent-terms-link`} className="text-[#3D1A78] underline">
           Terms of Use

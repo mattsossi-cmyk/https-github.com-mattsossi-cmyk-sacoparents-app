@@ -78,7 +78,7 @@ export default function ReportProvenanceFooter({
           <RULE_ICON size={14} />
         </div>
         <div className="flex-1 min-w-0">
-          <div className="text-[10px] uppercase tracking-[0.22em] text-[#3D1A78] font-bold">
+          <div className="text-[0.625rem] uppercase tracking-[0.22em] text-[#3D1A78] font-bold">
             How this report was built
           </div>
           <div className="text-sm text-[#4B4567] mt-0.5">
@@ -110,7 +110,7 @@ export default function ReportProvenanceFooter({
                     <span className="text-[#1A1330]">{r.section}</span>
                   </div>
                   <span
-                    className={`shrink-0 text-[10px] uppercase tracking-[0.14em] font-bold px-2 py-0.5 rounded-full border ${
+                    className={`shrink-0 text-[0.625rem] uppercase tracking-[0.14em] font-bold px-2 py-0.5 rounded-full border ${
                       r.origin === "rule"
                         ? "bg-[#F1F9F4] text-[#1F5C3B] border-[#B5DFC5]"
                         : "bg-[#FFF9EB] text-[#8A6B12] border-[#E4D8B8]"
@@ -121,7 +121,7 @@ export default function ReportProvenanceFooter({
                 </li>
               ))}
             </ul>
-            <p className="text-[11px] text-[#6E6787] mt-4 leading-relaxed">
+            <p className="text-[0.6875rem] text-[#6E6787] mt-4 leading-relaxed">
               Rule-based sections are deterministic — the same answers always
               produce the same output. Generative sections are drafted with
               technology assistance (Claude, via a neutral, child-focused

@@ -143,7 +143,7 @@ export default function AlignmentMilestoneCelebration({ milestone, snapshotId, p
       <Confetti colors={copy.burstColors} testidPrefix={testidPrefix} />
       <div className="relative flex items-start justify-between gap-4 flex-wrap">
         <div className="min-w-0">
-          <div className={`text-[10px] uppercase tracking-[0.22em] font-bold ${copy.tint.text} flex items-center gap-2`}>
+          <div className={`text-[0.625rem] uppercase tracking-[0.22em] font-bold ${copy.tint.text} flex items-center gap-2`}>
             <PartyPopper size={12} /> {copy.eyebrow}
           </div>
           <h2 className="font-serif text-2xl text-[#1A1330] mt-1 flex items-center gap-2">

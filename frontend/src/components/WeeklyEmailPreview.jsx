@@ -143,7 +143,7 @@ export default function WeeklyEmailPreview() {
           <Mail size={16} />
         </div>
         <div className="flex-1 min-w-0">
-          <div className="text-[10px] uppercase tracking-[0.22em] text-[#3D1A78] font-bold flex items-center gap-1.5">
+          <div className="text-[0.625rem] uppercase tracking-[0.22em] text-[#3D1A78] font-bold flex items-center gap-1.5">
             <Sparkles size={11} /> Sunday email preview
           </div>
           <div className="font-serif text-lg text-[#1A1330] leading-snug mt-0.5">
@@ -170,7 +170,7 @@ export default function WeeklyEmailPreview() {
           data-testid="weekly-email-preview-body"
         >
           {/* Subject-line mock */}
-          <div className="text-[10px] uppercase tracking-[0.22em] text-[#6E6787] font-bold mb-2">
+          <div className="text-[0.625rem] uppercase tracking-[0.22em] text-[#6E6787] font-bold mb-2">
             Subject
           </div>
           <div className="text-sm font-semibold text-[#1A1330] mb-4">
@@ -179,7 +179,7 @@ export default function WeeklyEmailPreview() {
 
           {/* Purple pill card matching the actual email */}
           <div className="rounded-2xl border border-[#D6CFE8] bg-[#F5F1FB] p-4">
-            <div className="text-[10px] uppercase tracking-[0.18em] text-[#3D1A78] font-bold">
+            <div className="text-[0.625rem] uppercase tracking-[0.18em] text-[#3D1A78] font-bold">
               Weekly progress
             </div>
             <div
@@ -211,10 +211,10 @@ export default function WeeklyEmailPreview() {
                 className="mt-4 rounded-2xl border border-[#E4D8B8] bg-[#FFF9EB] p-4"
                 data-testid="weekly-email-note-composer"
               >
-                <div className="flex items-center gap-2 text-[10px] uppercase tracking-[0.18em] text-[#8A6B12] font-bold">
+                <div className="flex items-center gap-2 text-[0.625rem] uppercase tracking-[0.18em] text-[#8A6B12] font-bold">
                   <Feather size={12} /> Add a note (goes in Sunday&apos;s email)
                 </div>
-                <p className="text-[11px] text-[#6E5910] mt-1">
+                <p className="text-[0.6875rem] text-[#6E5910] mt-1">
                   Optional handwritten line — think of it as a Post-it to your future self.
                   {data.sent_this_week
                     ? " This week's email already went out — save a note now and it'll appear on next Sunday's send."
@@ -232,7 +232,7 @@ export default function WeeklyEmailPreview() {
                 />
                 <div className="mt-2 flex flex-wrap items-center justify-between gap-2">
                   <span
-                    className={`text-[11px] font-semibold ${overLimit ? "text-[#B4223B]" : "text-[#8A6B12]"}`}
+                    className={`text-[0.6875rem] font-semibold ${overLimit ? "text-[#B4223B]" : "text-[#8A6B12]"}`}
                     data-testid="weekly-email-note-counter"
                   >
                     {remaining} chars left
@@ -240,7 +240,7 @@ export default function WeeklyEmailPreview() {
                   <div className="flex items-center gap-2">
                     {noteJustSaved && (
                       <span
-                        className="inline-flex items-center gap-1 text-[11px] font-semibold text-[#1F5C3B]"
+                        className="inline-flex items-center gap-1 text-[0.6875rem] font-semibold text-[#1F5C3B]"
                         data-testid="weekly-email-note-saved-flash"
                       >
                         <Check size={12} /> Saved
@@ -271,7 +271,7 @@ export default function WeeklyEmailPreview() {
                     className="mt-3 rounded-xl border border-dashed border-[#E4D8B8] bg-white/70 px-3 py-2"
                     data-testid="weekly-email-note-preview"
                   >
-                    <div className="text-[10px] uppercase tracking-[0.18em] text-[#8A6B12] font-bold mb-1">
+                    <div className="text-[0.625rem] uppercase tracking-[0.18em] text-[#8A6B12] font-bold mb-1">
                       Preview in the email
                     </div>
                     <div
@@ -326,12 +326,12 @@ export default function WeeklyEmailPreview() {
               className="mt-4 rounded-xl border border-[#F4D0DE] bg-[#FEF5F8] px-3.5 py-3"
               data-testid="weekly-email-preview-cheers"
             >
-              <div className="text-[10px] uppercase tracking-[0.18em] text-[#B8125A] font-bold">
+              <div className="text-[0.625rem] uppercase tracking-[0.18em] text-[#B8125A] font-bold">
                 {p.wall_opted_in ? "Community cheers" : "From the community"}
               </div>
               {p.cheers_received?.length > 0 && (
                 <>
-                  <div className="mt-1.5 text-[13px] text-[#4B4567]">
+                  <div className="mt-1.5 text-[0.8125rem] text-[#4B4567]">
                     <strong className="text-[#1A1330]">
                       {p.cheers_received_total ?? 0} cheer
                       {(p.cheers_received_total ?? 0) === 1 ? "" : "s"}
@@ -345,7 +345,7 @@ export default function WeeklyEmailPreview() {
                     {p.cheers_received.slice(0, 5).map((r) => (
                       <li
                         key={`${r.badge_type}-${r.earned_at}`}
-                        className="text-[13px] text-[#1A1330] flex items-baseline gap-1.5"
+                        className="text-[0.8125rem] text-[#1A1330] flex items-baseline gap-1.5"
                       >
                         <span className="text-[#B8125A]">♥</span>
                         <span>
@@ -361,7 +361,7 @@ export default function WeeklyEmailPreview() {
               )}
               {p.community_pulse?.length > 0 && (
                 <div
-                  className={`text-[12px] text-[#4B4567] ${p.cheers_received?.length ? "mt-2.5 pt-2.5 border-t border-dashed border-[#D6CFE8]" : "mt-1.5"}`}
+                  className={`text-[0.75rem] text-[#4B4567] ${p.cheers_received?.length ? "mt-2.5 pt-2.5 border-t border-dashed border-[#D6CFE8]" : "mt-1.5"}`}
                   data-testid="weekly-email-preview-community-pulse"
                 >
                   Most-cheered community moment this week:{" "}
@@ -377,7 +377,7 @@ export default function WeeklyEmailPreview() {
             </div>
           )}
 
-          <div className="mt-4 text-[11px] text-[#6E6787] italic">
+          <div className="mt-4 text-[0.6875rem] text-[#6E6787] italic">
             Small, steady work is what mediators love to see.
           </div>
 
@@ -408,7 +408,7 @@ export default function WeeklyEmailPreview() {
             </button>
             {data.sent_this_week && (
               <span
-                className="inline-flex items-center gap-1 text-[11px] font-semibold text-[#1F5C3B] px-2 py-1 rounded-full bg-[#F1F9F4] border border-[#B5DFC5]"
+                className="inline-flex items-center gap-1 text-[0.6875rem] font-semibold text-[#1F5C3B] px-2 py-1 rounded-full bg-[#F1F9F4] border border-[#B5DFC5]"
                 data-testid="weekly-email-preview-already-sent"
               >
                 <ShieldCheck size={11} /> Already sent this week

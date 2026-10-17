@@ -123,7 +123,7 @@ function WindowCard({ window, title }) {
       <div className="flex items-center justify-between mb-3">
         <div>
           <div className="eyebrow text-[#3D1A78]">{title}</div>
-          <div className="text-[11px] text-[#6E6787] mt-0.5">
+          <div className="text-[0.6875rem] text-[#6E6787] mt-0.5">
             {formatDate(window.from_at)} → {formatDate(window.to_at)}
           </div>
         </div>
@@ -183,7 +183,7 @@ function GrowthChart({ points }) {
       <div className="flex items-center justify-between mb-3">
         <div>
           <div className="eyebrow text-[#3D1A78]">Readiness over time</div>
-          <div className="text-[11px] text-[#6E6787] mt-0.5">
+          <div className="text-[0.6875rem] text-[#6E6787] mt-0.5">
             Higher is more prepared. Threshold to &ldquo;Prepared&rdquo; is 75.
           </div>
         </div>

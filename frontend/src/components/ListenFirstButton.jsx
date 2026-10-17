@@ -108,7 +108,7 @@ export default function ListenFirstButton({
           {playing ? <Pause size={22} /> : <Play size={22} className="ml-0.5" />}
         </button>
         <div className="flex-1 min-w-0">
-          <div className="flex items-center gap-2 text-[10px] uppercase tracking-[0.22em] font-bold opacity-90 mb-1">
+          <div className="flex items-center gap-2 text-[0.625rem] uppercase tracking-[0.22em] font-bold opacity-90 mb-1">
             <Headphones size={11} />
             <span>{label}</span>
           </div>
@@ -122,13 +122,13 @@ export default function ListenFirstButton({
                 style={{ width: `${pct}%` }}
               />
             </div>
-            <div className="text-[11px] tabular-nums opacity-90 shrink-0">
+            <div className="text-[0.6875rem] tabular-nums opacity-90 shrink-0">
               {fmt(progress)} / {fmt(duration)}
             </div>
             <Volume2 size={14} className="opacity-70 shrink-0" />
           </div>
           {error && (
-            <div className="text-[11px] text-white/90 mt-1.5" data-testid={`${testid}-error`}>
+            <div className="text-[0.6875rem] text-white/90 mt-1.5" data-testid={`${testid}-error`}>
               {error}
             </div>
           )}

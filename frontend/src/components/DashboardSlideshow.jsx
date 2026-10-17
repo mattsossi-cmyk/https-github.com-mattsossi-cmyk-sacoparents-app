@@ -233,7 +233,7 @@ export default function DashboardSlideshow() {
               testid={`dashboard-slideshow-ring-${slide.key}`}
             />
             <div className="absolute left-0 right-0 bottom-0 p-5 sm:p-8">
-              <div className="text-[10px] uppercase tracking-[0.28em] font-bold text-white/70">
+              <div className="text-[0.625rem] uppercase tracking-[0.28em] font-bold text-white/70">
                 Step {i + 1} of {SLIDES.length}
               </div>
               <h3
@@ -242,7 +242,7 @@ export default function DashboardSlideshow() {
               >
                 {slide.title}
               </h3>
-              <p className="text-white/90 text-[13px] sm:text-[15px] mt-2 max-w-2xl leading-relaxed hidden sm:block">
+              <p className="text-white/90 text-[0.8125rem] sm:text-[15px] mt-2 max-w-2xl leading-relaxed hidden sm:block">
                 {slide.caption}
               </p>
             </div>

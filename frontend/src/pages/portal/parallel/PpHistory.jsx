@@ -16,9 +16,9 @@ function Version({ v, current, onDownload, busy }) {
         <div>
           <p className="text-sm font-semibold text-slate-900">
             {when(v.created_at)}
-            {current && <span className="ml-2 text-[10px] font-bold uppercase text-emerald-700 bg-emerald-50 border border-emerald-200 px-1.5 py-0.5 rounded-full">Current</span>}
+            {current && <span className="ml-2 text-[0.625rem] font-bold uppercase text-emerald-700 bg-emerald-50 border border-emerald-200 px-1.5 py-0.5 rounded-full">Current</span>}
           </p>
-          <p className="text-[11px] text-slate-500">
+          <p className="text-[0.6875rem] text-slate-500">
             {v.reason} · {v.choices} choices
           </p>
         </div>
@@ -45,7 +45,7 @@ function Version({ v, current, onDownload, busy }) {
         )}
       </ul>
       {v.changes.length > 4 && (
-        <button type="button" data-testid={`pp-version-more-${v.id}`} onClick={() => setOpen(!open)} className="mt-1 text-[11px] font-semibold text-[#4a2574] hover:underline">
+        <button type="button" data-testid={`pp-version-more-${v.id}`} onClick={() => setOpen(!open)} className="mt-1 text-[0.6875rem] font-semibold text-[#4a2574] hover:underline">
           {open ? "Show less" : `Show all ${v.changes.length} changes`}
         </button>
       )}
@@ -80,7 +80,7 @@ export function PpHistory({ tick }) {
       <h3 className="text-sm font-extrabold text-[#2d1548] flex items-center gap-2">
         <i className="fa-solid fa-clock-rotate-left text-[#4a2574]"></i> Plan history
       </h3>
-      <p className="text-[11px] text-slate-500 mt-0.5">
+      <p className="text-[0.6875rem] text-slate-500 mt-0.5">
         A new version is saved when you finish your plan or download its PDF, if something changed. Your last 20 versions are kept.
       </p>
       {versions === null ? (

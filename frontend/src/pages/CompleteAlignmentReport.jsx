@@ -49,7 +49,7 @@ function StatusBadge({ status }) {
   const cfg = map[status] || map.pending;
   return (
     <span
-      className={`inline-flex items-center rounded-full text-[10px] font-bold uppercase tracking-[0.14em] px-2 py-0.5 ${cfg.bg} ${cfg.fg}`}
+      className={`inline-flex items-center rounded-full text-[0.625rem] font-bold uppercase tracking-[0.14em] px-2 py-0.5 ${cfg.bg} ${cfg.fg}`}
       data-testid={`complete-report-badge-${status}`}
     >
       {cfg.text}
@@ -217,10 +217,10 @@ export default function CompleteAlignmentReport() {
         {/* Header block */}
         <header className="rounded-3xl border border-[#E5E0EE] bg-gradient-to-br from-white to-[#F5F1FB] p-6 sm:p-8">
           <div className="flex items-center gap-2">
-            <span className="text-[10px] font-bold tracking-[0.22em] uppercase text-[#3D1A78]">
+            <span className="text-[0.625rem] font-bold tracking-[0.22em] uppercase text-[#3D1A78]">
               {variant === "joint" ? "Joint Report" : "Individual Report"}
             </span>
-            <span className="text-[10px] font-semibold text-[#6E6787]">
+            <span className="text-[0.625rem] font-semibold text-[#6E6787]">
               Same 10-section structure as sacoparentsalign.com
             </span>
           </div>
@@ -513,7 +513,7 @@ function ChildNeedsExcerpt({ data, variant, onToggleConsent, consentPending }) {
           <div className="space-y-3">
             {aHighlights.length > 0 && (
               <div>
-                <div className="text-[11px] uppercase tracking-[0.16em] font-bold text-[#3D1A78]">
+                <div className="text-[0.6875rem] uppercase tracking-[0.16em] font-bold text-[#3D1A78]">
                   {data?.parents?.[0] || "Parent A"} notes
                 </div>
                 <ul className="mt-1 list-disc list-inside space-y-1">
@@ -523,7 +523,7 @@ function ChildNeedsExcerpt({ data, variant, onToggleConsent, consentPending }) {
             )}
             {bHighlights.length > 0 && (
               <div>
-                <div className="text-[11px] uppercase tracking-[0.16em] font-bold text-[#3D1A78]">
+                <div className="text-[0.6875rem] uppercase tracking-[0.16em] font-bold text-[#3D1A78]">
                   {data?.parents?.[1] || "Parent B"} notes
                 </div>
                 <ul className="mt-1 list-disc list-inside space-y-1">
@@ -539,7 +539,7 @@ function ChildNeedsExcerpt({ data, variant, onToggleConsent, consentPending }) {
             co-parent's status (has consented / hasn't yet) so the
             user knows why the panel is still locked. */}
         {(aDone || bDone) && (
-          <div className="rounded-2xl border border-[#E5E0EE] bg-[#FBF8FE] p-3 sm:p-4 text-xs sm:text-[13px] text-[#1A1330]">
+          <div className="rounded-2xl border border-[#E5E0EE] bg-[#FBF8FE] p-3 sm:p-4 text-xs sm:text-[0.8125rem] text-[#1A1330]">
             <label className="flex items-start gap-3 cursor-pointer">
               <input
                 type="checkbox"
@@ -559,7 +559,7 @@ function ChildNeedsExcerpt({ data, variant, onToggleConsent, consentPending }) {
                 </span>
                 <br />
                 <span
-                  className="text-[11px] uppercase tracking-[0.14em] font-bold mt-1 inline-block"
+                  className="text-[0.6875rem] uppercase tracking-[0.14em] font-bold mt-1 inline-block"
                   data-testid="complete-report-child-needs-consent-status"
                 >
                   {unlocked ? (

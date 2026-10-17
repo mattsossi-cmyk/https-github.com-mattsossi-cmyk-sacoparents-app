@@ -264,7 +264,7 @@ export default function SpecialNeedsV2EducationalDeepDive() {
     return (
       <AppShell>
         <div className="max-w-3xl mx-auto p-10">
-          <div className="text-[10px] uppercase tracking-[0.22em] font-bold text-[#3D1A78] mb-1">
+          <div className="text-[0.625rem] uppercase tracking-[0.22em] font-bold text-[#3D1A78] mb-1">
             Medical · Prescription Deep Dive
           </div>
           <h1 className="font-serif text-3xl text-[#1A1330]">All done!</h1>
@@ -291,7 +291,7 @@ export default function SpecialNeedsV2EducationalDeepDive() {
             className="inline-flex items-center gap-1 text-xs text-[#4B4567] underline">
             <ArrowLeft size={12} /> Back to Special Needs
           </Link>
-          <div className="text-[10px] uppercase tracking-[0.22em] font-bold text-[#3D1A78]">
+          <div className="text-[0.625rem] uppercase tracking-[0.22em] font-bold text-[#3D1A78]">
             Educational Needs Deep Dive
           </div>
         </div>
@@ -324,10 +324,10 @@ export default function SpecialNeedsV2EducationalDeepDive() {
             className="mt-3 rounded-2xl border border-[#E4D8B8] bg-[#FFF9EB] px-3.5 py-2.5"
             data-testid="edu-deep-scale-legend"
           >
-            <div className="text-[10px] uppercase tracking-[0.18em] font-bold text-[#8A6B12]">
+            <div className="text-[0.625rem] uppercase tracking-[0.18em] font-bold text-[#8A6B12]">
               Alignment scale
             </div>
-            <div className="mt-1 text-[12px] text-[#3B2A05] leading-snug">
+            <div className="mt-1 text-[0.75rem] text-[#3B2A05] leading-snug">
               <strong>4</strong> Always / Very Consistent &nbsp;·&nbsp;
               <strong>3</strong> Often &nbsp;·&nbsp;
               <strong>2</strong> Sometimes &nbsp;·&nbsp;
@@ -339,7 +339,7 @@ export default function SpecialNeedsV2EducationalDeepDive() {
         )}
 
         {/* Meta row: section counter + section answered badge + save state */}
-        <div className="mt-3 flex items-center gap-3 flex-wrap text-[11px] text-[#4B4567]" data-testid="edu-deep-meta">
+        <div className="mt-3 flex items-center gap-3 flex-wrap text-[0.6875rem] text-[#4B4567]" data-testid="edu-deep-meta">
           <span className="font-semibold text-[#3D1A78]">Section {current + 1} of {visibleSections.length}</span>
           <span className="text-[#6A5799]">·</span>
           <span data-testid="edu-deep-section-progress">
@@ -359,7 +359,7 @@ export default function SpecialNeedsV2EducationalDeepDive() {
 
         {/* Overall progress bar */}
         <div className="mt-3" data-testid="edu-deep-overall-progress">
-          <div className="flex items-center gap-2 text-[10px] text-[#6A5799]">
+          <div className="flex items-center gap-2 text-[0.625rem] text-[#6A5799]">
             <div className="flex-1 h-1.5 rounded-full bg-[#EEE9F7] overflow-hidden">
               <div className="h-full bg-gradient-to-r from-[#3D1A78] to-[#6B3FA0] transition-all" style={{ width: `${overallPct}%` }} />
             </div>
@@ -383,7 +383,7 @@ export default function SpecialNeedsV2EducationalDeepDive() {
                 onClick={() => { setCurrent(i); setQIdx(0); }}
                 title={s.name}
                 aria-label={`${s.name} — ${st.answered} of ${st.total} answered`}
-                className={`px-2.5 py-1 rounded-full text-[10px] font-semibold border transition-colors ${cls}`}
+                className={`px-2.5 py-1 rounded-full text-[0.625rem] font-semibold border transition-colors ${cls}`}
                 data-testid={`edu-deep-goto-${s.id}`}
               >
                 {s.number}
@@ -463,7 +463,7 @@ export default function SpecialNeedsV2EducationalDeepDive() {
           )}
         </div>
 
-        <p className="text-[11px] text-[#4B4567] mt-8 italic max-w-3xl">
+        <p className="text-[0.6875rem] text-[#4B4567] mt-8 italic max-w-3xl">
           This deep dive is optional. It reflects only your perspective and does not diagnose,
           provide medical advice, prescribe, or determine parental fitness. In a medical
           emergency call 911 or the poison control centre.

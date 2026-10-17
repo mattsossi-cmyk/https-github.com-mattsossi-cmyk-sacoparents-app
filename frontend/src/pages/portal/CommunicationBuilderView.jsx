@@ -1,4 +1,5 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
+import { useDialogFocus } from "../../lib/useDialogFocus";
 import { createPortal } from "react-dom";
 import { toast } from "sonner";
 
@@ -25,7 +26,7 @@ const tipFor = ({ status, riskLabel, flagList, greyRock }) => {
   if (status !== "ai")
     return { label: "Welcome", text: "Write or paste your message, then tap Get suggested wording. AI will check the tone and suggest calmer, child-focused wording." };
   if (greyRock)
-    return { label: "Grey-rock tip", text: "Keep it to logistics only: no feelings, no apologies. Shorter is safer." };
+    return { label: "Grey-rock tip", text: "Keep it to logistics only: no feelings, no apologies. Shorter is better." };
   if (riskLabel === "Escalation Flag")
     return {
       label: "AI noticed possible friction in your draft. Here's a tip:",
@@ -52,6 +53,8 @@ export function CommunicationBuilderView({ open, focus, onClose, onQuickExit, gr
   const [baMode, setBaMode] = useState("example");
   const guard = useAiGuard("communication_builder", biff.rawInput);
   useLockScroll(open);
+  const pageRef = useRef(null);
+  useDialogFocus(open, pageRef, onClose);
   useEffect(() => {
     if (!open) return;
     setTransformed(false);
@@ -102,7 +105,7 @@ export function CommunicationBuilderView({ open, focus, onClose, onQuickExit, gr
   );
 
   return createPortal(
-    <div id="cb-page" data-testid="comm-builder-page" className="fixed inset-0 z-50 overflow-y-auto bg-gradient-to-b from-[#F3EFFE] to-[#EBE5FA] text-slate-800 pb-12">
+    <div ref={pageRef} id="cb-page" role="dialog" aria-modal="true" aria-label="Communication Builder" tabIndex={-1} data-testid="comm-builder-page" className="fixed inset-0 z-50 overflow-y-auto overflow-x-hidden bg-gradient-to-b from-[#F3EFFE] to-[#EBE5FA] text-slate-800 pb-12 outline-none">
       <SafetyBanner tp="cb" />
       <div className="max-w-6xl mx-auto px-4 pt-6">
         <PageHeader tp="cb" onBack={onClose} onQuickExit={onQuickExit} backLabel="Back" />

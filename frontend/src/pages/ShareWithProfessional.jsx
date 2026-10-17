@@ -78,7 +78,7 @@ function Stepper({ step }) {
         return (
           <li key={label} className="flex items-center gap-1">
             <span
-              className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-[11px] font-semibold ${
+              className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-[0.6875rem] font-semibold ${
                 active
                   ? "bg-[#3D1A78] text-white"
                   : done
@@ -106,12 +106,12 @@ function Field({ label, htmlFor, required, hint, children, testid }) {
     <div data-testid={testid}>
       <label
         htmlFor={htmlFor}
-        className="text-[11px] uppercase tracking-[0.15em] font-bold text-[#3D1A78] block"
+        className="text-[0.6875rem] uppercase tracking-[0.15em] font-bold text-[#3D1A78] block"
       >
         {label}{required && <span className="text-[#9A3A23] ml-0.5">*</span>}
       </label>
       {children}
-      {hint && <p className="mt-1 text-[11px] text-[#6E6787]">{hint}</p>}
+      {hint && <p className="mt-1 text-[0.6875rem] text-[#6E6787]">{hint}</p>}
     </div>
   );
 }
@@ -234,7 +234,7 @@ export default function ShareWithProfessional() {
         >
           <ArrowLeft size={14} /> Back
         </Link>
-        <div className="text-[10px] uppercase tracking-[0.22em] font-bold text-[#3D1A78] flex items-center gap-1.5">
+        <div className="text-[0.625rem] uppercase tracking-[0.22em] font-bold text-[#3D1A78] flex items-center gap-1.5">
           <ShieldCheck size={12} /> Share with purpose. Stay in control.
         </div>
         <h1
@@ -396,8 +396,8 @@ export default function ShareWithProfessional() {
                         />
                         <div className="min-w-0 flex-1">
                           <div className="text-sm font-semibold text-[#1A1330]">{r.title}</div>
-                          <p className="text-[12px] text-[#4B4567] mt-1 leading-snug">{r.blurb}</p>
-                          <div className="text-[11px] text-[#6E6787] mt-1.5">
+                          <p className="text-[0.75rem] text-[#4B4567] mt-1 leading-snug">{r.blurb}</p>
+                          <div className="text-[0.6875rem] text-[#6E6787] mt-1.5">
                             Completed {r.completed_at ? new Date(r.completed_at).toLocaleDateString() : "—"}
                             {" · "}v{r.version}
                           </div>
@@ -408,7 +408,7 @@ export default function ShareWithProfessional() {
                 })}
               </ul>
             )}
-            <div className="mt-4 rounded-xl bg-[#F5F1FB] border border-[#D6CFE8] px-3 py-2 text-[11px] text-[#3D1A78]">
+            <div className="mt-4 rounded-xl bg-[#F5F1FB] border border-[#D6CFE8] px-3 py-2 text-[0.6875rem] text-[#3D1A78]">
               <strong>Never shared through this flow:</strong> raw answers,
               journal entries, AI Coach conversations, unfinished drafts,
               safety-screen answers, your account credentials, or the other
@@ -428,7 +428,7 @@ export default function ShareWithProfessional() {
             </h2>
 
             <fieldset className="space-y-2 mb-5">
-              <legend className="text-[11px] uppercase tracking-[0.15em] font-bold text-[#3D1A78] mb-2">
+              <legend className="text-[0.6875rem] uppercase tracking-[0.15em] font-bold text-[#3D1A78] mb-2">
                 Permission level
               </legend>
               <label className="flex items-start gap-3 rounded-xl border border-[#E5E0EE] p-3 cursor-pointer hover:bg-[#FAF8FD]">
@@ -438,7 +438,7 @@ export default function ShareWithProfessional() {
                   data-testid="access-view-only" />
                 <div>
                   <div className="text-sm font-semibold text-[#1A1330]">View in secure portal only</div>
-                  <div className="text-[11px] text-[#4B4567] mt-0.5">Recommended. No offline copy leaves the app.</div>
+                  <div className="text-[0.6875rem] text-[#4B4567] mt-0.5">Recommended. No offline copy leaves the app.</div>
                 </div>
               </label>
               <label className="flex items-start gap-3 rounded-xl border border-[#E5E0EE] p-3 cursor-pointer hover:bg-[#FAF8FD]">
@@ -448,7 +448,7 @@ export default function ShareWithProfessional() {
                   data-testid="access-download" />
                 <div>
                   <div className="text-sm font-semibold text-[#1A1330]">View and download</div>
-                  <div className="text-[11px] text-[#4B4567] mt-0.5">
+                  <div className="text-[0.6875rem] text-[#4B4567] mt-0.5">
                     Once downloaded, SA CoParents can&rsquo;t recall the copy.
                     Revoking prevents future portal access.
                   </div>
@@ -457,7 +457,7 @@ export default function ShareWithProfessional() {
             </fieldset>
 
             <fieldset className="space-y-2 mb-5">
-              <legend className="text-[11px] uppercase tracking-[0.15em] font-bold text-[#3D1A78] mb-2">
+              <legend className="text-[0.6875rem] uppercase tracking-[0.15em] font-bold text-[#3D1A78] mb-2">
                 Notifications
               </legend>
               <label className="flex items-center gap-2 text-sm text-[#1A1330]">
@@ -486,7 +486,7 @@ export default function ShareWithProfessional() {
             </fieldset>
 
             <fieldset className="space-y-2">
-              <legend className="text-[11px] uppercase tracking-[0.15em] font-bold text-[#3D1A78] mb-2">
+              <legend className="text-[0.6875rem] uppercase tracking-[0.15em] font-bold text-[#3D1A78] mb-2">
                 Access expiration
               </legend>
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
@@ -551,7 +551,7 @@ export default function ShareWithProfessional() {
               </div>
             </dl>
 
-            <label className="flex items-start gap-2 mb-3 text-[13px] leading-relaxed text-[#1A1330]">
+            <label className="flex items-start gap-2 mb-3 text-[0.8125rem] leading-relaxed text-[#1A1330]">
               <input type="checkbox" className="mt-1 accent-[#3D1A78]"
                 checked={form.consent_authorised}
                 onChange={(e) => update({ consent_authorised: e.target.checked })}
@@ -568,7 +568,7 @@ export default function ShareWithProfessional() {
               </span>
             </label>
 
-            <label className="flex items-start gap-2 text-[13px] leading-relaxed text-[#1A1330]">
+            <label className="flex items-start gap-2 text-[0.8125rem] leading-relaxed text-[#1A1330]">
               <input type="checkbox" className="mt-1 accent-[#3D1A78]"
                 checked={form.consent_relationship_acknowledged}
                 onChange={(e) => update({ consent_relationship_acknowledged: e.target.checked })}

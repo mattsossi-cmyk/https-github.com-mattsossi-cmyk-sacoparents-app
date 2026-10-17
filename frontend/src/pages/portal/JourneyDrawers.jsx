@@ -1,4 +1,5 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
+import { useDialogFocus } from "../../lib/useDialogFocus";
 import { toast } from "sonner";
 
 import { BiffTab } from "./BiffTab";
@@ -30,20 +31,16 @@ import { RECORDS_ENABLED } from "./portalStorage";
 /* ------------------------------------------------------------------ */
 
 function DrawerShell({ open, onClose, title, testId, children }) {
-  // Lock body scroll + support ESC-to-close for keyboard users.
+  const boxRef = useRef(null);
+  useDialogFocus(open, boxRef, onClose);
   useEffect(() => {
     if (!open) return undefined;
     const prev = document.body.style.overflow;
     document.body.style.overflow = "hidden";
-    const onKey = (e) => {
-      if (e.key === "Escape") onClose();
-    };
-    window.addEventListener("keydown", onKey);
     return () => {
       document.body.style.overflow = prev;
-      window.removeEventListener("keydown", onKey);
     };
-  }, [open, onClose]);
+  }, [open]);
 
   if (!open) return null;
 
@@ -53,10 +50,15 @@ function DrawerShell({ open, onClose, title, testId, children }) {
       data-testid={testId}
     >
       <div
-        className="bg-slate-50 w-full sm:max-w-md max-h-[92vh] rounded-t-3xl sm:rounded-3xl shadow-2xl flex flex-col"
+        ref={boxRef}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby={`${testId}-title`}
+        tabIndex={-1}
+        className="bg-slate-50 w-full sm:max-w-md max-h-[92vh] rounded-t-3xl sm:rounded-3xl shadow-2xl flex flex-col outline-none"
       >
         <header className="shrink-0 flex items-center justify-between px-4 py-3 border-b border-slate-200 bg-white rounded-t-3xl">
-          <h2 className="font-bold text-slate-900 text-sm">{title}</h2>
+          <h2 id={`${testId}-title`} className="font-bold text-slate-900 text-sm">{title}</h2>
           <button
             type="button"
             data-testid={`${testId}-close`}
@@ -146,10 +148,10 @@ export function BiffSnapshotCard({ rawInput, biffOutput, onSaveBiffSnapshot, onS
       <div className="flex items-start gap-2">
         <i className="fa-solid fa-camera-retro text-purple-700 mt-0.5"></i>
         <div className="flex-1 min-w-0">
-          <div className="text-[10px] uppercase font-bold text-purple-800 tracking-wider">
+          <div className="text-[0.625rem] uppercase font-bold text-purple-800 tracking-wider">
             Draft-to-Snapshot
           </div>
-          <p className="text-[11px] text-slate-600 leading-snug">
+          <p className="text-[0.6875rem] text-slate-600 leading-snug">
             File this rewrite into your Snapshot Library so your
             mediator can see your tone progression — not just the
             rewrite in isolation.
@@ -175,7 +177,7 @@ export function BiffSnapshotCard({ rawInput, biffOutput, onSaveBiffSnapshot, onS
       {savedId > 0 && (
         <p
           data-testid="biff-save-snapshot-hint"
-          className="text-[10px] text-emerald-700 font-semibold text-center"
+          className="text-[0.625rem] text-emerald-700 font-semibold text-center"
         >
           <i className="fa-solid fa-check mr-1"></i>Saved — view it
           in your Snapshot Library.
@@ -208,19 +210,19 @@ export function BiffBookLink() {
       <div className="flex items-start gap-2">
         <i className="fa-solid fa-book text-amber-700 mt-0.5"></i>
         <div className="flex-1 min-w-0">
-          <div className="text-[10px] uppercase font-bold text-amber-800 tracking-wider">
+          <div className="text-[0.625rem] uppercase font-bold text-amber-800 tracking-wider">
             Deeper learning
           </div>
           <div className="text-xs font-bold text-slate-900">
             Get the book: {title}
             {author ? ` — ${author}` : ""}
           </div>
-          <p className="text-[11px] text-slate-600 leading-snug mt-0.5">
+          <p className="text-[0.6875rem] text-slate-600 leading-snug mt-0.5">
             The research + full method behind every rewrite in this
             tool.
           </p>
         </div>
-        <i className="fa-solid fa-arrow-up-right-from-square text-[10px] text-amber-700 mt-1 group-hover:translate-x-0.5 transition"></i>
+        <i className="fa-solid fa-arrow-up-right-from-square text-[0.625rem] text-amber-700 mt-1 group-hover:translate-x-0.5 transition"></i>
       </div>
     </a>
   );
@@ -254,7 +256,7 @@ export function RecordsDrawer({
       >
         <div className="flex justify-between items-center border-b border-slate-100 pb-2">
           <div>
-            <span className="text-[10px] font-bold text-emerald-600 uppercase">
+            <span className="text-[0.625rem] font-bold text-emerald-600 uppercase">
               Assessments
             </span>
             <h3 className="font-bold text-slate-800 text-sm">
@@ -264,7 +266,7 @@ export function RecordsDrawer({
           <button
             data-testid="add-alignment-btn"
             onClick={onAddAlignment}
-            className="bg-emerald-600 text-white text-[10px] font-bold px-2.5 py-1 rounded-lg"
+            className="bg-emerald-600 text-white text-[0.625rem] font-bold px-2.5 py-1 rounded-lg"
           >
             + Add Record
           </button>
@@ -285,7 +287,7 @@ export function RecordsDrawer({
             </div>
             <span
               data-testid="count-medical"
-              className="bg-white text-emerald-800 font-bold px-2 py-0.5 rounded-full text-[10px]"
+              className="bg-white text-emerald-800 font-bold px-2 py-0.5 rounded-full text-[0.625rem]"
             >
               {alignmentCounts.Medical} Records
             </span>
@@ -305,7 +307,7 @@ export function RecordsDrawer({
             </div>
             <span
               data-testid="count-educational"
-              className="bg-white text-blue-800 font-bold px-2 py-0.5 rounded-full text-[10px]"
+              className="bg-white text-blue-800 font-bold px-2 py-0.5 rounded-full text-[0.625rem]"
             >
               {alignmentCounts.Educational} Records
             </span>
@@ -325,7 +327,7 @@ export function RecordsDrawer({
             </div>
             <span
               data-testid="count-psychological"
-              className="bg-white text-purple-800 font-bold px-2 py-0.5 rounded-full text-[10px]"
+              className="bg-white text-purple-800 font-bold px-2 py-0.5 rounded-full text-[0.625rem]"
             >
               {alignmentCounts.Psychological} Records
             </span>
@@ -337,7 +339,7 @@ export function RecordsDrawer({
             type="button"
             onClick={() => setFolderFilter("All")}
             data-testid="clear-folder-filter"
-            className="text-[10px] text-purple-700 font-bold underline"
+            className="text-[0.625rem] text-purple-700 font-bold underline"
           >
             Show all records
           </button>
@@ -355,7 +357,7 @@ export function RecordsDrawer({
                   ? "You have 0 assessment records yet"
                   : `You have 0 ${folderFilter.toLowerCase()} records yet`}
               </div>
-              <p className="text-[10px] text-slate-500 leading-snug">
+              <p className="text-[0.625rem] text-slate-500 leading-snug">
                 {folderFilter === "All"
                   ? "Add your first record — a provider name, a date, a short note. It saves privately to this device."
                   : folderFilter === "Medical"
@@ -368,7 +370,7 @@ export function RecordsDrawer({
                 type="button"
                 data-testid={`assessment-empty-add-${folderFilter.toLowerCase()}`}
                 onClick={onAddAlignment}
-                className="mt-1 px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg font-bold text-[11px]"
+                className="mt-1 px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg font-bold text-[0.6875rem]"
               >
                 <i className="fa-solid fa-plus mr-1"></i>Add your first{" "}
                 {folderFilter === "All"
@@ -385,14 +387,14 @@ export function RecordsDrawer({
               >
                 <div className="flex justify-between items-start">
                   <span className="font-bold text-slate-800">{item.title}</span>
-                  <span className="text-[10px] text-slate-400 font-medium">
+                  <span className="text-[0.625rem] text-slate-400 font-medium">
                     {item.date}
                   </span>
                 </div>
-                <div className="text-[11px] text-slate-500 font-medium">
+                <div className="text-[0.6875rem] text-slate-500 font-medium">
                   Specialist: {item.provider}
                 </div>
-                <div className="text-[11px] text-slate-600 bg-white p-2 rounded-lg border border-slate-100">
+                <div className="text-[0.6875rem] text-slate-600 bg-white p-2 rounded-lg border border-slate-100">
                   {item.summary}
                 </div>
               </div>
@@ -433,14 +435,14 @@ export function FoundationDrawer({
       >
         <div className="flex justify-between items-start border-b border-slate-100 pb-2">
           <div>
-            <span className="text-[10px] font-bold text-purple-700 uppercase">
+            <span className="text-[0.625rem] font-bold text-purple-700 uppercase">
               Step 5 Anchor
             </span>
             <h3 className="font-bold text-slate-800 text-sm">
               Foundation Statement
             </h3>
           </div>
-          <span className="bg-purple-100 text-purple-900 text-[10px] font-bold px-2 py-0.5 rounded">
+          <span className="bg-purple-100 text-purple-900 text-[0.625rem] font-bold px-2 py-0.5 rounded">
             Anchor PDF
           </span>
         </div>
@@ -492,7 +494,7 @@ export function FoundationDrawer({
         {safetyFlagged ? (
           <div
             data-testid="foundation-email-coparent-blocked"
-            className="p-3 bg-rose-50 border border-rose-200 rounded-xl text-[11px]"
+            className="p-3 bg-rose-50 border border-rose-200 rounded-xl text-[0.6875rem]"
           >
             <div className="flex items-start gap-2">
               <i className="fa-solid fa-shield-heart text-rose-700 mt-0.5"></i>
@@ -515,7 +517,7 @@ export function FoundationDrawer({
             data-testid="email-foundation-coparent-btn"
             onClick={onEmailFoundationToCoparent}
             disabled={shareStatus?.foundation_email === "loading"}
-            className="w-full p-2 bg-white hover:bg-purple-50 border border-purple-300 text-purple-800 rounded-xl font-bold text-[11px] transition flex items-center justify-center gap-2 disabled:opacity-40"
+            className="w-full p-2 bg-white hover:bg-purple-50 border border-purple-300 text-purple-800 rounded-xl font-bold text-[0.6875rem] transition flex items-center justify-center gap-2 disabled:opacity-40"
           >
             <i className="fa-solid fa-envelope"></i>
             {shareStatus?.foundation_email === "loading"

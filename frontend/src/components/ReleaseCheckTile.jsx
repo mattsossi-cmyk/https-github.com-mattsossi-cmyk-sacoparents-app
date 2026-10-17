@@ -27,7 +27,7 @@ const CheckRow = ({ r }) => (
 
 const History = ({ runs }) => (
   <div className="flex items-center gap-1.5 mt-4" data-testid="admin-release-check-history">
-    <span className="text-[10px] uppercase tracking-[0.15em] text-[#6E6787] mr-1">Recent</span>
+    <span className="text-[0.625rem] uppercase tracking-[0.15em] text-[#6E6787] mr-1">Recent</span>
     {runs.map((r) => (
       <span
         key={r.id}

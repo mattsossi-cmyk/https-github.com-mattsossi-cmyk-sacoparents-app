@@ -32,7 +32,7 @@ function Typing({ tp }) {
 function Starters({ tp, starters, busy, onAsk }) {
   return (
     <div data-testid={`${tp}-chat-starters`} className="px-3 pt-2.5 border-t border-purple-100 bg-white">
-      <p data-testid={`${tp}-chat-starters-label`} className="text-[10px] font-bold uppercase tracking-wider text-purple-700 mb-1.5">
+      <p data-testid={`${tp}-chat-starters-label`} className="text-[0.625rem] font-bold uppercase tracking-wider text-purple-700 mb-1.5">
         Quick questions · {starters.label}
       </p>
       <div className="pp-scroll flex gap-2 overflow-x-auto pb-1">
@@ -43,7 +43,7 @@ function Starters({ tp, starters, busy, onAsk }) {
             data-testid={`${tp}-chat-starter-${i}`}
             disabled={busy}
             onClick={() => onAsk(s)}
-            className="shrink-0 whitespace-nowrap text-[11px] font-semibold text-[#4a2574] bg-[#f8f6fc] border border-purple-200 hover:bg-purple-50 disabled:opacity-50 rounded-full px-3 py-1.5 transition-colors"
+            className="shrink-0 whitespace-nowrap text-[0.6875rem] font-semibold text-[#4a2574] bg-[#f8f6fc] border border-purple-200 hover:bg-purple-50 disabled:opacity-50 rounded-full px-3 py-1.5 transition-colors"
           >
             {s}
           </button>
@@ -79,11 +79,11 @@ export function GuideChat({ chat, tp, title, greeting, suggestions = [], starter
           </span>
           <div>
             <h4 className="text-sm font-bold leading-tight">{title}</h4>
-            <p className="text-[10px] text-purple-100">Powered by Emergent AI · private to you</p>
+            <p className="text-[0.625rem] text-purple-100">Powered by Emergent AI · private to you</p>
           </div>
         </div>
         {chat.messages.length > 0 && (
-          <button type="button" data-testid={`${tp}-chat-new`} onClick={chat.reset} className="text-[10px] font-bold px-2.5 py-1 rounded-full bg-white/15 hover:bg-white/25 transition-colors">
+          <button type="button" data-testid={`${tp}-chat-new`} onClick={chat.reset} className="text-[0.625rem] font-bold px-2.5 py-1 rounded-full bg-white/15 hover:bg-white/25 transition-colors">
             New chat
           </button>
         )}
@@ -99,7 +99,7 @@ export function GuideChat({ chat, tp, title, greeting, suggestions = [], starter
                   type="button"
                   data-testid={`${tp}-chat-suggestion-${i}`}
                   onClick={() => submit(s)}
-                  className="text-[11px] font-semibold text-[#4a2574] bg-white border border-purple-200 hover:bg-purple-50 rounded-full px-3 py-1.5 transition-colors"
+                  className="text-[0.6875rem] font-semibold text-[#4a2574] bg-white border border-purple-200 hover:bg-purple-50 rounded-full px-3 py-1.5 transition-colors"
                 >
                   {s}
                 </button>
@@ -112,7 +112,7 @@ export function GuideChat({ chat, tp, title, greeting, suggestions = [], starter
         ))}
         {chat.busy && <Typing tp={tp} />}
       </div>
-      {chat.error && <p data-testid={`${tp}-chat-error`} className="px-4 pt-2 text-[11px] text-rose-700">{chat.error}</p>}
+      {chat.error && <p data-testid={`${tp}-chat-error`} className="px-4 pt-2 text-[0.6875rem] text-rose-700">{chat.error}</p>}
       {starters && <Starters key={starters.label} tp={tp} starters={starters} busy={chat.busy} onAsk={submit} />}
       <AiGuardFrame tp={`${tp}-chat`} guard={guard} className="px-3 pt-3 border-t border-purple-100">
       <form
@@ -143,7 +143,7 @@ export function GuideChat({ chat, tp, title, greeting, suggestions = [], starter
         </button>
       </form>
       </AiGuardFrame>
-      <p className="px-4 pb-3 text-[10px] text-slate-400">General guidance, not legal advice. In danger? Call 911.</p>
+      <p className="px-4 pb-3 text-[0.625rem] text-slate-400">General guidance, not legal advice. In danger? Call 911.</p>
     </section>
   );
 }

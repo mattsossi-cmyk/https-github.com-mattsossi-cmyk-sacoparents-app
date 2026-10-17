@@ -107,7 +107,7 @@ export default function JointReportEmailDialog({
       >
         <div className="flex items-center justify-between gap-3 px-6 sm:px-7 pt-6">
           <div>
-            <div className="text-[11px] uppercase tracking-[0.22em] text-[#3D1A78] font-bold mb-1">
+            <div className="text-[0.6875rem] uppercase tracking-[0.22em] text-[#3D1A78] font-bold mb-1">
               {v.eyebrow}
             </div>
             <h3
@@ -141,7 +141,7 @@ export default function JointReportEmailDialog({
             {isWarn
               ? <ShieldCheck size={16} className="text-[#8A6B12] mt-0.5 shrink-0" />
               : <ShieldAlert size={16} className="text-[#B02A2A] mt-0.5 shrink-0" />}
-            <div className="text-[12px] text-[#1A1330] leading-relaxed">
+            <div className="text-[0.75rem] text-[#1A1330] leading-relaxed">
               <strong className={isWarn ? "text-[#8A6B12]" : "text-[#B02A2A]"}>
                 {v.disclaimerTitle}
               </strong>{" "}
@@ -150,7 +150,7 @@ export default function JointReportEmailDialog({
           </div>
 
           <div className="rounded-2xl border border-[#E5E0EE] bg-[#F8F7FC] p-3">
-            <div className="text-[10px] uppercase tracking-[0.22em] font-bold text-[#3D1A78] mb-1">
+            <div className="text-[0.625rem] uppercase tracking-[0.22em] font-bold text-[#3D1A78] mb-1">
               {v.scopeTitle}
             </div>
             <div
@@ -159,7 +159,7 @@ export default function JointReportEmailDialog({
             >
               {parentAName || "Parent A"} <span className="text-[#6E6787] mx-1">·</span> {parentBName || "Parent B"}
             </div>
-            <div className="text-[11px] text-[#4B4567] mt-1">
+            <div className="text-[0.6875rem] text-[#4B4567] mt-1">
               {v.scopeSubtitle}
             </div>
           </div>
@@ -169,7 +169,7 @@ export default function JointReportEmailDialog({
           </p>
 
           <div>
-            <label className="block text-[11px] uppercase tracking-[0.18em] text-[#3D1A78] font-bold mb-1">
+            <label className="block text-[0.6875rem] uppercase tracking-[0.18em] text-[#3D1A78] font-bold mb-1">
               Recipient role
             </label>
             <div className="flex flex-wrap gap-1.5">
@@ -179,7 +179,7 @@ export default function JointReportEmailDialog({
                   type="button"
                   onClick={() => setRole(r.key)}
                   data-testid={`${testIdPrefix}-role-${r.key}`}
-                  className={`text-[12px] px-3 py-1.5 rounded-full border transition ${
+                  className={`text-[0.75rem] px-3 py-1.5 rounded-full border transition ${
                     role === r.key
                       ? "bg-[#3D1A78] text-white border-[#3D1A78] font-semibold"
                       : "bg-white text-[#4B4567] border-[#E5E0EE] hover:border-[#3D1A78]"
@@ -193,7 +193,7 @@ export default function JointReportEmailDialog({
           </div>
 
           <div>
-            <label className="block text-[11px] uppercase tracking-[0.18em] text-[#3D1A78] font-bold mb-1">
+            <label className="block text-[0.6875rem] uppercase tracking-[0.18em] text-[#3D1A78] font-bold mb-1">
               Recipient email <span aria-hidden="true" className="text-[#9A3A23]">*</span>
             </label>
             <input
@@ -209,7 +209,7 @@ export default function JointReportEmailDialog({
           </div>
 
           <div>
-            <label className="block text-[11px] uppercase tracking-[0.18em] text-[#3D1A78] font-bold mb-1">
+            <label className="block text-[0.6875rem] uppercase tracking-[0.18em] text-[#3D1A78] font-bold mb-1">
               Recipient name <span className="text-[#6E6787] font-normal normal-case tracking-normal">· optional</span>
             </label>
             <input
@@ -223,7 +223,7 @@ export default function JointReportEmailDialog({
           </div>
 
           <div>
-            <label className="block text-[11px] uppercase tracking-[0.18em] text-[#3D1A78] font-bold mb-1">
+            <label className="block text-[0.6875rem] uppercase tracking-[0.18em] text-[#3D1A78] font-bold mb-1">
               Short message <span className="text-[#6E6787] font-normal normal-case tracking-normal">· optional</span>
             </label>
             <textarea
@@ -241,7 +241,7 @@ export default function JointReportEmailDialog({
             />
           </div>
 
-          <p className="text-[11px] text-[#6A5799] italic">
+          <p className="text-[0.6875rem] text-[#6A5799] italic">
             Reply-to is set to your email so the recipient can respond
             directly.{" "}
             {variant === "agreement"

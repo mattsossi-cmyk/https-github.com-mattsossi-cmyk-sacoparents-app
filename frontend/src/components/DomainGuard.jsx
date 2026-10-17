@@ -148,7 +148,7 @@ export default function DomainGuard({ side, children }) {
       <div
         className={`max-w-md w-full rounded-2xl border-2 p-6 shadow-sm space-y-4 ${tint}`}
       >
-        <div className="text-[10px] uppercase tracking-widest font-bold opacity-70">
+        <div className="text-[0.625rem] uppercase tracking-widest font-bold opacity-70">
           Wrong site
         </div>
         <h1 className="text-lg font-bold leading-tight">

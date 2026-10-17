@@ -122,7 +122,7 @@ export default function AssessmentResultHandoff({ assessmentType }) {
       className="mt-6 rounded-3xl border border-[#D6CFE8] bg-white p-5 sm:p-6"
       data-testid="assessment-result-professional-cta"
     >
-      <div className="text-[11px] uppercase tracking-[0.16em] font-bold text-[#3D1A78]">
+      <div className="text-[0.6875rem] uppercase tracking-[0.16em] font-bold text-[#3D1A78]">
         Ready to hand this off?
       </div>
       <h3 className="font-serif text-2xl text-[#1A1330] mt-1 leading-tight">

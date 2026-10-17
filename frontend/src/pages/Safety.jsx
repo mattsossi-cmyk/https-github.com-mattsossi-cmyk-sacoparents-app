@@ -334,7 +334,7 @@ export default function Safety() {
         >
           <div className="grid md:grid-cols-2 gap-5">
             <div className="rounded-2xl bg-gradient-to-br from-[#3D1A78] to-[#2DB5B5] text-white p-6 flex flex-col">
-              <div className="text-[11px] uppercase tracking-[0.22em] font-bold opacity-90 mb-2">
+              <div className="text-[0.6875rem] uppercase tracking-[0.22em] font-bold opacity-90 mb-2">
                 Free and confidential
               </div>
               <h3 className="font-bold text-2xl mb-2 leading-tight">
@@ -357,7 +357,7 @@ export default function Safety() {
               </div>
             </div>
             <div className="rounded-2xl bg-white border border-[#E5E0EE] p-6 flex flex-col">
-              <div className="text-[11px] uppercase tracking-[0.22em] font-bold text-[#3D1A78] mb-2">
+              <div className="text-[0.6875rem] uppercase tracking-[0.22em] font-bold text-[#3D1A78] mb-2">
                 One decision at a time
               </div>
               <h3 className="font-bold text-2xl text-[#1A1330] mb-2 leading-tight">

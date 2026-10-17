@@ -68,7 +68,7 @@ function ConnectPrompt() {
           <Mail size={18} />
         </div>
         <div className="min-w-0 flex-1">
-          <div className="text-[10px] uppercase tracking-[0.22em] font-bold text-[#3D1A78]">
+          <div className="text-[0.625rem] uppercase tracking-[0.22em] font-bold text-[#3D1A78]">
             Mini Inbox
           </div>
           <div className="font-serif text-lg text-[#1A1330] mt-0.5">
@@ -216,7 +216,7 @@ export default function GmailMiniInbox() {
     >
       <div className="flex items-start justify-between flex-wrap gap-2">
         <div className="min-w-0">
-          <div className="text-[10px] uppercase tracking-[0.22em] font-bold text-[#3D1A78]">
+          <div className="text-[0.625rem] uppercase tracking-[0.22em] font-bold text-[#3D1A78]">
             Mini Inbox
           </div>
           <div className="font-serif text-lg text-[#1A1330] mt-0.5 flex items-center gap-2 flex-wrap">
@@ -224,7 +224,7 @@ export default function GmailMiniInbox() {
             Recent messages
             {unreadCount > 0 && (
               <span
-                className="inline-flex items-center justify-center min-w-[20px] h-[20px] px-1.5 rounded-full bg-[#C13030] text-white text-[10px] font-bold tabular-nums"
+                className="inline-flex items-center justify-center min-w-[20px] h-[20px] px-1.5 rounded-full bg-[#C13030] text-white text-[0.625rem] font-bold tabular-nums"
                 title={`${unreadCount} unread message${unreadCount === 1 ? "" : "s"} in your inbox`}
                 aria-label={`${unreadCount} unread`}
                 data-testid="gmail-mini-unread-badge"
@@ -233,7 +233,7 @@ export default function GmailMiniInbox() {
               </span>
             )}
             {status?.google_email && (
-              <span className="text-[10px] font-normal text-[#6A5799] font-sans truncate max-w-[180px] sm:max-w-none">
+              <span className="text-[0.625rem] font-normal text-[#6A5799] font-sans truncate max-w-[180px] sm:max-w-none">
                 {status.google_email}
               </span>
             )}
@@ -292,12 +292,12 @@ export default function GmailMiniInbox() {
                       >
                         {sender}
                       </span>
-                      <span className="text-[10px] text-[#6A5799] shrink-0">{when}</span>
+                      <span className="text-[0.625rem] text-[#6A5799] shrink-0">{when}</span>
                     </div>
                     <div className="text-xs text-[#1A1330] truncate mt-0.5">
                       {m.subject || <span className="italic text-[#6A5799]">(no subject)</span>}
                     </div>
-                    <div className="text-[11px] text-[#4B4567] mt-0.5">
+                    <div className="text-[0.6875rem] text-[#4B4567] mt-0.5">
                       {truncate(m.snippet, SNIPPET_MAX)}
                     </div>
                   </div>

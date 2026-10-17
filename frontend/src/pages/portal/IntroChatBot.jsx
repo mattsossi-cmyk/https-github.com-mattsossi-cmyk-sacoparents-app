@@ -167,7 +167,7 @@ export function IntroChatBot({
               <i className="fa-solid fa-hands-holding-child text-white text-sm"></i>
             </div>
             <div className="min-w-0">
-              <div className="text-[9px] font-bold text-purple-800 uppercase tracking-wider">
+              <div className="text-[0.5625rem] font-bold text-purple-800 uppercase tracking-wider">
                 Welcome
               </div>
               <h3 className="font-bold text-slate-800 text-sm truncate">
@@ -200,7 +200,7 @@ export function IntroChatBot({
               {INTRO_MESSAGES.map((m, i) => (
                 <div className="flex justify-start" key={`intro-${i}`}>
                   <div
-                    className="max-w-[92%] bg-white border border-slate-200 rounded-2xl rounded-tl-sm p-2.5 text-[12px] text-slate-800 leading-snug shadow-sm"
+                    className="max-w-[92%] bg-white border border-slate-200 rounded-2xl rounded-tl-sm p-2.5 text-[0.75rem] text-slate-800 leading-snug shadow-sm"
                     data-testid={`intro-msg-${i}`}
                   >
                     {m}
@@ -221,11 +221,11 @@ export function IntroChatBot({
                     I’m Here to Work on Co-Parenting
                   </h4>
                 </div>
-                <p className="text-[11px] text-slate-600 leading-snug">
+                <p className="text-[0.6875rem] text-slate-600 leading-snug">
                   Choose this path if you are starting on your own or
                   voluntarily working on your co-parenting relationship.
                 </p>
-                <ul className="text-[10px] text-slate-600 space-y-0.5 pl-3 list-disc">
+                <ul className="text-[0.625rem] text-slate-600 space-y-0.5 pl-3 list-disc">
                   {PARENT_BENEFITS.map((b) => (
                     <li key={b}>{b}</li>
                   ))}
@@ -254,17 +254,17 @@ export function IntroChatBot({
                     I’m Here Because of a Court Order
                   </h4>
                 </div>
-                <p className="text-[11px] text-slate-600 leading-snug">
+                <p className="text-[0.6875rem] text-slate-600 leading-snug">
                   Choose this path if a court, attorney, mediator, parent
                   facilitator, therapist, or other professional directed
                   you to SA CoParents.
                 </p>
-                <p className="text-[11px] text-slate-600 leading-snug">
+                <p className="text-[0.6875rem] text-slate-600 leading-snug">
                   I’ll guide you through the assessments or activities
                   you have been asked to complete. Your responses can then
                   be used to help identify:
                 </p>
-                <ul className="text-[10px] text-slate-600 space-y-0.5 pl-3 list-disc">
+                <ul className="text-[0.625rem] text-slate-600 space-y-0.5 pl-3 list-disc">
                   {COURT_BENEFITS.map((b) => (
                     <li key={b}>{b}</li>
                   ))}
@@ -293,7 +293,7 @@ export function IntroChatBot({
                     Not Sure Which Path to Choose?
                   </h4>
                 </div>
-                <p className="text-[11px] text-slate-600 leading-snug">
+                <p className="text-[0.6875rem] text-slate-600 leading-snug">
                   That’s okay. I can ask you a few simple questions
                   and help you identify the appropriate starting point.
                 </p>
@@ -313,14 +313,14 @@ export function IntroChatBot({
 
               {/* Footer aphorism */}
               <div className="pt-2 pb-3 text-center space-y-1">
-                <p className="text-[10px] text-slate-500 italic">
+                <p className="text-[0.625rem] text-slate-500 italic">
                   You can move through SA CoParents at your own pace. The
                   goal isn’t to decide which parent is right or wrong.
                   The goal is to better understand your parenting situation
                   and keep your child’s needs at the center of what
                   happens next.
                 </p>
-                <p className="text-[10px] font-bold text-purple-800 uppercase tracking-wider">
+                <p className="text-[0.625rem] font-bold text-purple-800 uppercase tracking-wider">
                   Start with Alignment. Move Toward Agreement.
                 </p>
               </div>
@@ -330,7 +330,7 @@ export function IntroChatBot({
           {phase === "help" && (
             <>
               <div className="flex justify-start">
-                <div className="max-w-[92%] bg-white border border-slate-200 rounded-2xl rounded-tl-sm p-2.5 text-[12px] text-slate-800 leading-snug shadow-sm">
+                <div className="max-w-[92%] bg-white border border-slate-200 rounded-2xl rounded-tl-sm p-2.5 text-[0.75rem] text-slate-800 leading-snug shadow-sm">
                   Great — a few quick questions and I’ll point
                   you to the best starting place.
                 </div>
@@ -339,12 +339,12 @@ export function IntroChatBot({
               {HELP_QUESTIONS.slice(0, step).map((q) => (
                 <React.Fragment key={q.key}>
                   <div className="flex justify-start">
-                    <div className="max-w-[92%] bg-white border border-slate-200 rounded-2xl rounded-tl-sm p-2.5 text-[12px] text-slate-800 leading-snug shadow-sm">
+                    <div className="max-w-[92%] bg-white border border-slate-200 rounded-2xl rounded-tl-sm p-2.5 text-[0.75rem] text-slate-800 leading-snug shadow-sm">
                       {q.prompt}
                     </div>
                   </div>
                   <div className="flex justify-end">
-                    <div className="max-w-[85%] bg-purple-800 text-white rounded-2xl rounded-tr-sm p-2.5 text-[12px] leading-snug">
+                    <div className="max-w-[85%] bg-purple-800 text-white rounded-2xl rounded-tr-sm p-2.5 text-[0.75rem] leading-snug">
                       {
                         YES_NO_OPTIONS.find((o) => o.value === answers[q.key])
                           ?.label
@@ -358,7 +358,7 @@ export function IntroChatBot({
                 <>
                   <div className="flex justify-start">
                     <div
-                      className="max-w-[92%] bg-white border border-slate-200 rounded-2xl rounded-tl-sm p-2.5 text-[12px] text-slate-800 leading-snug shadow-sm"
+                      className="max-w-[92%] bg-white border border-slate-200 rounded-2xl rounded-tl-sm p-2.5 text-[0.75rem] text-slate-800 leading-snug shadow-sm"
                       data-testid={`intro-help-q-${step}`}
                     >
                       {HELP_QUESTIONS[step].prompt}
@@ -398,7 +398,7 @@ export function IntroChatBot({
                   setStep(0);
                   setAnswers({});
                 }}
-                className="w-full mt-2 py-1.5 text-[10px] text-slate-400 hover:text-slate-600 underline"
+                className="w-full mt-2 py-1.5 text-[0.625rem] text-slate-400 hover:text-slate-600 underline"
               >
                 Back to the paths
               </button>
@@ -414,17 +414,17 @@ export function IntroChatBot({
                 >
                   <div className="flex items-center gap-1.5">
                     <i className="fa-solid fa-lightbulb text-amber-500 text-xs"></i>
-                    <span className="text-[9px] font-bold text-purple-800 uppercase tracking-wider">
+                    <span className="text-[0.5625rem] font-bold text-purple-800 uppercase tracking-wider">
                       Recommended
                     </span>
                   </div>
                   <div
-                    className="text-[13px] font-bold text-slate-800 leading-snug"
+                    className="text-[0.8125rem] font-bold text-slate-800 leading-snug"
                     data-testid="intro-recommend-title"
                   >
                     {rec.title}
                   </div>
-                  <p className="text-[11px] text-slate-600 leading-snug">
+                  <p className="text-[0.6875rem] text-slate-600 leading-snug">
                     {rec.body}
                   </p>
                 </div>
@@ -449,7 +449,7 @@ export function IntroChatBot({
                   type="button"
                   data-testid="intro-recommend-back"
                   onClick={() => setPhase("paths")}
-                  className="w-full py-1.5 text-[10px] text-slate-400 hover:text-slate-600 underline"
+                  className="w-full py-1.5 text-[0.625rem] text-slate-400 hover:text-slate-600 underline"
                 >
                   Show me both paths again
                 </button>

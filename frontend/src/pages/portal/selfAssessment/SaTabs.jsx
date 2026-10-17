@@ -19,7 +19,7 @@ export function SaTabs({ tab, onTab }) {
             aria-selected={on}
             data-testid={`sa-tab-${t.key}`}
             onClick={() => onTab(t.key)}
-            className={`rounded-full py-2 px-3 text-[12px] font-bold transition-colors ${on ? "bg-[#4c2889] text-white shadow" : "text-purple-900 hover:bg-white"}`}
+            className={`rounded-full py-2 px-3 text-[0.75rem] font-bold transition-colors ${on ? "bg-[#4c2889] text-white shadow" : "text-purple-900 hover:bg-white"}`}
           >
             <i className={`fa-solid ${t.icon} mr-1.5`} aria-hidden="true"></i>
             {t.label}

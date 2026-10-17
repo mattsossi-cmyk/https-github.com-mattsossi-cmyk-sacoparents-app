@@ -226,7 +226,7 @@ export default function CostSplitterPanel({ coparentEmail, coparentName }) {
             <h2 className="font-serif text-xl text-[#1A1330] leading-tight">
               Cost splitter
             </h2>
-            <span className="rounded-full bg-[#EEF7F1] text-[#1E7A55] px-2.5 py-0.5 text-[10px] uppercase tracking-[0.16em] font-bold">
+            <span className="rounded-full bg-[#EEF7F1] text-[#1E7A55] px-2.5 py-0.5 text-[0.625rem] uppercase tracking-[0.16em] font-bold">
               Beta
             </span>
           </div>
@@ -292,7 +292,7 @@ export default function CostSplitterPanel({ coparentEmail, coparentName }) {
         data-testid="cost-splitter-form"
       >
         <div className="sm:col-span-3">
-          <label className="text-[10px] uppercase tracking-[0.16em] font-bold text-[#1E7A55] block mb-1">
+          <label className="text-[0.625rem] uppercase tracking-[0.16em] font-bold text-[#1E7A55] block mb-1">
             Activity
           </label>
           <input
@@ -305,7 +305,7 @@ export default function CostSplitterPanel({ coparentEmail, coparentName }) {
           />
         </div>
         <div className="sm:col-span-2">
-          <label className="text-[10px] uppercase tracking-[0.16em] font-bold text-[#1E7A55] block mb-1">
+          <label className="text-[0.625rem] uppercase tracking-[0.16em] font-bold text-[#1E7A55] block mb-1">
             Category
           </label>
           <select
@@ -323,7 +323,7 @@ export default function CostSplitterPanel({ coparentEmail, coparentName }) {
           </select>
         </div>
         <div>
-          <label className="text-[10px] uppercase tracking-[0.16em] font-bold text-[#1E7A55] block mb-1">
+          <label className="text-[0.625rem] uppercase tracking-[0.16em] font-bold text-[#1E7A55] block mb-1">
             Amount
           </label>
           <div className="relative">
@@ -345,7 +345,7 @@ export default function CostSplitterPanel({ coparentEmail, coparentName }) {
           </div>
         </div>
         <div className="sm:col-span-4">
-          <label className="text-[10px] uppercase tracking-[0.16em] font-bold text-[#1E7A55] block mb-1">
+          <label className="text-[0.625rem] uppercase tracking-[0.16em] font-bold text-[#1E7A55] block mb-1">
             Note (private to you)
           </label>
           <input
@@ -358,7 +358,7 @@ export default function CostSplitterPanel({ coparentEmail, coparentName }) {
           />
         </div>
         <div className="sm:col-span-2">
-          <label className="text-[10px] uppercase tracking-[0.16em] font-bold text-[#1E7A55] block mb-1">
+          <label className="text-[0.625rem] uppercase tracking-[0.16em] font-bold text-[#1E7A55] block mb-1">
             Date
           </label>
           <input
@@ -371,7 +371,7 @@ export default function CostSplitterPanel({ coparentEmail, coparentName }) {
           />
         </div>
         <div className="sm:col-span-6 flex flex-wrap items-center gap-3 justify-end">
-          <p className="text-[11px] text-[#4B4567] flex items-center gap-1.5 mr-auto">
+          <p className="text-[0.6875rem] text-[#4B4567] flex items-center gap-1.5 mr-auto">
             <Info size={12} /> Free-text notes stay private. Totals + activity labels are visible to your co-parent.
           </p>
           <button

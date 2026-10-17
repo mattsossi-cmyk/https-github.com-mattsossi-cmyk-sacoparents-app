@@ -1,4 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useDialogFocus } from "../../lib/useDialogFocus";
 
 import { api } from "../../lib/api";
 import { AiGuardFrame, useAiGuard } from "../../components/aiNotice/AiGuard";
@@ -449,6 +450,9 @@ export function GuidedJourneyModal({
     setTranscribing(false);
   }, [open]);
 
+  const dialogRef = useRef(null);
+  useDialogFocus(open, dialogRef, onClose);
+
   if (!open) return null;
 
   const percent = progress.total
@@ -463,7 +467,14 @@ export function GuidedJourneyModal({
       className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 no-print"
       data-testid={`modal-guided-${topic}`}
     >
-      <div className="bg-white w-full max-w-sm sm:rounded-2xl rounded-t-2xl shadow-xl flex flex-col h-[85vh] sm:h-[85vh]">
+      <div
+        ref={dialogRef}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby={`guided-title-${topic}`}
+        tabIndex={-1}
+        className="bg-white w-full max-w-sm sm:rounded-2xl rounded-t-2xl shadow-xl flex flex-col h-[85vh] sm:h-[85vh] outline-none"
+      >
         {/* Header */}
         <div className="flex justify-between items-center border-b border-slate-100 p-3">
           <div className="min-w-0">
@@ -471,19 +482,19 @@ export function GuidedJourneyModal({
               <span
                 className={
                   safetyFlagged
-                    ? "bg-slate-900 text-amber-300 text-[9px] font-bold px-1.5 py-0.5 rounded-full uppercase tracking-wider"
-                    : "bg-purple-100 text-purple-800 text-[9px] font-bold px-1.5 py-0.5 rounded uppercase tracking-wider"
+                    ? "bg-slate-900 text-amber-300 text-[0.5625rem] font-bold px-1.5 py-0.5 rounded-full uppercase tracking-wider"
+                    : "bg-purple-100 text-purple-800 text-[0.5625rem] font-bold px-1.5 py-0.5 rounded uppercase tracking-wider"
                 }
               >
                 {safetyFlagged ? "Grey-rock" : "Guided"}
               </span>
-              <span className="text-[10px] text-slate-500">
+              <span className="text-[0.625rem] text-slate-500">
                 {showRecap
                   ? "Recap — review before saving"
                   : `Step ${progress.step} of ${progress.total}`}
               </span>
             </div>
-            <h3 className="font-bold text-slate-800 text-sm mt-0.5 truncate">
+            <h3 id={`guided-title-${topic}`} className="font-bold text-slate-800 text-sm mt-0.5 truncate">
               {TOPIC_TITLES[topic] || "Guided Journey"}
             </h3>
           </div>
@@ -519,7 +530,7 @@ export function GuidedJourneyModal({
                   <div className="font-bold text-slate-800 text-sm">
                     Pick up where you left off?
                   </div>
-                  <p className="text-[11px] text-slate-500 leading-snug">
+                  <p className="text-[0.6875rem] text-slate-500 leading-snug">
                     You have a saved draft from{" "}
                     {new Date(resumePrompt.updated_at).toLocaleString(undefined, {
                       dateStyle: "medium",
@@ -553,7 +564,7 @@ export function GuidedJourneyModal({
                 type="button"
                 data-testid={`guided-resume-discard-${topic}`}
                 onClick={discardDraftAndClose}
-                className="w-full text-[10px] text-slate-400 hover:text-rose-600 underline"
+                className="w-full text-[0.625rem] text-slate-400 hover:text-rose-600 underline"
               >
                 Discard draft and close
               </button>
@@ -574,7 +585,7 @@ export function GuidedJourneyModal({
                     Here's what will be saved
                   </div>
                   <p
-                    className="text-[11px] text-slate-500 leading-snug"
+                    className="text-[0.6875rem] text-slate-500 leading-snug"
                     data-testid={`guided-recap-target-${topic}`}
                   >
                     This will be added to your <b>{savePlacementLabel}</b>.
@@ -588,13 +599,13 @@ export function GuidedJourneyModal({
                     className="p-2 bg-slate-50 rounded-lg border border-slate-200"
                     data-testid={`guided-recap-item-${i}`}
                   >
-                    <div className="text-[10px] font-bold text-purple-800 uppercase tracking-wider">
+                    <div className="text-[0.625rem] font-bold text-purple-800 uppercase tracking-wider">
                       Q{i + 1}
                     </div>
-                    <div className="text-[11px] text-slate-600 leading-snug">
+                    <div className="text-[0.6875rem] text-slate-600 leading-snug">
                       {qa.question}
                     </div>
-                    <div className="text-[12px] text-slate-900 font-medium mt-1 leading-snug">
+                    <div className="text-[0.75rem] text-slate-900 font-medium mt-1 leading-snug">
                       {qa.answer}
                     </div>
                   </li>
@@ -621,8 +632,8 @@ export function GuidedJourneyModal({
                 <div
                   className={
                     m.role === "coach"
-                      ? "max-w-[85%] bg-white border border-slate-200 rounded-2xl rounded-tl-sm p-2.5 text-[12px] text-slate-800 leading-snug shadow-sm"
-                      : "max-w-[85%] bg-purple-800 text-white rounded-2xl rounded-tr-sm p-2.5 text-[12px] leading-snug"
+                      ? "max-w-[85%] bg-white border border-slate-200 rounded-2xl rounded-tl-sm p-2.5 text-[0.75rem] text-slate-800 leading-snug shadow-sm"
+                      : "max-w-[85%] bg-purple-800 text-white rounded-2xl rounded-tr-sm p-2.5 text-[0.75rem] leading-snug"
                   }
                   data-testid={`guided-msg-${m.role}-${i}`}
                 >
@@ -635,14 +646,14 @@ export function GuidedJourneyModal({
                 className="flex justify-start"
                 data-testid={`guided-typing-${topic}`}
               >
-                <div className="bg-white border border-slate-200 rounded-2xl rounded-tl-sm p-2.5 text-[12px] text-slate-500 italic">
+                <div className="bg-white border border-slate-200 rounded-2xl rounded-tl-sm p-2.5 text-[0.75rem] text-slate-500 italic">
                   Coach is typing…
                 </div>
               </div>
             )}
             {error && (
               <div
-                className="p-2 bg-rose-50 border border-rose-200 rounded-lg text-[11px] text-rose-800"
+                className="p-2 bg-rose-50 border border-rose-200 rounded-lg text-[0.6875rem] text-rose-800"
                 data-testid={`guided-error-${topic}`}
               >
                 {error}
@@ -656,7 +667,7 @@ export function GuidedJourneyModal({
           <div className="border-t border-slate-100 p-2 space-y-2 bg-white">
             {showRecap ? (
               <>
-                <div className="text-[10px] text-slate-500 leading-snug px-1">
+                <div className="text-[0.625rem] text-slate-500 leading-snug px-1">
                   Nothing has been saved yet — tap Confirm to store your
                   answers, or go back to edit.
                 </div>
@@ -695,7 +706,7 @@ export function GuidedJourneyModal({
                     </div>
                     <label
                       data-testid={`guided-recap-pair-toggle-${topic}`}
-                      className="flex items-center gap-1.5 pt-1 text-[10px] text-slate-600 cursor-pointer select-none"
+                      className="flex items-center gap-1.5 pt-1 text-[0.625rem] text-slate-600 cursor-pointer select-none"
                     >
                       <input
                         type="checkbox"
@@ -732,7 +743,7 @@ export function GuidedJourneyModal({
               </>
             ) : isFinal ? (
               <>
-                <div className="text-[11px] text-slate-500 leading-snug px-1">
+                <div className="text-[0.6875rem] text-slate-500 leading-snug px-1">
                   Done — I've captured {answers.length} answers. Tap
                   Save to review a plain-language recap before it goes
                   into your record.

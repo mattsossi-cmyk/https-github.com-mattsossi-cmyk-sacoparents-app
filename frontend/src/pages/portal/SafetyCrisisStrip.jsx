@@ -14,7 +14,7 @@ export function SafetyCrisisStrip() {
       data-testid="portal-crisis-strip"
       className="no-print fixed bottom-16 left-0 right-0 z-40 max-w-md mx-auto px-3"
     >
-      <div className="bg-rose-950/95 text-rose-50 rounded-t-lg px-3 py-1.5 text-[10px] flex items-center gap-2 shadow-lg border-t border-rose-800">
+      <div className="bg-rose-950/95 text-rose-50 rounded-t-lg px-3 py-1.5 text-[0.625rem] flex items-center gap-2 shadow-lg border-t border-rose-800">
         <i className="fa-solid fa-shield-heart text-rose-300 shrink-0" aria-hidden></i>
         <div className="flex-1 leading-tight">
           <span className="font-bold">In danger?</span>{" "}

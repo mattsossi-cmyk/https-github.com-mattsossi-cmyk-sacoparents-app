@@ -17,20 +17,20 @@ const day = (iso) => {
 // Status-only view of what a professional asked a parent to complete. Never shows answers.
 export const RequestedProgress = ({ rows, testid }) => {
   if (!rows) {
-    return <p className="text-[11px] text-[#6E6787] mt-2" data-testid={`${testid}-not-joined`}>Hasn&rsquo;t joined yet</p>;
+    return <p className="text-[0.6875rem] text-[#6E6787] mt-2" data-testid={`${testid}-not-joined`}>Hasn&rsquo;t joined yet</p>;
   }
   if (!rows.length) return null;
   const done = rows.filter((r) => r.status === "done").length;
   return (
     <div className="mt-2.5" data-testid={testid}>
-      <div className="text-[10px] uppercase tracking-[0.15em] font-bold text-[#6E6787] mb-1.5" data-testid={`${testid}-count`}>
+      <div className="text-[0.625rem] uppercase tracking-[0.15em] font-bold text-[#6E6787] mb-1.5" data-testid={`${testid}-count`}>
         Requested · {done} of {rows.length} done
       </div>
       <ul className="space-y-1">
         {rows.map((r) => {
           const m = META[r.status] || META.todo;
           return (
-            <li key={r.key} className="flex items-center justify-between gap-2 text-[12px]" data-testid={`${testid}-${r.key}`}>
+            <li key={r.key} className="flex items-center justify-between gap-2 text-[0.75rem]" data-testid={`${testid}-${r.key}`}>
               <span className="text-[#1A1330] truncate">{r.title}</span>
               <span className={`shrink-0 inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[10.5px] font-semibold ${m.cls}`} data-testid={`${testid}-${r.key}-status`}>
                 <m.Icon size={10} aria-hidden /> {m.label}

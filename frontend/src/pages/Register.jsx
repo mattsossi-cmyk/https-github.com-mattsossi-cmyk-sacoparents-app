@@ -17,6 +17,7 @@ export default function Register() {
   const [children, setChildren] = useState([{ uid: "c0", name: "", age: "" }]);
   const [loading, setLoading] = useState(false);
   const [consent, setConsent] = useState(emptyConsent);
+  const [formError, setFormError] = useState({ field: "", text: "" });
 
   const addChild = () =>
     setChildren((c) => [...c, { uid: `c${Date.now()}`, name: "", age: "" }]);
@@ -28,13 +29,14 @@ export default function Register() {
   const onSubmit = async (e) => {
     e.preventDefault();
     if (!consentReady(consent)) {
-      toast.error("Please tick both boxes to create your account.");
+      setFormError({ field: "consent", text: "Please tick both boxes to create your account." });
       return;
     }
     if (scorePassword(password).score < 2) {
-      toast.error("Please choose a stronger password.");
+      setFormError({ field: "password", text: "Please choose a stronger password: at least 8 characters, mixing letters, numbers or symbols." });
       return;
     }
+    setFormError({ field: "", text: "" });
     setLoading(true);
     try {
       await register({
@@ -50,14 +52,14 @@ export default function Register() {
       navigate("/onboarding/what-do-you-need", { replace: true });
     } catch (err) {
       const detail = err?.response?.data?.detail;
-      toast.error(typeof detail === "string" ? detail : "Could not create account.");
+      setFormError({ field: "form", text: typeof detail === "string" ? detail : "Could not create account." });
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="min-h-screen gentle-bg grid place-items-center p-6">
+    <main className="min-h-screen gentle-bg grid place-items-center p-6">
       <div className="w-full max-w-xl fade-up">
         <Link to="/" className="block text-center mb-8">
           <svg width={68} height={68} viewBox="0 0 64 64" className="mx-auto mb-3" aria-hidden>
@@ -79,7 +81,7 @@ export default function Register() {
           <div className="font-sans font-extrabold text-3xl text-[#1A1330] tracking-tight">
             <span className="text-brand-gradient">SA</span> CoParents
           </div>
-          <div className="text-[10px] uppercase tracking-[0.2em] text-[#6E6787] mt-1">
+          <div className="text-[0.625rem] uppercase tracking-[0.2em] text-[#6E6787] mt-1">
             Helping families communicate better
           </div>
         </Link>
@@ -127,6 +129,8 @@ export default function Register() {
                 type="password"
                 required
                 minLength={8}
+                aria-invalid={formError.field === "password" ? "true" : undefined}
+                aria-describedby={formError.field === "password" ? "register-form-error" : undefined}
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 className="input-soft"
@@ -154,6 +158,7 @@ export default function Register() {
                   <div key={c.uid} className="grid grid-cols-[1fr_120px_auto] gap-2 items-center">
                     <input
                       placeholder="Name"
+                      aria-label={`Child ${i + 1} name`}
                       value={c.name}
                       onChange={(e) => updateChild(i, "name", e.target.value)}
                       className="input-soft"
@@ -161,6 +166,7 @@ export default function Register() {
                     />
                     <input
                       placeholder="Age"
+                      aria-label={`Child ${i + 1} age`}
                       value={c.age}
                       onChange={(e) => updateChild(i, "age", e.target.value)}
                       className="input-soft"
@@ -170,7 +176,7 @@ export default function Register() {
                       type="button"
                       onClick={() => removeChild(i)}
                       className="w-10 h-10 rounded-full hover:bg-[#EFE9F9] text-[#6E6787]"
-                      aria-label="Remove child"
+                      aria-label={`Remove child ${i + 1}`}
                       data-testid={`register-child-remove-${i}`}
                     >
                       <X size={16} className="mx-auto" />
@@ -181,7 +187,7 @@ export default function Register() {
               <button
                 type="button"
                 onClick={addChild}
-                className="mt-2 text-sm text-[#3D1A78] hover:underline inline-flex items-center gap-1"
+                className="mt-2 min-h-6 py-1 text-sm text-[#3D1A78] hover:underline inline-flex items-center gap-1"
                 data-testid="register-add-child"
               >
                 <Plus size={14} /> Add another child
@@ -190,8 +196,9 @@ export default function Register() {
 
             <div className="grid sm:grid-cols-2 gap-4">
               <div>
-                <label className="eyebrow block mb-2">Current custody situation</label>
+                <label htmlFor="register-custody" className="eyebrow block mb-2">Current custody situation</label>
                 <input
+                  id="register-custody"
                   placeholder="e.g. 50/50, weekends only…"
                   value={custody}
                   onChange={(e) => setCustody(e.target.value)}
@@ -214,9 +221,20 @@ export default function Register() {
 
             <ConsentFields tp="register" value={consent} onChange={setConsent} />
 
+            {formError.text && (
+              <p id="register-form-error" role="alert" data-testid="register-form-error" className="text-sm font-semibold text-[#A93636]">
+                {formError.text}
+              </p>
+            )}
+            {!consentReady(consent) && (
+              <p id="register-submit-hint" data-testid="register-submit-hint" className="text-xs text-[#4B4567]">
+                Tick both boxes above to create your account.
+              </p>
+            )}
             <button
               type="submit"
               disabled={loading || !consentReady(consent)}
+              aria-describedby={!consentReady(consent) ? "register-submit-hint" : undefined}
               className="btn-gradient w-full disabled:opacity-50 disabled:cursor-not-allowed"
               data-testid="register-submit-button"
             >
@@ -232,6 +250,6 @@ export default function Register() {
           </p>
         </div>
       </div>
-    </div>
+    </main>
   );
 }

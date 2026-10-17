@@ -80,7 +80,7 @@ function BundleTemplatesPanel({ templates, loading, onApply, onDelete }) {
     >
       <div className="flex items-center gap-2 mb-2">
         <Bookmark size={13} className="text-[#0E7A7A]" />
-        <span className="text-[11px] uppercase tracking-[0.15em] font-bold text-[#0E7A7A]">
+        <span className="text-[0.6875rem] uppercase tracking-[0.15em] font-bold text-[#0E7A7A]">
           Apply a saved bundle
         </span>
         {loading && (
@@ -105,7 +105,7 @@ function BundleTemplatesPanel({ templates, loading, onApply, onDelete }) {
                   <div className="font-semibold text-sm text-[#1A1330] truncate">
                     {tpl.name}
                   </div>
-                  <div className="text-[11px] text-[#4B4567] mt-0.5">
+                  <div className="text-[0.6875rem] text-[#4B4567] mt-0.5">
                     {stepCount} step{stepCount !== 1 ? "s" : ""} · {reqCount} required
                   </div>
                 </div>
@@ -195,7 +195,7 @@ function AdditionalStepsPicker({ primary, steps, onChange }) {
         className="w-full flex items-center justify-between gap-2 text-left"
       >
         <div>
-          <div className="text-[11px] uppercase tracking-[0.15em] font-bold text-[#3D1A78]">
+          <div className="text-[0.6875rem] uppercase tracking-[0.15em] font-bold text-[#3D1A78]">
             Additional assessments (optional)
           </div>
           <div className="text-xs text-[#4B4567] mt-0.5">
@@ -441,7 +441,7 @@ export default function ProfessionalJointAlignmentNew() {
         <div className="rounded-3xl bg-gradient-to-br from-[#3D1A78] to-[#5A2FA0] text-white p-6 sm:p-8 mb-6 shadow-sm">
           <div className="inline-flex items-center gap-2 rounded-full bg-white/15 px-3 py-1 mb-4">
             <Sparkles size={12} />
-            <span className="text-[10px] uppercase tracking-[0.22em] font-bold">
+            <span className="text-[0.625rem] uppercase tracking-[0.22em] font-bold">
               For mediators &amp; family attorneys
             </span>
           </div>
@@ -466,7 +466,7 @@ export default function ProfessionalJointAlignmentNew() {
                 <CheckCircle2 size={20} />
               </div>
               <div>
-                <div className="text-[11px] uppercase tracking-[0.2em] font-bold text-[#1F5C3B]">
+                <div className="text-[0.6875rem] uppercase tracking-[0.2em] font-bold text-[#1F5C3B]">
                   Case created
                 </div>
                 <h2 className="font-serif text-2xl text-[#1A1330] mt-1 leading-tight" data-testid="pj-result-caseid">
@@ -494,13 +494,13 @@ export default function ProfessionalJointAlignmentNew() {
                 >
                   <div className="flex items-baseline justify-between flex-wrap gap-2">
                     <div>
-                      <div className="text-[11px] uppercase tracking-[0.15em] font-bold text-[#1F5C3B]">
+                      <div className="text-[0.6875rem] uppercase tracking-[0.15em] font-bold text-[#1F5C3B]">
                         Parent {i + 1}
                       </div>
                       <div className="text-sm font-semibold text-[#1A1330]">{p.email}</div>
                       {delivery && (
                         <div
-                          className={`mt-1 text-[11px] font-semibold inline-flex items-center gap-1 ${delivery.delivered ? "text-[#1F5C3B]" : "text-[#8A4610]"}`}
+                          className={`mt-1 text-[0.6875rem] font-semibold inline-flex items-center gap-1 ${delivery.delivered ? "text-[#1F5C3B]" : "text-[#8A4610]"}`}
                           data-testid={`pj-result-parent-${i}-delivery`}
                           data-delivered={delivery.delivered ? "true" : "false"}
                         >
@@ -518,7 +518,7 @@ export default function ProfessionalJointAlignmentNew() {
                     </button>
                   </div>
                   <div
-                    className="mt-3 font-mono text-[11px] text-[#4B4567] bg-[#F5F9F4] border border-[#DDEDE0] rounded-lg px-3 py-2 break-all"
+                    className="mt-3 font-mono text-[0.6875rem] text-[#4B4567] bg-[#F5F9F4] border border-[#DDEDE0] rounded-lg px-3 py-2 break-all"
                     data-testid={`pj-invitation-url-${i}`}
                   >
                     {p.invitation_url}
@@ -560,7 +560,7 @@ export default function ProfessionalJointAlignmentNew() {
           >
             <div className="grid gap-5 sm:grid-cols-2">
               <div className="sm:col-span-2">
-                <label className="text-[11px] uppercase tracking-[0.15em] font-bold text-[#3D1A78]" htmlFor="pj-assessment">
+                <label className="text-[0.6875rem] uppercase tracking-[0.15em] font-bold text-[#3D1A78]" htmlFor="pj-assessment">
                   Assessment lane
                 </label>
                 <select
@@ -616,7 +616,7 @@ export default function ProfessionalJointAlignmentNew() {
               </div>
 
               <div>
-                <label className="text-[11px] uppercase tracking-[0.15em] font-bold text-[#3D1A78]" htmlFor="pj-p1-name">
+                <label className="text-[0.6875rem] uppercase tracking-[0.15em] font-bold text-[#3D1A78]" htmlFor="pj-p1-name">
                   Parent 1 · Name (optional)
                 </label>
                 <input
@@ -631,7 +631,7 @@ export default function ProfessionalJointAlignmentNew() {
                 />
               </div>
               <div>
-                <label className="text-[11px] uppercase tracking-[0.15em] font-bold text-[#3D1A78]" htmlFor="pj-p1-email">
+                <label className="text-[0.6875rem] uppercase tracking-[0.15em] font-bold text-[#3D1A78]" htmlFor="pj-p1-email">
                   Parent 1 · Email <span className="text-[#C05621]">*</span>
                 </label>
                 <input
@@ -648,7 +648,7 @@ export default function ProfessionalJointAlignmentNew() {
               </div>
 
               <div>
-                <label className="text-[11px] uppercase tracking-[0.15em] font-bold text-[#3D1A78]" htmlFor="pj-p2-name">
+                <label className="text-[0.6875rem] uppercase tracking-[0.15em] font-bold text-[#3D1A78]" htmlFor="pj-p2-name">
                   Parent 2 · Name (optional)
                 </label>
                 <input
@@ -663,7 +663,7 @@ export default function ProfessionalJointAlignmentNew() {
                 />
               </div>
               <div>
-                <label className="text-[11px] uppercase tracking-[0.15em] font-bold text-[#3D1A78]" htmlFor="pj-p2-email">
+                <label className="text-[0.6875rem] uppercase tracking-[0.15em] font-bold text-[#3D1A78]" htmlFor="pj-p2-email">
                   Parent 2 · Email <span className="text-[#C05621]">*</span>
                 </label>
                 <input
@@ -680,7 +680,7 @@ export default function ProfessionalJointAlignmentNew() {
               </div>
 
               <div className="sm:col-span-2">
-                <label className="text-[11px] uppercase tracking-[0.15em] font-bold text-[#3D1A78]" htmlFor="pj-ref">
+                <label className="text-[0.6875rem] uppercase tracking-[0.15em] font-bold text-[#3D1A78]" htmlFor="pj-ref">
                   Your reference number (optional)
                 </label>
                 <input
@@ -696,7 +696,7 @@ export default function ProfessionalJointAlignmentNew() {
               </div>
 
               <div className="sm:col-span-2">
-                <label className="text-[11px] uppercase tracking-[0.15em] font-bold text-[#3D1A78]" htmlFor="pj-note">
+                <label className="text-[0.6875rem] uppercase tracking-[0.15em] font-bold text-[#3D1A78]" htmlFor="pj-note">
                   Personal reminder note (optional)
                 </label>
                 <textarea
@@ -710,7 +710,7 @@ export default function ProfessionalJointAlignmentNew() {
                   placeholder='e.g. "Looking forward to Thursday — this takes ~15 minutes."'
                   data-testid="pj-reminder-note"
                 />
-                <div className="mt-1 flex items-center justify-between text-[11px] text-[#6E6787]">
+                <div className="mt-1 flex items-center justify-between text-[0.6875rem] text-[#6E6787]">
                   <span>Shown to the parent if we send the 5-day gentle nudge.</span>
                   <span data-testid="pj-reminder-note-count">{form.reminder_note.length}/240</span>
                 </div>
@@ -723,7 +723,7 @@ export default function ProfessionalJointAlignmentNew() {
             </div>
 
             <div
-              className="mt-6 flex items-start gap-3 rounded-2xl bg-[#F5F1FB] border border-[#D6CFE8] px-4 py-3 text-[13px] text-[#3D1A78]"
+              className="mt-6 flex items-start gap-3 rounded-2xl bg-[#F5F1FB] border border-[#D6CFE8] px-4 py-3 text-[0.8125rem] text-[#3D1A78]"
               data-testid="pj-privacy-strip"
             >
               <ShieldCheck size={16} className="flex-shrink-0 mt-0.5" />
@@ -737,7 +737,7 @@ export default function ProfessionalJointAlignmentNew() {
 
             {error && (
               <div
-                className="mt-4 flex items-start gap-3 rounded-2xl bg-[#FEE4E2] border border-[#F1B0A9] px-4 py-3 text-[13px] text-[#8A2C1E]"
+                className="mt-4 flex items-start gap-3 rounded-2xl bg-[#FEE4E2] border border-[#F1B0A9] px-4 py-3 text-[0.8125rem] text-[#8A2C1E]"
                 role="alert"
                 aria-live="polite"
                 data-testid="pj-error"
@@ -768,7 +768,7 @@ export default function ProfessionalJointAlignmentNew() {
             <div className="flex items-center justify-between gap-2 mb-3">
               <div className="flex items-center gap-2">
                 <Users size={14} className="text-[#3D1A78]" />
-                <div className="text-[11px] uppercase tracking-[0.2em] font-bold text-[#3D1A78]">
+                <div className="text-[0.6875rem] uppercase tracking-[0.2em] font-bold text-[#3D1A78]">
                   Cases you&rsquo;ve created
                 </div>
               </div>

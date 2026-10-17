@@ -57,7 +57,7 @@ export default function AdminConsentTrend() {
     <AppShell>
       <div className="max-w-5xl mx-auto px-1 py-6 space-y-6" data-testid="admin-trend-page">
         <div>
-          <div className="text-[11px] uppercase tracking-[0.22em] font-bold text-[#3D1A78] inline-flex items-center gap-2">
+          <div className="text-[0.6875rem] uppercase tracking-[0.22em] font-bold text-[#3D1A78] inline-flex items-center gap-2">
             <TrendingUp size={12} /> Privacy Notice consent · weekly totals only
           </div>
           <h1 className="font-serif text-4xl sm:text-5xl text-[#1A1330] mt-2">Consent trend</h1>
@@ -69,7 +69,7 @@ export default function AdminConsentTrend() {
         {err === "error" && <p className="text-sm text-[#B02A2A]" data-testid="admin-trend-error">Couldn&rsquo;t load the totals. Please refresh.</p>}
         <div tabIndex={0} role="region" aria-label="Scrollable table" className="rounded-2xl border border-[#E5E0EE] bg-white overflow-x-auto" data-testid="admin-trend-table">
           <table className="w-full text-sm">
-            <thead className="bg-[#F8F7FC] text-[11px] uppercase tracking-wider text-[#6E6787]">
+            <thead className="bg-[#F8F7FC] text-[0.6875rem] uppercase tracking-wider text-[#6E6787]">
               <tr>{HEAD.map((h, i) => <th key={h} className={`px-4 py-2.5 font-bold ${i ? "text-right" : "text-left"}`}>{h}</th>)}</tr>
             </thead>
             <tbody>

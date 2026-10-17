@@ -139,7 +139,7 @@ function SendTestDigestForm() {
       <div className="eyebrow mb-2 flex items-center gap-2">
         <Send size={11} /> Send test digest to any inbox
       </div>
-      <p className="text-[11px] text-[#6E6787] leading-relaxed mb-2">
+      <p className="text-[0.6875rem] text-[#6E6787] leading-relaxed mb-2">
         Ships the exact Monday HTML (with a "TEST" banner) to a
         one-off address so you can eyeball the render on your phone.
         Bypasses the Monday dedupe — never affects the real send.
@@ -212,7 +212,7 @@ function DismissSparkline({ series }) {
   if (empty) {
     return (
       <div
-        className="text-[10px] text-[#6E6787] italic mt-1"
+        className="text-[0.625rem] text-[#6E6787] italic mt-1"
         data-testid="admin-nudge-sparkline-empty"
       >
         No dismisses in the last 4 weeks — nothing to plot yet.
@@ -244,7 +244,7 @@ function DismissSparkline({ series }) {
         <path d={toPath("first")} fill="none" stroke="#B6663B" strokeWidth={1.75} />
         <path d={toPath("permanent")} fill="none" stroke="#3D1A78" strokeWidth={1.75} />
       </svg>
-      <div className="text-[9px] uppercase tracking-[0.14em] font-bold text-[#6E6787] leading-tight">
+      <div className="text-[0.5625rem] uppercase tracking-[0.14em] font-bold text-[#6E6787] leading-tight">
         <div className="text-[#965231]">— retry-hides</div>
         <div className="text-[#3D1A78]">— permanent</div>
       </div>
@@ -287,7 +287,7 @@ function ReminderAnalyticsTile({ data }) {
           </div>
           <p className="text-xs text-[#6E6787] mt-1">
             Aggregated from the reminder collection — same numbers as
-            <code className="mx-1 px-1 py-0.5 rounded bg-[#F5EFFB] text-[10px] text-[#3D1A78]">
+            <code className="mx-1 px-1 py-0.5 rounded bg-[#F5EFFB] text-[0.625rem] text-[#3D1A78]">
               /api/admin/alignment-reflections/analytics
             </code>
             . First-touch attribution, per subject.
@@ -362,7 +362,7 @@ function ReminderAnalyticsTile({ data }) {
 
           {/* Per-subject rows */}
           <div className="mt-5 rounded-2xl border border-[#E5E0EE] bg-white overflow-hidden">
-            <div className="grid grid-cols-12 px-4 py-2.5 text-[10px] uppercase tracking-[0.14em] font-bold text-[#6E6787] bg-[#FAF8FD] border-b border-[#E5E0EE]">
+            <div className="grid grid-cols-12 px-4 py-2.5 text-[0.625rem] uppercase tracking-[0.14em] font-bold text-[#6E6787] bg-[#FAF8FD] border-b border-[#E5E0EE]">
               <div className="col-span-4">Subject</div>
               <div className="col-span-2 text-right">Sent</div>
               <div className="col-span-2 text-right">Open rate</div>
@@ -397,7 +397,7 @@ function ReminderAnalyticsTile({ data }) {
               ))}
             </ul>
           </div>
-          <p className="text-[11px] text-[#6E6787] mt-4 italic">
+          <p className="text-[0.6875rem] text-[#6E6787] mt-4 italic">
             A CTR-of-opens below 25% usually means the email body copy
             isn&rsquo;t clarifying <em>why</em> the reminder came now.
           </p>
@@ -561,7 +561,7 @@ export default function AdminDashboard() {
               <TrendingUp size={16} className="text-[#3D1A78]" />
             </div>
             <SignupChart series={signups} />
-            <div className="flex justify-between text-[10px] text-[#6E6787] mt-2 uppercase tracking-[0.15em]">
+            <div className="flex justify-between text-[0.625rem] text-[#6E6787] mt-2 uppercase tracking-[0.15em]">
               <span>{signups[0]?.date}</span>
               <span>{signups[signups.length - 1]?.date}</span>
             </div>
@@ -692,7 +692,7 @@ export default function AdminDashboard() {
               <DismissSparkline series={nudge.weekly_4w} />
             </div>
             <SendTestDigestForm />
-            <p className="text-[11px] text-[#6E6787] mt-4 italic">
+            <p className="text-[0.6875rem] text-[#6E6787] mt-4 italic">
               Rising permanent-hides with flat opt-ins means the retry
               cadence isn't converting hesitant parents.{" "}
               <Link
@@ -803,7 +803,7 @@ export default function AdminDashboard() {
             <div tabIndex={0} role="region" aria-label="Scrollable table" className="overflow-x-auto">
               <table className="w-full text-sm" data-testid="admin-recent-users">
                 <thead>
-                  <tr className="text-[10px] uppercase tracking-[0.15em] text-[#6E6787]">
+                  <tr className="text-[0.625rem] uppercase tracking-[0.15em] text-[#6E6787]">
                     <th className="text-left py-2 pr-3">Name</th>
                     <th className="text-left py-2 pr-3">Email</th>
                     <th className="text-left py-2 pr-3">Auth</th>

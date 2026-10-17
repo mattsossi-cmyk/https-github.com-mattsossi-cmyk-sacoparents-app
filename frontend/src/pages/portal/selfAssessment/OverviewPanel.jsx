@@ -24,13 +24,13 @@ function TipHistory({ tips }) {
   if (!items.length) return null;
   return (
     <div data-testid="sa-tip-history" className="rounded-2xl border border-purple-100 bg-purple-50/60 px-4 py-3 space-y-2">
-      <div className="text-[10px] uppercase font-bold tracking-wider text-purple-800">
+      <div className="text-[0.625rem] uppercase font-bold tracking-wider text-purple-800">
         <i className="fa-solid fa-lightbulb mr-1.5"></i>
         {CONTENT.tips.title}
       </div>
       {items.map(([k, label]) => (
         <div key={k} data-testid={`sa-tip-history-${k}`}>
-          <div className="text-[11px] font-bold text-[#3B1C6B]">{label}</div>
+          <div className="text-[0.6875rem] font-bold text-[#3B1C6B]">{label}</div>
           <p className="text-xs text-slate-700 leading-relaxed">{tips[k]}</p>
         </div>
       ))}
@@ -100,7 +100,7 @@ function GrowthMoment({ moves }) {
       <p className="text-[12.5px] text-slate-700 mt-1.5">{CONTENT.growth.lead}</p>
       <ul className="mt-2 space-y-1">
         {moves.map((m) => (
-          <li key={m.key} data-testid={`sa-growth-row-${m.key}`} className="text-[13px] text-slate-800">
+          <li key={m.key} data-testid={`sa-growth-row-${m.key}`} className="text-[0.8125rem] text-slate-800">
             <span className="font-bold">{m.label}:</span> {m.fromBand} <span className="text-emerald-700 font-bold">→ {m.toBand}</span>
           </li>
         ))}
@@ -114,12 +114,12 @@ function StrengthsGrowth({ scores }) {
   const half = Math.ceil(ranked.length / 2);
   const block = (testid, title, icon, tone, list) => (
     <div data-testid={testid} className={`rounded-2xl border px-4 py-3 ${tone}`}>
-      <div className="text-[10px] uppercase font-bold tracking-wider mb-1.5">
+      <div className="text-[0.625rem] uppercase font-bold tracking-wider mb-1.5">
         <i className={`fa-solid ${icon} mr-1.5`}></i>
         {title}
       </div>
       {list.map((s) => (
-        <div key={s.key} className="flex justify-between text-[13px] text-slate-800">
+        <div key={s.key} className="flex justify-between text-[0.8125rem] text-slate-800">
           <span>{s.score_label}</span>
           <span className="font-bold">{scores.sections[s.key]}/100</span>
         </div>
@@ -150,7 +150,7 @@ export function OverviewPanel({ history, celebrate, onStartNew, onClose }) {
       <CentralMessage />
       {latest.goal && (
         <div data-testid="sa-current-goal" className="rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3">
-          <div className="text-[10px] uppercase font-bold tracking-wider text-emerald-800">{CONTENT.goal.label}</div>
+          <div className="text-[0.625rem] uppercase font-bold tracking-wider text-emerald-800">{CONTENT.goal.label}</div>
           <p className="text-sm font-semibold text-slate-900 mt-0.5 break-words">{latest.goal}</p>
         </div>
       )}

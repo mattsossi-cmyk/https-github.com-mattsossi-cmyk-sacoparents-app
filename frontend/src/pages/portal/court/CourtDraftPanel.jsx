@@ -11,7 +11,7 @@ function Preview({ parts }) {
     <ul data-testid="court-draft-preview" className="space-y-2.5">
       {parts.map(([key, text]) => (
         <li key={key} data-testid={`court-draft-part-${key}`} className="border border-[#e7dbf8] rounded-xl p-3">
-          <p className="text-[11px] font-extrabold uppercase tracking-wider text-[#5c2c8e] mb-1">{LABELS[key]}</p>
+          <p className="text-[0.6875rem] font-extrabold uppercase tracking-wider text-[#5c2c8e] mb-1">{LABELS[key]}</p>
           <p className="text-sm text-[#202124] whitespace-pre-wrap break-words">{text}</p>
         </li>
       ))}

@@ -251,7 +251,7 @@ export default function Reflection() {
           reflect on your progress and experiences.
         </p>
 
-        <div className="mt-3 flex items-center gap-2 text-[12px] text-[#6E6787]">
+        <div className="mt-3 flex items-center gap-2 text-[0.75rem] text-[#6E6787]">
           <Lock size={12} className="text-[#3D1A78]" />
           <span>
             Private to you. Never shared, never seen by mediator unless you explicitly include it.{" "}
@@ -339,7 +339,7 @@ export default function Reflection() {
 
             <div className="sticky bottom-4 mt-10">
               <div className="card-soft p-4 sm:p-5 flex items-center justify-between gap-4">
-                <div className="text-[13px] text-[#4B4567] flex items-center gap-2 min-w-0">
+                <div className="text-[0.8125rem] text-[#4B4567] flex items-center gap-2 min-w-0">
                   {savedAt ? (
                     <>
                       <Check size={14} className="text-[#3D1A78] shrink-0" />
@@ -620,7 +620,7 @@ function RecapCard({ recap, loading, entries }) {
           {recap.themes.map((t) => (
             <span
               key={t}
-              className="text-[11px] uppercase tracking-[0.15em] px-2 py-1 rounded-full bg-white/70 text-[#3D1A78] border border-white"
+              className="text-[0.6875rem] uppercase tracking-[0.15em] px-2 py-1 rounded-full bg-white/70 text-[#3D1A78] border border-white"
               data-testid={`journal-recap-theme-${t}`}
             >
               {t}
@@ -629,7 +629,7 @@ function RecapCard({ recap, loading, entries }) {
         </div>
       )}
       {recap.generated_at && (
-        <div className="text-[10px] text-[#6E6787] mt-3 uppercase tracking-[0.15em]">
+        <div className="text-[0.625rem] text-[#6E6787] mt-3 uppercase tracking-[0.15em]">
           Updated {fmtDate(recap.generated_at)}
         </div>
       )}
@@ -647,7 +647,7 @@ function EntryCard({ entry, onDelete }) {
       <div className="flex items-center justify-between gap-3 mb-2">
         <div className="flex items-center gap-2">
           <span
-            className={`inline-flex items-center gap-1 text-[10px] uppercase tracking-[0.15em] px-2 py-0.5 rounded-full ${
+            className={`inline-flex items-center gap-1 text-[0.625rem] uppercase tracking-[0.15em] px-2 py-0.5 rounded-full ${
               isSnapshot
                 ? "bg-[#D5F2F2] text-[#0E7A7A]"
                 : "bg-[#EFE9F9] text-[#3D1A78]"

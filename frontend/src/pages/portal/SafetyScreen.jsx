@@ -84,13 +84,13 @@ export function SafetyScreen({
       <div className="bg-white w-full max-w-sm rounded-2xl shadow-xl space-y-3 p-5 my-4">
         <div className="flex justify-between items-start border-b border-slate-100 pb-3">
           <div>
-            <span className="bg-rose-100 text-rose-900 text-[10px] font-bold px-2 py-0.5 rounded uppercase tracking-wider">
+            <span className="bg-rose-100 text-rose-900 text-[0.625rem] font-bold px-2 py-0.5 rounded uppercase tracking-wider">
               Safety First
             </span>
             <h3 className="font-bold text-slate-800 text-sm mt-1">
               Quick Safety Check
             </h3>
-            <p className="text-[10px] text-slate-500 mt-1 leading-snug">
+            <p className="text-[0.625rem] text-slate-500 mt-1 leading-snug">
               Three questions. Your answers stay on this device unless
               you're signed in and syncing. This is <strong>not</strong> a
               clinical screen — for that, tap "Full safety screen" below.
@@ -154,8 +154,8 @@ export function SafetyScreen({
                   onClick={() => setCoerce("yes")}
                   className={
                     coerce === "yes"
-                      ? "flex-1 py-2 rounded-lg font-bold bg-rose-700 text-white text-[11px]"
-                      : "flex-1 py-2 rounded-lg font-bold bg-slate-100 text-slate-600 text-[11px] border border-slate-200"
+                      ? "flex-1 py-2 rounded-lg font-bold bg-rose-700 text-white text-[0.6875rem]"
+                      : "flex-1 py-2 rounded-lg font-bold bg-slate-100 text-slate-600 text-[0.6875rem] border border-slate-200"
                   }
                 >
                   Yes
@@ -166,8 +166,8 @@ export function SafetyScreen({
                   onClick={() => setCoerce("no")}
                   className={
                     coerce === "no"
-                      ? "flex-1 py-2 rounded-lg font-bold bg-emerald-700 text-white text-[11px]"
-                      : "flex-1 py-2 rounded-lg font-bold bg-slate-100 text-slate-600 text-[11px] border border-slate-200"
+                      ? "flex-1 py-2 rounded-lg font-bold bg-emerald-700 text-white text-[0.6875rem]"
+                      : "flex-1 py-2 rounded-lg font-bold bg-slate-100 text-slate-600 text-[0.6875rem] border border-slate-200"
                   }
                 >
                   No
@@ -178,8 +178,8 @@ export function SafetyScreen({
                   onClick={() => setCoerce("prefer_not")}
                   className={
                     coerce === "prefer_not"
-                      ? "w-full mt-1 py-2 rounded-lg font-bold bg-amber-600 text-white text-[11px]"
-                      : "w-full mt-1 py-2 rounded-lg font-bold bg-slate-100 text-slate-600 text-[11px] border border-slate-200"
+                      ? "w-full mt-1 py-2 rounded-lg font-bold bg-amber-600 text-white text-[0.6875rem]"
+                      : "w-full mt-1 py-2 rounded-lg font-bold bg-slate-100 text-slate-600 text-[0.6875rem] border border-slate-200"
                   }
                 >
                   Prefer not to say
@@ -199,8 +199,8 @@ export function SafetyScreen({
                   onClick={() => setDevice("yes")}
                   className={
                     device === "yes"
-                      ? "flex-1 py-2 rounded-lg font-bold bg-emerald-700 text-white text-[11px]"
-                      : "flex-1 py-2 rounded-lg font-bold bg-slate-100 text-slate-600 text-[11px] border border-slate-200"
+                      ? "flex-1 py-2 rounded-lg font-bold bg-emerald-700 text-white text-[0.6875rem]"
+                      : "flex-1 py-2 rounded-lg font-bold bg-slate-100 text-slate-600 text-[0.6875rem] border border-slate-200"
                   }
                 >
                   Yes
@@ -211,8 +211,8 @@ export function SafetyScreen({
                   onClick={() => setDevice("no")}
                   className={
                     device === "no"
-                      ? "flex-1 py-2 rounded-lg font-bold bg-rose-700 text-white text-[11px]"
-                      : "flex-1 py-2 rounded-lg font-bold bg-slate-100 text-slate-600 text-[11px] border border-slate-200"
+                      ? "flex-1 py-2 rounded-lg font-bold bg-rose-700 text-white text-[0.6875rem]"
+                      : "flex-1 py-2 rounded-lg font-bold bg-slate-100 text-slate-600 text-[0.6875rem] border border-slate-200"
                   }
                 >
                   No
@@ -223,8 +223,8 @@ export function SafetyScreen({
                   onClick={() => setDevice("unsure")}
                   className={
                     device === "unsure"
-                      ? "w-full mt-1 py-2 rounded-lg font-bold bg-amber-600 text-white text-[11px]"
-                      : "w-full mt-1 py-2 rounded-lg font-bold bg-slate-100 text-slate-600 text-[11px] border border-slate-200"
+                      ? "w-full mt-1 py-2 rounded-lg font-bold bg-amber-600 text-white text-[0.6875rem]"
+                      : "w-full mt-1 py-2 rounded-lg font-bold bg-slate-100 text-slate-600 text-[0.6875rem] border border-slate-200"
                   }
                 >
                   Not sure
@@ -258,7 +258,7 @@ export function SafetyScreen({
                   <div className="font-bold text-rose-900 text-sm">
                     Your safety comes first.
                   </div>
-                  <p className="text-rose-800 text-[11px] mt-1 leading-snug">
+                  <p className="text-rose-800 text-[0.6875rem] mt-1 leading-snug">
                     BIFF messaging, Legal Reports, and joint tools all
                     assume both parents are safe. When there's
                     intimidation, coercion, or physical harm, these
@@ -269,14 +269,14 @@ export function SafetyScreen({
             </div>
 
             <div className="space-y-2">
-              <div className="font-semibold text-slate-700 text-[11px] uppercase tracking-wider">
+              <div className="font-semibold text-slate-700 text-[0.6875rem] uppercase tracking-wider">
                 Immediate help
               </div>
               <div className="grid grid-cols-1 gap-1.5">
                 <a
                   href="tel:911"
                   data-testid="safety-flagged-call-911"
-                  className="p-2 bg-rose-700 text-white rounded-lg font-bold text-[11px] flex items-center justify-between"
+                  className="p-2 bg-rose-700 text-white rounded-lg font-bold text-[0.6875rem] flex items-center justify-between"
                 >
                   <span>
                     <i className="fa-solid fa-phone mr-2"></i>
@@ -287,7 +287,7 @@ export function SafetyScreen({
                 <a
                   href="tel:18007997233"
                   data-testid="safety-flagged-dv-hotline"
-                  className="p-2 bg-purple-800 text-white rounded-lg font-bold text-[11px] flex items-center justify-between"
+                  className="p-2 bg-purple-800 text-white rounded-lg font-bold text-[0.6875rem] flex items-center justify-between"
                 >
                   <span>
                     <i className="fa-solid fa-hand-holding-heart mr-2"></i>
@@ -298,7 +298,7 @@ export function SafetyScreen({
                 <a
                   href="sms:88788?body=START"
                   data-testid="safety-flagged-text-start"
-                  className="p-2 bg-purple-700 text-white rounded-lg font-bold text-[11px] flex items-center justify-between"
+                  className="p-2 bg-purple-700 text-white rounded-lg font-bold text-[0.6875rem] flex items-center justify-between"
                 >
                   <span>
                     <i className="fa-solid fa-message mr-2"></i>
@@ -312,7 +312,7 @@ export function SafetyScreen({
             <Link
               to="/safety-assessment"
               data-testid="safety-flagged-full-screen-link"
-              className="block w-full text-center p-2 bg-white border-2 border-purple-700 text-purple-800 rounded-lg font-bold text-[11px]"
+              className="block w-full text-center p-2 bg-white border-2 border-purple-700 text-purple-800 rounded-lg font-bold text-[0.6875rem]"
             >
               Open the full clinical Safety Screen
             </Link>
@@ -327,7 +327,7 @@ export function SafetyScreen({
             />
 
             <div className="pt-1 border-t border-slate-100">
-              <p className="text-[10px] text-slate-500 leading-snug mb-1.5">
+              <p className="text-[0.625rem] text-slate-500 leading-snug mb-1.5">
                 {coerce === "yes"
                   ? "Grey-rock mode is on — the Portal will quietly adapt its tools and language so nothing you do here can be used against you. You can turn it off from the Alignment & Tools page any time."
                   : "You can still enter the Portal — nothing here will lock you out. Just know these tools work best after the safety picture is clearer."}
@@ -337,7 +337,7 @@ export function SafetyScreen({
                   type="button"
                   data-testid="safety-flagged-continue-btn"
                   onClick={() => onContinueFlagged({ phys, coerce, device })}
-                  className="flex-1 px-3 py-1.5 bg-slate-200 text-slate-700 rounded-lg font-semibold text-[11px]"
+                  className="flex-1 px-3 py-1.5 bg-slate-200 text-slate-700 rounded-lg font-semibold text-[0.6875rem]"
                 >
                   {coerce === "yes"
                     ? "Enter the Portal in grey-rock mode"
@@ -357,7 +357,7 @@ export function SafetyScreen({
                       ? () => onContinueFlagged({ phys, coerce, device })
                       : resetAndClose
                   }
-                  className="px-3 py-1.5 border border-slate-300 rounded-lg font-semibold text-slate-600 text-[11px]"
+                  className="px-3 py-1.5 border border-slate-300 rounded-lg font-semibold text-slate-600 text-[0.6875rem]"
                 >
                   {coerce === "yes" ? "Not now" : "Close"}
                 </button>
@@ -384,8 +384,8 @@ export function SafetyRetakeChip({ onOpen, flagged }) {
       onClick={onOpen}
       className={
         flagged
-          ? "no-print inline-flex items-center gap-1.5 bg-rose-50 border border-rose-300 text-rose-800 px-2.5 py-1 rounded-full text-[10px] font-bold hover:bg-rose-100 transition"
-          : "no-print inline-flex items-center gap-1.5 bg-purple-50 border border-purple-200 text-purple-800 px-2.5 py-1 rounded-full text-[10px] font-bold hover:bg-purple-100 transition"
+          ? "no-print inline-flex items-center gap-1.5 bg-rose-50 border border-rose-300 text-rose-800 px-2.5 py-1 rounded-full text-[0.625rem] font-bold hover:bg-rose-100 transition"
+          : "no-print inline-flex items-center gap-1.5 bg-purple-50 border border-purple-200 text-purple-800 px-2.5 py-1 rounded-full text-[0.625rem] font-bold hover:bg-purple-100 transition"
       }
     >
       <i className="fa-solid fa-shield-heart"></i>
@@ -414,13 +414,13 @@ export function SafetySoftBanner({ context }) {
       <div className="flex items-start gap-2">
         <i className="fa-solid fa-triangle-exclamation text-amber-700 mt-0.5" aria-hidden></i>
         <div className="flex-1">
-          <div className="font-bold text-amber-900 text-[11px]">
+          <div className="font-bold text-amber-900 text-[0.6875rem]">
             Safety concern flagged in your Quick Safety Check
           </div>
-          <p className="text-amber-800 text-[11px] leading-snug mt-0.5">
+          <p className="text-amber-800 text-[0.6875rem] leading-snug mt-0.5">
             {contextLine}
           </p>
-          <div className="mt-1.5 flex flex-wrap gap-2 text-[10px] font-bold">
+          <div className="mt-1.5 flex flex-wrap gap-2 text-[0.625rem] font-bold">
             <a
               href="tel:18007997233"
               className="text-purple-800 underline"

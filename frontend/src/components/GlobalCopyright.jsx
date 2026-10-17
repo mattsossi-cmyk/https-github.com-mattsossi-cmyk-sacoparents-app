@@ -1,5 +1,5 @@
 import React from "react";
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 
 /**
  * GlobalCopyright — appears at the bottom of every page in the app.
@@ -11,16 +11,26 @@ import { Link } from "react-router-dom";
  */
 export default function GlobalCopyright() {
   const year = new Date().getFullYear();
+  // The Quick exit calendar stays plain.
+  const neutral = useLocation().pathname === "/calendar";
   return (
     <div
       className="w-full border-t border-[#E5E0EE] bg-white/70 py-3 text-center"
       data-testid="global-copyright"
     >
-      <span className="text-[11px] text-[#6E6787]">
+      <span className="text-[0.6875rem] text-[#6E6787]">
         © {year} SA CoParents · All rights reserved. ·{" "}
         <Link to="/privacy-notice" data-testid="global-footer-privacy-notice" className="text-[#3D1A78] font-semibold underline underline-offset-2">
           Privacy Notice
         </Link>
+        {!neutral && (
+          <>
+            {" "}·{" "}
+            <Link to="/help" data-testid="global-footer-get-help" className="text-[#3D1A78] font-semibold underline underline-offset-2">
+              Get help
+            </Link>
+          </>
+        )}
       </span>
     </div>
   );

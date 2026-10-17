@@ -54,7 +54,7 @@ function SubjectCard({ subject }) {
         </div>
         {isSensitive && (
           <span
-            className="text-[10px] uppercase tracking-[0.14em] font-bold text-[#AA0033]"
+            className="text-[0.625rem] uppercase tracking-[0.14em] font-bold text-[#AA0033]"
             data-testid={`alignment-subject-${subject.id}-sensitive-badge`}
           >
             Dual-consent only
@@ -70,7 +70,7 @@ function SubjectCard({ subject }) {
         </p>
       </div>
       <div className="flex items-center justify-between pt-2 border-t border-[#EEE8F7]">
-        <span className="text-[10px] uppercase tracking-[0.14em] font-bold text-[#6E6787]">
+        <span className="text-[0.625rem] uppercase tracking-[0.14em] font-bold text-[#6E6787]">
           {subject.prompt_count} prompts
         </span>
         <span className="inline-flex items-center gap-1 text-xs font-semibold text-[#3D1A78] group-hover:translate-x-0.5 transition-transform">
@@ -117,7 +117,7 @@ export default function AlignmentSubjects() {
         <div className="card-soft p-6 sm:p-8 relative overflow-hidden">
           <div className="absolute -top-24 -right-24 w-72 h-72 rounded-full bg-[#D4C5F0]/40 pointer-events-none" />
           <div className="relative">
-            <div className="text-[10px] uppercase tracking-[0.22em] font-bold text-[#3D1A78] flex items-center gap-2">
+            <div className="text-[0.625rem] uppercase tracking-[0.22em] font-bold text-[#3D1A78] flex items-center gap-2">
               <Sparkles size={12} />
               Alignment reflection · Subject picker
             </div>

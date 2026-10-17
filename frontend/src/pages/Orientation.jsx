@@ -166,7 +166,7 @@ export default function Orientation() {
             <div className="font-sans font-extrabold text-base text-[#1A1330]">
               <span className="text-brand-gradient">SA</span> CoParents
             </div>
-            <div className="text-[9px] uppercase tracking-[0.2em] text-[#6E6787]">
+            <div className="text-[0.5625rem] uppercase tracking-[0.2em] text-[#6E6787]">
               Orientation
             </div>
           </div>
@@ -246,7 +246,7 @@ export default function Orientation() {
               <ArrowLeft size={14} /> Back
             </button>
 
-            <div className="text-[12px] text-[#6E6787]">
+            <div className="text-[0.75rem] text-[#6E6787]">
               {idx + 1} / {total}
             </div>
 
@@ -261,7 +261,7 @@ export default function Orientation() {
         </div>
       </main>
 
-      <footer className="text-center pb-5 text-[11px] text-[#6E6787]">
+      <footer className="text-center pb-5 text-[0.6875rem] text-[#6E6787]">
         <span className="inline-flex items-center gap-1.5">
           <Wind size={11} className="text-[#3D1A78]" />
           Take a breath if you need to — this is your space.

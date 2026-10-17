@@ -5,7 +5,7 @@ const enter = "animate-in fade-in slide-in-from-bottom-2 duration-300";
 export function GuideAvatar() {
   return (
     <div className="shrink-0 w-8 h-8 rounded-full bg-[#4c2889] text-white flex items-center justify-center shadow-sm">
-      <i className="fa-solid fa-seedling text-[13px]"></i>
+      <i className="fa-solid fa-seedling text-[0.8125rem]"></i>
     </div>
   );
 }
@@ -56,7 +56,7 @@ export function SectionDivider({ number, title, testid }) {
   return (
     <div data-testid={testid} className={`flex items-center gap-2 py-1 ${enter}`}>
       <div className="flex-1 h-px bg-purple-200" />
-      <div className="shrink-0 px-3 py-1 rounded-full bg-purple-100 text-purple-900 text-[11px] font-bold tracking-wide">
+      <div className="shrink-0 px-3 py-1 rounded-full bg-purple-100 text-purple-900 text-[0.6875rem] font-bold tracking-wide">
         {number}. {title}
       </div>
       <div className="flex-1 h-px bg-purple-200" />

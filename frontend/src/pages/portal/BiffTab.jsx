@@ -23,11 +23,11 @@ function ToneRow({ status, riskLabel, flagList }) {
     <div className="p-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs space-y-1">
       <div className="flex justify-between items-center font-bold">
         <span className="text-slate-600">AI tone check:</span>
-        <span data-testid="risk-badge" data-status={status} className={`text-[10px] px-2 py-0.5 rounded ${tone}`}>
+        <span data-testid="risk-badge" data-status={status} className={`text-[0.625rem] px-2 py-0.5 rounded ${tone}`}>
           {badge}
         </span>
       </div>
-      <div data-testid="flag-list" className="text-slate-500 text-[11px]">
+      <div data-testid="flag-list" className="text-slate-500 text-[0.6875rem]">
         {!checked ? (
           "Tap Get suggested wording to have AI check the tone."
         ) : flagList.length > 0 ? (
@@ -81,35 +81,34 @@ export function BiffTab({
       <div className="bg-white p-4 rounded-2xl shadow-sm border border-purple-200 space-y-3 card-box">
         <div className="border-b border-slate-100 pb-2">
           <div className="flex items-center justify-between gap-2 flex-wrap">
-            <span className="bg-amber-100 text-amber-800 text-[10px] font-bold px-2 py-0.5 rounded uppercase">
+            <span className="bg-amber-100 text-amber-800 text-[0.625rem] font-bold px-2 py-0.5 rounded uppercase">
               De-escalation Engine
             </span>
             {safetyFlagged && (
               <span
                 data-testid="biff-greyrock-chip"
-                title="Because your Quick Safety Check flagged coercion or safety concerns, the coach is producing shorter, more neutral replies."
-                className="inline-flex items-center gap-1 bg-slate-900 text-amber-300 text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider"
+                className="inline-flex items-center gap-1 bg-slate-900 text-amber-300 text-[0.625rem] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider"
               >
-                <i className="fa-solid fa-shield-halved" aria-hidden="true"></i>
-                <span>Grey-rock coach on</span>
+                <i className="fa-solid fa-sliders" aria-hidden="true"></i>
+                <span>Grey-rock tone on</span>
               </span>
             )}
           </div>
           <h3 className="font-bold text-slate-800 text-sm mt-1">
             BIFF Communication Builder
           </h3>
-          <p className="text-[11px] text-slate-500">
+          <p className="text-[0.6875rem] text-slate-500">
             {safetyFlagged
-              ? "Grey-rock BIFF: short, factual, neutral. Safer to send to a coercive co-parent."
+              ? "Grey-rock BIFF: short, factual and neutral."
               : "Brief, Informative, Friendly, and Firm messaging."}
           </p>
         </div>
 
         <div className="no-print space-y-1.5">
-          <label className="text-[10px] font-bold text-slate-400 uppercase">
+          <label className="text-[0.625rem] font-bold text-slate-600 uppercase">
             Scenario Presets:
           </label>
-          <div className="flex flex-wrap gap-1.5 text-[11px]">
+          <div className="flex flex-wrap gap-1.5 text-[0.6875rem]">
             {PRESET_CHIPS.map(([key, testid, label]) => (
               <button
                 key={key}
@@ -155,7 +154,7 @@ export function BiffTab({
             data-status={biffStatus}
             className="p-3 bg-purple-50/70 border border-purple-200 rounded-xl text-xs text-slate-800 font-medium min-h-[80px]"
           >
-            <p className="text-[10px] font-bold uppercase tracking-wider text-purple-700 mb-1">Suggested wording</p>
+            <p className="text-[0.625rem] font-bold uppercase tracking-wider text-purple-700 mb-1">Suggested wording</p>
             {biffStatus === "unavailable" ? (
               <SuggestUnavailable tp="biff" raw={rawInput} greyRock={safetyFlagged} onRetry={suggest} onUseTemplate={onRawInputChange} busy={biffLoading} />
             ) : biffStatus === "loading" ? (
@@ -232,7 +231,7 @@ export function BiffHistory({ biffLogs }) {
               className="p-2.5 bg-slate-50 border border-slate-200 rounded-xl space-y-1"
               data-testid={`biff-history-${item.id}`}
             >
-              <div className="flex justify-between items-center text-[10px]">
+              <div className="flex justify-between items-center text-[0.625rem]">
                 <span className="font-bold text-purple-800">
                   {item.timestamp}
                 </span>
@@ -240,7 +239,7 @@ export function BiffHistory({ biffLogs }) {
                   {item.category}
                 </span>
               </div>
-              <div className="text-[11px] text-slate-800 font-medium">
+              <div className="text-[0.6875rem] text-slate-800 font-medium">
                 {item.biff}
               </div>
             </div>
@@ -266,53 +265,19 @@ export function BiffMilestones({
     <div className="bg-white p-4 rounded-2xl shadow-sm border border-purple-200 space-y-3 card-box">
       <div className="flex justify-between items-center">
         <h3 className="font-bold text-slate-800 text-xs uppercase tracking-wider flex items-center gap-1.5">
-          {safetyFlagged ? (
-            <>
-              <i className="fa-solid fa-clipboard-list text-purple-800"></i>{" "}
-              Advocate Review Log
-            </>
-          ) : (
-            <>
-              <i className="fa-solid fa-chart-line text-emerald-600"></i>{" "}
-              History of Successes & Failures
-            </>
-          )}
+          <i className="fa-solid fa-chart-line text-emerald-600" aria-hidden="true"></i>{" "}
+          History of Successes & Failures
         </h3>
         <button
           data-testid="add-milestone-btn"
           onClick={addMilestoneLog}
-          className={
-            safetyFlagged
-              ? "no-print text-[10px] bg-purple-800 text-white px-2 py-1 rounded-lg"
-              : "no-print text-[10px] bg-slate-800 text-white px-2 py-1 rounded-lg"
-          }
+          className="no-print text-[0.625rem] bg-slate-800 text-white px-2 py-1 min-h-6 rounded-lg"
         >
-          {safetyFlagged ? "+ Log for advocate" : "+ Log Milestone"}
+          + Log Milestone
         </button>
       </div>
 
-      {safetyFlagged ? (
-        <div
-          className="p-3 bg-purple-50 border border-purple-200 rounded-xl text-center"
-          data-testid="advocate-review-tile"
-        >
-          <div
-            data-testid="advocate-review-count"
-            className="text-purple-900 font-bold text-lg"
-          >
-            {advocateReviewCount}
-          </div>
-          <div className="text-[10px] text-purple-800 font-semibold">
-            Events logged for advocate / attorney review
-          </div>
-          <p className="text-[10px] text-slate-500 mt-1 leading-snug">
-            The collaborative "Successful Resolution / Friction Point"
-            framing doesn't fit the safety context you flagged. Each
-            entry here goes into your Weekly Progress PDF for your
-            advocate.
-          </p>
-        </div>
-      ) : (
+      {(
         <div className="grid grid-cols-2 gap-2 text-center text-xs">
           <div className="p-2.5 bg-emerald-50 border border-emerald-200 rounded-xl">
             <div
@@ -321,7 +286,7 @@ export function BiffMilestones({
             >
               {successCount}
             </div>
-            <div className="text-[10px] text-emerald-800 font-semibold">
+            <div className="text-[0.625rem] text-emerald-800 font-semibold">
               Successful Resolutions
             </div>
           </div>
@@ -332,7 +297,7 @@ export function BiffMilestones({
             >
               {frictionCount}
             </div>
-            <div className="text-[10px] text-rose-800 font-semibold">
+            <div className="text-[0.625rem] text-rose-800 font-semibold">
               Friction Points
             </div>
           </div>
@@ -348,12 +313,12 @@ export function BiffMilestones({
           milestones.map((m) => {
             const isAdvocate = m.source === "advocate_review";
             const tagClass = isAdvocate
-              ? "text-[9px] font-bold px-2 py-0.5 rounded bg-purple-100 text-purple-900"
+              ? "text-[0.5625rem] font-bold px-2 py-0.5 rounded bg-purple-100 text-purple-900"
               : m.type === "success"
-              ? "text-[9px] font-bold px-2 py-0.5 rounded bg-emerald-100 text-emerald-800"
+              ? "text-[0.5625rem] font-bold px-2 py-0.5 rounded bg-emerald-100 text-emerald-800"
               : m.type === "friction"
-              ? "text-[9px] font-bold px-2 py-0.5 rounded bg-rose-100 text-rose-800"
-              : "text-[9px] font-bold px-2 py-0.5 rounded bg-slate-100 text-slate-700";
+              ? "text-[0.5625rem] font-bold px-2 py-0.5 rounded bg-rose-100 text-rose-800"
+              : "text-[0.5625rem] font-bold px-2 py-0.5 rounded bg-slate-100 text-slate-700";
             const tagLabel = isAdvocate ? "ADVOCATE" : String(m.type || "note").toUpperCase();
             return (
               <div
@@ -363,7 +328,7 @@ export function BiffMilestones({
               >
                 <div>
                   <span className="font-bold text-slate-800">{m.title}</span>
-                  <div className="text-[10px] text-slate-500">{m.note}</div>
+                  <div className="text-[0.625rem] text-slate-500">{m.note}</div>
                 </div>
                 <span className={tagClass} data-testid={`milestone-tag-${m.id}`}>
                   {tagLabel}
@@ -398,7 +363,7 @@ export function BiffMilestones({
             : "Share"}
         </button>
       </div>
-      <p className="text-[10px] text-slate-400 text-center no-print">
+      <p className="text-[0.625rem] text-slate-400 text-center no-print">
         One-page snapshot to share with your pediatrician, mediator, or attorney.
       </p>
     </div>

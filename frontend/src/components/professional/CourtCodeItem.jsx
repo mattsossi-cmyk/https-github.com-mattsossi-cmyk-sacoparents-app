@@ -44,7 +44,7 @@ export const CourtCodeItem = ({ c, onChanged }) => {
           <ProgressPdfButton path={`/professional/court-codes/${c.case_id}/progress.pdf`} caseId={c.case_id} testid={`court-code-progress-pdf-${c.case_id}`} />
           {state === "Active" && (
             <button type="button" onClick={revoke} disabled={busy} data-testid={`court-code-revoke-${c.case_id}`}
-              className="inline-flex items-center gap-1 text-[11px] font-semibold text-[#B02A2A] hover:underline disabled:opacity-60">
+              className="inline-flex items-center gap-1 text-[0.6875rem] font-semibold text-[#B02A2A] hover:underline disabled:opacity-60">
               {busy ? <Loader2 size={11} className="animate-spin" /> : <Trash2 size={11} />} Revoke
             </button>
           )}
@@ -52,7 +52,7 @@ export const CourtCodeItem = ({ c, onChanged }) => {
         </div>
       </div>
       {c.parents.length === 0 ? (
-        <p className="text-[11px] text-[#6E6787] mt-2" data-testid={`court-code-waiting-${c.case_id}`}>No parent has entered this code yet.</p>
+        <p className="text-[0.6875rem] text-[#6E6787] mt-2" data-testid={`court-code-waiting-${c.case_id}`}>No parent has entered this code yet.</p>
       ) : (
         <div className="mt-1 grid gap-2 sm:grid-cols-2">
           {c.parents.map((p, i) => (

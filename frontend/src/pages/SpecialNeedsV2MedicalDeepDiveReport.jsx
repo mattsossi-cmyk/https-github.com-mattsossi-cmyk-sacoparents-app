@@ -37,7 +37,7 @@ function RatingPill({ rating, testid }) {
   const cls = RATING_STYLES[rating] || RATING_STYLES["Not enough info"];
   return (
     <span data-testid={testid}
-      className={`inline-flex items-center px-2.5 py-1 rounded-full text-[10px] font-semibold border ${cls}`}>
+      className={`inline-flex items-center px-2.5 py-1 rounded-full text-[0.625rem] font-semibold border ${cls}`}>
       {rating || "-"}
     </span>
   );
@@ -54,7 +54,7 @@ function SectionCard({ children, testid }) {
 
 function Eyebrow({ children }) {
   return (
-    <div className="text-[10px] uppercase tracking-[0.22em] font-bold text-[#3D1A78] mb-1">{children}</div>
+    <div className="text-[0.625rem] uppercase tracking-[0.22em] font-bold text-[#3D1A78] mb-1">{children}</div>
   );
 }
 
@@ -214,24 +214,24 @@ export default function SpecialNeedsV2EducationalDeepDiveReport() {
         <SectionCard testid="med-report-overview">
           <h2 className="font-serif text-xl text-[#1A1330]">1. Report overview</h2>
           <dl className="mt-3 grid grid-cols-2 gap-x-4 gap-y-1 text-xs text-[#4B4567]">
-            <div><dt className="uppercase tracking-widest text-[10px] font-semibold text-[#3D1A78]">Parent</dt>
+            <div><dt className="uppercase tracking-widest text-[0.625rem] font-semibold text-[#3D1A78]">Parent</dt>
               <dd className="text-[#1A1330] font-semibold">{cover.parent_name}</dd></div>
-            <div><dt className="uppercase tracking-widest text-[10px] font-semibold text-[#3D1A78]">Child</dt>
+            <div><dt className="uppercase tracking-widest text-[0.625rem] font-semibold text-[#3D1A78]">Child</dt>
               <dd className="text-[#1A1330] font-semibold">{cover.child_name}</dd></div>
-            <div><dt className="uppercase tracking-widest text-[10px] font-semibold text-[#3D1A78]">Grade</dt>
+            <div><dt className="uppercase tracking-widest text-[0.625rem] font-semibold text-[#3D1A78]">Grade</dt>
               <dd className="text-[#1A1330]">{cover.grade_level}</dd></div>
-            <div><dt className="uppercase tracking-widest text-[10px] font-semibold text-[#3D1A78]">State</dt>
+            <div><dt className="uppercase tracking-widest text-[0.625rem] font-semibold text-[#3D1A78]">State</dt>
               <dd className="text-[#1A1330]">{cover.school_state}</dd></div>
-            <div><dt className="uppercase tracking-widest text-[10px] font-semibold text-[#3D1A78]">Setting</dt>
+            <div><dt className="uppercase tracking-widest text-[0.625rem] font-semibold text-[#3D1A78]">Setting</dt>
               <dd className="text-[#1A1330]">{cover.school_setting}</dd></div>
-            <div><dt className="uppercase tracking-widest text-[10px] font-semibold text-[#3D1A78]">Date</dt>
+            <div><dt className="uppercase tracking-widest text-[0.625rem] font-semibold text-[#3D1A78]">Date</dt>
               <dd className="text-[#1A1330]">{cover.assessment_date}</dd></div>
           </dl>
-          <h3 className="mt-4 text-[10px] uppercase tracking-[0.18em] font-semibold text-[#3D1A78]">Purpose</h3>
+          <h3 className="mt-4 text-[0.625rem] uppercase tracking-[0.18em] font-semibold text-[#3D1A78]">Purpose</h3>
           <ul className="list-disc pl-5 text-sm text-[#1A1330] space-y-1 mt-1">
             {(overview.purpose_bullets || []).map((b) => (<li key={b}>{b}</li>))}
           </ul>
-          <p className="text-[11px] text-[#4B4567] italic mt-3">{report.disclaimer}</p>
+          <p className="text-[0.6875rem] text-[#4B4567] italic mt-3">{report.disclaimer}</p>
         </SectionCard>
 
         {/* 2. Educational Support Summary */}
@@ -250,7 +250,7 @@ export default function SpecialNeedsV2EducationalDeepDiveReport() {
           </div>
           {support.overall_narrative && (
             <div className="mt-4 bg-[#FCFBFE] rounded-2xl border border-[#E5E0EE] p-3">
-              <div className="text-[10px] uppercase tracking-[0.18em] font-semibold text-[#3D1A78] mb-1">Overall</div>
+              <div className="text-[0.625rem] uppercase tracking-[0.18em] font-semibold text-[#3D1A78] mb-1">Overall</div>
               <div className="text-sm text-[#1A1330]">{support.overall_narrative}</div>
             </div>
           )}
@@ -262,13 +262,13 @@ export default function SpecialNeedsV2EducationalDeepDiveReport() {
           <SectionCard testid="med-deep-ai-summary">
             <div className="flex items-start justify-between gap-3 flex-wrap">
               <div>
-                <div className="text-[10px] uppercase tracking-[0.22em] font-bold text-[#3D1A78] flex items-center gap-2 mb-1">
+                <div className="text-[0.625rem] uppercase tracking-[0.22em] font-bold text-[#3D1A78] flex items-center gap-2 mb-1">
                   <Sparkles size={12} /> AI executive summary
                 </div>
-                <p className="text-[11px] text-[#6A5799] italic">Neutral · non-diagnostic · generated from your answers</p>
+                <p className="text-[0.6875rem] text-[#6A5799] italic">Neutral · non-diagnostic · generated from your answers</p>
               </div>
               <div className="flex items-center gap-2 flex-wrap">
-                <div className="inline-flex rounded-full border border-[#D6CFE8] overflow-hidden text-[10px] font-semibold" data-testid="med-deep-length-toggle">
+                <div className="inline-flex rounded-full border border-[#D6CFE8] overflow-hidden text-[0.625rem] font-semibold" data-testid="med-deep-length-toggle">
                   {["short", "standard", "long"].map((lvl) => (
                     <button
                       key={lvl}
@@ -282,7 +282,7 @@ export default function SpecialNeedsV2EducationalDeepDiveReport() {
                     </button>
                   ))}
                 </div>
-                <div className="inline-flex rounded-full border border-[#D6CFE8] overflow-hidden text-[10px] font-semibold"
+                <div className="inline-flex rounded-full border border-[#D6CFE8] overflow-hidden text-[0.625rem] font-semibold"
                      data-testid="med-deep-model-toggle"
                      title="Which AI writes this summary. Same prompts, same neutral guardrails - just a different voice.">
                   {[
@@ -303,7 +303,7 @@ export default function SpecialNeedsV2EducationalDeepDiveReport() {
                 </div>
                 <button onClick={regenerateSummary} disabled={regenBusy}
                   data-testid="med-deep-regen-summary"
-                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[11px] font-semibold border border-[#D6CFE8] text-[#3D1A78] hover:bg-[#EEE9F7] disabled:opacity-60">
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[0.6875rem] font-semibold border border-[#D6CFE8] text-[#3D1A78] hover:bg-[#EEE9F7] disabled:opacity-60">
                   {regenBusy ? <Loader2 size={12} className="animate-spin" /> : <RefreshCcw size={12} />}
                   {regenBusy ? "Regenerating…" : "Regenerate"}
                 </button>
@@ -311,7 +311,7 @@ export default function SpecialNeedsV2EducationalDeepDiveReport() {
             </div>
             <p className="text-sm text-[#1A1330] whitespace-pre-wrap leading-relaxed mt-3">{report.ai_summary}</p>
             {report.ai_summary_regenerated_at && (
-              <p className="text-[10px] text-[#6A5799] italic mt-2" data-testid="med-deep-regen-timestamp">
+              <p className="text-[0.625rem] text-[#6A5799] italic mt-2" data-testid="med-deep-regen-timestamp">
                 Last regenerated: {new Date(report.ai_summary_regenerated_at).toLocaleString()}
                 {report.ai_summary_length && ` · ${report.ai_summary_length}`}
                 {report.ai_summary_model && ` · ${report.ai_summary_model === "gpt" ? "GPT 5.6 Terra" : "Claude Sonnet 4.5"}`}
@@ -324,14 +324,14 @@ export default function SpecialNeedsV2EducationalDeepDiveReport() {
         <SectionCard testid="med-report-child-profile">
           <h2 className="font-serif text-xl text-[#1A1330]">3. Your child&apos;s profile</h2>
           <div className="mt-3">
-            <div className="text-[10px] uppercase tracking-[0.18em] font-semibold text-[#1F5C3B] mb-1">Strengths</div>
+            <div className="text-[0.625rem] uppercase tracking-[0.18em] font-semibold text-[#1F5C3B] mb-1">Strengths</div>
             <ul className="list-disc pl-5 text-sm text-[#1A1330] space-y-1">
               {(profile.strengths || []).map((s) => (<li key={s}>{s}</li>))}
             </ul>
           </div>
           {(profile.concerns || []).length > 0 && (
             <div className="mt-3">
-              <div className="text-[10px] uppercase tracking-[0.18em] font-semibold text-[#B02A2A] mb-1">Concerns</div>
+              <div className="text-[0.625rem] uppercase tracking-[0.18em] font-semibold text-[#B02A2A] mb-1">Concerns</div>
               <ul className="list-disc pl-5 text-sm text-[#1A1330] space-y-1">
                 {(profile.concerns || []).map((c) => (<li key={c}>{c}</li>))}
               </ul>
@@ -353,21 +353,21 @@ export default function SpecialNeedsV2EducationalDeepDiveReport() {
           <h2 className="font-serif text-xl text-[#1A1330]">4. Professional involvement</h2>
           {(involvement.roles || []).length > 0 && (
             <div className="mt-3">
-              <div className="text-[10px] uppercase tracking-[0.18em] font-semibold text-[#3D1A78] mb-1">Currently involved</div>
+              <div className="text-[0.625rem] uppercase tracking-[0.18em] font-semibold text-[#3D1A78] mb-1">Currently involved</div>
               <div className="flex flex-wrap gap-1.5">
                 {(involvement.roles || []).map((r) => (
-                  <span key={r} className="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-[#EEE9F7] text-[#3D1A78] border border-[#D6CFE8]">{r}</span>
+                  <span key={r} className="px-2 py-0.5 rounded-full text-[0.625rem] font-semibold bg-[#EEE9F7] text-[#3D1A78] border border-[#D6CFE8]">{r}</span>
                 ))}
               </div>
             </div>
           )}
           {(involvement.meetings || []).length > 0 && (
             <div className="mt-4">
-              <div className="text-[10px] uppercase tracking-[0.18em] font-semibold text-[#3D1A78] mb-2">Upcoming or recommended meetings</div>
+              <div className="text-[0.625rem] uppercase tracking-[0.18em] font-semibold text-[#3D1A78] mb-2">Upcoming or recommended meetings</div>
               <div className="overflow-x-auto">
                 <table className="w-full text-sm">
                   <thead>
-                    <tr className="text-left text-[10px] uppercase tracking-[0.14em] text-[#6A5799] border-b border-[#E5E0EE]">
+                    <tr className="text-left text-[0.625rem] uppercase tracking-[0.14em] text-[#6A5799] border-b border-[#E5E0EE]">
                       <th className="py-2 pr-3">Meeting</th><th className="py-2 pr-3">Status</th><th className="py-2">Suggested next step</th>
                     </tr>
                   </thead>
@@ -441,7 +441,7 @@ export default function SpecialNeedsV2EducationalDeepDiveReport() {
           {level.description && <p className="text-sm text-[#1A1330] mt-2">{level.description}</p>}
           {(level.next_steps || []).length > 0 && (
             <div className="mt-3">
-              <div className="text-[10px] uppercase tracking-[0.18em] font-semibold text-[#3D1A78] mb-1">Suggested next steps</div>
+              <div className="text-[0.625rem] uppercase tracking-[0.18em] font-semibold text-[#3D1A78] mb-1">Suggested next steps</div>
               <ul className="list-disc pl-5 text-sm text-[#1A1330] space-y-1">
                 {(level.next_steps || []).map((s) => (<li key={s}>{s}</li>))}
               </ul>
@@ -463,7 +463,7 @@ export default function SpecialNeedsV2EducationalDeepDiveReport() {
           <div className="mt-3 overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
-                <tr className="text-left text-[10px] uppercase tracking-[0.14em] text-[#6A5799] border-b border-[#E5E0EE]">
+                <tr className="text-left text-[0.625rem] uppercase tracking-[0.14em] text-[#6A5799] border-b border-[#E5E0EE]">
                   <th className="py-2 pr-2">#</th><th className="py-2 pr-3">Action</th><th className="py-2 pr-3">Detail</th><th className="py-2 pr-3">Owner</th><th className="py-2">Target date</th>
                 </tr>
               </thead>
@@ -511,7 +511,7 @@ export default function SpecialNeedsV2EducationalDeepDiveReport() {
 
         <ReportProvenanceFooter variant="deepdive" className="mt-8" />
 
-        <p className="text-[11px] text-[#4B4567] mt-8 italic">{report.disclaimer}</p>
+        <p className="text-[0.6875rem] text-[#4B4567] mt-8 italic">{report.disclaimer}</p>
 
         {/* One clear ending — the founder-mandated single next action. */}
         <PathwayEndCTA

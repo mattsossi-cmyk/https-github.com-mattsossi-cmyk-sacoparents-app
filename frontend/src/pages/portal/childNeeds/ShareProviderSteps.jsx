@@ -27,7 +27,7 @@ export function ProviderPicker({ providers, pickedId, onPick }) {
           <i className={`fa-solid ${pickedId === p.provider_id ? "fa-circle-dot text-[#4A154B]" : "fa-circle text-slate-300"} mt-0.5`}></i>
           <span className="min-w-0">
             <span className="block text-sm font-bold text-slate-900">{p.name}</span>
-            <span className="block text-[12px] text-slate-500 break-words">{[p.role_label, p.organization, p.email].filter(Boolean).join(" · ")}</span>
+            <span className="block text-[0.75rem] text-slate-500 break-words">{[p.role_label, p.organization, p.email].filter(Boolean).join(" · ")}</span>
           </span>
         </button>
       ))}
@@ -46,7 +46,7 @@ export function FormTicks({ completed, picked, onToggle, onAll }) {
         </label>
       ))}
       {completed.length > 1 && (
-        <button type="button" data-testid="share-form-select-all" onClick={onAll} className="text-[12px] font-bold text-[#611663] hover:underline">
+        <button type="button" data-testid="share-form-select-all" onClick={onAll} className="text-[0.75rem] font-bold text-[#611663] hover:underline">
           {all ? "Clear all" : "Select all (full report)"}
         </button>
       )}
@@ -58,10 +58,10 @@ export function ConfirmStep({ provider, keys }) {
   return (
     <div data-testid="share-confirm" className="space-y-3 text-sm">
       <div className="rounded-lg border border-[#E2E8F0] p-3.5">
-        <p className="text-[11px] font-bold uppercase tracking-wider text-slate-500">Who gets it</p>
+        <p className="text-[0.6875rem] font-bold uppercase tracking-wider text-slate-500">Who gets it</p>
         <p data-testid="share-confirm-provider" className="font-bold text-slate-900">{provider.name}</p>
-        <p className="text-[12px] text-slate-500 break-words">{[provider.role_label, provider.organization, provider.email].filter(Boolean).join(" · ")}</p>
-        <p className="mt-3 text-[11px] font-bold uppercase tracking-wider text-slate-500">What they get (one PDF)</p>
+        <p className="text-[0.75rem] text-slate-500 break-words">{[provider.role_label, provider.organization, provider.email].filter(Boolean).join(" · ")}</p>
+        <p className="mt-3 text-[0.6875rem] font-bold uppercase tracking-wider text-slate-500">What they get (one PDF)</p>
         <ul data-testid="share-confirm-forms" className="list-disc pl-5 text-slate-800">
           {keys.map((k) => <li key={k}>{TITLES[k]}</li>)}
         </ul>

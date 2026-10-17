@@ -48,7 +48,7 @@ function ProCard({ pro, onInvite, testidBase }) {
         <div className="text-sm font-semibold text-[#1A1330] leading-tight">
           {pro.name}
         </div>
-        <div className="text-[12px] text-[#4B4567] mt-0.5">
+        <div className="text-[0.75rem] text-[#4B4567] mt-0.5">
           {pro.title}
           {pro.city && (
             <span className="text-[#6E6787] inline-flex items-center gap-0.5">
@@ -57,7 +57,7 @@ function ProCard({ pro, onInvite, testidBase }) {
           )}
         </div>
         {pro.bio && (
-          <p className="text-[12px] text-[#4B4567] mt-1 leading-snug line-clamp-2">
+          <p className="text-[0.75rem] text-[#4B4567] mt-1 leading-snug line-clamp-2">
             {pro.bio}
           </p>
         )}
@@ -66,7 +66,7 @@ function ProCard({ pro, onInvite, testidBase }) {
             {pro.specialties.slice(0, 4).map((s) => (
               <span
                 key={s}
-                className="rounded-full bg-[#F5F1FB] text-[#3D1A78] px-2 py-0.5 text-[10px] font-semibold"
+                className="rounded-full bg-[#F5F1FB] text-[#3D1A78] px-2 py-0.5 text-[0.625rem] font-semibold"
               >
                 {s}
               </span>
@@ -197,7 +197,7 @@ export default function ProfessionalDirectoryModal({ open, caseId, onClose }) {
 
         {/* Header */}
         <div className="px-6 pt-6 pb-4 border-b border-[#EEE8F7]">
-          <div className="text-[10px] uppercase tracking-[0.22em] font-bold text-[#3D1A78] flex items-center gap-1.5">
+          <div className="text-[0.625rem] uppercase tracking-[0.22em] font-bold text-[#3D1A78] flex items-center gap-1.5">
             <UserRound size={12} /> Professional directory · sacoparentsalign.com
           </div>
           <h3
@@ -206,14 +206,14 @@ export default function ProfessionalDirectoryModal({ open, caseId, onClose }) {
           >
             {pane === "list" ? "Invite a professional" : `Invite ${picked?.name}`}
           </h3>
-          <p className="text-[13px] text-[#4B4567] mt-1 leading-relaxed">
+          <p className="text-[0.8125rem] text-[#4B4567] mt-1 leading-relaxed">
             {pane === "list"
               ? "Pick a co-parenting professional from the sacoparentsalign.com directory and we'll email them an invitation to co-manage the case."
               : "We'll email them at sacoparentsalign.com. They'll accept from there — no new login needed."}
           </p>
           {caseId && (
             <div
-              className="mt-2 inline-flex items-center gap-1.5 rounded-full bg-[#F5F1FB] text-[#3D1A78] px-2.5 py-0.5 text-[11px] font-semibold"
+              className="mt-2 inline-flex items-center gap-1.5 rounded-full bg-[#F5F1FB] text-[#3D1A78] px-2.5 py-0.5 text-[0.6875rem] font-semibold"
               data-testid="pdir-case-pill"
             >
               Case <span className="font-mono">{caseId}</span>
@@ -296,13 +296,13 @@ export default function ProfessionalDirectoryModal({ open, caseId, onClose }) {
                 <div className="text-sm font-semibold text-[#1A1330]">
                   {picked?.name}
                 </div>
-                <div className="text-[12px] text-[#4B4567] mt-0.5">
+                <div className="text-[0.75rem] text-[#4B4567] mt-0.5">
                   {picked?.title}
                   {picked?.city && (
                     <span className="text-[#6E6787]"> · {picked.city}</span>
                   )}
                 </div>
-                <div className="text-[11px] text-[#6E6787] mt-1">
+                <div className="text-[0.6875rem] text-[#6E6787] mt-1">
                   Invitation will be emailed to{" "}
                   <span className="font-mono text-[#3D1A78]">{picked?.contact_email}</span>.
                 </div>
@@ -310,7 +310,7 @@ export default function ProfessionalDirectoryModal({ open, caseId, onClose }) {
 
               <label
                 htmlFor="pdir-note"
-                className="mt-4 block text-[11px] uppercase tracking-[0.15em] font-bold text-[#3D1A78]"
+                className="mt-4 block text-[0.6875rem] uppercase tracking-[0.15em] font-bold text-[#3D1A78]"
               >
                 A note to include (optional)
               </label>
@@ -324,11 +324,11 @@ export default function ProfessionalDirectoryModal({ open, caseId, onClose }) {
                 className="mt-1 block w-full rounded-2xl border border-[#E5E0EE] bg-white text-[#1A1330] text-sm px-3 py-2 focus:outline-none focus:border-[#3D1A78] resize-none"
                 data-testid="pdir-note-input"
               />
-              <div className="text-[10px] text-[#6E6787] mt-1 text-right">
+              <div className="text-[0.625rem] text-[#6E6787] mt-1 text-right">
                 {note.length} / 500
               </div>
 
-              <div className="mt-3 text-[11px] text-[#6E6787] inline-flex items-start gap-1.5">
+              <div className="mt-3 text-[0.6875rem] text-[#6E6787] inline-flex items-start gap-1.5">
                 <CheckCircle2 size={11} className="mt-0.5 text-[#1F5C3B]" />
                 <span>
                   They'll accept from{" "}

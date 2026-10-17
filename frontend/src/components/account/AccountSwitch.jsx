@@ -42,7 +42,7 @@ export default function AccountSwitch({ url, Icon, title, body, onMsg, offMsg, t
           <div className="min-w-0 flex-1">
             <div className="text-sm font-semibold text-[#1A1330] leading-tight">{title}</div>
             <p className="text-xs text-[#4B4567] mt-1 leading-relaxed">{body}</p>
-            <div className="text-[11px] font-semibold mt-1.5 text-[#6E6787]" data-testid={`${testid}-state`}>
+            <div className="text-[0.6875rem] font-semibold mt-1.5 text-[#6E6787]" data-testid={`${testid}-state`}>
               {on === null ? "Checking…" : on ? "On" : "Off"}
             </div>
           </div>

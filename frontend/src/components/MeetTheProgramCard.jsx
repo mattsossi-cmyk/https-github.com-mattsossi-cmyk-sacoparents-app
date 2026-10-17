@@ -182,7 +182,7 @@ export default function MeetTheProgramCard({ trailerId = "meet-the-program" }) {
             </span>
           </button>
           <div className="flex-1 min-w-[220px]">
-            <div className="inline-flex items-center gap-2 text-[10px] uppercase tracking-[0.22em] font-bold text-[#FFD766] mb-1">
+            <div className="inline-flex items-center gap-2 text-[0.625rem] uppercase tracking-[0.22em] font-bold text-[#FFD766] mb-1">
               <Film size={12} /> {trailer.eyebrow}
             </div>
             <h3 className="font-serif text-xl sm:text-2xl leading-tight">
@@ -306,7 +306,7 @@ export default function MeetTheProgramCard({ trailerId = "meet-the-program" }) {
                     );
                   })}
                 </div>
-                <div className="mt-2 flex items-center justify-between text-[10px] uppercase tracking-[0.18em] font-bold text-white/70">
+                <div className="mt-2 flex items-center justify-between text-[0.625rem] uppercase tracking-[0.18em] font-bold text-white/70">
                   <span data-testid={`trailer-chapter-current-${trailer.id}`}>
                     {trailer.chapters[currentChapterIndex]?.label || trailer.chapters[0].label}
                   </span>

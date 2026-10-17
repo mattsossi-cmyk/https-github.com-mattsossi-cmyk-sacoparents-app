@@ -404,7 +404,7 @@ export default function FourCircleFrontDoor({ userName, situationChoice = null }
       className="mt-4 rounded-3xl border border-[#E5E0EE] bg-white p-5 sm:p-8 shadow-sm"
       data-testid="four-circle-front-door"
     >
-      <div className="text-[11px] uppercase tracking-[0.18em] font-bold text-[#3D1A78] mb-2">
+      <div className="text-[0.6875rem] uppercase tracking-[0.18em] font-bold text-[#3D1A78] mb-2">
         Start here
       </div>
       <h1
@@ -504,7 +504,7 @@ export default function FourCircleFrontDoor({ userName, situationChoice = null }
         >
           <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
             <div>
-              <div className="text-[11px] uppercase tracking-[0.16em] font-bold text-[#1E7A55]">
+              <div className="text-[0.6875rem] uppercase tracking-[0.16em] font-bold text-[#1E7A55]">
                 Child needs
               </div>
               <h2 className="font-serif text-xl sm:text-2xl text-[#1A1330] leading-tight mt-1">
@@ -551,13 +551,13 @@ export default function FourCircleFrontDoor({ userName, situationChoice = null }
         >
           <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
             <div>
-              <div className="text-[11px] uppercase tracking-[0.16em] font-bold text-[#3D1A78]">
+              <div className="text-[0.6875rem] uppercase tracking-[0.16em] font-bold text-[#3D1A78]">
                 Co-Parenting pathway
               </div>
               <h2 className="font-serif text-xl sm:text-2xl text-[#1A1330] leading-tight mt-1">
                 Walk through the four steps in order — or jump to one.
               </h2>
-              <p className="text-[13px] text-[#4B4567] mt-1 leading-relaxed !mb-0">
+              <p className="text-[0.8125rem] text-[#4B4567] mt-1 leading-relaxed !mb-0">
                 Every step feeds the co-parenting agreement on
                 <strong className="text-[#1A1330]"> sacoparentsalign.com</strong>{" "}
                 once your professional opens the case.
@@ -589,7 +589,7 @@ export default function FourCircleFrontDoor({ userName, situationChoice = null }
 
       {/* Safety-first crisis reminder — always visible below the circles */}
       <div
-        className="mt-6 flex items-start gap-3 rounded-2xl bg-[#FFF6EA] border border-[#F1D9B7] px-4 py-3 text-[13px] text-[#5A3C10]"
+        className="mt-6 flex items-start gap-3 rounded-2xl bg-[#FFF6EA] border border-[#F1D9B7] px-4 py-3 text-[0.8125rem] text-[#5A3C10]"
         data-testid="front-door-crisis-strip"
       >
         <Phone size={16} className="text-[#904B0E] flex-shrink-0 mt-0.5" />
@@ -622,7 +622,7 @@ function FrontDoorTile({ circle, expanded, onClick, index = 0, recommended = fal
     >
       {recommended && (
         <span
-          className={`absolute -top-2 left-4 inline-flex items-center gap-1 rounded-full bg-[#3D1A78] text-white px-2.5 py-0.5 text-[10px] uppercase tracking-[0.15em] font-bold shadow-md ${pulsing ? "recommended-pulse" : ""}`}
+          className={`absolute -top-2 left-4 inline-flex items-center gap-1 rounded-full bg-[#3D1A78] text-white px-2.5 py-0.5 text-[0.625rem] uppercase tracking-[0.15em] font-bold shadow-md ${pulsing ? "recommended-pulse" : ""}`}
           data-testid={`${circle.testid}-recommended`}
           data-pulsing={pulsing ? "true" : undefined}
         >
@@ -638,15 +638,15 @@ function FrontDoorTile({ circle, expanded, onClick, index = 0, recommended = fal
         {circle.label}
       </h3>
       <p
-        className={`text-[13px] italic mt-1 leading-snug ${circle.tone.accent}`}
+        className={`text-[0.8125rem] italic mt-1 leading-snug ${circle.tone.accent}`}
       >
         {circle.prompt}
       </p>
-      <p className="text-[13px] text-[#4B4567] mt-3 leading-relaxed flex-1">
+      <p className="text-[0.8125rem] text-[#4B4567] mt-3 leading-relaxed flex-1">
         {circle.detail}
       </p>
       <span
-        className={`inline-flex items-center gap-1.5 mt-4 text-[13px] font-semibold ${circle.tone.accent} group-hover:gap-2.5 transition-all duration-200`}
+        className={`inline-flex items-center gap-1.5 mt-4 text-[0.8125rem] font-semibold ${circle.tone.accent} group-hover:gap-2.5 transition-all duration-200`}
       >
         {circle.expandable
           ? expanded
@@ -675,13 +675,13 @@ function HelpMeChoosePanel({ answers, setAnswers, recommendedKey, onDismiss, onR
             <HelpCircle size={18} strokeWidth={2.2} />
           </div>
           <div>
-            <div className="text-[11px] uppercase tracking-[0.16em] font-bold text-[#3D1A78]">
+            <div className="text-[0.6875rem] uppercase tracking-[0.16em] font-bold text-[#3D1A78]">
               Step {step} of 2
             </div>
             <h3 className="font-serif text-xl text-[#1A1330] leading-tight mt-1">
               Let&rsquo;s find the right pathway together
             </h3>
-            <p className="text-[13px] text-[#4B4567] mt-1 leading-relaxed max-w-xl">
+            <p className="text-[0.8125rem] text-[#4B4567] mt-1 leading-relaxed max-w-xl">
               Two quick questions. There are no wrong answers — SA CoParents
               simply highlights the pathway that best fits what you told us.
             </p>
@@ -750,7 +750,7 @@ function HelpMeChoosePanel({ answers, setAnswers, recommendedKey, onDismiss, onR
               <Sparkles size={18} strokeWidth={2.2} />
             </div>
             <div className="flex-1">
-              <div className="text-[11px] uppercase tracking-[0.16em] font-bold text-[#3D1A78]">
+              <div className="text-[0.6875rem] uppercase tracking-[0.16em] font-bold text-[#3D1A78]">
                 Recommended for you
               </div>
               <div
@@ -759,7 +759,7 @@ function HelpMeChoosePanel({ answers, setAnswers, recommendedKey, onDismiss, onR
               >
                 {CIRCLE_LABELS[recommendedKey]}
               </div>
-              <p className="text-[13px] text-[#4B4567] mt-2 leading-relaxed">
+              <p className="text-[0.8125rem] text-[#4B4567] mt-2 leading-relaxed">
                 Look above — this pathway is now highlighted for you. Tap it
                 when you&rsquo;re ready to start. You can always change your
                 answer later.
@@ -796,7 +796,7 @@ function ChildNeedsTile({ tile, onClick }) {
         <div className="font-serif text-lg text-[#1A1330] leading-tight">
           {tile.label}
         </div>
-        <p className="text-[12px] text-[#4B4567] mt-1 leading-snug">
+        <p className="text-[0.75rem] text-[#4B4567] mt-1 leading-snug">
           {tile.detail}
         </p>
       </div>
@@ -823,7 +823,7 @@ function PathwayStepTile({ tile, onClick }) {
           <div className="w-10 h-10 rounded-full bg-[#3D1A78] text-white grid place-items-center">
             <Icon size={18} strokeWidth={2.2} />
           </div>
-          <div className="text-[10px] uppercase tracking-[0.14em] font-bold text-[#3D1A78] mt-1">
+          <div className="text-[0.625rem] uppercase tracking-[0.14em] font-bold text-[#3D1A78] mt-1">
             Step {tile.step}
           </div>
         </div>
@@ -831,7 +831,7 @@ function PathwayStepTile({ tile, onClick }) {
           <div className="font-serif text-lg text-[#1A1330] leading-tight">
             {tile.label}
           </div>
-          <p className="text-[12px] text-[#4B4567] mt-1 leading-snug">
+          <p className="text-[0.75rem] text-[#4B4567] mt-1 leading-snug">
             {tile.detail}
           </p>
         </div>
@@ -862,13 +862,13 @@ function ClinicalDetailChip({ text, tone = "purple", testId }) {
   };
   return (
     <div
-      className={`inline-flex items-start gap-2 rounded-full border ${palette[tone] || palette.purple} px-3 py-1.5 text-[11px] leading-snug`}
+      className={`inline-flex items-start gap-2 rounded-full border ${palette[tone] || palette.purple} px-3 py-1.5 text-[0.6875rem] leading-snug`}
       data-testid={testId}
     >
-      <span className="text-[10px] uppercase tracking-[0.16em] font-bold shrink-0 pt-[1px]">
+      <span className="text-[0.625rem] uppercase tracking-[0.16em] font-bold shrink-0 pt-[1px]">
         Under the hood
       </span>
-      <span className="text-[11px] leading-snug">{text}</span>
+      <span className="text-[0.6875rem] leading-snug">{text}</span>
     </div>
   );
 }

@@ -78,7 +78,7 @@ export default function PathwayReviewerCommentsCard() {
             <MessageSquare size={16} />
           </span>
           <div className="min-w-0">
-            <div className="text-[10px] uppercase tracking-[0.22em] font-bold text-[#3D1A78]">
+            <div className="text-[0.625rem] uppercase tracking-[0.22em] font-bold text-[#3D1A78]">
               Reviewer Comments · Pathway Report
             </div>
             <div className="font-serif text-lg text-[#1A1330] leading-snug">
@@ -87,7 +87,7 @@ export default function PathwayReviewerCommentsCard() {
           </div>
         </div>
         <span
-          className="inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] uppercase tracking-[0.16em] font-bold bg-[#F0EEF8] text-[#3D1A78] shrink-0"
+          className="inline-flex items-center px-2.5 py-0.5 rounded-full text-[0.625rem] uppercase tracking-[0.16em] font-bold bg-[#F0EEF8] text-[#3D1A78] shrink-0"
           data-testid="pathway-reviewer-comments-count"
         >
           {state.comments.length} new
@@ -106,13 +106,13 @@ export default function PathwayReviewerCommentsCard() {
               <span className="text-sm font-semibold text-[#1A1330]">
                 {c.reviewer_name}
               </span>
-              <span className="text-[10px] uppercase tracking-[0.16em] font-bold text-[#3D1A78] bg-[#F5F1FB] rounded-full px-2 py-0.5">
+              <span className="text-[0.625rem] uppercase tracking-[0.16em] font-bold text-[#3D1A78] bg-[#F5F1FB] rounded-full px-2 py-0.5">
                 {ROLE_LABEL[c.reviewer_role] || c.reviewer_role}
               </span>
               {c.reviewer_org && (
-                <span className="text-[11px] text-[#4B4567]">· {c.reviewer_org}</span>
+                <span className="text-[0.6875rem] text-[#4B4567]">· {c.reviewer_org}</span>
               )}
-              <span className="text-[11px] text-[#6E6787] ml-auto">
+              <span className="text-[0.6875rem] text-[#6E6787] ml-auto">
                 {formatWhen(c.created_at)}
               </span>
             </div>
@@ -124,7 +124,7 @@ export default function PathwayReviewerCommentsCard() {
       </ul>
 
       {overflowCount > 0 && (
-        <p className="text-[11px] text-[#4B4567] italic mt-2"
+        <p className="text-[0.6875rem] text-[#4B4567] italic mt-2"
           data-testid="pathway-reviewer-comments-overflow">
           {overflowCount} older comment{overflowCount === 1 ? "" : "s"} not shown here.
         </p>
@@ -133,7 +133,7 @@ export default function PathwayReviewerCommentsCard() {
       <div className="mt-4 flex items-center justify-end">
         <Link
           to="/pathway-report"
-          className="inline-flex items-center gap-1 text-[11px] font-bold text-[#3D1A78]"
+          className="inline-flex items-center gap-1 text-[0.6875rem] font-bold text-[#3D1A78]"
           data-testid="pathway-reviewer-comments-cta"
         >
           Open pathway report <ArrowRight size={12} />

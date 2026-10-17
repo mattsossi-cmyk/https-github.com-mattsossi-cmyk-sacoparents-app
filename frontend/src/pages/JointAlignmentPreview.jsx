@@ -47,7 +47,7 @@ function CountPill({ count, label, tone }) {
       data-testid={`preview-count-${label.toLowerCase()}`}
     >
       <div className="text-2xl font-serif leading-none">{count}</div>
-      <div className="text-[11px] uppercase tracking-[0.14em] font-semibold mt-1">
+      <div className="text-[0.6875rem] uppercase tracking-[0.14em] font-semibold mt-1">
         {label}
       </div>
     </div>
@@ -196,7 +196,7 @@ export default function JointAlignmentPreview() {
         >
           <ArrowLeft size={14} /> Back to dashboard
         </Link>
-        <div className="text-[10px] uppercase tracking-[0.22em] font-bold text-[#3D1A78] flex items-center gap-1.5">
+        <div className="text-[0.625rem] uppercase tracking-[0.22em] font-bold text-[#3D1A78] flex items-center gap-1.5">
           <ShieldCheck size={12} /> Private review
         </div>
         <h1
@@ -214,7 +214,7 @@ export default function JointAlignmentPreview() {
         </p>
 
         <div
-          className="mt-6 rounded-2xl border border-[#D6CFE8] bg-[#F5F1FB] p-4 text-[13px] text-[#3D1A78]"
+          className="mt-6 rounded-2xl border border-[#D6CFE8] bg-[#F5F1FB] p-4 text-[0.8125rem] text-[#3D1A78]"
           data-testid="preview-not-shared-banner"
         >
           <div className="font-semibold flex items-center gap-1.5 mb-1">
@@ -244,7 +244,7 @@ export default function JointAlignmentPreview() {
               <div className="min-w-0 flex-1">
                 <div className="font-semibold text-sm">{error}</div>
                 {errorDetail && (
-                  <div className="text-[12px] mt-1 leading-relaxed">
+                  <div className="text-[0.75rem] mt-1 leading-relaxed">
                     {errorDetail}
                   </div>
                 )}
@@ -272,12 +272,12 @@ export default function JointAlignmentPreview() {
 
             <div className="mt-6 rounded-2xl border border-[#E5E0EE] bg-white overflow-hidden">
               <div className="px-5 py-3 border-b border-[#EEE8F7] bg-[#FAF8FD]">
-                <div className="text-[11px] uppercase tracking-[0.18em] font-bold text-[#3D1A78]">
+                <div className="text-[0.6875rem] uppercase tracking-[0.18em] font-bold text-[#3D1A78]">
                   Topic-by-topic
                 </div>
               </div>
               {topics.length === 0 ? (
-                <div className="p-6 text-center text-[13px] text-[#6E6787]" data-testid="preview-empty">
+                <div className="p-6 text-center text-[0.8125rem] text-[#6E6787]" data-testid="preview-empty">
                   Neither of you produced content for this case yet.
                 </div>
               ) : (
@@ -296,7 +296,7 @@ export default function JointAlignmentPreview() {
                             {t.topic_label}
                           </div>
                           {t.alignment === "incomplete" && (
-                            <div className="text-[11px] text-[#6E6787] mt-0.5">
+                            <div className="text-[0.6875rem] text-[#6E6787] mt-0.5">
                               {t.parent_a_completed ? "Parent A ✓" : "Parent A —"}
                               {" · "}
                               {t.parent_b_completed ? "Parent B ✓" : "Parent B —"}
@@ -304,7 +304,7 @@ export default function JointAlignmentPreview() {
                           )}
                         </div>
                         <span
-                          className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-[11px] font-semibold ${meta.cls}`}
+                          className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-[0.6875rem] font-semibold ${meta.cls}`}
                           data-testid={`preview-topic-${t.topic_key}-flag`}
                         >
                           <Icon size={11} />
@@ -340,7 +340,7 @@ export default function JointAlignmentPreview() {
 
             {releaseState === "awaiting_coparent" && (
               <div
-                className="mt-6 rounded-2xl border border-[#D6CFE8] bg-[#F5F1FB] p-4 text-[13px] text-[#3D1A78]"
+                className="mt-6 rounded-2xl border border-[#D6CFE8] bg-[#F5F1FB] p-4 text-[0.8125rem] text-[#3D1A78]"
                 data-testid="preview-awaiting-coparent"
               >
                 <div className="font-semibold flex items-center gap-1.5 mb-1">
@@ -353,7 +353,7 @@ export default function JointAlignmentPreview() {
             )}
             {(releaseState === "released" || releaseState === "released_pending") && (
               <div
-                className="mt-6 rounded-2xl border border-[#B7DEC6] bg-[#E1F3E8] p-4 text-[13px] text-[#186142]"
+                className="mt-6 rounded-2xl border border-[#B7DEC6] bg-[#E1F3E8] p-4 text-[0.8125rem] text-[#186142]"
                 data-testid="preview-released-banner"
               >
                 <div className="font-semibold flex items-center gap-1.5 mb-1">
@@ -366,7 +366,7 @@ export default function JointAlignmentPreview() {
             )}
 
             <div
-              className="mt-8 rounded-2xl bg-[#F5F1FB] border border-[#D6CFE8] p-4 text-[12px] text-[#3D1A78] leading-relaxed"
+              className="mt-8 rounded-2xl bg-[#F5F1FB] border border-[#D6CFE8] p-4 text-[0.75rem] text-[#3D1A78] leading-relaxed"
               data-testid="preview-legal-note"
             >
               <div className="font-semibold flex items-center gap-1.5 mb-1">
@@ -418,7 +418,7 @@ function ReleaseConsentModal({
       <div className="bg-white rounded-3xl max-w-xl w-full max-h-[92vh] overflow-y-auto shadow-2xl">
         <div className="flex items-start justify-between gap-3 px-6 pt-6">
           <div className="min-w-0">
-            <div className="text-[10px] uppercase tracking-[0.22em] font-bold text-[#3D1A78]">
+            <div className="text-[0.625rem] uppercase tracking-[0.22em] font-bold text-[#3D1A78]">
               Release consent
             </div>
             <h2
@@ -443,7 +443,7 @@ function ReleaseConsentModal({
 
         <div className="px-6 py-4">
           <label
-            className="text-[11px] uppercase tracking-[0.16em] font-bold text-[#3D1A78] block"
+            className="text-[0.6875rem] uppercase tracking-[0.16em] font-bold text-[#3D1A78] block"
             htmlFor="release-professional-name"
           >
             Professional&rsquo;s name
@@ -459,7 +459,7 @@ function ReleaseConsentModal({
             data-testid="release-modal-professional-name"
           />
           {profNameLocked && (
-            <p className="text-[11px] text-[#6E6787] mt-1">
+            <p className="text-[0.6875rem] text-[#6E6787] mt-1">
               Your co-parent already named this professional. Both consents
               must target the same person before release fires.
             </p>
@@ -472,7 +472,7 @@ function ReleaseConsentModal({
           </div>
 
           <label
-            className="mt-4 flex items-start gap-2 text-[13px] text-[#1A1330]"
+            className="mt-4 flex items-start gap-2 text-[0.8125rem] text-[#1A1330]"
             data-testid="release-modal-consent-label"
           >
             <input

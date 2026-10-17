@@ -89,7 +89,7 @@ export function JourneyStepperCompact({
       className="rounded-3xl border border-[#E5E0EE] bg-white p-4 sm:p-5"
       data-testid={testId}
     >
-      <div className="text-[10px] uppercase tracking-[0.22em] font-bold text-[#3D1A78] mb-3">
+      <div className="text-[0.625rem] uppercase tracking-[0.22em] font-bold text-[#3D1A78] mb-3">
         The six-step journey
       </div>
       <ol className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
@@ -123,7 +123,7 @@ export function JourneyStepperCompact({
                 {done ? <Check size={14} strokeWidth={2.6} /> : step.number}
               </div>
               <div className="flex-1 min-w-0">
-                <div className="text-[10px] uppercase tracking-[0.14em] font-bold text-[#4B4567] flex items-center gap-1 mb-0.5">
+                <div className="text-[0.625rem] uppercase tracking-[0.14em] font-bold text-[#4B4567] flex items-center gap-1 mb-0.5">
                   <Icon size={11} strokeWidth={2.4} /> Step {step.number}
                 </div>
                 <div className="text-sm font-semibold text-[#1A1330] leading-tight">
@@ -161,7 +161,7 @@ export function JourneyStepperVerbose({ testId = "journey-stepper-verbose" }) {
                 <Icon size={18} strokeWidth={2.2} />
               </div>
               <div>
-                <div className="text-[10px] uppercase tracking-[0.16em] font-bold text-[#3D1A78]">
+                <div className="text-[0.625rem] uppercase tracking-[0.16em] font-bold text-[#3D1A78]">
                   Step {step.number}
                 </div>
                 <div className="font-serif text-lg text-[#1A1330] leading-tight">

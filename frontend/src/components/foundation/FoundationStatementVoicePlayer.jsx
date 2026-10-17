@@ -274,14 +274,14 @@ export default function FoundationStatementVoicePlayer({
         <label className={
           variant === "floating"
             ? "hidden"
-            : "inline-flex items-center gap-1 text-[11px] text-[#4B4567]"
+            : "inline-flex items-center gap-1 text-[0.6875rem] text-[#4B4567]"
         }>
           <Volume2 size={11} className="text-[#6E6787]" aria-hidden />
           <select
             value={voice}
             onChange={(e) => setVoice(e.target.value)}
             disabled={isBusy}
-            className="bg-transparent border-none text-[11px] text-[#3D1A78] font-semibold focus:outline-none cursor-pointer"
+            className="bg-transparent border-none text-[0.6875rem] text-[#3D1A78] font-semibold focus:outline-none cursor-pointer"
             aria-label="Voice"
             data-testid={`${testidPrefix}-voice`}
           >
@@ -297,7 +297,7 @@ export default function FoundationStatementVoicePlayer({
       {status === "error" && errorMsg && variant !== "floating" && (
         <span
           role="alert"
-          className="text-[11px] text-[#C05621]"
+          className="text-[0.6875rem] text-[#C05621]"
           data-testid={`${testidPrefix}-error`}
         >
           {errorMsg}

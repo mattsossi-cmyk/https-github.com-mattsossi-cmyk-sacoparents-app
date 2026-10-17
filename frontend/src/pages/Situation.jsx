@@ -117,7 +117,7 @@ export default function Situation() {
         </Link>
 
         <div className="text-center max-w-2xl mx-auto">
-          <div className="text-[11px] uppercase tracking-[0.28em] font-bold text-[#3D1A78]">
+          <div className="text-[0.6875rem] uppercase tracking-[0.28em] font-bold text-[#3D1A78]">
             Starting on My Own · Step 2 of 2
           </div>
           <h1
@@ -142,7 +142,7 @@ export default function Situation() {
         </div>
 
         <div
-          className="mt-10 mx-auto max-w-3xl rounded-2xl border border-[#F1D9B7] bg-[#FFF6EA] px-5 py-4 flex items-start gap-3 text-[13px] leading-relaxed"
+          className="mt-10 mx-auto max-w-3xl rounded-2xl border border-[#F1D9B7] bg-[#FFF6EA] px-5 py-4 flex items-start gap-3 text-[0.8125rem] leading-relaxed"
           data-testid="situation-crisis-strip"
         >
           <Phone size={16} className="text-[#904B0E] flex-shrink-0 mt-0.5" />

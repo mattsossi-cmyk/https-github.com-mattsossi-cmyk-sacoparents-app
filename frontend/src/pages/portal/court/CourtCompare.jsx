@@ -36,8 +36,8 @@ function ShareSwitch({ compare }) {
 
 function Pair({ label, value, tone }) {
   return (
-    <span className={`rounded-lg px-2.5 py-1.5 text-[11px] ${tone}`}>
-      <span className="block font-bold uppercase tracking-wider text-[9px] opacity-70">{label}</span>
+    <span className={`rounded-lg px-2.5 py-1.5 text-[0.6875rem] ${tone}`}>
+      <span className="block font-bold uppercase tracking-wider text-[0.5625rem] opacity-70">{label}</span>
       <span className="block font-semibold whitespace-pre-wrap break-words">{value || "Not filled in"}</span>
     </span>
   );
@@ -49,7 +49,7 @@ function ScoreRows({ rows, aligned, points = {}, extra }) {
       {rows.map((r, i) => (
         <li key={`${r.source}-${r.area}`} data-testid={`court-compare-row-${i}`} className={`border rounded-xl p-3 ${r.agreed ? "border-emerald-200" : "border-[#e7dbf8]"}`}>
           <p className="text-sm font-semibold text-[#202124]">{r.area}</p>
-          <p className="text-[10px] text-[#5f6368] mb-2">{r.source}</p>
+          <p className="text-[0.625rem] text-[#5f6368] mb-2">{r.source}</p>
           <div className="grid grid-cols-2 gap-2">
             <Pair label="You" value={r.mine} tone="bg-[#f2ebfc] text-[#3b1566]" />
             <Pair label="Co-parent" value={r.theirs} tone={aligned ? "bg-emerald-50 text-emerald-800" : "bg-amber-50 text-amber-900"} />
@@ -72,7 +72,7 @@ function ChildRows({ cats }) {
     <div data-testid="court-compare-child" className="space-y-3">
       {cats.map((c) => (
         <div key={c.category}>
-          <p className="text-[11px] font-extrabold uppercase tracking-wider text-[#5c2c8e] mb-1.5">{c.category}</p>
+          <p className="text-[0.6875rem] font-extrabold uppercase tracking-wider text-[#5c2c8e] mb-1.5">{c.category}</p>
           {c.rows.length ? (
             c.rows.map((r) => (
               <div key={r.label} className="border border-[#e7dbf8] rounded-xl p-3 mb-2">
@@ -106,7 +106,7 @@ function TalkingPoints({ compare }) {
         <i className={`fa-solid ${compare.pointsBusy ? "fa-spinner fa-spin" : tp ? "fa-rotate" : "fa-wand-magic-sparkles"} mr-1.5`}></i>
         {tp ? "Refresh talking points" : "Suggest talking points"}
       </button>
-      <span className="text-[11px] text-[#5f6368]">
+      <span className="text-[0.6875rem] text-[#5f6368]">
         {tp?.stale ? "Your answers changed since these were made. Refresh for updated ones." : tp ? "Shared with your co-parent. One calm opener per area." : "One calm opener per differing area, shared with your co-parent."}
       </span>
     </div>

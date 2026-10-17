@@ -16,7 +16,7 @@ export function DoorsGateway({
   return (
     <div className="space-y-4" data-testid="screen-gateway">
       <div className="text-center py-2">
-        <span className="bg-purple-100 text-purple-900 text-[10px] font-bold px-2.5 py-1 rounded-full uppercase tracking-wider border border-purple-200">
+        <span className="bg-purple-100 text-purple-900 text-[0.625rem] font-bold px-2.5 py-1 rounded-full uppercase tracking-wider border border-purple-200">
           San Antonio, TX Methodology
         </span>
         <h2 className="text-xl font-bold text-slate-800 mt-2">
@@ -42,7 +42,7 @@ export function DoorsGateway({
             >
               {kudosStreak}-day tone-safe streak
             </div>
-            <div className="text-[10px] text-amber-800">
+            <div className="text-[0.625rem] text-amber-800">
               Consecutive days you kept a hot message BIFF-safe. Keep it going.
             </div>
           </div>
@@ -60,7 +60,7 @@ export function DoorsGateway({
             <div className="p-3 bg-purple-50 text-purple-700 rounded-xl group-hover:bg-purple-800 group-hover:text-white transition">
               <i className="fa-solid fa-heart-pulse text-2xl"></i>
             </div>
-            <span className="bg-emerald-100 text-emerald-800 text-[10px] font-bold px-2.5 py-0.5 rounded-full">
+            <span className="bg-emerald-100 text-emerald-800 text-[0.625rem] font-bold px-2.5 py-0.5 rounded-full">
               Door 1 · Self-Guided
             </span>
           </div>
@@ -87,7 +87,7 @@ export function DoorsGateway({
             <div className="p-3 bg-slate-100 text-slate-700 rounded-xl group-hover:bg-purple-950 group-hover:text-white transition">
               <i className="fa-solid fa-gavel text-2xl"></i>
             </div>
-            <span className="bg-purple-100 text-purple-900 text-[10px] font-bold px-2.5 py-0.5 rounded-full">
+            <span className="bg-purple-100 text-purple-900 text-[0.625rem] font-bold px-2.5 py-0.5 rounded-full">
               Door 2 · Professional Key
             </span>
           </div>
@@ -109,7 +109,7 @@ export function DoorsGateway({
       {/* Sync / Sign-in chip */}
       <div className="text-center pt-2" data-testid="sync-chip">
         {user ? (
-          <div className="inline-flex items-center gap-2 bg-emerald-50 border border-emerald-200 text-emerald-800 px-3 py-1.5 rounded-full text-[11px] font-semibold">
+          <div className="inline-flex items-center gap-2 bg-emerald-50 border border-emerald-200 text-emerald-800 px-3 py-1.5 rounded-full text-[0.6875rem] font-semibold">
             <i className="fa-solid fa-cloud-arrow-up"></i>
             <span data-testid="sync-status">
               {syncStatus === "syncing"
@@ -125,7 +125,7 @@ export function DoorsGateway({
           <Link
             to="/login"
             data-testid="sync-signin-link"
-            className="inline-flex items-center gap-2 bg-white border border-purple-200 text-purple-800 px-3 py-1.5 rounded-full text-[11px] font-semibold hover:bg-purple-50 transition"
+            className="inline-flex items-center gap-2 bg-white border border-purple-200 text-purple-800 px-3 py-1.5 rounded-full text-[0.6875rem] font-semibold hover:bg-purple-50 transition"
           >
             <i className="fa-solid fa-cloud"></i>
             Sign in to sync across devices

@@ -130,7 +130,7 @@ export default function PersonalHomeStrip() {
       className="mt-4 rounded-3xl border border-[#E5E0EE] bg-white p-4 sm:p-6 shadow-sm"
       data-testid="personal-home-strip"
     >
-      <div className="text-[11px] uppercase tracking-[0.18em] font-bold text-[#3D1A78] mb-3">
+      <div className="text-[0.6875rem] uppercase tracking-[0.18em] font-bold text-[#3D1A78] mb-3">
         Just for you
       </div>
       <div className="grid gap-3 sm:grid-cols-3">
@@ -176,13 +176,13 @@ function ResumeTile({ resume }) {
         <Icon size={16} strokeWidth={2.2} />
       </div>
       <div className="flex-1 min-w-0">
-        <div className="text-[10px] uppercase tracking-[0.16em] font-bold text-[#3D1A78]">
+        <div className="text-[0.625rem] uppercase tracking-[0.16em] font-bold text-[#3D1A78]">
           Continue where you left off
         </div>
         <div className="font-serif text-base text-[#1A1330] leading-tight mt-0.5">
           {meta.label}
         </div>
-        <div className="text-[11px] text-[#4B4567] mt-1 inline-flex items-center gap-1">
+        <div className="text-[0.6875rem] text-[#4B4567] mt-1 inline-flex items-center gap-1">
           Pick up from your last answer <ArrowRight size={11} className="group-hover:translate-x-0.5 transition" />
         </div>
       </div>
@@ -205,14 +205,14 @@ function QuickTile({ testid, to, icon: Icon, label, hint, tone }) {
         <Icon size={16} strokeWidth={2.2} />
       </div>
       <div className="flex-1 min-w-0">
-        <div className="text-[10px] uppercase tracking-[0.16em] font-bold text-current">
+        <div className="text-[0.625rem] uppercase tracking-[0.16em] font-bold text-current">
           <Sparkles size={9} className="inline mr-1" />
           For you
         </div>
         <div className="font-serif text-base text-[#1A1330] leading-tight mt-0.5">
           {label}
         </div>
-        <div className="text-[11px] text-[#4B4567] mt-1 inline-flex items-center gap-1">
+        <div className="text-[0.6875rem] text-[#4B4567] mt-1 inline-flex items-center gap-1">
           {hint} <ArrowRight size={11} className="group-hover:translate-x-0.5 transition" />
         </div>
       </div>

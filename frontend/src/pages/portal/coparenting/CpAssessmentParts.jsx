@@ -16,19 +16,19 @@ export function CpIntro({ schema, onStart }) {
         Rate how often each statement is true for you right now. There are no right or wrong answers. Your
         answers save as you go, so you can stop and come back anytime.
       </p>
-      <div className="rounded-xl bg-rose-50 border border-rose-200 px-3 py-2 text-[12px] text-rose-900">
+      <div className="rounded-xl bg-rose-50 border border-rose-200 px-3 py-2 text-[0.75rem] text-rose-900">
         <i className="fa-solid fa-shield-heart mr-1.5"></i>
         If anything here doesn't feel safe to answer, step away at any time. Your safety and your child's safety
         come first.
       </div>
       <ol className="space-y-1.5">
         {schema.sections.map((s) => (
-          <li key={s.id} className="flex items-center gap-2 text-[13px] text-slate-700">
-            <span className="w-6 h-6 rounded-full bg-purple-100 text-purple-800 text-[11px] font-bold flex items-center justify-center shrink-0">
+          <li key={s.id} className="flex items-center gap-2 text-[0.8125rem] text-slate-700">
+            <span className="w-6 h-6 rounded-full bg-purple-100 text-purple-800 text-[0.6875rem] font-bold flex items-center justify-center shrink-0">
               {s.number}
             </span>
             {s.name}
-            <span className="ml-auto text-[11px] text-slate-400">{s.questions.length} Qs</span>
+            <span className="ml-auto text-[0.6875rem] text-slate-400">{s.questions.length} Qs</span>
           </li>
         ))}
       </ol>
@@ -52,14 +52,14 @@ export function CpSection({ section, scale, answers, onAnswer }) {
         <h3 className="text-base font-extrabold text-[#4c2889]">
           {section.number}. {section.name}
         </h3>
-        <p className="text-[12px] text-slate-500 mt-0.5">{section.goal}</p>
-        <p data-testid="cp-assess-section-count" className="text-[11px] font-semibold text-slate-500 mt-1">
+        <p className="text-[0.75rem] text-slate-500 mt-0.5">{section.goal}</p>
+        <p data-testid="cp-assess-section-count" className="text-[0.6875rem] font-semibold text-slate-500 mt-1">
           {answered} of {section.questions.length} answered
         </p>
       </div>
       {section.questions.map((q, i) => (
         <div key={q.id} data-testid={`cp-assess-q-${q.id}`} className="rounded-xl border border-purple-100 bg-white p-3">
-          <p className="text-[13px] text-slate-800 leading-snug">
+          <p className="text-[0.8125rem] text-slate-800 leading-snug">
             <span className="font-bold text-purple-800 mr-1">{i + 1}.</span>
             {q.prompt}
           </p>
@@ -93,15 +93,15 @@ export function CpResults({ scores, onDownload, onRetake, onClose }) {
   return (
     <div data-testid="cp-assess-results" className="space-y-4">
       <div className="rounded-2xl bg-[#4c2889] text-white p-4">
-        <div className="text-[10px] uppercase tracking-[0.16em] font-bold text-purple-200">Overall</div>
+        <div className="text-[0.625rem] uppercase tracking-[0.16em] font-bold text-purple-200">Overall</div>
         <div data-testid="cp-assess-overall" className="text-2xl font-extrabold mt-0.5">
           {scores.overall_rating}
         </div>
       </div>
       {focus.size > 0 && (
         <div data-testid="cp-assess-focus" className="rounded-xl border border-amber-200 bg-amber-50 px-3 py-2.5">
-          <div className="text-[11px] font-bold text-amber-900 uppercase tracking-wide">Priority focus</div>
-          <ul className="mt-1 text-[13px] text-amber-900 list-disc pl-4">
+          <div className="text-[0.6875rem] font-bold text-amber-900 uppercase tracking-wide">Priority focus</div>
+          <ul className="mt-1 text-[0.8125rem] text-amber-900 list-disc pl-4">
             {scores.sections.filter((s) => focus.has(s.id)).map((s) => (
               <li key={s.id}>{s.name}</li>
             ))}
@@ -110,11 +110,11 @@ export function CpResults({ scores, onDownload, onRetake, onClose }) {
       )}
       <ul className="space-y-1.5">
         {scores.sections.map((s) => (
-          <li key={s.id} data-testid={`cp-assess-rating-${s.id}`} className="flex items-center gap-2 text-[13px] text-slate-800">
+          <li key={s.id} data-testid={`cp-assess-rating-${s.id}`} className="flex items-center gap-2 text-[0.8125rem] text-slate-800">
             <span className="flex-1">
               {s.number}. {s.name}
             </span>
-            <span className={`shrink-0 px-2 py-0.5 rounded-full border text-[11px] font-bold ${RATING_CHIP[s.rating] || "bg-slate-50 text-slate-600 border-slate-200"}`}>
+            <span className={`shrink-0 px-2 py-0.5 rounded-full border text-[0.6875rem] font-bold ${RATING_CHIP[s.rating] || "bg-slate-50 text-slate-600 border-slate-200"}`}>
               {s.rating}
             </span>
           </li>
@@ -129,7 +129,7 @@ export function CpResults({ scores, onDownload, onRetake, onClose }) {
         </button>
       </div>
       <div data-testid="cp-assess-mediator">
-        <h4 className="text-[12px] font-extrabold text-slate-800 mb-1.5">
+        <h4 className="text-[0.75rem] font-extrabold text-slate-800 mb-1.5">
           <i className="fa-solid fa-chart-line mr-1.5 text-purple-700"></i>
           Progress Snapshot for your mediator
         </h4>

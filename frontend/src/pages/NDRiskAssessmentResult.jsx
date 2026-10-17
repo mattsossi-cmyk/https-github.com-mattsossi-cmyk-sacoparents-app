@@ -32,11 +32,11 @@ function Heatmap({ threat, vuln }) {
       <div className="grid grid-cols-[max-content_repeat(4,_44px)] gap-1 items-center">
         <div />
         {rows.map((c) => (
-          <div key={`col-${c}`} className="text-[10px] text-center text-[#6A5799] font-bold">V{c}</div>
+          <div key={`col-${c}`} className="text-[0.625rem] text-center text-[#6A5799] font-bold">V{c}</div>
         ))}
         {rows.map((r) => (
           <>
-            <div key={`row-${r}`} className="text-[10px] text-right text-[#6A5799] font-bold pr-1">T{r}</div>
+            <div key={`row-${r}`} className="text-[0.625rem] text-right text-[#6A5799] font-bold pr-1">T{r}</div>
             {rows.map((c) => {
               const p = r * c;
               const tier = tierForProduct(p);
@@ -61,7 +61,7 @@ function Heatmap({ threat, vuln }) {
           </>
         ))}
       </div>
-      <div className="flex flex-wrap gap-2 mt-3 text-[10px]">
+      <div className="flex flex-wrap gap-2 mt-3 text-[0.625rem]">
         <span className="px-2 py-0.5 rounded-full bg-[#E6F4EC] text-[#1F5C3B] font-semibold">1-3 Low</span>
         <span className="px-2 py-0.5 rounded-full bg-[#FFF6E5] text-[#8A5B00] font-semibold">4-8 Medium</span>
         <span className="px-2 py-0.5 rounded-full bg-[#F8D7D7] text-[#B02A2A] font-semibold">9-12 High</span>
@@ -133,7 +133,7 @@ export default function NDRiskAssessmentResult() {
 
         <header className="flex items-start justify-between gap-4 flex-wrap">
           <div>
-            <div className="text-[10px] uppercase tracking-[0.22em] font-bold text-[#3D1A78]">
+            <div className="text-[0.625rem] uppercase tracking-[0.22em] font-bold text-[#3D1A78]">
               ND Risk · Result
             </div>
             <h1 className="font-serif text-3xl sm:text-4xl text-[#1A1330] mt-1">
@@ -156,7 +156,7 @@ export default function NDRiskAssessmentResult() {
         </header>
 
         <section className={`mt-6 rounded-3xl border-2 ${tier.bg} p-6`} data-testid="nd-risk-result-tier">
-          <div className="text-[10px] uppercase tracking-[0.22em] font-bold text-[#3D1A78]">
+          <div className="text-[0.625rem] uppercase tracking-[0.22em] font-bold text-[#3D1A78]">
             Overall risk tier
           </div>
           <div className="flex items-baseline gap-4 flex-wrap mt-1">
@@ -177,7 +177,7 @@ export default function NDRiskAssessmentResult() {
 
         <section className="mt-6 grid md:grid-cols-2 gap-6">
           <div className="rounded-3xl border border-[#E5E0EE] bg-white p-6">
-            <div className="text-[10px] uppercase tracking-[0.22em] font-bold text-[#3D1A78]">
+            <div className="text-[0.625rem] uppercase tracking-[0.22em] font-bold text-[#3D1A78]">
               Risk matrix
             </div>
             <div className="font-serif text-lg text-[#1A1330] mt-1 mb-3">
@@ -187,7 +187,7 @@ export default function NDRiskAssessmentResult() {
           </div>
 
           <div className="rounded-3xl border border-[#E5E0EE] bg-white p-6" data-testid="nd-risk-interventions">
-            <div className="text-[10px] uppercase tracking-[0.22em] font-bold text-[#3D1A78]">
+            <div className="text-[0.625rem] uppercase tracking-[0.22em] font-bold text-[#3D1A78]">
               Required interventions
             </div>
             <div className="font-serif text-lg text-[#1A1330] mt-1 mb-3">
@@ -209,7 +209,7 @@ export default function NDRiskAssessmentResult() {
         </section>
 
         <section className="mt-8" data-testid="nd-risk-timeline-section" id="timeline">
-          <div className="text-[10px] uppercase tracking-[0.22em] font-bold text-[#3D1A78]">
+          <div className="text-[0.625rem] uppercase tracking-[0.22em] font-bold text-[#3D1A78]">
             Assessment timeline
           </div>
           <div className="font-serif text-2xl text-[#1A1330] mt-1 mb-4">
@@ -218,7 +218,7 @@ export default function NDRiskAssessmentResult() {
           <NDRiskTimeline highlightId={assessment.assessment_id} />
         </section>
 
-        <p className="mt-8 text-[11px] text-[#6A5799] italic">
+        <p className="mt-8 text-[0.6875rem] text-[#6A5799] italic">
           This report is informational preparation support only. It is not legal
           advice, medical diagnosis, or a substitute for a licensed professional.
           The PDF is designed to be brought to your mediator,

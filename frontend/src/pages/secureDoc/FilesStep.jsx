@@ -40,7 +40,7 @@ export function FilesStep({ token, info, grant }) {
             <span className="flex items-center gap-2 min-w-0 text-sm text-[#1A1330]">
               <FileText size={16} className="text-[#3D1A78] shrink-0" />
               <span className="truncate" data-testid={`secure-doc-file-name-${f.index}`}>{f.name}</span>
-              <span className="text-[11px] text-[#6E6787] shrink-0">{kb(f.size)}</span>
+              <span className="text-[0.6875rem] text-[#6E6787] shrink-0">{kb(f.size)}</span>
             </span>
             <button type="button" onClick={() => download(f)} disabled={busy === f.index}
               className="inline-flex items-center gap-1.5 rounded-full bg-[#3D1A78] hover:bg-[#2a0f5f] text-white px-4 py-2 text-xs font-semibold shrink-0 disabled:opacity-50"

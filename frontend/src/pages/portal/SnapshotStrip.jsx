@@ -121,7 +121,7 @@ export function SnapshotStrip({
             Recent snapshots
           </h3>
         </div>
-        <span className="text-[10px] text-slate-400">
+        <span className="text-[0.625rem] text-slate-400">
           Last {items.length} of {history.length}
         </span>
       </div>
@@ -146,8 +146,8 @@ export function SnapshotStrip({
             }}
             className={
               overTopZone
-                ? "rounded-xl border-2 border-dashed border-amber-500 bg-amber-50 p-2 text-[10px] font-bold text-amber-800 text-center"
-                : "rounded-xl border-2 border-dashed border-purple-300 bg-purple-50/50 p-2 text-[10px] font-semibold text-purple-700 text-center"
+                ? "rounded-xl border-2 border-dashed border-amber-500 bg-amber-50 p-2 text-[0.625rem] font-bold text-amber-800 text-center"
+                : "rounded-xl border-2 border-dashed border-purple-300 bg-purple-50/50 p-2 text-[0.625rem] font-semibold text-purple-700 text-center"
             }
           >
             <i className="fa-solid fa-thumbtack mr-1"></i>
@@ -189,7 +189,7 @@ export function SnapshotStrip({
                       : "text-slate-300 hover:text-amber-600 hover:bg-amber-50")
                   }
                 >
-                  <i className="fa-solid fa-thumbtack text-[11px]"></i>
+                  <i className="fa-solid fa-thumbtack text-[0.6875rem]"></i>
                 </button>
               )}
               {typeof onDelete === "function" && (
@@ -200,7 +200,7 @@ export function SnapshotStrip({
                   aria-label="Remove this snapshot"
                   className="absolute top-1 right-1 w-6 h-6 rounded-full text-slate-300 hover:text-rose-600 hover:bg-rose-50 flex items-center justify-center"
                 >
-                  <i className="fa-solid fa-xmark text-[11px]"></i>
+                  <i className="fa-solid fa-xmark text-[0.6875rem]"></i>
                 </button>
               )}
               <div className="flex items-center gap-2 mb-2 pr-12">
@@ -225,7 +225,7 @@ export function SnapshotStrip({
                         }}
                         placeholder={`${label} — e.g. Emma's summer plan`}
                         data-testid={`snapshot-rename-input-${idx}`}
-                        className="flex-1 min-w-0 text-[11px] font-bold text-slate-800 bg-white border border-purple-400 rounded px-1.5 py-0.5 focus:outline-none focus:ring-1 focus:ring-purple-500"
+                        className="flex-1 min-w-0 text-[0.6875rem] font-bold text-slate-800 bg-white border border-purple-400 rounded px-1.5 py-0.5 focus:outline-none focus:ring-1 focus:ring-purple-500"
                       />
                       <button
                         type="button"
@@ -234,7 +234,7 @@ export function SnapshotStrip({
                         aria-label="Save name"
                         className="shrink-0 w-6 h-6 rounded text-emerald-600 hover:bg-emerald-50 flex items-center justify-center"
                       >
-                        <i className="fa-solid fa-check text-[11px]"></i>
+                        <i className="fa-solid fa-check text-[0.6875rem]"></i>
                       </button>
                       <button
                         type="button"
@@ -243,7 +243,7 @@ export function SnapshotStrip({
                         aria-label="Cancel rename"
                         className="shrink-0 w-6 h-6 rounded text-slate-400 hover:bg-slate-100 flex items-center justify-center"
                       >
-                        <i className="fa-solid fa-xmark text-[11px]"></i>
+                        <i className="fa-solid fa-xmark text-[0.6875rem]"></i>
                       </button>
                     </div>
                   ) : (
@@ -265,20 +265,20 @@ export function SnapshotStrip({
                             aria-label="Rename this snapshot"
                             className="shrink-0 w-5 h-5 rounded text-slate-300 hover:text-purple-700 hover:bg-purple-50 flex items-center justify-center"
                           >
-                            <i className="fa-solid fa-pen text-[9px]"></i>
+                            <i className="fa-solid fa-pen text-[0.5625rem]"></i>
                           </button>
                         )}
                       </div>
                       {snap.label && snap.label.trim() && (
                         <div
-                          className="text-[9px] text-slate-400 uppercase tracking-wider truncate"
+                          className="text-[0.5625rem] text-slate-400 uppercase tracking-wider truncate"
                           data-testid={`snapshot-topic-sub-${idx}`}
                         >
                           {label}
                           {snap.category ? ` · ${snap.category}` : ""}
                         </div>
                       )}
-                      <div className="text-[10px] text-slate-500">
+                      <div className="text-[0.625rem] text-slate-500">
                         {snap.answers?.length || 0} answers ·{" "}
                         {relativeAge(snap.saved_at)}
                       </div>
@@ -291,7 +291,7 @@ export function SnapshotStrip({
                   className="p-2 bg-rose-50 border border-rose-200 rounded-lg space-y-1.5"
                   data-testid={`snapshot-delete-confirm-${idx}`}
                 >
-                  <div className="text-[11px] text-rose-800 leading-snug">
+                  <div className="text-[0.6875rem] text-rose-800 leading-snug">
                     Delete this snapshot? You can always re-run the
                     Guided chat to make a new one.
                   </div>
@@ -300,7 +300,7 @@ export function SnapshotStrip({
                       type="button"
                       data-testid={`snapshot-delete-confirm-cancel-${idx}`}
                       onClick={() => setConfirmingId(null)}
-                      className="py-1.5 bg-white border border-slate-300 text-slate-600 rounded-lg font-bold text-[10px]"
+                      className="py-1.5 bg-white border border-slate-300 text-slate-600 rounded-lg font-bold text-[0.625rem]"
                     >
                       Keep it
                     </button>
@@ -311,7 +311,7 @@ export function SnapshotStrip({
                         onDelete(snap.id ?? idx);
                         setConfirmingId(null);
                       }}
-                      className="py-1.5 bg-rose-600 hover:bg-rose-700 text-white rounded-lg font-bold text-[10px]"
+                      className="py-1.5 bg-rose-600 hover:bg-rose-700 text-white rounded-lg font-bold text-[0.625rem]"
                     >
                       Delete
                     </button>
@@ -330,7 +330,7 @@ export function SnapshotStrip({
                       variant: "standard",
                     })
                   }
-                  className="py-1.5 bg-white hover:bg-purple-50 border border-purple-300 text-purple-800 rounded-lg font-bold text-[10px]"
+                  className="py-1.5 bg-white hover:bg-purple-50 border border-purple-300 text-purple-800 rounded-lg font-bold text-[0.625rem]"
                 >
                   <i className="fa-solid fa-file-arrow-down mr-1"></i>PDF
                 </button>
@@ -345,7 +345,7 @@ export function SnapshotStrip({
                       variant: "fridge",
                     })
                   }
-                  className="py-1.5 bg-white hover:bg-amber-50 border border-amber-400 text-amber-800 rounded-lg font-bold text-[10px]"
+                  className="py-1.5 bg-white hover:bg-amber-50 border border-amber-400 text-amber-800 rounded-lg font-bold text-[0.625rem]"
                 >
                   <i className="fa-solid fa-note-sticky mr-1"></i>Fridge
                 </button>
@@ -360,7 +360,7 @@ export function SnapshotStrip({
                       variant: "fridge_pair",
                     })
                   }
-                  className="py-1.5 bg-white hover:bg-amber-50 border border-amber-400 text-amber-800 rounded-lg font-bold text-[10px]"
+                  className="py-1.5 bg-white hover:bg-amber-50 border border-amber-400 text-amber-800 rounded-lg font-bold text-[0.625rem]"
                 >
                   <i className="fa-solid fa-copy mr-1"></i>×2
                 </button>

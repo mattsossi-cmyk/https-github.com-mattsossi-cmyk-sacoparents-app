@@ -218,7 +218,7 @@ export default function ReadinessCheck() {
                               setAnswers({ ...answers, [q.id]: s.v })
                             }
                             data-testid={`readiness-${q.id}-${s.v}`}
-                            className={`rounded-xl px-2 py-2.5 text-[11px] sm:text-xs leading-tight transition-all min-h-[60px] flex items-center justify-center text-center ${
+                            className={`rounded-xl px-2 py-2.5 text-[0.6875rem] sm:text-xs leading-tight transition-all min-h-[60px] flex items-center justify-center text-center ${
                               isOn
                                 ? "bg-[#3D1A78] text-white shadow-sm"
                                 : "bg-[#EFE9F9] text-[#4B4567] hover:bg-[#E5E0EE]"

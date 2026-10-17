@@ -42,7 +42,7 @@ export function GoalReachedBanner({ history, userId, active }) {
       </span>
       <div className="min-w-0 flex-1">
         <p className="text-base font-extrabold leading-tight">Goal reached</p>
-        <p data-testid="door-self-goal-reached-text" className="text-[13px] text-emerald-50 leading-snug mt-0.5 break-words">
+        <p data-testid="door-self-goal-reached-text" className="text-[0.8125rem] text-emerald-50 leading-snug mt-0.5 break-words">
           &ldquo;{shown.goal}&rdquo; &middot; {when(shown.reached_at)}. Your child feels this progress too.
         </p>
       </div>

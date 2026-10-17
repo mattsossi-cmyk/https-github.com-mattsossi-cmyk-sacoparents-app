@@ -176,7 +176,7 @@ export default function JoinInvitation() {
         data-testid="join-invitation-page"
       >
         <div className="rounded-3xl bg-white border border-[#E5E0EE] p-6 sm:p-10 shadow-sm">
-          <div className="text-[11px] uppercase tracking-[0.18em] font-bold text-[#3D1A78] mb-2">
+          <div className="text-[0.6875rem] uppercase tracking-[0.18em] font-bold text-[#3D1A78] mb-2">
             Joint Alignment invitation
           </div>
 
@@ -397,7 +397,7 @@ export default function JoinInvitation() {
                 <button
                   type="button"
                   onClick={() => navigate("/join")}
-                  className="text-[13px] text-[#3D1A78] underline hover:text-[#2A0F5F]"
+                  className="text-[0.8125rem] text-[#3D1A78] underline hover:text-[#2A0F5F]"
                   data-testid="join-invitation-manual-code-link"
                 >
                   Enter an Alignment Code instead
@@ -414,7 +414,7 @@ export default function JoinInvitation() {
 function InfoRow({ label, value, testid }) {
   return (
     <div className="rounded-xl border border-[#E5E0EE] bg-[#FAFAFC] p-3">
-      <div className="text-[10px] uppercase tracking-[0.14em] font-bold text-[#6E6787]">
+      <div className="text-[0.625rem] uppercase tracking-[0.14em] font-bold text-[#6E6787]">
         {label}
       </div>
       <div

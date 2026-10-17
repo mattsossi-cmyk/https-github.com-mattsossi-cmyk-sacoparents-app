@@ -134,7 +134,7 @@ export default function CommunicationPathway() {
             <div className="w-12 h-12 rounded-full bg-white/15 grid place-items-center backdrop-blur-sm">
               <MessageCircle size={22} strokeWidth={2.2} />
             </div>
-            <div className="text-[11px] uppercase tracking-[0.18em] font-bold text-white/85">
+            <div className="text-[0.6875rem] uppercase tracking-[0.18em] font-bold text-white/85">
               Communication pathway
             </div>
           </div>
@@ -153,7 +153,7 @@ export default function CommunicationPathway() {
         </div>
 
         <div className="mt-8">
-          <div className="text-[11px] uppercase tracking-[0.16em] font-bold text-[#1E6FA8] mb-2">
+          <div className="text-[0.6875rem] uppercase tracking-[0.16em] font-bold text-[#1E6FA8] mb-2">
             Step 1
           </div>
           <h2 className="font-serif text-2xl text-[#1A1330] leading-tight">
@@ -178,11 +178,11 @@ export default function CommunicationPathway() {
                   data-testid={`communication-choice-${choice.key}`}
                 >
                   <div
-                    className={`inline-flex items-center rounded-full border px-3 py-1 text-[11px] font-semibold ${choice.tone}`}
+                    className={`inline-flex items-center rounded-full border px-3 py-1 text-[0.6875rem] font-semibold ${choice.tone}`}
                   >
                     {choice.label}
                   </div>
-                  <p className="text-[13px] text-[#4B4567] mt-3 leading-snug">
+                  <p className="text-[0.8125rem] text-[#4B4567] mt-3 leading-snug">
                     {choice.detail}
                   </p>
                 </button>
@@ -199,7 +199,7 @@ export default function CommunicationPathway() {
           >
             <div className="flex items-center gap-2">
               <Sparkles size={16} className="text-[#1E6FA8]" />
-              <div className="text-[11px] uppercase tracking-[0.16em] font-bold text-[#1E6FA8]">
+              <div className="text-[0.6875rem] uppercase tracking-[0.16em] font-bold text-[#1E6FA8]">
                 Recommended for &ldquo;{activeChoice.label}&rdquo;
               </div>
             </div>
@@ -217,7 +217,7 @@ export default function CommunicationPathway() {
                 </li>
               ))}
             </ul>
-            <div className="mt-6 rounded-2xl bg-[#EEF5FA] border border-[#D0E4EE] p-4 flex items-start gap-3 text-[13px] text-[#1E6FA8]">
+            <div className="mt-6 rounded-2xl bg-[#EEF5FA] border border-[#D0E4EE] p-4 flex items-start gap-3 text-[0.8125rem] text-[#1E6FA8]">
               <Lock size={15} className="flex-shrink-0 mt-0.5" />
               <p className="!m-0 leading-relaxed text-[#1A1330]">
                 <strong>Now available:</strong> your private Communication
@@ -257,7 +257,7 @@ export default function CommunicationPathway() {
                 <ShieldAlert size={22} strokeWidth={2.2} />
               </div>
               <div>
-                <div className="text-[11px] uppercase tracking-[0.18em] font-bold text-[#8F1D24]">
+                <div className="text-[0.6875rem] uppercase tracking-[0.18em] font-bold text-[#8F1D24]">
                   Safety comes first
                 </div>
                 <h3 className="font-serif text-xl text-[#1A1330] leading-tight mt-1">
@@ -290,7 +290,7 @@ export default function CommunicationPathway() {
                 Call 1-800-799-7233
               </a>
             </div>
-            <p className="text-[12px] text-[#4B4567] italic mt-4 leading-relaxed">
+            <p className="text-[0.75rem] text-[#4B4567] italic mt-4 leading-relaxed">
               In immediate danger? Call{" "}
               <a href="tel:911" className="underline font-semibold text-[#8F1D24]">
                 911

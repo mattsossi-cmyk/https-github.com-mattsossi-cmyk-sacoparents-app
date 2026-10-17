@@ -19,7 +19,7 @@ const BAND_STYLES = {
 function BandPill({ band, headline, percent, answered }) {
   const cls = BAND_STYLES[band] || BAND_STYLES.unrated;
   return (
-    <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-[10px] font-bold border ${cls}`}>
+    <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-[0.625rem] font-bold border ${cls}`}>
       {headline || band}
       {answered ? <span className="ml-1.5 tabular-nums">· {percent}%</span> : null}
     </span>
@@ -39,7 +39,7 @@ export default function DeepDivePartsNarrative({
       className="mt-6 bg-white rounded-3xl border border-[#E5E0EE] p-5 sm:p-7 shadow-sm"
       data-testid={`${testidPrefix}-parts-narrative`}
     >
-      <div className="text-[10px] uppercase tracking-[0.22em] font-bold text-[#3D1A78] mb-1">
+      <div className="text-[0.625rem] uppercase tracking-[0.22em] font-bold text-[#3D1A78] mb-1">
         Your story, part by part
       </div>
       <h2 className="font-serif text-xl text-[#1A1330]">
@@ -64,7 +64,7 @@ export default function DeepDivePartsNarrative({
           >
             <div className="flex items-start justify-between gap-3 flex-wrap">
               <div className="min-w-0">
-                <div className="text-[10px] uppercase tracking-[0.18em] font-bold text-[#3D1A78]">
+                <div className="text-[0.625rem] uppercase tracking-[0.18em] font-bold text-[#3D1A78]">
                   Part {part.number}
                 </div>
                 <div className="font-serif text-lg text-[#1A1330] mt-0.5">
@@ -91,7 +91,7 @@ export default function DeepDivePartsNarrative({
 
             {(part.strengths || []).length > 0 && (
               <div className="mt-3" data-testid={`${testidPrefix}-part-${part.id}-strengths`}>
-                <div className="flex items-center gap-1.5 text-[10px] uppercase tracking-[0.18em] font-bold text-[#1F5C3B]">
+                <div className="flex items-center gap-1.5 text-[0.625rem] uppercase tracking-[0.18em] font-bold text-[#1F5C3B]">
                   <Sparkles size={12} /> Strengths in this part
                 </div>
                 <ul className="mt-1 list-disc pl-5 text-xs text-[#1A1330] space-y-1">
@@ -109,7 +109,7 @@ export default function DeepDivePartsNarrative({
 
             {(part.growth || []).length > 0 && (
               <div className="mt-3" data-testid={`${testidPrefix}-part-${part.id}-growth`}>
-                <div className="flex items-center gap-1.5 text-[10px] uppercase tracking-[0.18em] font-bold text-[#B02A2A]">
+                <div className="flex items-center gap-1.5 text-[0.625rem] uppercase tracking-[0.18em] font-bold text-[#B02A2A]">
                   <TrendingUp size={12} /> Where to grow
                 </div>
                 <ul className="mt-1 list-disc pl-5 text-xs text-[#1A1330] space-y-1">
@@ -145,7 +145,7 @@ export default function DeepDivePartsNarrative({
           className="mt-5 rounded-2xl border border-[#D6CFE8] bg-[#F5F1FB] p-4"
           data-testid={`${testidPrefix}-parts-closing`}
         >
-          <div className="text-[10px] uppercase tracking-[0.18em] font-bold text-[#3D1A78] mb-1">
+          <div className="text-[0.625rem] uppercase tracking-[0.18em] font-bold text-[#3D1A78] mb-1">
             A note to close
           </div>
           <p className="text-sm text-[#1A1330] leading-relaxed">{closing}</p>

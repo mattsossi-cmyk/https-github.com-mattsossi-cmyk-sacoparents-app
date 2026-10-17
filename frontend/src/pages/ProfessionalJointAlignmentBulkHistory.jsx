@@ -53,7 +53,7 @@ function CountPill({ tone, count, label, testid }) {
   };
   return (
     <span
-      className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-semibold ${palette[tone]}`}
+      className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[0.6875rem] font-semibold ${palette[tone]}`}
       data-testid={testid}
     >
       {count} {label}
@@ -80,7 +80,7 @@ function ImportRow({ item, selected, onSelect }) {
     >
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0 flex-1">
-          <div className="flex items-center gap-1.5 text-[10px] uppercase tracking-[0.18em] font-bold text-[#3D1A78]">
+          <div className="flex items-center gap-1.5 text-[0.625rem] uppercase tracking-[0.18em] font-bold text-[#3D1A78]">
             <FileSpreadsheet size={11} />
             {variant === "stream" ? "Streaming import" : "Bulk import"}
           </div>
@@ -90,7 +90,7 @@ function ImportRow({ item, selected, onSelect }) {
           >
             {filename || "Untitled upload"}
           </div>
-          <div className="text-[11px] text-[#6E6787] mt-1">
+          <div className="text-[0.6875rem] text-[#6E6787] mt-1">
             {formatTimestamp(started_at)} · {total_rows} row{total_rows === 1 ? "" : "s"}
           </div>
         </div>
@@ -143,20 +143,20 @@ function ImportDetail({ detail, loading, error }) {
 
   return (
     <div data-testid="bulk-history-detail">
-      <div className="text-[10px] uppercase tracking-[0.18em] font-bold text-[#3D1A78]">
+      <div className="text-[0.625rem] uppercase tracking-[0.18em] font-bold text-[#3D1A78]">
         {import_id}
       </div>
       <h2 className="font-serif text-2xl text-[#1A1330] mt-1 break-all">
         {filename || "Untitled upload"}
       </h2>
-      <div className="mt-2 text-[12px] text-[#4B4567] leading-relaxed">
+      <div className="mt-2 text-[0.75rem] text-[#4B4567] leading-relaxed">
         Started <strong>{formatTimestamp(started_at)}</strong>
         {finished_at ? (
           <> · Finished <strong>{formatTimestamp(finished_at)}</strong></>
         ) : null}
       </div>
       {(default_assessment_type || default_reminder_note) && (
-        <div className="mt-2 text-[11px] text-[#6E6787]">
+        <div className="mt-2 text-[0.6875rem] text-[#6E6787]">
           {default_assessment_type && (
             <span className="mr-3">
               Default lane: <span className="text-[#3D1A78] font-semibold">{default_assessment_type}</span>
@@ -170,17 +170,17 @@ function ImportDetail({ detail, loading, error }) {
 
       <div className="mt-5 grid grid-cols-3 gap-3">
         <div className="rounded-2xl border border-[#B5DFC5] bg-[#E6F4EC] p-4">
-          <div className="text-[10px] uppercase tracking-[0.22em] font-bold text-[#1F5C3B] opacity-70">Created</div>
+          <div className="text-[0.625rem] uppercase tracking-[0.22em] font-bold text-[#1F5C3B] opacity-70">Created</div>
           <div className="text-2xl font-serif text-[#1F5C3B] mt-1"
                data-testid="bulk-history-detail-count-created">{created_count}</div>
         </div>
         <div className="rounded-2xl border border-[#D6CFE8] bg-[#F1EEF7] p-4">
-          <div className="text-[10px] uppercase tracking-[0.22em] font-bold text-[#3D1A78] opacity-70">Skipped</div>
+          <div className="text-[0.625rem] uppercase tracking-[0.22em] font-bold text-[#3D1A78] opacity-70">Skipped</div>
           <div className="text-2xl font-serif text-[#3D1A78] mt-1"
                data-testid="bulk-history-detail-count-skipped">{skipped_count}</div>
         </div>
         <div className="rounded-2xl border border-[#F5D0C5] bg-[#FCE3DC] p-4">
-          <div className="text-[10px] uppercase tracking-[0.22em] font-bold text-[#9A3A23] opacity-70">Errored</div>
+          <div className="text-[0.625rem] uppercase tracking-[0.22em] font-bold text-[#9A3A23] opacity-70">Errored</div>
           <div className="text-2xl font-serif text-[#9A3A23] mt-1"
                data-testid="bulk-history-detail-count-errored">{errored_count}</div>
         </div>
@@ -197,7 +197,7 @@ function ImportDetail({ detail, loading, error }) {
               <li key={cid}>
                 <Link
                   to={`/professional/joint-alignment/mine?search=${encodeURIComponent(cid)}`}
-                  className="inline-flex rounded-full bg-[#EFE9F9] hover:bg-[#E5DAF7] text-[#3D1A78] px-2 py-0.5 text-[11px] font-mono font-semibold transition-colors"
+                  className="inline-flex rounded-full bg-[#EFE9F9] hover:bg-[#E5DAF7] text-[#3D1A78] px-2 py-0.5 text-[0.6875rem] font-mono font-semibold transition-colors"
                   data-testid={`bulk-history-case-${cid}`}
                 >
                   {cid}
@@ -214,13 +214,13 @@ function ImportDetail({ detail, loading, error }) {
             <MinusCircle size={14} className="text-[#3D1A78]" />
             Skipped duplicates ({skipped_case_ids.length})
           </h3>
-          <p className="text-[11px] text-[#6E6787] mt-1">
+          <p className="text-[0.6875rem] text-[#6E6787] mt-1">
             These rows already had an active case with you — nothing sent.
           </p>
           <ul className="mt-2 flex flex-wrap gap-2">
             {skipped_case_ids.map((cid, i) => (
               <li key={`${cid}-${i}`}>
-                <span className="inline-flex rounded-full bg-[#F1EEF7] text-[#6E6787] px-2 py-0.5 text-[11px] font-mono">
+                <span className="inline-flex rounded-full bg-[#F1EEF7] text-[#6E6787] px-2 py-0.5 text-[0.6875rem] font-mono">
                   {cid}
                 </span>
               </li>
@@ -237,7 +237,7 @@ function ImportDetail({ detail, loading, error }) {
           </h3>
           <ul className="mt-2 divide-y divide-[#EEE8F7] rounded-xl border border-[#F5D0C5] bg-[#FFF9F7]">
             {errored_rows.map((e, i) => (
-              <li key={`${e.row}-${i}`} className="p-2.5 text-[12px]">
+              <li key={`${e.row}-${i}`} className="p-2.5 text-[0.75rem]">
                 <span className="text-[#9A3A23] font-semibold">Row {e.row}:</span>{" "}
                 <span className="text-[#1A1330]">{e.reason}</span>
               </li>
@@ -329,7 +329,7 @@ export default function ProfessionalJointAlignmentBulkHistory() {
         </Link>
         <div className="flex items-start justify-between gap-3 flex-wrap">
           <div>
-            <div className="text-[10px] uppercase tracking-[0.22em] font-bold text-[#3D1A78] flex items-center gap-1.5">
+            <div className="text-[0.625rem] uppercase tracking-[0.22em] font-bold text-[#3D1A78] flex items-center gap-1.5">
               <Sparkles size={12} /> Bulk import history
             </div>
             <h1

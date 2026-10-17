@@ -53,7 +53,7 @@ export default function WizardLayout({
             );
           })}
         </div>
-        <div className="flex justify-between text-[10px] uppercase tracking-[0.2em] text-[#6E6787]">
+        <div className="flex justify-between text-[0.625rem] uppercase tracking-[0.2em] text-[#6E6787]">
           {STEPS.map((s, i) => (
             <div
               key={s.key}

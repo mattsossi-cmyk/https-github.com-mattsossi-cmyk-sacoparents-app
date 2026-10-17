@@ -65,7 +65,7 @@ export default function CourtOrderedCaseBadge() {
           <Scale size={16} strokeWidth={2.2} />
         </div>
         <div className="min-w-0">
-          <div className="text-[10px] uppercase tracking-[0.22em] font-bold text-[#0E7A7A]">
+          <div className="text-[0.625rem] uppercase tracking-[0.22em] font-bold text-[#0E7A7A]">
             Your court-ordered case
           </div>
           <div className="text-sm text-[#1A1330] mt-0.5 truncate">

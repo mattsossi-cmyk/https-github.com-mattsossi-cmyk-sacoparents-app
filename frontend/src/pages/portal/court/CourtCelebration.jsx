@@ -22,7 +22,7 @@ export function CourtCelebration({ open, notice, onClose, onPdf }) {
           <i className="fa-solid fa-handshake"></i>
         </span>
       </div>
-      <p data-testid="court-celebration-notice" className="text-[11px] leading-snug text-[#5c2c8e] bg-[#f2ebfc] rounded-lg px-3 py-2 mb-5">{notice}</p>
+      <p data-testid="court-celebration-notice" className="text-[0.6875rem] leading-snug text-[#5c2c8e] bg-[#f2ebfc] rounded-lg px-3 py-2 mb-5">{notice}</p>
       <div className="flex flex-col sm:flex-row gap-2.5">
         <button type="button" data-testid="court-celebration-pdf" onClick={onPdf} className="flex-1 bg-[#2fa144] hover:bg-[#268537] text-white font-bold py-3 px-5 rounded-lg transition-colors">
           <i className="fa-solid fa-file-pdf mr-2"></i>Download Comparison PDF

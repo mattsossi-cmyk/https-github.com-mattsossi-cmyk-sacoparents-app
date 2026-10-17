@@ -123,7 +123,7 @@ export default function LearningArticle() {
         </Link>
 
         <header className="mt-4">
-          <div className="text-[10px] uppercase tracking-[0.22em] text-[#3D1A78] font-bold">
+          <div className="text-[0.625rem] uppercase tracking-[0.22em] text-[#3D1A78] font-bold">
             {article.hub_name}
           </div>
           <h1 className="font-serif text-3xl sm:text-4xl font-extrabold text-[#1A1330] mt-2 leading-tight">
@@ -131,7 +131,7 @@ export default function LearningArticle() {
           </h1>
           <p className="text-lg text-[#4B4567] mt-3">{article.summary}</p>
           <div className="flex flex-wrap items-center gap-3 mt-4">
-            <span className="inline-flex items-center gap-1.5 text-[11px] text-[#6E6787]">
+            <span className="inline-flex items-center gap-1.5 text-[0.6875rem] text-[#6E6787]">
               <Clock size={11} /> {article.read_minutes} min read
             </span>
             <button
@@ -176,7 +176,7 @@ export default function LearningArticle() {
             className="mt-8 rounded-2xl border border-[#D6CFE8] bg-[#F5F1FB] p-5"
             data-testid="learning-article-takeaways"
           >
-            <div className="text-[10px] uppercase tracking-[0.22em] text-[#3D1A78] font-bold">
+            <div className="text-[0.625rem] uppercase tracking-[0.22em] text-[#3D1A78] font-bold">
               3 things to try this week
             </div>
             <ul className="mt-3 space-y-2.5">
@@ -202,14 +202,14 @@ export default function LearningArticle() {
           data-testid="learning-article-coach"
         >
           <div className="flex items-center justify-between flex-wrap gap-2">
-            <div className="flex items-center gap-2 text-[10px] uppercase tracking-[0.22em] text-[#8A6B12] font-bold">
+            <div className="flex items-center gap-2 text-[0.625rem] uppercase tracking-[0.22em] text-[#8A6B12] font-bold">
               <Sparkles size={12} /> Ask the coach for more depth
             </div>
             {coach && !coachLoading && (
               <button
                 type="button"
                 onClick={() => askCoach(true)}
-                className="inline-flex items-center gap-1 text-[11px] font-semibold text-[#8A6B12] hover:underline"
+                className="inline-flex items-center gap-1 text-[0.6875rem] font-semibold text-[#8A6B12] hover:underline"
                 data-testid="learning-coach-regenerate"
               >
                 <RefreshCw size={11} /> Regenerate

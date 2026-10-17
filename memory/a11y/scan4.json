@@ -1,0 +1,813 @@
+[
+ {
+  "path": "/",
+  "who": "guest",
+  "violations": [],
+  "final_url": "/",
+  "overflow": false,
+  "overflow_200": false
+ },
+ {
+  "path": "/",
+  "who": "parent",
+  "violations": [],
+  "final_url": "/",
+  "overflow": false,
+  "overflow_200": false
+ },
+ {
+  "path": "/admin",
+  "who": "admin",
+  "violations": [],
+  "final_url": "/admin",
+  "overflow": false,
+  "overflow_200": false
+ },
+ {
+  "path": "/legacy",
+  "who": "guest",
+  "violations": [],
+  "final_url": "/legacy",
+  "overflow": false,
+  "overflow_200": false
+ },
+ {
+  "path": "/align",
+  "who": "parent",
+  "violations": [],
+  "final_url": "/align",
+  "overflow": false,
+  "overflow_200": false
+ },
+ {
+  "path": "/admin/accounts",
+  "who": "admin",
+  "violations": [],
+  "final_url": "/admin/accounts",
+  "overflow": false,
+  "overflow_200": false
+ },
+ {
+  "path": "/login",
+  "who": "guest",
+  "violations": [],
+  "final_url": "/login",
+  "overflow": false,
+  "overflow_200": false
+ },
+ {
+  "path": "/account",
+  "who": "parent",
+  "violations": [],
+  "final_url": "/account",
+  "overflow": false,
+  "overflow_200": false
+ },
+ {
+  "path": "/admin/consent",
+  "who": "admin",
+  "violations": [],
+  "final_url": "/admin/consent",
+  "overflow": false,
+  "overflow_200": false
+ },
+ {
+  "path": "/register",
+  "who": "guest",
+  "violations": [],
+  "final_url": "/register",
+  "overflow": false,
+  "overflow_200": false
+ },
+ {
+  "path": "/delete-account",
+  "who": "parent",
+  "violations": [],
+  "final_url": "/delete-account",
+  "overflow": false,
+  "overflow_200": false
+ },
+ {
+  "path": "/admin/consent-trend",
+  "who": "admin",
+  "violations": [],
+  "final_url": "/admin/consent-trend",
+  "overflow": false,
+  "overflow_200": false
+ },
+ {
+  "path": "/signup",
+  "who": "guest",
+  "violations": [],
+  "final_url": "/signup",
+  "overflow": false,
+  "overflow_200": false
+ },
+ {
+  "path": "/cancel-subscription",
+  "who": "parent",
+  "violations": [],
+  "final_url": "/cancel-subscription",
+  "overflow": false,
+  "overflow_200": false
+ },
+ {
+  "path": "/admin/users",
+  "who": "admin",
+  "violations": [],
+  "final_url": "/admin/users",
+  "overflow": false,
+  "overflow_200": false
+ },
+ {
+  "path": "/forgot-password",
+  "who": "guest",
+  "violations": [],
+  "final_url": "/forgot-password",
+  "overflow": false,
+  "overflow_200": false
+ },
+ {
+  "path": "/case-settings",
+  "who": "parent",
+  "violations": [],
+  "final_url": "/case-settings",
+  "overflow": false,
+  "overflow_200": false
+ },
+ {
+  "path": "/admin/surveys",
+  "who": "admin",
+  "violations": [],
+  "final_url": "/admin/surveys",
+  "overflow": false,
+  "overflow_200": false
+ },
+ {
+  "path": "/privacy",
+  "who": "guest",
+  "violations": [],
+  "final_url": "/privacy-notice",
+  "overflow": false,
+  "overflow_200": false
+ },
+ {
+  "path": "/plan-options",
+  "who": "parent",
+  "violations": [],
+  "final_url": "/plan-options",
+  "overflow": false,
+  "overflow_200": false
+ },
+ {
+  "path": "/admin/insights",
+  "who": "admin",
+  "violations": [],
+  "final_url": "/admin/insights",
+  "overflow": false,
+  "overflow_200": false
+ },
+ {
+  "path": "/privacy-notice",
+  "who": "guest",
+  "violations": [],
+  "final_url": "/privacy-notice",
+  "overflow": false,
+  "overflow_200": false
+ },
+ {
+  "path": "/communication",
+  "who": "parent",
+  "violations": [],
+  "final_url": "/communication",
+  "overflow": false,
+  "overflow_200": false
+ },
+ {
+  "path": "/admin/nudge-copy",
+  "who": "admin",
+  "violations": [],
+  "final_url": "/admin/nudge-copy",
+  "overflow": false,
+  "overflow_200": false
+ },
+ {
+  "path": "/terms",
+  "who": "guest",
+  "violations": [],
+  "final_url": "/terms",
+  "overflow": false,
+  "overflow_200": false
+ },
+ {
+  "path": "/communication/reflection",
+  "who": "parent",
+  "violations": [],
+  "final_url": "/communication/reflection",
+  "overflow": false,
+  "overflow_200": false
+ },
+ {
+  "path": "/accessibility",
+  "who": "guest",
+  "violations": [],
+  "final_url": "/accessibility",
+  "overflow": false,
+  "overflow_200": false
+ },
+ {
+  "path": "/admin/bridge-copy",
+  "who": "admin",
+  "violations": [],
+  "final_url": "/admin/bridge-copy",
+  "overflow": false,
+  "overflow_200": false
+ },
+ {
+  "path": "/communication/alignment",
+  "who": "parent",
+  "violations": [],
+  "final_url": "/communication/alignment",
+  "overflow": false,
+  "overflow_200": false
+ },
+ {
+  "path": "/admin/audit-log",
+  "who": "admin",
+  "violations": [],
+  "final_url": "/admin/audit-log",
+  "overflow": false,
+  "overflow_200": false
+ },
+ {
+  "path": "/methodology",
+  "who": "guest",
+  "violations": [],
+  "final_url": "/methodology",
+  "overflow": false,
+  "overflow_200": false
+ },
+ {
+  "path": "/schedule/reflection",
+  "who": "parent",
+  "violations": [],
+  "final_url": "/schedule/reflection",
+  "overflow": false,
+  "overflow_200": false
+ },
+ {
+  "path": "/admin/help-services",
+  "who": "admin",
+  "violations": [],
+  "final_url": "/admin/help-services",
+  "overflow": false,
+  "overflow_200": false
+ },
+ {
+  "path": "/what-professionals-see",
+  "who": "guest",
+  "violations": [],
+  "final_url": "/what-professionals-see",
+  "overflow": false,
+  "overflow_200": false
+ },
+ {
+  "path": "/schedule/alignment",
+  "who": "parent",
+  "violations": [],
+  "final_url": "/schedule/alignment",
+  "overflow": false,
+  "overflow_200": false
+ },
+ {
+  "path": "/admin/reviewers",
+  "who": "admin",
+  "violations": [],
+  "final_url": "/admin/reviewers",
+  "overflow": false,
+  "overflow_200": false
+ },
+ {
+  "path": "/legal/hipaa",
+  "who": "guest",
+  "violations": [],
+  "final_url": "/legal/hipaa",
+  "overflow": false,
+  "overflow_200": false
+ },
+ {
+  "path": "/activities/reflection",
+  "who": "parent",
+  "violations": [],
+  "final_url": "/activities/reflection",
+  "overflow": false,
+  "overflow_200": false
+ },
+ {
+  "path": "/admin/nd-coordinator",
+  "who": "admin",
+  "violations": [],
+  "final_url": "/admin/nd-coordinator",
+  "overflow": false,
+  "overflow_200": false
+ },
+ {
+  "path": "/legal/hb300",
+  "who": "guest",
+  "violations": [],
+  "final_url": "/legal/hb300",
+  "overflow": false,
+  "overflow_200": false
+ },
+ {
+  "path": "/activities/alignment",
+  "who": "parent",
+  "violations": [],
+  "final_url": "/activities/alignment",
+  "overflow": false,
+  "overflow_200": false
+ },
+ {
+  "path": "/admin/professionals",
+  "who": "admin",
+  "violations": [],
+  "final_url": "/admin/professionals",
+  "overflow": false,
+  "overflow_200": false
+ },
+ {
+  "path": "/legal/privacy-practices",
+  "who": "guest",
+  "violations": [],
+  "final_url": "/legal/privacy-practices",
+  "overflow": false,
+  "overflow_200": false
+ },
+ {
+  "path": "/alignment/subjects",
+  "who": "parent",
+  "violations": [],
+  "final_url": "/alignment/subjects",
+  "overflow": false,
+  "overflow_200": false
+ },
+ {
+  "path": "/legal/app-store-privacy",
+  "who": "guest",
+  "violations": [],
+  "final_url": "/legal/app-store-privacy",
+  "overflow": false,
+  "overflow_200": false
+ },
+ {
+  "path": "/situation",
+  "who": "parent",
+  "violations": [],
+  "final_url": "/situation",
+  "overflow": false,
+  "overflow_200": false
+ },
+ {
+  "path": "/data-retention",
+  "who": "guest",
+  "violations": [],
+  "final_url": "/data-retention",
+  "overflow": false,
+  "overflow_200": false
+ },
+ {
+  "path": "/joint-reports",
+  "who": "parent",
+  "violations": [],
+  "final_url": "/joint-reports",
+  "overflow": false,
+  "overflow_200": false
+ },
+ {
+  "path": "/professionals",
+  "who": "guest",
+  "violations": [],
+  "final_url": "/professionals",
+  "overflow": false,
+  "overflow_200": false
+ },
+ {
+  "path": "/joint-agreement",
+  "who": "parent",
+  "violations": [],
+  "final_url": "/joint-agreement",
+  "overflow": false,
+  "overflow_200": false
+ },
+ {
+  "path": "/for-professionals",
+  "who": "guest",
+  "violations": [],
+  "final_url": "/for-professionals",
+  "overflow": false,
+  "overflow_200": false
+ },
+ {
+  "path": "/pathway-report",
+  "who": "parent",
+  "violations": [],
+  "final_url": "/pathway-report",
+  "overflow": false,
+  "overflow_200": false
+ },
+ {
+  "path": "/for-portal-engineers",
+  "who": "guest",
+  "violations": [],
+  "final_url": "/for-portal-engineers",
+  "overflow": false,
+  "overflow_200": false
+ },
+ {
+  "path": "/complete-alignment-report",
+  "who": "parent",
+  "violations": [],
+  "final_url": "/complete-alignment-report",
+  "overflow": false,
+  "overflow_200": false
+ },
+ {
+  "path": "/samples",
+  "who": "guest",
+  "violations": [],
+  "final_url": "/samples",
+  "overflow": false,
+  "overflow_200": false
+ },
+ {
+  "path": "/complete-alignment-report/joint/SA-DEMO01",
+  "who": "parent",
+  "violations": [],
+  "final_url": "/complete-alignment-report/joint/SA-DEMO01",
+  "overflow": false,
+  "overflow_200": false
+ },
+ {
+  "path": "/samples/co-parenting",
+  "who": "guest",
+  "violations": [],
+  "final_url": "/samples/co-parenting",
+  "overflow": false,
+  "overflow_200": false
+ },
+ {
+  "path": "/shared-with-professionals",
+  "who": "parent",
+  "violations": [],
+  "final_url": "/shared-with-professionals",
+  "overflow": false,
+  "overflow_200": false
+ },
+ {
+  "path": "/samples/joint-alignment-preview",
+  "who": "guest",
+  "violations": [],
+  "final_url": "/samples/joint-alignment-preview",
+  "overflow": false,
+  "overflow_200": false
+ },
+ {
+  "path": "/share/professional",
+  "who": "parent",
+  "violations": [],
+  "final_url": "/share/professional",
+  "overflow": false,
+  "overflow_200": false
+ },
+ {
+  "path": "/join",
+  "who": "guest",
+  "violations": [],
+  "final_url": "/join",
+  "overflow": false,
+  "overflow_200": false
+ },
+ {
+  "path": "/nd-risk-assessment",
+  "who": "parent",
+  "violations": [],
+  "final_url": "/nd-risk-assessment",
+  "overflow": false,
+  "overflow_200": false
+ },
+ {
+  "path": "/join/sample-preview",
+  "who": "guest",
+  "violations": [],
+  "final_url": "/join/sample-preview",
+  "overflow": false,
+  "overflow_200": false
+ },
+ {
+  "path": "/companion-assessment",
+  "who": "parent",
+  "violations": [],
+  "final_url": "/companion-assessment",
+  "overflow": false,
+  "overflow_200": false
+ },
+ {
+  "path": "/mediator-badge",
+  "who": "guest",
+  "violations": [],
+  "final_url": "/mediator-badge",
+  "overflow": false,
+  "overflow_200": false
+ },
+ {
+  "path": "/interventions",
+  "who": "parent",
+  "violations": [],
+  "final_url": "/interventions",
+  "overflow": false,
+  "overflow_200": false
+ },
+ {
+  "path": "/foundation/demo",
+  "who": "guest",
+  "violations": [],
+  "final_url": "/foundation/demo",
+  "overflow": false,
+  "overflow_200": false
+ },
+ {
+  "path": "/problem-solving",
+  "who": "parent",
+  "violations": [],
+  "final_url": "/problem-solving",
+  "overflow": false,
+  "overflow_200": false
+ },
+ {
+  "path": "/help",
+  "who": "guest",
+  "violations": [],
+  "final_url": "/help",
+  "overflow": false,
+  "overflow_200": false
+ },
+ {
+  "path": "/my-plan",
+  "who": "parent",
+  "violations": [],
+  "final_url": "/my-plan",
+  "overflow": false,
+  "overflow_200": false
+ },
+ {
+  "path": "/calendar",
+  "who": "guest",
+  "violations": [],
+  "final_url": "/calendar",
+  "overflow": false,
+  "overflow_200": false
+ },
+ {
+  "path": "/coach",
+  "who": "parent",
+  "violations": [],
+  "final_url": "/coach",
+  "overflow": false,
+  "overflow_200": false
+ },
+ {
+  "path": "/safety",
+  "who": "guest",
+  "violations": [],
+  "final_url": "/safety",
+  "overflow": false,
+  "overflow_200": false
+ },
+ {
+  "path": "/learning",
+  "who": "parent",
+  "violations": [],
+  "final_url": "/learning",
+  "overflow": false,
+  "overflow_200": false
+ },
+ {
+  "path": "/prep/child-goals",
+  "who": "parent",
+  "violations": [],
+  "final_url": "/prep/child-goals",
+  "overflow": false,
+  "overflow_200": false
+ },
+ {
+  "path": "/prep/issues",
+  "who": "parent",
+  "violations": [],
+  "final_url": "/prep/issues",
+  "overflow": false,
+  "overflow_200": false
+ },
+ {
+  "path": "/prep/priority",
+  "who": "parent",
+  "violations": [],
+  "final_url": "/prep/priority",
+  "overflow": false,
+  "overflow_200": false
+ },
+ {
+  "path": "/watch",
+  "who": "guest",
+  "violations": [],
+  "final_url": "/watch",
+  "overflow": false,
+  "overflow_200": false
+ },
+ {
+  "path": "/prep/communication",
+  "who": "parent",
+  "violations": [],
+  "final_url": "/prep/communication",
+  "overflow": false,
+  "overflow_200": false
+ },
+ {
+  "path": "/prep/readiness",
+  "who": "parent",
+  "violations": [],
+  "final_url": "/prep/readiness",
+  "overflow": false,
+  "overflow_200": false
+ },
+ {
+  "path": "/summary",
+  "who": "parent",
+  "violations": [
+   {
+    "id": "color-contrast",
+    "impact": "serious",
+    "n": 3,
+    "help": "Elements must meet minimum color contrast ratio thresholds",
+    "nodes": [
+     {
+      "t": "estid=\"history-sum_5aa5a9a513ce\"] > .text-\\[\\#6E6787\\][x-line-number=\"1046\"][x-id=\"Summary_1046_12\"]",
+      "html": "<span class=\"text-[#6E6787] shrink-0\" x-file-name=\"Summary\" x-line-number=\"1046\" x-column=\"12\" x-component=\"span\" x-id=\"Summary_1046_12\" x-dynamic=\"true\" x-sour",
+      "d": {
+       "fgColor": "#6e6787",
+       "bgColor": "#efe9f9",
+       "contrastRatio": 4.47,
+       "fontSize": "10.5pt (14px)",
+       "fontWeight": "normal",
+       "messageKey": null,
+       "expectedContrastRatio": "4.5:1",
+       "shadowColor": null
+      }
+     },
+     {
+      "t": "estid=\"history-sum_feab0c86b18e\"] > .text-\\[\\#6E6787\\][x-line-number=\"1046\"][x-id=\"Summary_1046_12\"]",
+      "html": "<span class=\"text-[#6E6787] shrink-0\" x-file-name=\"Summary\" x-line-number=\"1046\" x-column=\"12\" x-component=\"span\" x-id=\"Summary_1046_12\" x-dynamic=\"true\" x-sour",
+      "d": {
+       "fgColor": "#6e6787",
+       "bgColor": "#efe9f9",
+       "contrastRatio": 4.47,
+       "fontSize": "10.5pt (14px)",
+       "fontWeight": "normal",
+       "messageKey": null,
+       "expectedContrastRatio": "4.5:1",
+       "shadowColor": null
+      }
+     },
+     {
+      "t": "estid=\"history-sum_0fecdff3cba5\"] > .text-\\[\\#6E6787\\][x-line-number=\"1046\"][x-id=\"Summary_1046_12\"]",
+      "html": "<span class=\"text-[#6E6787] shrink-0\" x-file-name=\"Summary\" x-line-number=\"1046\" x-column=\"12\" x-component=\"span\" x-id=\"Summary_1046_12\" x-dynamic=\"true\" x-sour",
+      "d": {
+       "fgColor": "#6e6787",
+       "bgColor": "#efe9f9",
+       "contrastRatio": 4.47,
+       "fontSize": "10.5pt (14px)",
+       "fontWeight": "normal",
+       "messageKey": null,
+       "expectedContrastRatio": "4.5:1",
+       "shadowColor": null
+      }
+     }
+    ]
+   }
+  ],
+  "final_url": "/summary",
+  "overflow": false,
+  "overflow_200": false
+ },
+ {
+  "path": "/reflection",
+  "who": "parent",
+  "violations": [],
+  "final_url": "/reflection",
+  "overflow": false,
+  "overflow_200": false
+ },
+ {
+  "path": "/orientation",
+  "who": "parent",
+  "violations": [],
+  "final_url": "/orientation",
+  "overflow": false,
+  "overflow_200": false
+ },
+ {
+  "path": "/progress",
+  "who": "parent",
+  "violations": [],
+  "final_url": "/progress",
+  "overflow": false,
+  "overflow_200": false
+ },
+ {
+  "path": "/special-needs-v2",
+  "who": "parent",
+  "violations": [],
+  "final_url": "/special-needs-v2",
+  "overflow": false,
+  "overflow_200": false
+ },
+ {
+  "path": "/special-needs-v2/report",
+  "who": "parent",
+  "violations": [],
+  "final_url": "/special-needs-v2/report",
+  "overflow": false,
+  "overflow_200": false
+ },
+ {
+  "path": "/special-needs-v2/compare",
+  "who": "parent",
+  "violations": [],
+  "final_url": "/special-needs-v2/compare",
+  "overflow": false,
+  "overflow_200": false
+ },
+ {
+  "path": "/special-needs-v2/educational-deep-dive",
+  "who": "parent",
+  "violations": [],
+  "final_url": "/special-needs-v2/educational-deep-dive",
+  "overflow": false,
+  "overflow_200": false
+ },
+ {
+  "path": "/special-needs-v2/psychological-deep-dive",
+  "who": "parent",
+  "violations": [],
+  "final_url": "/special-needs-v2/psychological-deep-dive",
+  "overflow": false,
+  "overflow_200": false
+ },
+ {
+  "path": "/special-needs-v2/medical-deep-dive",
+  "who": "parent",
+  "violations": [],
+  "final_url": "/special-needs-v2/medical-deep-dive",
+  "overflow": false,
+  "overflow_200": false
+ },
+ {
+  "path": "/onboarding/what-do-you-need",
+  "who": "parent",
+  "violations": [],
+  "final_url": "/onboarding/what-do-you-need",
+  "overflow": false,
+  "overflow_200": false
+ },
+ {
+  "path": "/professional/joint-alignment/new",
+  "who": "parent",
+  "violations": [],
+  "final_url": "/professional/joint-alignment/new",
+  "overflow": false,
+  "overflow_200": false
+ },
+ {
+  "path": "/professional/joint-alignment/mine",
+  "who": "parent",
+  "violations": [],
+  "final_url": "/professional/joint-alignment/mine",
+  "overflow": false,
+  "overflow_200": false
+ },
+ {
+  "path": "/gmail",
+  "who": "parent",
+  "violations": [],
+  "final_url": "/gmail",
+  "overflow": false,
+  "overflow_200": false
+ },
+ {
+  "path": "/case/SA-DEMO01",
+  "who": "parent",
+  "violations": [],
+  "final_url": "/case/SA-DEMO01",
+  "overflow": false,
+  "overflow_200": false
+ }
+]

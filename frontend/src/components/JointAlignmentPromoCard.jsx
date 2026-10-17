@@ -296,7 +296,7 @@ export default function JointAlignmentPromoCard({
                 </button>
               </div>
               <p
-                className="text-[11px] text-[#6E6787] mt-2 inline-flex items-center gap-1.5"
+                className="text-[0.6875rem] text-[#6E6787] mt-2 inline-flex items-center gap-1.5"
                 data-testid={`${testidPrefix}-one-shot-notice`}
               >
                 <Lock size={11} /> One invitation per co-parent — please double-check the address.

@@ -122,7 +122,7 @@ function useEnterApp() {
 function Eyebrow({ children, color = "text-[#3D1A78]" }) {
   return (
     <div
-      className={`text-[11px] tracking-[0.28em] uppercase font-bold ${color} mb-3`}
+      className={`text-[0.6875rem] tracking-[0.28em] uppercase font-bold ${color} mb-3`}
     >
       {children}
     </div>
@@ -236,7 +236,7 @@ function MarketingFooter() {
             )}
           </div>
         </div>
-        <div className="text-[11px] text-white/40 mt-8 leading-relaxed max-w-2xl">
+        <div className="text-[0.6875rem] text-white/40 mt-8 leading-relaxed max-w-2xl">
           SA CoParents is an educational and preparation tool. It is not legal
           advice, therapy, or a substitute for professional mediation. Always
           consult qualified family-law and mental-health professionals for your
@@ -499,7 +499,7 @@ function SituationPicker() {
         className="rounded-3xl border border-[#E5E0EE] bg-white/85 backdrop-blur-sm p-6 sm:p-8 shadow-sm max-w-3xl mx-auto"
         data-testid="situation-picker"
       >
-        <div className="text-[11px] uppercase tracking-[0.16em] font-bold text-[#3D1A78] mb-2">
+        <div className="text-[0.6875rem] uppercase tracking-[0.16em] font-bold text-[#3D1A78] mb-2">
           Step 1
         </div>
         <h2 className="font-serif text-xl sm:text-2xl text-[#1A1330] leading-snug">
@@ -524,7 +524,7 @@ function SituationPicker() {
                 <div className="text-[15px] font-semibold text-[#1A1330] leading-snug">
                   {g.label}
                 </div>
-                <div className="text-xs sm:text-[13px] text-[#4B4567] leading-snug mt-0.5">
+                <div className="text-xs sm:text-[0.8125rem] text-[#4B4567] leading-snug mt-0.5">
                   {g.sublabel}
                 </div>
               </div>
@@ -649,25 +649,25 @@ function PathBInvitedCard() {
           className="w-full text-left"
           data-testid="hero-invited-cta"
         >
-          <div className="text-[10px] uppercase tracking-[0.22em] font-bold text-[#3D1A78]">
+          <div className="text-[0.625rem] uppercase tracking-[0.22em] font-bold text-[#3D1A78]">
             Path B
           </div>
           <div className="font-serif text-xl sm:text-2xl text-[#1A1330] mt-1 leading-tight">
             I was invited by a professional
           </div>
-          <div className="text-[13px] text-[#4B4567] mt-2 leading-relaxed">
+          <div className="text-[0.8125rem] text-[#4B4567] mt-2 leading-relaxed">
             Open the link your mediator or attorney emailed you — or
             paste the code they gave you. We&rsquo;ll auto-connect the
             rest.
           </div>
-          <div className="mt-3 inline-flex items-center gap-1 text-[13px] font-semibold text-[#3D1A78] group-hover:underline">
+          <div className="mt-3 inline-flex items-center gap-1 text-[0.8125rem] font-semibold text-[#3D1A78] group-hover:underline">
             Continue your invitation →
           </div>
         </button>
         <div className="mt-3 pt-3 border-t border-[#EFE9F9]">
           <Link
             to="/join/sample-preview"
-            className="text-[11px] text-[#6E6787] hover:text-[#3D1A78] hover:underline"
+            className="text-[0.6875rem] text-[#6E6787] hover:text-[#3D1A78] hover:underline"
             data-testid="hero-invited-sample-link"
           >
             See a sample invited screen →
@@ -682,7 +682,7 @@ function PathBInvitedCard() {
       className="text-left rounded-3xl bg-white border-2 border-[#3D1A78] p-5 sm:p-6 shadow-sm"
       data-testid="hero-invited-expanded"
     >
-      <div className="text-[10px] uppercase tracking-[0.22em] font-bold text-[#3D1A78]">
+      <div className="text-[0.625rem] uppercase tracking-[0.22em] font-bold text-[#3D1A78]">
         Path B
       </div>
       <div className="font-serif text-xl sm:text-2xl text-[#1A1330] mt-1 leading-tight">
@@ -690,10 +690,10 @@ function PathBInvitedCard() {
       </div>
       <div className="mt-4 space-y-3">
         <div className="rounded-2xl bg-[#F5F1FB] border border-[#D6CFE8] p-3">
-          <div className="text-[12px] font-semibold text-[#3D1A78] mb-1">
+          <div className="text-[0.75rem] font-semibold text-[#3D1A78] mb-1">
             I have a link from my email
           </div>
-          <div className="text-[12px] text-[#4B4567] leading-relaxed">
+          <div className="text-[0.75rem] text-[#4B4567] leading-relaxed">
             Open the link your professional sent you — it auto-connects
             everything.
           </div>
@@ -701,7 +701,7 @@ function PathBInvitedCard() {
         <form onSubmit={submit} className="space-y-2">
           <label
             htmlFor="hero-path-b-code"
-            className="block text-[12px] font-semibold text-[#3D1A78]"
+            className="block text-[0.75rem] font-semibold text-[#3D1A78]"
           >
             I have an Alignment Code
           </label>
@@ -729,7 +729,7 @@ function PathBInvitedCard() {
           </div>
           {warning && (
             <div
-              className="text-[11px] text-[#8A5B00] bg-[#FFF6E5] border border-[#F0D9A1] rounded-lg px-2.5 py-1.5"
+              className="text-[0.6875rem] text-[#8A5B00] bg-[#FFF6E5] border border-[#F0D9A1] rounded-lg px-2.5 py-1.5"
               data-testid="hero-path-b-code-warning"
             >
               {warning}
@@ -739,7 +739,7 @@ function PathBInvitedCard() {
         <button
           type="button"
           onClick={() => { setExpanded(false); setCode(""); setWarning(null); }}
-          className="text-[11px] text-[#6E6787] hover:text-[#1A1330] hover:underline"
+          className="text-[0.6875rem] text-[#6E6787] hover:text-[#1A1330] hover:underline"
           data-testid="hero-path-b-collapse"
         >
           ← Back
@@ -765,7 +765,7 @@ function HeroTop() {
           <div className="absolute inset-0 rounded-full bg-[#3D1A78]/25 blur-lg" />
           <div className="relative h-24 w-24 sm:h-28 sm:w-28 rounded-full bg-gradient-to-br from-[#3D1A78] to-[#5A2FA0] text-white grid place-items-center shadow-xl border-4 border-white">
             <div className="text-center leading-tight">
-              <div className="text-[10px] uppercase tracking-[0.24em] font-bold opacity-90">Free</div>
+              <div className="text-[0.625rem] uppercase tracking-[0.24em] font-bold opacity-90">Free</div>
               <div className="font-serif text-lg sm:text-xl font-bold">App</div>
             </div>
           </div>
@@ -823,7 +823,7 @@ function HeroBottom() {
             </span>
             <span className="hidden sm:inline-block h-px w-10 bg-[#3D1A78]/40" />
           </div>
-          <p className="mt-2 text-[13px] sm:text-sm text-[#4B4567] max-w-lg mx-auto">
+          <p className="mt-2 text-[0.8125rem] sm:text-sm text-[#4B4567] max-w-lg mx-auto">
             Two ways to begin — starting on your own, or picking up
             an invitation from a professional.
           </p>
@@ -842,17 +842,17 @@ function HeroBottom() {
             className="group text-left rounded-3xl bg-white border-2 border-[#D6CFE8] hover:border-[#3D1A78] p-5 sm:p-6 transition shadow-sm"
             data-testid="hero-solo-cta"
           >
-            <div className="text-[10px] uppercase tracking-[0.22em] font-bold text-[#3D1A78]">
+            <div className="text-[0.625rem] uppercase tracking-[0.22em] font-bold text-[#3D1A78]">
               Path A
             </div>
             <div className="font-serif text-xl sm:text-2xl text-[#1A1330] mt-1 leading-tight">
               I&rsquo;m starting on my own
             </div>
-            <div className="text-[13px] text-[#4B4567] mt-2 leading-relaxed">
+            <div className="text-[0.8125rem] text-[#4B4567] mt-2 leading-relaxed">
               Reflect independently, at your own pace. Build a Foundation
               Statement you can share when you&rsquo;re ready.
             </div>
-            <div className="mt-3 inline-flex items-center gap-1 text-[13px] font-semibold text-[#3D1A78] group-hover:underline">
+            <div className="mt-3 inline-flex items-center gap-1 text-[0.8125rem] font-semibold text-[#3D1A78] group-hover:underline">
               Choose your situation →
             </div>
           </button>
@@ -961,13 +961,13 @@ function Step5CoparentCtas() {
   if (profName) {
     return (
       <div
-        className="mt-4 rounded-2xl border border-[#B7DEC6] bg-[#E1F3E8] p-3 text-[13px] text-[#186142]"
+        className="mt-4 rounded-2xl border border-[#B7DEC6] bg-[#E1F3E8] p-3 text-[0.8125rem] text-[#186142]"
         data-testid="how-step-5-invited-banner"
       >
         <div className="font-semibold flex items-center gap-1.5 mb-0.5">
           ✓ Connected to {profName}
         </div>
-        <div className="text-[12px] leading-relaxed">
+        <div className="text-[0.75rem] leading-relaxed">
           Complete your reflection at your own pace — your professional
           will use the completed assessments to generate a Joint
           Alignment Report.
@@ -979,14 +979,14 @@ function Step5CoparentCtas() {
     <div className="mt-4 flex flex-wrap gap-2" data-testid="how-step-5-ctas">
       <a
         href="/dashboard"
-        className="inline-flex items-center gap-1 rounded-full bg-[#3D1A78] hover:bg-[#2A0F5F] text-white px-3.5 py-1.5 text-[12px] font-semibold"
+        className="inline-flex items-center gap-1 rounded-full bg-[#3D1A78] hover:bg-[#2A0F5F] text-white px-3.5 py-1.5 text-[0.75rem] font-semibold"
         data-testid="how-step-5-invite-coparent"
       >
         Invite my co-parent →
       </a>
       <a
         href="/join"
-        className="inline-flex items-center gap-1 rounded-full bg-white border border-[#3D1A78] text-[#3D1A78] hover:bg-[#F5F1FB] px-3.5 py-1.5 text-[12px] font-semibold"
+        className="inline-flex items-center gap-1 rounded-full bg-white border border-[#3D1A78] text-[#3D1A78] hover:bg-[#F5F1FB] px-3.5 py-1.5 text-[0.75rem] font-semibold"
         data-testid="how-step-5-connect-professional"
       >
         Connect with a professional →
@@ -1079,14 +1079,14 @@ function HowItWorks() {
                 <div className="w-11 h-11 rounded-2xl bg-gradient-to-br from-[#3D1A78] to-[#2DB5B5] grid place-items-center text-white shadow-sm mb-4">
                   <s.icon size={18} strokeWidth={2.2} />
                 </div>
-                <div className="text-[10px] uppercase tracking-[0.22em] text-[#3D1A78] font-bold mb-1">
+                <div className="text-[0.625rem] uppercase tracking-[0.22em] text-[#3D1A78] font-bold mb-1">
                   Step {s.n}
                 </div>
                 <h3 className="font-serif text-[1.35rem] sm:text-2xl text-[#1A1330] leading-tight mb-1.5">
                   {s.title}
                 </h3>
                 <div
-                  className="text-[11px] uppercase tracking-[0.16em] text-[#6E6787] font-semibold mb-3"
+                  className="text-[0.6875rem] uppercase tracking-[0.16em] text-[#6E6787] font-semibold mb-3"
                   data-testid={`how-step-${s.n}-formal-subtitle`}
                 >
                   {s.subtitle}
@@ -1156,7 +1156,7 @@ function ProfessionalConnection() {
               <Briefcase size={20} strokeWidth={2.2} />
             </div>
             <div>
-              <div className="text-[10px] uppercase tracking-[0.22em] font-bold text-[#0E7A7A]">
+              <div className="text-[0.625rem] uppercase tracking-[0.22em] font-bold text-[#0E7A7A]">
                 The Ecosystem Hand-off
               </div>
               <h2 className="font-serif text-2xl sm:text-3xl text-[#1A1330] leading-snug mt-1">
@@ -1223,7 +1223,7 @@ function AlignmentPhilosophy() {
       <div className="absolute -bottom-40 -right-40 w-[32rem] h-[32rem] rounded-full bg-white/8 blur-3xl pointer-events-none" />
       <div className="relative max-w-5xl mx-auto px-4 sm:px-6">
         <div className="text-center max-w-3xl mx-auto">
-          <div className="text-[10px] uppercase tracking-[0.28em] font-bold text-[#E8DEFA] mb-3">
+          <div className="text-[0.625rem] uppercase tracking-[0.28em] font-bold text-[#E8DEFA] mb-3">
             The Parent Philosophy
           </div>
           <h2 className="font-serif text-3xl sm:text-4xl lg:text-5xl leading-tight">
@@ -1246,7 +1246,7 @@ function AlignmentPhilosophy() {
           className="mt-12 rounded-3xl bg-white/10 backdrop-blur-sm border border-white/20 p-6 sm:p-8"
           data-testid="alignment-shared-concerns"
         >
-          <div className="text-[10px] uppercase tracking-[0.22em] font-bold text-[#A8DCDC] mb-4 text-center">
+          <div className="text-[0.625rem] uppercase tracking-[0.22em] font-bold text-[#A8DCDC] mb-4 text-center">
             Shared concerns often sound like this
           </div>
           <ul className="grid sm:grid-cols-2 gap-3 sm:gap-4">

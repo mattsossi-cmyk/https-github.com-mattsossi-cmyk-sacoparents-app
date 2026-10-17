@@ -18,7 +18,7 @@ export function ContinueStep({ step, doneCount, total }) {
         <span data-testid="door-self-continue-title" className="block text-base font-extrabold leading-tight">
           Continue at Step {step.n}
         </span>
-        <span data-testid="door-self-continue-detail" className="block text-[12px] text-emerald-50 leading-snug mt-0.5">
+        <span data-testid="door-self-continue-detail" className="block text-[0.75rem] text-emerald-50 leading-snug mt-0.5">
           {step.label} · {doneCount} of {total} steps done
         </span>
       </span>

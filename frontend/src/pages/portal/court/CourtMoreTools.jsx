@@ -13,7 +13,7 @@ export function CourtMoreTools({ cc, courtKey, onCase, onBiff, onPillar, modules
       <CollapsibleTrigger data-testid="court-more-tools-toggle" className="w-full flex items-center justify-between gap-3 px-5 py-4 text-left rounded-3xl hover:bg-[#faf8fd] transition-colors">
         <span>
           <span className="block text-lg font-extrabold text-[#3b1566]">More court tools</span>
-          <span className="block text-[12px] text-slate-500">Case code, Communication Builder, the bigger-picture tiles, court modules and your checklist.</span>
+          <span className="block text-[0.75rem] text-slate-500">Case code, Communication Builder, the bigger-picture tiles, court modules and your checklist.</span>
         </span>
         <i className={`fa-solid fa-chevron-down text-[#5c2c8e] transition-transform duration-200 ${open ? "rotate-180" : ""}`} aria-hidden="true"></i>
       </CollapsibleTrigger>

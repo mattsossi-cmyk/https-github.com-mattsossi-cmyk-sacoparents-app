@@ -137,7 +137,7 @@ export default function InviteAccept() {
           <div className="w-14 h-14 mx-auto rounded-2xl bg-gradient-to-br from-[#3D1A78] to-[#2DB5B5] grid place-items-center text-white shadow-md mb-4">
             <Users size={26} strokeWidth={2.2} />
           </div>
-          <div className="text-[11px] tracking-[0.22em] uppercase font-bold text-[#3D1A78] mb-2">
+          <div className="text-[0.6875rem] tracking-[0.22em] uppercase font-bold text-[#3D1A78] mb-2">
             You&apos;re invited
           </div>
           <h1 className="font-serif text-3xl sm:text-4xl text-[#1A1330] leading-tight">
@@ -238,7 +238,7 @@ export default function InviteAccept() {
             Create my account &amp; start
           </button>
 
-          <div className="mt-5 flex items-start gap-2 text-[11px] text-[#6E6787] leading-relaxed">
+          <div className="mt-5 flex items-start gap-2 text-[0.6875rem] text-[#6E6787] leading-relaxed">
             <ShieldCheck size={14} className="text-[#0E7A7A] mt-0.5 shrink-0" />
             <span>
               Your prep is private. {info.inviter_name} won&apos;t see any of your

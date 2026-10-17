@@ -150,7 +150,7 @@ export default function SectionCoachCard({
           <Sparkles size={16} />
         </div>
         <div className="flex-1">
-          <div className="text-[10px] uppercase tracking-[0.22em] text-[#3D1A78] font-bold">
+          <div className="text-[0.625rem] uppercase tracking-[0.22em] text-[#3D1A78] font-bold">
             AI Personal Coach
           </div>
           <div className="font-serif text-lg text-[#1A1330] leading-snug mt-0.5">
@@ -229,7 +229,7 @@ export default function SectionCoachCard({
                       )}`}
                     >
                       <div
-                        className={`flex items-center gap-2 ${tint.text} font-semibold text-[11px] uppercase tracking-[0.18em]`}
+                        className={`flex items-center gap-2 ${tint.text} font-semibold text-[0.6875rem] uppercase tracking-[0.18em]`}
                       >
                         <Icon size={13} />
                         {title}
@@ -245,7 +245,7 @@ export default function SectionCoachCard({
                           {items.map((line, i) => (
                             <li
                               key={`${key}-${i}-${String(line).slice(0, 30)}`}
-                              className="flex gap-2 text-[13px] text-[#1A1330] leading-snug"
+                              className="flex gap-2 text-[0.8125rem] text-[#1A1330] leading-snug"
                             >
                               <span
                                 className={`shrink-0 mt-1.5 h-1.5 w-1.5 rounded-full ${tint.dot}`}
@@ -277,7 +277,7 @@ export default function SectionCoachCard({
                 </button>
               </div>
 
-              <div className="mt-3 text-[11px] text-[#6E6787] italic">
+              <div className="mt-3 text-[0.6875rem] text-[#6E6787] italic">
                 This coach is educational — not a diagnosis or medical advice.
               </div>
             </>

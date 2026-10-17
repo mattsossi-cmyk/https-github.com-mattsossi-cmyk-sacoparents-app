@@ -13,7 +13,7 @@ function CheckItem({ listKey, item, on, onToggle }) {
       }`}
     >
       <span className={`mt-0.5 shrink-0 w-5 h-5 rounded-md border-2 flex items-center justify-center ${on ? "border-[#4a2574] bg-[#4a2574] text-white" : "border-slate-300"}`}>
-        {on && <i className="fa-solid fa-check text-[10px]"></i>}
+        {on && <i className="fa-solid fa-check text-[0.625rem]"></i>}
       </span>
       <span className="text-sm font-semibold text-slate-900">{item.label}</span>
     </button>
@@ -46,7 +46,7 @@ export function PpChecklist({ list, index, total, plan, onToggle, onNote, onBack
           <i className={`fa-solid ${list.icon}`}></i>
         </div>
         <div>
-          <p className="text-[11px] font-bold uppercase tracking-wider text-[#8251b8]">
+          <p className="text-[0.6875rem] font-bold uppercase tracking-wider text-[#8251b8]">
             Quick check {index + 1} of {total}
           </p>
           <h2 data-testid="pp-check-title" className="text-2xl sm:text-3xl font-extrabold text-[#2d1548]">{list.title}</h2>

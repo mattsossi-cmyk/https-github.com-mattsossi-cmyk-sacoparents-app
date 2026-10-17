@@ -232,7 +232,7 @@ function VoicePlayerBar({ token, onSection }) {
           <select
             value={voice}
             onChange={(e) => setVoice(e.target.value)}
-            className="bg-transparent border-none text-[12px] text-[#3D1A78] font-semibold focus:outline-none cursor-pointer"
+            className="bg-transparent border-none text-[0.75rem] text-[#3D1A78] font-semibold focus:outline-none cursor-pointer"
             data-testid="shared-voice-select"
           >
             {VOICE_OPTIONS.map((v) => (
@@ -285,7 +285,7 @@ export default function FoundationStatementShared() {
             className="rounded-3xl border border-[#E5E0EE] bg-white px-6 py-12 text-center"
             data-testid="shared-error"
           >
-            <div className="text-[10px] uppercase tracking-[0.22em] font-bold text-[#C05621] mb-2">
+            <div className="text-[0.625rem] uppercase tracking-[0.22em] font-bold text-[#C05621] mb-2">
               Link unavailable
             </div>
             <h1 className="font-serif text-3xl text-[#1A1330] leading-tight">
@@ -299,7 +299,7 @@ export default function FoundationStatementShared() {
         )}
         {data && (
           <>
-            <div className="text-[10px] uppercase tracking-[0.22em] font-bold text-[#3D1A78] flex items-center gap-1.5">
+            <div className="text-[0.625rem] uppercase tracking-[0.22em] font-bold text-[#3D1A78] flex items-center gap-1.5">
               <Heart size={12} /> Foundation Statement
             </div>
             <h1
@@ -321,7 +321,7 @@ export default function FoundationStatementShared() {
                 className="mt-6 rounded-2xl bg-[#F5F1FB] border-l-4 border-[#3D1A78] px-4 py-3"
                 data-testid="shared-sender-note"
               >
-                <div className="text-[10px] uppercase tracking-[0.22em] font-bold text-[#3D1A78] mb-1">
+                <div className="text-[0.625rem] uppercase tracking-[0.22em] font-bold text-[#3D1A78] mb-1">
                   A note from {data.sender_name}
                 </div>
                 <p className="text-sm text-[#1A1330] leading-relaxed whitespace-pre-wrap">
@@ -358,7 +358,7 @@ export default function FoundationStatementShared() {
                         : "border-[#E5E0EE] bg-white")
                     }
                   >
-                    <div className="text-[10px] uppercase tracking-[0.22em] font-bold text-[#3D1A78] mb-1">
+                    <div className="text-[0.625rem] uppercase tracking-[0.22em] font-bold text-[#3D1A78] mb-1">
                       {s.label}
                     </div>
                     <p className="text-[#1A1330] leading-relaxed whitespace-pre-wrap">
@@ -371,7 +371,7 @@ export default function FoundationStatementShared() {
 
             {/* Guardrail strip */}
             <div
-              className="mt-8 flex items-start gap-2 rounded-2xl bg-white border border-[#E5E0EE] px-4 py-3 text-[12px] text-[#4B4567]"
+              className="mt-8 flex items-start gap-2 rounded-2xl bg-white border border-[#E5E0EE] px-4 py-3 text-[0.75rem] text-[#4B4567]"
               data-testid="shared-court-disclaimer"
             >
               <ShieldCheck size={14} className="flex-shrink-0 mt-0.5 text-[#3D1A78]" />
@@ -381,7 +381,7 @@ export default function FoundationStatementShared() {
                 or first co-parenting conversation makes the discussion
                 calmer and more focused.
                 {expiresLine && (
-                  <span className="block text-[#6E6787] mt-1 text-[11px]">
+                  <span className="block text-[#6E6787] mt-1 text-[0.6875rem]">
                     {expiresLine}
                   </span>
                 )}

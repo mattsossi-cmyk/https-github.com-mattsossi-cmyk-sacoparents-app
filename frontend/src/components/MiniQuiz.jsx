@@ -186,7 +186,7 @@ export default function MiniQuiz() {
     >
       <div className="flex items-baseline justify-between gap-3 flex-wrap">
         <div>
-          <div className="text-[10px] uppercase tracking-[0.22em] font-bold text-[#3D1A78]">
+          <div className="text-[0.625rem] uppercase tracking-[0.22em] font-bold text-[#3D1A78]">
             Rough self-check · not a diagnosis
           </div>
           <h2
@@ -235,7 +235,7 @@ export default function MiniQuiz() {
                       aria-checked={isActive}
                       onClick={() => pick(idx, key)}
                       className={
-                        "text-left text-[13px] font-medium leading-snug rounded-xl border-2 transition-colors px-3 py-2.5 " +
+                        "text-left text-[0.8125rem] font-medium leading-snug rounded-xl border-2 transition-colors px-3 py-2.5 " +
                         (isActive
                           ? `${cfg.activeBg} ${cfg.activeText} ${cfg.activeRing}`
                           : `bg-white text-[#1A1330] ${cfg.ring} hover:bg-[#F5F1FB]`)
@@ -244,7 +244,7 @@ export default function MiniQuiz() {
                     >
                       <span className="inline-flex items-center gap-1.5">
                         {isActive ? <Check size={12} /> : <Circle size={12} />}
-                        <span className="text-[10px] uppercase tracking-[0.16em] font-bold">
+                        <span className="text-[0.625rem] uppercase tracking-[0.16em] font-bold">
                           {cfg.label}
                         </span>
                       </span>
@@ -274,7 +274,7 @@ export default function MiniQuiz() {
           <div className="flex items-center gap-3 flex-wrap">
             <div className="flex items-center gap-2">
               <span
-                className="inline-flex items-center rounded-full bg-white/70 text-[#1A1330] text-[10px] font-bold uppercase tracking-[0.18em] px-2.5 py-1"
+                className="inline-flex items-center rounded-full bg-white/70 text-[#1A1330] text-[0.625rem] font-bold uppercase tracking-[0.18em] px-2.5 py-1"
                 data-testid="sample-preview-mini-quiz-tally"
               >
                 {counts.agree} same · {counts.differ} different · {counts.incomplete} untested
@@ -312,7 +312,7 @@ export default function MiniQuiz() {
         </div>
       )}
 
-      <p className="mt-4 text-[11px] text-[#6E6787] italic leading-relaxed">
+      <p className="mt-4 text-[0.6875rem] text-[#6E6787] italic leading-relaxed">
         Educational and organizational self-check — not a diagnosis, not a
         court submission, and never a judgment about which parent is right.
       </p>

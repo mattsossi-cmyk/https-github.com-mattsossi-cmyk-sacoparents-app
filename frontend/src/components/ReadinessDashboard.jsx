@@ -89,7 +89,7 @@ export default function ReadinessDashboard({ readiness, dimensionNarratives = {}
           className="rounded-2xl border border-[#3D1A78]/25 bg-[#F5F1FB] p-4 mb-4 text-sm text-[#1A1330] leading-relaxed"
           data-testid="readiness-disclaimer"
         >
-          <div className="text-[10px] uppercase tracking-[0.22em] font-bold text-[#3D1A78] mb-1">
+          <div className="text-[0.625rem] uppercase tracking-[0.22em] font-bold text-[#3D1A78] mb-1">
             Read this first
           </div>
           {readiness_disclaimer}
@@ -101,7 +101,7 @@ export default function ReadinessDashboard({ readiness, dimensionNarratives = {}
           className="rounded-2xl border border-[#9A3A23]/25 bg-[#FDF3F0] p-4 mb-4 text-sm text-[#1A1330] leading-relaxed space-y-2"
           data-testid="readiness-caveats"
         >
-          <div className="text-[10px] uppercase tracking-[0.22em] font-bold text-[#9A3A23] mb-1">
+          <div className="text-[0.625rem] uppercase tracking-[0.22em] font-bold text-[#9A3A23] mb-1">
             Important caveats
           </div>
           {caveats.map((c, i) => (
@@ -130,7 +130,7 @@ export default function ReadinessDashboard({ readiness, dimensionNarratives = {}
                 <div className="flex items-baseline justify-between gap-3 mb-1">
                   <div className="font-semibold text-[#1A1330] text-lg">{p.label}</div>
                   <div
-                    className="text-[10px] uppercase tracking-[0.18em] font-bold px-2.5 py-0.5 rounded-full"
+                    className="text-[0.625rem] uppercase tracking-[0.18em] font-bold px-2.5 py-0.5 rounded-full"
                     style={{ background: levelTone.hex + "18", color: levelTone.hex }}
                   >
                     {levelTone.label}
@@ -143,7 +143,7 @@ export default function ReadinessDashboard({ readiness, dimensionNarratives = {}
                 <p className="text-sm text-[#4B4567] leading-relaxed">{p.narrative}</p>
                 {p.strengths?.length > 0 && (
                   <div className="mt-3">
-                    <div className="text-[10px] uppercase tracking-[0.18em] font-bold text-[#1F7A3A] mb-1">
+                    <div className="text-[0.625rem] uppercase tracking-[0.18em] font-bold text-[#1F7A3A] mb-1">
                       What&rsquo;s working
                     </div>
                     <ul className="text-sm text-[#1A1330] space-y-0.5 list-disc list-inside">
@@ -155,7 +155,7 @@ export default function ReadinessDashboard({ readiness, dimensionNarratives = {}
                 )}
                 {p.growth_areas?.length > 0 && (
                   <div className="mt-3">
-                    <div className="text-[10px] uppercase tracking-[0.18em] font-bold text-[#B98211] mb-1">
+                    <div className="text-[0.625rem] uppercase tracking-[0.18em] font-bold text-[#B98211] mb-1">
                       Growth areas
                     </div>
                     <ul className="text-sm text-[#1A1330] space-y-0.5 list-disc list-inside">
@@ -167,7 +167,7 @@ export default function ReadinessDashboard({ readiness, dimensionNarratives = {}
                 )}
                 {p.preparation_recommendations?.length > 0 && (
                   <div className="mt-3 rounded-xl bg-white border border-[#3D1A78]/15 p-3">
-                    <div className="text-[10px] uppercase tracking-[0.18em] font-bold text-[#3D1A78] mb-1.5">
+                    <div className="text-[0.625rem] uppercase tracking-[0.18em] font-bold text-[#3D1A78] mb-1.5">
                       Specific preparation recommendations
                     </div>
                     <ol className="text-sm text-[#1A1330] space-y-1 list-decimal list-inside">
@@ -178,7 +178,7 @@ export default function ReadinessDashboard({ readiness, dimensionNarratives = {}
                   </div>
                 )}
                 <div
-                  className="mt-3 text-[11px] uppercase tracking-[0.14em] text-[#6E6787]"
+                  className="mt-3 text-[0.6875rem] uppercase tracking-[0.14em] text-[#6E6787]"
                   data-testid={`readiness-profile-${k}-secondary-score`}
                 >
                   Secondary score · {Math.round(p.secondary_score)}/100
@@ -209,7 +209,7 @@ export default function ReadinessDashboard({ readiness, dimensionNarratives = {}
         data-testid="readiness-overall"
       >
         <div>
-          <div className="text-[10px] uppercase tracking-[0.18em] font-bold text-[#6E6787] mb-0.5">
+          <div className="text-[0.625rem] uppercase tracking-[0.18em] font-bold text-[#6E6787] mb-0.5">
             Secondary indicator only
           </div>
           <div className="text-sm text-[#4B4567] leading-relaxed">
@@ -218,11 +218,11 @@ export default function ReadinessDashboard({ readiness, dimensionNarratives = {}
           </div>
         </div>
         <div className="shrink-0 text-right">
-          <div className="text-[10px] uppercase tracking-[0.16em] text-[#4B4567]">Overall</div>
+          <div className="text-[0.625rem] uppercase tracking-[0.16em] text-[#4B4567]">Overall</div>
           <div className="text-3xl font-serif font-bold" style={{ color: overallTone.hex }}>
             {overall}
           </div>
-          <div className="text-[10px] text-[#6E6787]">/ 100 · {label}</div>
+          <div className="text-[0.625rem] text-[#6E6787]">/ 100 · {label}</div>
         </div>
       </div>
 

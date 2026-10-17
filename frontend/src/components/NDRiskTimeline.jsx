@@ -97,11 +97,11 @@ function DeltaCard({ from, to }) {
       data-testid={`nd-timeline-delta-${to.id}`}
     >
       <div className="flex items-center justify-between gap-3 flex-wrap">
-        <div className="text-[10px] uppercase tracking-[0.2em] font-bold text-[#6A5799]">
+        <div className="text-[0.625rem] uppercase tracking-[0.2em] font-bold text-[#6A5799]">
           {from.dateLong} → {to.dateLong}
         </div>
         <span
-          className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-bold"
+          className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[0.6875rem] font-bold"
           style={{ background: tone.bg, color: tone.c }}
         >
           {arrow}
@@ -110,20 +110,20 @@ function DeltaCard({ from, to }) {
       </div>
       <div className="mt-2 flex items-center gap-2 text-sm text-[#1A1330]">
         <span
-          className="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-bold"
+          className="inline-flex items-center px-2 py-0.5 rounded-full text-[0.6875rem] font-bold"
           style={{ background: fromMeta.bg, color: fromMeta.color }}
         >
           {fromMeta.label}
         </span>
         <span className="text-[#6A5799]">→</span>
         <span
-          className="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-bold"
+          className="inline-flex items-center px-2 py-0.5 rounded-full text-[0.6875rem] font-bold"
           style={{ background: toMeta.bg, color: toMeta.color }}
         >
           {toMeta.label}
         </span>
         {tierChanged && (
-          <span className="text-[11px] text-[#4B4567] italic">tier changed</span>
+          <span className="text-[0.6875rem] text-[#4B4567] italic">tier changed</span>
         )}
       </div>
     </div>
@@ -224,7 +224,7 @@ export default function NDRiskTimeline({ highlightId }) {
       {/* Header stats */}
       <div className="grid sm:grid-cols-3 gap-3 mb-4">
         <div className="rounded-2xl border border-[#E5E0EE] bg-white p-4">
-          <div className="text-[10px] uppercase tracking-[0.2em] font-bold text-[#6A5799]">
+          <div className="text-[0.625rem] uppercase tracking-[0.2em] font-bold text-[#6A5799]">
             Latest tier
           </div>
           <div className="mt-1 flex items-baseline gap-2">
@@ -240,7 +240,7 @@ export default function NDRiskTimeline({ highlightId }) {
             </span>
             <span className="text-lg font-bold text-[#1A1330]">{latest.score}/16</span>
           </div>
-          <div className="text-[11px] text-[#6A5799] mt-1">
+          <div className="text-[0.6875rem] text-[#6A5799] mt-1">
             {daysSinceLatest === 0
               ? "Assessed today"
               : `${daysSinceLatest} day${daysSinceLatest === 1 ? "" : "s"} ago`}
@@ -248,7 +248,7 @@ export default function NDRiskTimeline({ highlightId }) {
         </div>
 
         <div className="rounded-2xl border border-[#E5E0EE] bg-white p-4">
-          <div className="text-[10px] uppercase tracking-[0.2em] font-bold text-[#6A5799]">
+          <div className="text-[0.625rem] uppercase tracking-[0.2em] font-bold text-[#6A5799]">
             Since first assessment
           </div>
           <div className="mt-1 flex items-baseline gap-2">
@@ -268,7 +268,7 @@ export default function NDRiskTimeline({ highlightId }) {
               {lifetimeDelta} pts
             </span>
           </div>
-          <div className="text-[11px] text-[#6A5799] mt-1">
+          <div className="text-[0.6875rem] text-[#6A5799] mt-1">
             {chrono.length} assessment{chrono.length === 1 ? "" : "s"} logged
           </div>
         </div>
@@ -278,13 +278,13 @@ export default function NDRiskTimeline({ highlightId }) {
           className="rounded-2xl border border-[#3D1A78] bg-[#3D1A78] p-4 text-white hover:bg-[#2E1258] transition"
           data-testid="nd-timeline-reassess-cta"
         >
-          <div className="text-[10px] uppercase tracking-[0.2em] font-bold opacity-80">
+          <div className="text-[0.625rem] uppercase tracking-[0.2em] font-bold opacity-80">
             Re-assess
           </div>
           <div className="mt-1 inline-flex items-center gap-2 text-sm font-bold">
             <RefreshCw size={14} /> Take a new assessment
           </div>
-          <div className="text-[11px] opacity-80 mt-1">
+          <div className="text-[0.6875rem] opacity-80 mt-1">
             Recommended every 30 days.
           </div>
         </Link>
@@ -294,14 +294,14 @@ export default function NDRiskTimeline({ highlightId }) {
       <div className="rounded-3xl border border-[#E5E0EE] bg-white p-4 sm:p-6">
         <div className="flex items-center justify-between gap-3 flex-wrap mb-3">
           <div>
-            <div className="text-[10px] uppercase tracking-[0.22em] font-bold text-[#3D1A78]">
+            <div className="text-[0.625rem] uppercase tracking-[0.22em] font-bold text-[#3D1A78]">
               Tier progression
             </div>
             <div className="font-serif text-lg text-[#1A1330]">
               Overall score over time (lower = safer)
             </div>
           </div>
-          <div className="flex flex-wrap gap-1.5 text-[10px]">
+          <div className="flex flex-wrap gap-1.5 text-[0.625rem]">
             {(["low", "medium", "high", "critical"]).map((t) => (
               <span
                 key={t}
@@ -360,7 +360,7 @@ export default function NDRiskTimeline({ highlightId }) {
       {/* Delta cards between consecutive assessments (newest → oldest pair) */}
       {previous && (
         <div className="mt-6">
-          <div className="text-[10px] uppercase tracking-[0.22em] font-bold text-[#3D1A78] mb-2">
+          <div className="text-[0.625rem] uppercase tracking-[0.22em] font-bold text-[#3D1A78] mb-2">
             Movement between assessments
           </div>
           <div className="grid sm:grid-cols-2 gap-3">

@@ -53,7 +53,7 @@ export default function BriefingEmailDialog({ open, onClose, onSend, sending }) 
       >
         <div className="flex items-center justify-between gap-3 px-6 sm:px-7 pt-6">
           <div>
-            <div className="text-[11px] uppercase tracking-[0.22em] text-[#3D1A78] font-bold mb-1">
+            <div className="text-[0.6875rem] uppercase tracking-[0.22em] text-[#3D1A78] font-bold mb-1">
               Send 4-Dimension Briefing
             </div>
             <h3
@@ -81,7 +81,7 @@ export default function BriefingEmailDialog({ open, onClose, onSend, sending }) 
           </p>
 
           <div>
-            <label className="block text-[11px] uppercase tracking-[0.18em] text-[#3D1A78] font-bold mb-1">
+            <label className="block text-[0.6875rem] uppercase tracking-[0.18em] text-[#3D1A78] font-bold mb-1">
               Recipient role
             </label>
             <div className="flex flex-wrap gap-1.5">
@@ -91,7 +91,7 @@ export default function BriefingEmailDialog({ open, onClose, onSend, sending }) 
                   type="button"
                   onClick={() => setRole(r.key)}
                   data-testid={`briefing-role-${r.key}`}
-                  className={`text-[12px] px-3 py-1.5 rounded-full border transition ${
+                  className={`text-[0.75rem] px-3 py-1.5 rounded-full border transition ${
                     role === r.key
                       ? "bg-[#3D1A78] text-white border-[#3D1A78] font-semibold"
                       : "bg-white text-[#4B4567] border-[#E5E0EE] hover:border-[#3D1A78]"
@@ -105,7 +105,7 @@ export default function BriefingEmailDialog({ open, onClose, onSend, sending }) 
           </div>
 
           <div>
-            <label className="block text-[11px] uppercase tracking-[0.18em] text-[#3D1A78] font-bold mb-1">
+            <label className="block text-[0.6875rem] uppercase tracking-[0.18em] text-[#3D1A78] font-bold mb-1">
               Recipient email <span aria-hidden="true" className="text-[#9A3A23]">*</span>
             </label>
             <input
@@ -121,7 +121,7 @@ export default function BriefingEmailDialog({ open, onClose, onSend, sending }) 
           </div>
 
           <div>
-            <label className="block text-[11px] uppercase tracking-[0.18em] text-[#3D1A78] font-bold mb-1">
+            <label className="block text-[0.6875rem] uppercase tracking-[0.18em] text-[#3D1A78] font-bold mb-1">
               Recipient name <span className="text-[#6E6787] font-normal normal-case tracking-normal">· optional</span>
             </label>
             <input
@@ -135,7 +135,7 @@ export default function BriefingEmailDialog({ open, onClose, onSend, sending }) 
           </div>
 
           <div>
-            <label className="block text-[11px] uppercase tracking-[0.18em] text-[#3D1A78] font-bold mb-1">
+            <label className="block text-[0.6875rem] uppercase tracking-[0.18em] text-[#3D1A78] font-bold mb-1">
               Short message <span className="text-[#6E6787] font-normal normal-case tracking-normal">· optional</span>
             </label>
             <textarea
@@ -149,7 +149,7 @@ export default function BriefingEmailDialog({ open, onClose, onSend, sending }) 
             />
           </div>
 
-          <p className="text-[11px] text-[#6A5799] italic">
+          <p className="text-[0.6875rem] text-[#6A5799] italic">
             Reply-to is set to your email so the recipient can respond directly. The
             briefing is informational preparation support only — not legal advice.
           </p>

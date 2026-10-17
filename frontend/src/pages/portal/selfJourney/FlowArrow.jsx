@@ -5,14 +5,14 @@ const SIZES = {
     line: "w-1.5 h-8",
     btn: "w-[107px] h-[107px] sm:w-[147px] sm:h-[147px]",
     icon: "text-[54px] sm:text-[74px]",
-    badge: "-top-1 -right-4 sm:-right-3 text-[11px] sm:text-xs px-2.5 py-1",
+    badge: "-top-1 -right-4 sm:-right-3 text-[0.6875rem] sm:text-xs px-2.5 py-1",
     glow: "",
   },
   sm: {
     line: "w-1 h-4",
     btn: "w-[54px] h-[54px] sm:w-[74px] sm:h-[74px]",
     icon: "text-[27px] sm:text-[37px]",
-    badge: "-top-1.5 left-[72%] text-[10px] sm:text-[11px] px-2 py-0.5",
+    badge: "-top-1.5 left-[72%] text-[0.625rem] sm:text-[0.6875rem] px-2 py-0.5",
     glow: "sa-arrow-sm",
   },
 };

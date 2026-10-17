@@ -18,7 +18,7 @@ const CopyBtn = ({ text, testid }) => (
     type="button"
     data-testid={testid}
     onClick={() => copy(text)}
-    className="shrink-0 px-2.5 py-1 rounded-full bg-white border border-purple-200 hover:bg-purple-50 text-[11px] font-semibold text-purple-900 transition-colors"
+    className="shrink-0 px-2.5 py-1 rounded-full bg-white border border-purple-200 hover:bg-purple-50 text-[0.6875rem] font-semibold text-purple-900 transition-colors"
   >
     <i className="fa-regular fa-copy mr-1"></i>Copy
   </button>
@@ -50,7 +50,7 @@ function TemplateCard({ t, grey, onUse }) {
               type="button"
               data-testid={`sa-ai-template-use-${t.key}`}
               onClick={() => onUse(body)}
-              className="shrink-0 px-2.5 py-1 rounded-full bg-purple-700 hover:bg-purple-800 text-[11px] font-semibold text-white transition-colors"
+              className="shrink-0 px-2.5 py-1 rounded-full bg-purple-700 hover:bg-purple-800 text-[0.6875rem] font-semibold text-white transition-colors"
             >
               Use in draft
             </button>

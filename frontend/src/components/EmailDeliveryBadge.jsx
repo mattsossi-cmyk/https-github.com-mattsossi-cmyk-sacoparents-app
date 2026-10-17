@@ -60,7 +60,7 @@ export default function EmailDeliveryBadge({ reportType, refreshKey = 0 }) {
   const iso = slot.last_sent_at;
   return (
     <span
-      className="inline-flex items-center gap-1.5 rounded-full bg-[#E1F3E8] border border-[#B7DEC6] text-[#186142] px-2.5 py-0.5 text-[11px] font-semibold"
+      className="inline-flex items-center gap-1.5 rounded-full bg-[#E1F3E8] border border-[#B7DEC6] text-[#186142] px-2.5 py-0.5 text-[0.6875rem] font-semibold"
       title={`Sent to ${slot.last_sent_to} at ${iso}`}
       data-testid={`email-delivery-badge-${reportType}`}
       data-iso={iso}

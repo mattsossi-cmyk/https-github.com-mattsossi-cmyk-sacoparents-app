@@ -15,7 +15,7 @@ import { logError } from "../../lib/logger";
 import PathwayReportUnlockHint from "../PathwayReportUnlockHint";
 
 function StatusBadge({ share, testidPrefix }) {
-  const base = "inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold border";
+  const base = "inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[0.625rem] font-semibold border";
   if (share.status === "revoked") {
     return <span className={`${base} bg-[#F8D7D7] text-[#B02A2A] border-[#EFB4B4]`} data-testid={`${testidPrefix}-status-revoked`}>Revoked</span>;
   }
@@ -121,7 +121,7 @@ export default function DeepDiveCompareHub({ pathway }) {
           <ArrowLeft size={12} /> {pathway.backLabel}
         </Link>
 
-        <div className="text-[10px] uppercase tracking-[0.22em] font-bold text-[#3D1A78] mb-1">
+        <div className="text-[0.625rem] uppercase tracking-[0.22em] font-bold text-[#3D1A78] mb-1">
           {pathway.eyebrow}
         </div>
         <h1 className="font-serif text-3xl sm:text-4xl text-[#1A1330] leading-tight">
@@ -257,7 +257,7 @@ export default function DeepDiveCompareHub({ pathway }) {
           )}
         </div>
 
-        <p className="text-[11px] text-[#4B4567] mt-8 italic max-w-3xl">
+        <p className="text-[0.6875rem] text-[#4B4567] mt-8 italic max-w-3xl">
           This tool is neutral: neither parent is labeled as correct. Safety Screen data is never
           shared automatically. Either parent can revoke at any time.
         </p>

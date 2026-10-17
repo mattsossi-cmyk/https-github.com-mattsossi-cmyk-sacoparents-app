@@ -8,7 +8,7 @@ import { api } from "../lib/api";
 
 const Stat = ({ label, value, sub, testid }) => (
   <div className="rounded-2xl border border-[#E5E0EE] bg-white p-5" data-testid={testid}>
-    <div className="text-[11px] uppercase tracking-[0.18em] font-bold text-[#6E6787]">{label}</div>
+    <div className="text-[0.6875rem] uppercase tracking-[0.18em] font-bold text-[#6E6787]">{label}</div>
     <div className="font-serif text-4xl text-[#1A1330] mt-1 tabular-nums" data-testid={`${testid}-value`}>{value ?? "–"}</div>
     {sub && <div className="text-xs text-[#4B4567] mt-1">{sub}</div>}
   </div>
@@ -42,7 +42,7 @@ export default function AdminAccountCounts() {
   return (
     <AppShell>
       <div className="max-w-4xl mx-auto px-1 py-6" data-testid="admin-counts-page">
-        <div className="text-[11px] uppercase tracking-[0.22em] font-bold text-[#3D1A78] inline-flex items-center gap-2">
+        <div className="text-[0.6875rem] uppercase tracking-[0.22em] font-bold text-[#3D1A78] inline-flex items-center gap-2">
           <Users size={12} /> Accounts · counts only
         </div>
         <h1 className="font-serif text-4xl sm:text-5xl text-[#1A1330] mt-2">How many accounts</h1>

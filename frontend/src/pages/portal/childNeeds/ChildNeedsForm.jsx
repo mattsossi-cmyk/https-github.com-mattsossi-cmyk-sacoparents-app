@@ -41,7 +41,7 @@ function FieldList({ category, fields, values, set }) {
     }
     out.push(
       <div key={f.id} data-field={f.id} className="rounded-lg">
-        <label htmlFor={f.id} className="block text-[13px] font-bold text-slate-700 mb-1.5">
+        <label htmlFor={f.id} className="block text-[0.8125rem] font-bold text-slate-700 mb-1.5">
           {f.label}
         </label>
         <Field field={f} value={values[f.id] || ""} onChange={(v) => set(f.id, v)} />
@@ -95,7 +95,7 @@ export function ChildNeedsForm({ category, initial, ackDate, onSubmit, onDraft, 
           <i className="fa-solid fa-house-chimney-user mr-1.5"></i>
           {CONTENT.home_group_title}
         </h4>
-        <p className="text-[12px] text-slate-500">{CONTENT.home_group_desc}</p>
+        <p className="text-[0.75rem] text-slate-500">{CONTENT.home_group_desc}</p>
       </div>
       <FieldList category={category} fields={category.fields.filter((f) => f.group === "home")} values={values} set={set} />
       {!ackDate && <AckTick checked={ack} onChange={setAck} />}

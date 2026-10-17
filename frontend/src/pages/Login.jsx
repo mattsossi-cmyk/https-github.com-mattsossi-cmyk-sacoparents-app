@@ -41,6 +41,7 @@ export default function Login() {
   const [magicLoading, setMagicLoading] = useState(false);
   const [magicSent, setMagicSent] = useState(false);
   const [showEmail, setShowEmail] = useState(false);
+  const [loginError, setLoginError] = useState("");
 
   const startDemo = async () => {
     setDemoLoading(true);
@@ -58,12 +59,14 @@ export default function Login() {
   const onSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
+    setLoginError("");
     try {
       await login(email, password);
       toast.success("Welcome back.");
       navigate(redirectTo);
     } catch (err) {
-      toast.error(err?.response?.data?.detail || "Could not sign in.");
+      const msg = err?.response?.data?.detail;
+      setLoginError(typeof msg === "string" ? msg : "Could not sign in.");
     } finally {
       setLoading(false);
     }
@@ -103,7 +106,7 @@ export default function Login() {
   };
 
   return (
-    <div className="min-h-screen gentle-bg grid place-items-center p-6">
+    <main className="min-h-screen gentle-bg grid place-items-center p-6">
       <div className="w-full max-w-md fade-up">
         <Link to="/" className="block text-center mb-8" data-testid="brand-home-link">
           <svg width={68} height={68} viewBox="0 0 64 64" className="mx-auto mb-3" aria-hidden>
@@ -125,7 +128,7 @@ export default function Login() {
           <div className="font-sans font-extrabold text-3xl text-[#1A1330] tracking-tight">
             <span className="text-brand-gradient">SA</span> CoParents
           </div>
-          <div className="text-[10px] uppercase tracking-[0.2em] text-[#6E6787] mt-1">
+          <div className="text-[0.625rem] uppercase tracking-[0.2em] text-[#6E6787] mt-1">
             Helping families communicate better
           </div>
         </Link>
@@ -153,7 +156,7 @@ export default function Login() {
             {demoLoading ? "Starting demo…" : "Enter demo mode"}
           </button>
 
-          <p className="text-[11px] text-[#6E6787] mt-3 text-center">
+          <p className="text-[0.6875rem] text-[#6E6787] mt-3 text-center">
             No account needed · Free to use · Takes 2 seconds
           </p>
 
@@ -164,7 +167,7 @@ export default function Login() {
               <button
                 type="button"
                 onClick={() => setShowEmail(true)}
-                className="w-full text-xs text-[#6E6787] hover:text-[#3D1A78]"
+                className="w-full min-h-6 py-1 text-xs text-[#6E6787] hover:text-[#3D1A78]"
                 data-testid="login-show-email-toggle"
               >
                 Have an existing account? <span className="font-semibold underline">Sign in with email</span>
@@ -176,8 +179,12 @@ export default function Login() {
                 </div>
                 <form onSubmit={onSubmit} className="space-y-4">
                   <div>
-                    <label className="eyebrow block mb-2">Email</label>
+                    <label htmlFor="login-email" className="eyebrow block mb-2">Email</label>
                     <input
+                      id="login-email"
+                      autoComplete="email"
+                      aria-invalid={loginError ? "true" : undefined}
+                      aria-describedby={loginError ? "login-error" : undefined}
                       type="email"
                       required
                       value={email}
@@ -190,7 +197,7 @@ export default function Login() {
                       type="button"
                       onClick={sendMagicLink}
                       disabled={magicLoading || magicSent}
-                      className="mt-2 text-xs text-[#3D1A78] font-semibold hover:underline disabled:opacity-60"
+                      className="mt-2 min-h-6 py-1 text-xs text-[#3D1A78] font-semibold hover:underline disabled:opacity-60"
                       data-testid="login-magic-link-button"
                     >
                       {magicSent
@@ -201,8 +208,12 @@ export default function Login() {
                     </button>
                   </div>
                   <div>
-                    <label className="eyebrow block mb-2">Password</label>
+                    <label htmlFor="login-password" className="eyebrow block mb-2">Password</label>
                     <input
+                      id="login-password"
+                      autoComplete="current-password"
+                      aria-invalid={loginError ? "true" : undefined}
+                      aria-describedby={loginError ? "login-error" : undefined}
                       type="password"
                       required
                       minLength={8}
@@ -222,6 +233,11 @@ export default function Login() {
                       </Link>
                     </div>
                   </div>
+                  {loginError && (
+                    <p id="login-error" role="alert" data-testid="login-error" className="text-sm font-semibold text-[#A93636]">
+                      {loginError}
+                    </p>
+                  )}
                   <button
                     type="submit"
                     disabled={loading}
@@ -234,7 +250,7 @@ export default function Login() {
                 <button
                   type="button"
                   onClick={() => setShowEmail(false)}
-                  className="mt-4 w-full text-[11px] text-[#6E6787] hover:text-[#3D1A78]"
+                  className="mt-4 w-full text-[0.6875rem] text-[#6E6787] hover:text-[#3D1A78]"
                   data-testid="login-hide-email-toggle"
                 >
                   ← Back to demo mode
@@ -245,6 +261,6 @@ export default function Login() {
         </div>
         <LoginPrivacyBox />
       </div>
-    </div>
+    </main>
   );
 }

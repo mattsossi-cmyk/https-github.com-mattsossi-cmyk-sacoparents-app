@@ -40,7 +40,7 @@ export default function AgreementShareLinkModal({
         onClick={(e) => e.stopPropagation()}
       >
         <div className="px-6 pt-6">
-          <div className="text-[11px] uppercase tracking-[0.22em] text-[#3D1A78] font-bold mb-1">
+          <div className="text-[0.6875rem] uppercase tracking-[0.22em] text-[#3D1A78] font-bold mb-1">
             Shareable link
           </div>
           <h3
@@ -62,7 +62,7 @@ export default function AgreementShareLinkModal({
             <div>
               <label
                 htmlFor="joint-agreement-share-link-expiry"
-                className="block text-[10px] uppercase tracking-[0.18em] text-[#3D1A78] font-semibold mb-1.5"
+                className="block text-[0.625rem] uppercase tracking-[0.18em] text-[#3D1A78] font-semibold mb-1.5"
               >
                 Link expires in
               </label>
@@ -83,7 +83,7 @@ export default function AgreementShareLinkModal({
             <div>
               <label
                 htmlFor="joint-agreement-share-link-note"
-                className="block text-[10px] uppercase tracking-[0.18em] text-[#3D1A78] font-semibold mb-1.5"
+                className="block text-[0.625rem] uppercase tracking-[0.18em] text-[#3D1A78] font-semibold mb-1.5"
               >
                 Optional note for the recipient
               </label>
@@ -98,7 +98,7 @@ export default function AgreementShareLinkModal({
                 data-testid="joint-agreement-share-link-note-input"
                 className="w-full rounded-xl border border-[#E5E0EE] bg-white px-3 py-2 text-sm text-[#1A1330] leading-relaxed focus:outline-none focus:ring-2 focus:ring-[#3D1A78]/30 disabled:opacity-60 resize-none"
               />
-              <div className="mt-1 text-[11px] text-[#6E6787] text-right">
+              <div className="mt-1 text-[0.6875rem] text-[#6E6787] text-right">
                 {shareLinkNote.length}/500
               </div>
             </div>

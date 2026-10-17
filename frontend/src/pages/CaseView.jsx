@@ -185,7 +185,7 @@ export default function CaseView() {
           className="rounded-3xl bg-white border border-[#E5E0EE] p-6 sm:p-8 shadow-sm"
           data-testid="case-view-summary"
         >
-          <div className="text-[11px] uppercase tracking-[0.22em] font-bold text-[#3D1A78]">
+          <div className="text-[0.6875rem] uppercase tracking-[0.22em] font-bold text-[#3D1A78]">
             Your Case
           </div>
           <div className="mt-2 flex items-baseline gap-3 flex-wrap">
@@ -196,7 +196,7 @@ export default function CaseView() {
               Case {caseData.case_id}
             </h1>
             <span
-              className="inline-flex items-center gap-1 rounded-full bg-[#EFE9F9] text-[#3D1A78] px-2.5 py-0.5 text-[10px] uppercase tracking-[0.16em] font-bold"
+              className="inline-flex items-center gap-1 rounded-full bg-[#EFE9F9] text-[#3D1A78] px-2.5 py-0.5 text-[0.625rem] uppercase tracking-[0.16em] font-bold"
               data-testid="case-view-status"
             >
               {(caseData.status || "pending").replaceAll("_", " ")}
@@ -233,7 +233,7 @@ export default function CaseView() {
           className="mt-8"
           data-testid="case-view-required-section"
         >
-          <div className="text-[11px] uppercase tracking-[0.22em] font-bold text-[#904B0E]">
+          <div className="text-[0.6875rem] uppercase tracking-[0.22em] font-bold text-[#904B0E]">
             Required by Your Referral
           </div>
           <h2 className="font-serif text-2xl sm:text-3xl text-[#1A1330] leading-tight mt-1">
@@ -265,7 +265,7 @@ export default function CaseView() {
             className="mt-8"
             data-testid="case-view-optional-section"
           >
-            <div className="text-[11px] uppercase tracking-[0.22em] font-bold text-[#0E7A7A]">
+            <div className="text-[0.6875rem] uppercase tracking-[0.22em] font-bold text-[#0E7A7A]">
               Optional — Recommended by Your Professional
             </div>
             <h2 className="font-serif text-xl sm:text-2xl text-[#1A1330] leading-tight mt-1">
@@ -298,7 +298,7 @@ export default function CaseView() {
             data-testid="case-view-additional-tools-summary"
           >
             <div>
-              <div className="text-[10px] uppercase tracking-[0.22em] font-bold text-[#3D1A78]">
+              <div className="text-[0.625rem] uppercase tracking-[0.22em] font-bold text-[#3D1A78]">
                 Additional SA CoParents Tools
               </div>
               <div className="text-sm text-[#4B4567] mt-0.5">
@@ -345,7 +345,7 @@ function StepRow({ step, index, optional = false, onStart }) {
       <div className="flex items-start gap-3 flex-1 min-w-0">
         <StatusIcon size={22} className={`flex-shrink-0 mt-0.5 ${iconColor}`} />
         <div className="flex-1 min-w-0">
-          <div className="text-[10px] uppercase tracking-[0.14em] font-bold text-[#6E6787]">
+          <div className="text-[0.625rem] uppercase tracking-[0.14em] font-bold text-[#6E6787]">
             Step {index}
           </div>
           <div
@@ -354,7 +354,7 @@ function StepRow({ step, index, optional = false, onStart }) {
           >
             {step.label}
           </div>
-          <div className="text-[13px] text-[#4B4567] mt-1">
+          <div className="text-[0.8125rem] text-[#4B4567] mt-1">
             Status:{" "}
             <strong
               className={
@@ -398,7 +398,7 @@ function AdditionalToolTile({ tool }) {
       <div className="font-serif text-lg text-[#1A1330] leading-tight">
         {tool.label}
       </div>
-      <p className="text-[12px] text-[#4B4567] mt-1 leading-snug flex-1">
+      <p className="text-[0.75rem] text-[#4B4567] mt-1 leading-snug flex-1">
         {tool.body}
       </p>
       <span className="mt-3 inline-flex items-center gap-1 text-xs font-semibold text-[#3D1A78]">

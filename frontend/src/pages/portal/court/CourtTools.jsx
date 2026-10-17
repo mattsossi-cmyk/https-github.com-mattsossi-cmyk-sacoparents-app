@@ -11,7 +11,7 @@ export function Tool({ testid, icon, title, sub, onClick, busy, disabled = false
       </span>
       <span className="min-w-0">
         <span className="block text-sm font-bold text-[#3b1566] break-words">{title}</span>
-        <span data-testid={`${testid}-sub`} className="block text-[11px] text-[#5f6368] break-words">{sub}</span>
+        <span data-testid={`${testid}-sub`} className="block text-[0.6875rem] text-[#5f6368] break-words">{sub}</span>
       </span>
     </button>
   );
@@ -44,7 +44,7 @@ export function CourtModulesCard({ modules, onOpenModule }) {
       <h4 className="text-sm font-extrabold text-[#3b1566] uppercase tracking-wider flex items-center gap-2">
         <i className="fa-solid fa-layer-group text-[#5c2c8e]"></i> Court Modules
       </h4>
-      <p className="text-[11px] text-slate-500 mt-0.5 mb-3">Optional reflection modules.</p>
+      <p className="text-[0.6875rem] text-slate-500 mt-0.5 mb-3">Optional reflection modules.</p>
       <div className="space-y-2">
         {modules.map((m) => (
           <button
@@ -58,9 +58,9 @@ export function CourtModulesCard({ modules, onOpenModule }) {
             <span className="shrink-0 w-8 h-8 rounded-full bg-[#3b1566] text-white font-extrabold text-sm flex items-center justify-center">{m.letter}</span>
             <span className="min-w-0 flex-1">
               <span className="block text-sm font-bold text-[#3b1566]">{m.title}</span>
-              <span className="block text-[11px] text-[#5f6368]">{m.body}</span>
+              <span className="block text-[0.6875rem] text-[#5f6368]">{m.body}</span>
             </span>
-            <span className={`shrink-0 text-[10px] font-bold px-2 py-0.5 rounded-full border ${m.chip}`}>{m.label}</span>
+            <span className={`shrink-0 text-[0.625rem] font-bold px-2 py-0.5 rounded-full border ${m.chip}`}>{m.label}</span>
           </button>
         ))}
       </div>

@@ -34,11 +34,11 @@ export function DimensionRow({ row, coparentName }) {
           <div className="font-serif text-lg text-[#1A1330] leading-tight">
             {row.label}
           </div>
-          <p className="text-[12px] text-[#4B4567] mt-0.5 leading-snug">
+          <p className="text-[0.75rem] text-[#4B4567] mt-0.5 leading-snug">
             {row.blurb}
           </p>
         </div>
-        <div className="text-[11px] text-[#4B4567]">
+        <div className="text-[0.6875rem] text-[#4B4567]">
           Delta:{" "}
           <span
             className={`font-semibold ${row.delta <= 15 ? "text-[#1E7A55]" : "text-[#904B0E]"}`}
@@ -49,13 +49,13 @@ export function DimensionRow({ row, coparentName }) {
       </div>
       <div className="mt-3 grid gap-3">
         <div>
-          <div className="text-[10px] uppercase tracking-[0.16em] font-bold text-[#1E7A55] mb-1">
+          <div className="text-[0.625rem] uppercase tracking-[0.16em] font-bold text-[#1E7A55] mb-1">
             You · {row.self_score}
           </div>
           <ScoreBar value={row.self_score} tone="self" />
         </div>
         <div>
-          <div className="text-[10px] uppercase tracking-[0.16em] font-bold text-[#6A5799] mb-1">
+          <div className="text-[0.625rem] uppercase tracking-[0.16em] font-bold text-[#6A5799] mb-1">
             {coparentName || "Co-parent"} · {row.coparent_score}
           </div>
           <ScoreBar value={row.coparent_score} tone="coparent" />

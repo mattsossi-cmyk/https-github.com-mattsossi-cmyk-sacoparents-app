@@ -1,0 +1,1093 @@
+[
+ {
+  "label": "login default",
+  "url": "/login",
+  "violations": [],
+  "sem": {
+   "lang": "en",
+   "h1": 1,
+   "main": 0,
+   "title": "SA CoParents \u2014 With Reflection. Build Alignment. Create Better Agreements.",
+   "dialogs": 0,
+   "small": [
+    "button[login-show-email-toggle] 324x16"
+   ],
+   "small_n": 1
+  },
+  "overflow": {
+   "sw": 390,
+   "cw": 390,
+   "overflow": false,
+   "wide": []
+  }
+ },
+ {
+  "label": "login kbd",
+  "seq": [
+   {
+    "el": "a[brand-home-link]",
+    "visible_focus": true,
+    "inDialog": false
+   },
+   {
+    "el": "button[login-demo-mode-button]",
+    "visible_focus": true,
+    "inDialog": false
+   },
+   {
+    "el": "button[login-show-email-toggle]",
+    "visible_focus": true,
+    "inDialog": false
+   },
+   {
+    "el": "a[login-privacy-link-notice]",
+    "visible_focus": true,
+    "inDialog": false
+   },
+   {
+    "el": "a[login-privacy-link-pros]",
+    "visible_focus": true,
+    "inDialog": false
+   },
+   {
+    "el": "a[global-footer-privacy-notice]",
+    "visible_focus": true,
+    "inDialog": false
+   },
+   {
+    "el": "BODY"
+   },
+   {
+    "el": "a[brand-home-link]",
+    "visible_focus": true,
+    "inDialog": false
+   },
+   {
+    "el": "button[login-demo-mode-button]",
+    "visible_focus": true,
+    "inDialog": false
+   },
+   {
+    "el": "button[login-show-email-toggle]",
+    "visible_focus": true,
+    "inDialog": false
+   },
+   {
+    "el": "a[login-privacy-link-notice]",
+    "visible_focus": true,
+    "inDialog": false
+   },
+   {
+    "el": "a[login-privacy-link-pros]",
+    "visible_focus": true,
+    "inDialog": false
+   }
+  ]
+ },
+ {
+  "label": "login text200",
+  "root200": {
+   "sw": 390,
+   "cw": 390,
+   "overflow": false,
+   "wide": []
+  },
+  "w320": {
+   "sw": 320,
+   "cw": 320,
+   "overflow": false,
+   "wide": []
+  },
+  "w195": {
+   "sw": 195,
+   "cw": 195,
+   "overflow": false,
+   "wide": []
+  }
+ },
+ {
+  "label": "login with error",
+  "url": "/login",
+  "violations": [],
+  "sem": {
+   "lang": "en",
+   "h1": 1,
+   "main": 0,
+   "title": "SA CoParents \u2014 With Reflection. Build Alignment. Create Better Agreements.",
+   "dialogs": 0,
+   "small": [
+    "button[login-magic-link-button] 170x16",
+    "button[login-hide-email-toggle] 324x17"
+   ],
+   "small_n": 2
+  },
+  "overflow": {
+   "sw": 390,
+   "cw": 390,
+   "overflow": false,
+   "wide": []
+  }
+ },
+ {
+  "label": "register default",
+  "url": "/register",
+  "violations": [],
+  "sem": {
+   "lang": "en",
+   "h1": 1,
+   "main": 0,
+   "title": "SA CoParents \u2014 With Reflection. Build Alignment. Create Better Agreements.",
+   "dialogs": 0,
+   "small": [
+    "button[register-add-child] 132x20",
+    "input[register-consent-ack] 20x20",
+    "input[register-consent-sensitive] 20x20"
+   ],
+   "small_n": 3
+  },
+  "overflow": {
+   "sw": 390,
+   "cw": 390,
+   "overflow": false,
+   "wide": []
+  }
+ },
+ {
+  "label": "register kbd",
+  "seq": [
+   {
+    "el": "a[SA CoParentsHelping families c]",
+    "visible_focus": true,
+    "inDialog": false
+   },
+   {
+    "el": "input[register-name-input]",
+    "visible_focus": true,
+    "inDialog": false
+   },
+   {
+    "el": "input[register-email-input]",
+    "visible_focus": true,
+    "inDialog": false
+   },
+   {
+    "el": "input[register-password-input]",
+    "visible_focus": true,
+    "inDialog": false
+   },
+   {
+    "el": "a[register-forgot-password-link]",
+    "visible_focus": true,
+    "inDialog": false
+   },
+   {
+    "el": "input[register-child-name-0]",
+    "visible_focus": true,
+    "inDialog": false
+   },
+   {
+    "el": "input[register-child-age-0]",
+    "visible_focus": true,
+    "inDialog": false
+   },
+   {
+    "el": "button[register-child-remove-0]",
+    "visible_focus": true,
+    "inDialog": false
+   },
+   {
+    "el": "button[register-add-child]",
+    "visible_focus": true,
+    "inDialog": false
+   },
+   {
+    "el": "input[register-custody-input]",
+    "visible_focus": true,
+    "inDialog": false
+   },
+   {
+    "el": "input[register-mediation-date-input]",
+    "visible_focus": true,
+    "inDialog": false
+   },
+   {
+    "el": "input[register-mediation-date-input]",
+    "visible_focus": true,
+    "inDialog": false
+   },
+   {
+    "el": "input[register-mediation-date-input]",
+    "visible_focus": true,
+    "inDialog": false
+   },
+   {
+    "el": "input[register-mediation-date-input]",
+    "visible_focus": false,
+    "inDialog": false
+   },
+   {
+    "el": "a[register-consent-terms-link]",
+    "visible_focus": true,
+    "inDialog": false
+   }
+  ]
+ },
+ {
+  "label": "register text200",
+  "root200": {
+   "sw": 448,
+   "cw": 390,
+   "overflow": true,
+   "wide": []
+  },
+  "w320": {
+   "sw": 320,
+   "cw": 320,
+   "overflow": false,
+   "wide": []
+  },
+  "w195": {
+   "sw": 276,
+   "cw": 195,
+   "overflow": true,
+   "wide": []
+  }
+ },
+ {
+  "label": "register with validation",
+  "url": "/register",
+  "violations": [
+   {
+    "id": "color-contrast",
+    "impact": "serious",
+    "n": 1,
+    "nodes": [
+     {
+      "t": ".tracking-\\[0\\.12em\\]",
+      "html": "<div class=\"text-[11px] uppercas...\" data-testid=\"register-password-st...\" x-file-name=\"PasswordStrengthMete...\" x-line-number=\"72\" x-column"
+     }
+    ]
+   }
+  ],
+  "sem": {
+   "lang": "en",
+   "h1": 1,
+   "main": 0,
+   "title": "SA CoParents \u2014 With Reflection. Build Alignment. Create Better Agreements.",
+   "dialogs": 0,
+   "small": [
+    "button[register-add-child] 132x20",
+    "input[register-consent-ack] 20x20",
+    "input[register-consent-sensitive] 20x20"
+   ],
+   "small_n": 3
+  },
+  "overflow": {
+   "sw": 390,
+   "cw": 390,
+   "overflow": false,
+   "wide": []
+  }
+ },
+ {
+  "label": "help guest",
+  "url": "/help",
+  "violations": [],
+  "sem": {
+   "lang": "en",
+   "h1": 1,
+   "main": 1,
+   "title": "SA CoParents \u2014 With Reflection. Build Alignment. Create Better Agreements.",
+   "dialogs": 0,
+   "small": [],
+   "small_n": 0
+  },
+  "overflow": {
+   "sw": 390,
+   "cw": 390,
+   "overflow": false,
+   "wide": []
+  }
+ },
+ {
+  "label": "help kbd",
+  "seq": [
+   {
+    "el": "a[help-911]",
+    "visible_focus": true,
+    "inDialog": false
+   },
+   {
+    "el": "a[help-hotline-call]",
+    "visible_focus": true,
+    "inDialog": false
+   },
+   {
+    "el": "a[help-hotline-text]",
+    "visible_focus": true,
+    "inDialog": false
+   },
+   {
+    "el": "select[help-state-select]",
+    "visible_focus": true,
+    "inDialog": false
+   },
+   {
+    "el": "a[help-more-resources]",
+    "visible_focus": true,
+    "inDialog": false
+   },
+   {
+    "el": "button[help-quick-exit]",
+    "visible_focus": true,
+    "inDialog": false
+   },
+   {
+    "el": "a[global-footer-privacy-notice]",
+    "visible_focus": true,
+    "inDialog": false
+   },
+   {
+    "el": "BODY"
+   },
+   {
+    "el": "a[help-911]",
+    "visible_focus": true,
+    "inDialog": false
+   },
+   {
+    "el": "a[help-hotline-call]",
+    "visible_focus": true,
+    "inDialog": false
+   },
+   {
+    "el": "a[help-hotline-text]",
+    "visible_focus": true,
+    "inDialog": false
+   },
+   {
+    "el": "select[help-state-select]",
+    "visible_focus": true,
+    "inDialog": false
+   }
+  ]
+ },
+ {
+  "label": "help text200",
+  "root200": {
+   "sw": 390,
+   "cw": 390,
+   "overflow": false,
+   "wide": []
+  },
+  "w320": {
+   "sw": 320,
+   "cw": 320,
+   "overflow": false,
+   "wide": []
+  },
+  "w195": {
+   "sw": 195,
+   "cw": 195,
+   "overflow": false,
+   "wide": []
+  }
+ },
+ {
+  "label": "calendar",
+  "url": "/calendar",
+  "violations": [],
+  "sem": {
+   "lang": "en",
+   "h1": 1,
+   "main": 1,
+   "title": "SA CoParents \u2014 With Reflection. Build Alignment. Create Better Agreements.",
+   "dialogs": 0,
+   "small": [
+    "a[calendar-home-link] 41x20"
+   ],
+   "small_n": 1
+  },
+  "overflow": {
+   "sw": 390,
+   "cw": 390,
+   "overflow": false,
+   "wide": []
+  }
+ },
+ {
+  "label": "calendar kbd",
+  "seq": [
+   {
+    "el": "a[calendar-home-link]",
+    "visible_focus": true,
+    "inDialog": false
+   },
+   {
+    "el": "button[calendar-prev]",
+    "visible_focus": true,
+    "inDialog": false
+   },
+   {
+    "el": "button[calendar-next]",
+    "visible_focus": true,
+    "inDialog": false
+   },
+   {
+    "el": "a[global-footer-privacy-notice]",
+    "visible_focus": true,
+    "inDialog": false
+   },
+   {
+    "el": "BODY"
+   },
+   {
+    "el": "a[calendar-home-link]",
+    "visible_focus": true,
+    "inDialog": false
+   },
+   {
+    "el": "button[calendar-prev]",
+    "visible_focus": true,
+    "inDialog": false
+   },
+   {
+    "el": "button[calendar-next]",
+    "visible_focus": true,
+    "inDialog": false
+   },
+   {
+    "el": "a[global-footer-privacy-notice]",
+    "visible_focus": true,
+    "inDialog": false
+   },
+   {
+    "el": "BODY"
+   }
+  ]
+ },
+ {
+  "label": "calendar text200",
+  "root200": {
+   "sw": 390,
+   "cw": 390,
+   "overflow": false,
+   "wide": []
+  },
+  "w320": {
+   "sw": 320,
+   "cw": 320,
+   "overflow": false,
+   "wide": []
+  },
+  "w195": {
+   "sw": 195,
+   "cw": 195,
+   "overflow": false,
+   "wide": []
+  }
+ },
+ {
+  "label": "portal guest home",
+  "url": "/",
+  "violations": [],
+  "sem": {
+   "lang": "en",
+   "h1": 2,
+   "main": 1,
+   "title": "SA CoParents \u2014 With Reflection. Build Alignment. Create Better Agreements.",
+   "dialogs": 0,
+   "small": [],
+   "small_n": 0
+  },
+  "overflow": {
+   "sw": 390,
+   "cw": 390,
+   "overflow": false,
+   "wide": []
+  }
+ },
+ {
+  "label": "portal parent home",
+  "url": "/",
+  "violations": [],
+  "sem": {
+   "lang": "en",
+   "h1": 2,
+   "main": 1,
+   "title": "SA CoParents \u2014 With Reflection. Build Alignment. Create Better Agreements.",
+   "dialogs": 0,
+   "small": [],
+   "small_n": 0
+  },
+  "overflow": {
+   "sw": 390,
+   "cw": 390,
+   "overflow": false,
+   "wide": []
+  }
+ },
+ {
+  "label": "portal home kbd",
+  "seq": [
+   {
+    "el": "button[export-pdf-btn]",
+    "visible_focus": true,
+    "inDialog": false
+   },
+   {
+    "el": "a[case-settings-banner-link]",
+    "visible_focus": true,
+    "inDialog": false
+   },
+   {
+    "el": "button[plan-options-card-button]",
+    "visible_focus": true,
+    "inDialog": false
+   },
+   {
+    "el": "button[door-court]",
+    "visible_focus": true,
+    "inDialog": false
+   },
+   {
+    "el": "button[door-self]",
+    "visible_focus": true,
+    "inDialog": false
+   },
+   {
+    "el": "button[door-comm]",
+    "visible_focus": true,
+    "inDialog": false
+   },
+   {
+    "el": "button[door-welcome-hotspot-self]",
+    "visible_focus": true,
+    "inDialog": false
+   },
+   {
+    "el": "button[door-welcome-hotspot-court]",
+    "visible_focus": true,
+    "inDialog": false
+   },
+   {
+    "el": "button[door-welcome-hotspot-comm]",
+    "visible_focus": true,
+    "inDialog": false
+   },
+   {
+    "el": "a[portal-privacy-footer-link]",
+    "visible_focus": true,
+    "inDialog": false
+   },
+   {
+    "el": "a[crisis-call-911]",
+    "visible_focus": true,
+    "inDialog": false
+   },
+   {
+    "el": "a[crisis-dv-hotline]",
+    "visible_focus": true,
+    "inDialog": false
+   },
+   {
+    "el": "a[crisis-text-start]",
+    "visible_focus": true,
+    "inDialog": false
+   },
+   {
+    "el": "a[crisis-988]",
+    "visible_focus": true,
+    "inDialog": false
+   },
+   {
+    "el": "button[nav-doors]",
+    "visible_focus": true,
+    "inDialog": false
+   }
+  ]
+ },
+ {
+  "label": "portal home text200",
+  "root200": {
+   "sw": 422,
+   "cw": 390,
+   "overflow": true,
+   "wide": []
+  },
+  "w320": {
+   "sw": 320,
+   "cw": 320,
+   "overflow": false,
+   "wide": []
+  },
+  "w195": {
+   "sw": 213,
+   "cw": 195,
+   "overflow": true,
+   "wide": []
+  }
+ },
+ {
+  "label": "parent /case-settings",
+  "url": "/case-settings",
+  "violations": [],
+  "sem": {
+   "lang": "en",
+   "h1": 1,
+   "main": 1,
+   "title": "SA CoParents \u2014 With Reflection. Build Alignment. Create Better Agreements.",
+   "dialogs": 0,
+   "small": [
+    "button[case-settings-back] 55x20"
+   ],
+   "small_n": 1
+  },
+  "overflow": {
+   "sw": 390,
+   "cw": 390,
+   "overflow": false,
+   "wide": []
+  }
+ },
+ {
+  "label": "/case-settings kbd",
+  "seq": [
+   {
+    "el": "button[case-settings-back]",
+    "visible_focus": true,
+    "inDialog": false
+   },
+   {
+    "el": "a[Get help]",
+    "visible_focus": true,
+    "inDialog": false
+   },
+   {
+    "el": "a[global-footer-privacy-notice]",
+    "visible_focus": true,
+    "inDialog": false
+   },
+   {
+    "el": "BODY"
+   },
+   {
+    "el": "button[case-settings-back]",
+    "visible_focus": true,
+    "inDialog": false
+   },
+   {
+    "el": "a[Get help]",
+    "visible_focus": true,
+    "inDialog": false
+   },
+   {
+    "el": "a[global-footer-privacy-notice]",
+    "visible_focus": true,
+    "inDialog": false
+   },
+   {
+    "el": "BODY"
+   },
+   {
+    "el": "button[case-settings-back]",
+    "visible_focus": true,
+    "inDialog": false
+   },
+   {
+    "el": "a[Get help]",
+    "visible_focus": true,
+    "inDialog": false
+   },
+   {
+    "el": "a[global-footer-privacy-notice]",
+    "visible_focus": true,
+    "inDialog": false
+   },
+   {
+    "el": "BODY"
+   }
+  ]
+ },
+ {
+  "label": "/case-settings text200",
+  "root200": {
+   "sw": 390,
+   "cw": 390,
+   "overflow": false,
+   "wide": []
+  },
+  "w320": {
+   "sw": 320,
+   "cw": 320,
+   "overflow": false,
+   "wide": []
+  },
+  "w195": {
+   "sw": 195,
+   "cw": 195,
+   "overflow": false,
+   "wide": []
+  }
+ },
+ {
+  "label": "parent /plan-options",
+  "url": "/plan-options",
+  "violations": [],
+  "sem": {
+   "lang": "en",
+   "h1": 1,
+   "main": 1,
+   "title": "SA CoParents \u2014 With Reflection. Build Alignment. Create Better Agreements.",
+   "dialogs": 0,
+   "small": [
+    "button[plan-options-back] 55x20"
+   ],
+   "small_n": 1
+  },
+  "overflow": {
+   "sw": 390,
+   "cw": 390,
+   "overflow": false,
+   "wide": []
+  }
+ },
+ {
+  "label": "/plan-options kbd",
+  "seq": [
+   {
+    "el": "button[plan-options-back]",
+    "visible_focus": true,
+    "inDialog": false
+   },
+   {
+    "el": "button[plan-option-comm_no_direct]",
+    "visible_focus": true,
+    "inDialog": false
+   },
+   {
+    "el": "button[plan-option-comm_templates]",
+    "visible_focus": true,
+    "inDialog": false
+   },
+   {
+    "el": "button[plan-option-ex_supervised]",
+    "visible_focus": true,
+    "inDialog": false
+   },
+   {
+    "el": "button[plan-option-ex_safe_site]",
+    "visible_focus": true,
+    "inDialog": false
+   },
+   {
+    "el": "button[plan-option-ex_staggered]",
+    "visible_focus": true,
+    "inDialog": false
+   },
+   {
+    "el": "button[plan-option-ex_school]",
+    "visible_focus": true,
+    "inDialog": false
+   },
+   {
+    "el": "button[plan-option-sch_separate]",
+    "visible_focus": true,
+    "inDialog": false
+   },
+   {
+    "el": "button[plan-option-dec_own_home]",
+    "visible_focus": true,
+    "inDialog": false
+   },
+   {
+    "el": "button[plan-option-sched_fixed]",
+    "visible_focus": true,
+    "inDialog": false
+   },
+   {
+    "el": "button[plan-options-save]",
+    "visible_focus": true,
+    "inDialog": false
+   },
+   {
+    "el": "a[global-footer-privacy-notice]",
+    "visible_focus": true,
+    "inDialog": false
+   }
+  ]
+ },
+ {
+  "label": "/plan-options text200",
+  "root200": {
+   "sw": 390,
+   "cw": 390,
+   "overflow": false,
+   "wide": []
+  },
+  "w320": {
+   "sw": 320,
+   "cw": 320,
+   "overflow": false,
+   "wide": []
+  },
+  "w195": {
+   "sw": 195,
+   "cw": 195,
+   "overflow": false,
+   "wide": []
+  }
+ },
+ {
+  "label": "parent /help",
+  "url": "/help",
+  "violations": [],
+  "sem": {
+   "lang": "en",
+   "h1": 1,
+   "main": 1,
+   "title": "SA CoParents \u2014 With Reflection. Build Alignment. Create Better Agreements.",
+   "dialogs": 0,
+   "small": [],
+   "small_n": 0
+  },
+  "overflow": {
+   "sw": 390,
+   "cw": 390,
+   "overflow": false,
+   "wide": []
+  }
+ },
+ {
+  "label": "/help kbd",
+  "seq": [
+   {
+    "el": "a[help-911]",
+    "visible_focus": true,
+    "inDialog": false
+   },
+   {
+    "el": "a[help-hotline-call]",
+    "visible_focus": true,
+    "inDialog": false
+   },
+   {
+    "el": "a[help-hotline-text]",
+    "visible_focus": true,
+    "inDialog": false
+   },
+   {
+    "el": "select[help-state-select]",
+    "visible_focus": true,
+    "inDialog": false
+   },
+   {
+    "el": "a[help-more-resources]",
+    "visible_focus": true,
+    "inDialog": false
+   },
+   {
+    "el": "button[help-quick-exit]",
+    "visible_focus": true,
+    "inDialog": false
+   },
+   {
+    "el": "a[global-footer-privacy-notice]",
+    "visible_focus": true,
+    "inDialog": false
+   },
+   {
+    "el": "BODY"
+   },
+   {
+    "el": "a[help-911]",
+    "visible_focus": true,
+    "inDialog": false
+   },
+   {
+    "el": "a[help-hotline-call]",
+    "visible_focus": true,
+    "inDialog": false
+   },
+   {
+    "el": "a[help-hotline-text]",
+    "visible_focus": true,
+    "inDialog": false
+   },
+   {
+    "el": "select[help-state-select]",
+    "visible_focus": true,
+    "inDialog": false
+   }
+  ]
+ },
+ {
+  "label": "/help text200",
+  "root200": {
+   "sw": 390,
+   "cw": 390,
+   "overflow": false,
+   "wide": []
+  },
+  "w320": {
+   "sw": 320,
+   "cw": 320,
+   "overflow": false,
+   "wide": []
+  },
+  "w195": {
+   "sw": 195,
+   "cw": 195,
+   "overflow": false,
+   "wide": []
+  }
+ },
+ {
+  "label": "BIFF drawer open",
+  "url": "/",
+  "violations": [
+   {
+    "id": "color-contrast",
+    "impact": "serious",
+    "n": 2,
+    "nodes": [
+     {
+      "t": ".bg-amber-600",
+      "html": "<button type=\"button\" data-testid=\"grey-rock-toggle-on-...\" aria-pressed=\"false\" class=\"shrink-0 px-2.5 py-1...\" x-file-name=\"AlignmentHub\" "
+     },
+     {
+      "t": "label",
+      "html": "<label class=\"text-[10px] font-bold text-slate-400 uppercase\" x-file-name=\"BiffTab\" x-line-number=\"109\" x-column=\"10\" x-component=\"label\" x-"
+     }
+    ]
+   }
+  ],
+  "sem": {
+   "lang": "en",
+   "h1": 2,
+   "main": 1,
+   "title": "SA CoParents \u2014 With Reflection. Build Alignment. Create Better Agreements.",
+   "dialogs": 0,
+   "small": [
+    "button[grey-rock-toggle-on-btn] 56x23",
+    "button[biff-ai-learn-more] 81x23"
+   ],
+   "small_n": 2
+  },
+  "overflow": {
+   "sw": 390,
+   "cw": 390,
+   "overflow": false,
+   "wide": []
+  }
+ },
+ {
+  "label": "BIFF drawer kbd",
+  "seq": [
+   {
+    "el": "button[nav-print]",
+    "visible_focus": true,
+    "inDialog": false
+   },
+   {
+    "el": "button[nav-get-help]",
+    "visible_focus": true,
+    "inDialog": false
+   },
+   {
+    "el": "button[biff-coach-drawer-close]",
+    "visible_focus": true,
+    "inDialog": true
+   },
+   {
+    "el": "a[case-settings-banner-link]",
+    "visible_focus": true,
+    "inDialog": true
+   },
+   {
+    "el": "button[grey-rock-toggle-on-btn]",
+    "visible_focus": true,
+    "inDialog": true
+   },
+   {
+    "el": "button[preset-late-handoff]",
+    "visible_focus": true,
+    "inDialog": true
+   },
+   {
+    "el": "button[preset-expense-request]",
+    "visible_focus": true,
+    "inDialog": true
+   },
+   {
+    "el": "button[preset-schedule-change]",
+    "visible_focus": true,
+    "inDialog": true
+   },
+   {
+    "el": "button[preset-medical-update]",
+    "visible_focus": true,
+    "inDialog": true
+   },
+   {
+    "el": "button[biff-ai-learn-more]",
+    "visible_focus": true,
+    "inDialog": true
+   }
+  ]
+ },
+ {
+  "label": "communication builder open",
+  "url": "/",
+  "violations": [],
+  "sem": {
+   "lang": "en",
+   "h1": 3,
+   "main": 1,
+   "title": "SA CoParents \u2014 With Reflection. Build Alignment. Create Better Agreements.",
+   "dialogs": 0,
+   "small": [
+    "button[cb-ai-learn-more] 81x23",
+    "a[sharing-notice-communication-builder-link] 176x20",
+    "button[sa-ai-query-ai-learn-more] 81x23"
+   ],
+   "small_n": 3
+  },
+  "overflow": {
+   "sw": 390,
+   "cw": 390,
+   "overflow": false,
+   "wide": []
+  }
+ },
+ {
+  "label": "communication builder text200",
+  "root200": {
+   "sw": 422,
+   "cw": 390,
+   "overflow": true,
+   "wide": [
+    "div[w-32 bg-purple-100 rounded-full h-2] r=433",
+    "span[text-[11px] font-semibold text-purple-60] r=431",
+    "button[cb-copy] r=490"
+   ]
+  },
+  "w320": {
+   "sw": 320,
+   "cw": 320,
+   "overflow": false,
+   "wide": []
+  },
+  "w195": {
+   "sw": 213,
+   "cw": 195,
+   "overflow": true,
+   "wide": [
+    "button[cb-quick-exit] r=229",
+    "div[w-32 bg-purple-100 rounded-full h-2] r=217",
+    "span[text-[11px] font-semibold text-purple-60] r=239",
+    "button[cb-copy] r=247"
+   ]
+  }
+ }
+]

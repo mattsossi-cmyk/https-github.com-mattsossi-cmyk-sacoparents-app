@@ -13,7 +13,7 @@ const EXAMPLE =
 
 // Tone check is only shown after AI actually reviewed the draft.
 const RiskRow = ({ riskLabel, flagList }) => (
-  <div data-testid="cb-risk" className="flex flex-wrap items-center gap-1.5 mb-3 text-[11px]">
+  <div data-testid="cb-risk" className="flex flex-wrap items-center gap-1.5 mb-3 text-[0.6875rem]">
     <span
       data-testid="cb-risk-badge"
       className={`px-2 py-0.5 rounded-full font-bold ${
@@ -42,7 +42,7 @@ function Output({ status, output, raw, greyRock, onRetry, onUseTemplate }) {
     return <SuggestUnavailable tp="cb" raw={raw} greyRock={greyRock} onRetry={onRetry} onUseTemplate={onUseTemplate} />;
   return (
     <span data-testid="cb-output-example" className="text-purple-200/80">
-      <span className="block text-[10px] uppercase tracking-wider font-bold text-purple-300 mb-1">Example</span>
+      <span className="block text-[0.625rem] uppercase tracking-wider font-bold text-purple-300 mb-1">Example</span>
       &ldquo;{EXAMPLE}&rdquo;
     </span>
   );
@@ -52,8 +52,8 @@ export function ResponseCard({ output, status, raw, riskLabel, flagList, greyRoc
   const showReal = status === "ai" && !!output;
   const act = "py-2 rounded-xl disabled:opacity-50 text-white text-xs font-bold transition-colors";
   return (
-    <div data-testid="cb-response-card" data-status={status} className="bg-gradient-to-br from-purple-900 to-indigo-950 text-white rounded-2xl p-6 shadow-xl border border-purple-800">
-      <div className="flex justify-between items-center mb-3 gap-2">
+    <div data-testid="cb-response-card" data-status={status} className="bg-gradient-to-br from-purple-900 to-indigo-950 text-white rounded-2xl p-4 sm:p-6 shadow-xl border border-purple-800">
+      <div className="flex flex-wrap justify-between items-center mb-3 gap-2">
         <span data-testid="cb-response-title" className="text-xs font-bold text-purple-300 uppercase tracking-wider flex items-center gap-2">
           <i className="fa-solid fa-pen-nib text-emerald-400"></i> Suggested wording
         </span>
@@ -68,8 +68,8 @@ export function ResponseCard({ output, status, raw, riskLabel, flagList, greyRoc
         </button>
       </div>
       {greyRock && (
-        <p data-testid="cb-greyrock-note" className="text-[11px] text-amber-200 mb-2">
-          <i className="fa-solid fa-shield-halved mr-1"></i>Grey-rock style: short, factual and neutral.
+        <p data-testid="cb-greyrock-note" className="text-[0.6875rem] text-amber-200 mb-2">
+          <i className="fa-solid fa-sliders mr-1" aria-hidden="true"></i>Grey-rock style: short, factual and neutral.
         </p>
       )}
       {showReal && <RiskRow riskLabel={riskLabel} flagList={flagList} />}
@@ -77,11 +77,11 @@ export function ResponseCard({ output, status, raw, riskLabel, flagList, greyRoc
         <Output status={status} output={output} raw={raw} greyRock={greyRock} onRetry={onRetry} onUseTemplate={onUseTemplate} />
       </div>
       {showReal && (
-        <p data-testid="cb-output-note" className="text-[11px] text-purple-200/90 mb-3">
+        <p data-testid="cb-output-note" className="text-[0.6875rem] text-purple-200/90 mb-3">
           AI-suggested and checked against your dates, times and questions. Read it and edit it before you send.
         </p>
       )}
-      <div className="grid grid-cols-4 gap-2 text-center text-[10px] mt-2">
+      <div className="grid grid-cols-4 gap-2 text-center text-[0.625rem] mt-2">
         {PILLARS.map(([k, v]) => (
           <div key={k} className="bg-white/10 p-2 rounded-lg">
             <span className="font-bold text-purple-300 block">{k}</span> {v}

@@ -16,7 +16,7 @@ export function TrendSparkline({ series, currentAvg }) {
     return (
       <div
         data-testid="trend-sparkline-empty"
-        className="text-[10px] text-slate-500 italic mt-2 flex items-center gap-1"
+        className="text-[0.625rem] text-slate-500 italic mt-2 flex items-center gap-1"
       >
         <i className="fa-solid fa-chart-line text-purple-700"></i>
         Log at least one Reassessment above to unlock your trend line.
@@ -50,12 +50,12 @@ export function TrendSparkline({ series, currentAvg }) {
       data-testid="trend-sparkline"
     >
       <div className="flex justify-between items-center mb-1">
-        <span className="text-[9px] font-bold text-purple-800 uppercase">
+        <span className="text-[0.5625rem] font-bold text-purple-800 uppercase">
           Trend (last {points.length - 1} reassessment{points.length - 1 === 1 ? "" : "s"} + now)
         </span>
         <span
           data-testid="trend-delta"
-          className={`text-[10px] font-bold ${deltaColor}`}
+          className={`text-[0.625rem] font-bold ${deltaColor}`}
         >
           {deltaLabel}
         </span>
@@ -86,7 +86,7 @@ export function TrendSparkline({ series, currentAvg }) {
           />
         ))}
       </svg>
-      <div className="text-[9px] text-slate-400 text-center mt-1">
+      <div className="text-[0.5625rem] text-slate-400 text-center mt-1">
         {points.map((v) => v.toFixed(1)).join(" → ")}
       </div>
     </div>

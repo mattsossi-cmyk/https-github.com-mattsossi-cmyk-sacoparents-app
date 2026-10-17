@@ -33,7 +33,7 @@ export default function DeviceSafetyBanner({ testId = "device-safety-banner" }) 
         <div className="flex items-start gap-2">
           <AlertCircle size={16} className="shrink-0 mt-0.5 text-[#9A3A23]" />
           <div>
-            <div className="text-[11px] uppercase tracking-[0.18em] font-bold text-[#9A3A23] mb-1">
+            <div className="text-[0.6875rem] uppercase tracking-[0.18em] font-bold text-[#9A3A23] mb-1">
               Before you begin · your safety on this device
             </div>
             <p className="text-sm text-[#1A1330] leading-relaxed">
@@ -65,7 +65,7 @@ export default function DeviceSafetyBanner({ testId = "device-safety-banner" }) 
         >
           <ExternalLink size={12} /> Quick exit
         </button>
-        <span className="inline-flex items-center text-[11px] text-[#4B4567] italic">
+        <span className="inline-flex items-center text-[0.6875rem] text-[#4B4567] italic">
           Redirects to weather.com and removes this page from history.
         </span>
       </div>

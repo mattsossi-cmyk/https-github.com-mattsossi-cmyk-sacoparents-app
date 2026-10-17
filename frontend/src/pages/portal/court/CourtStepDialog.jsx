@@ -11,8 +11,8 @@ export function CourtStepDialog({ step, item, onClose, onOpen, onAskAi }) {
   return (
     <CourtDialog open onClose={onClose} testid="court-step-dialog" title={step.title} desc={step.body}>
       <div data-testid="court-step-dialog-progress" className="bg-[#f2ebfc] border border-[#e7dbf8] rounded-xl px-4 py-3 mb-5">
-        <p className="text-[11px] font-extrabold uppercase tracking-wider text-[#5c2c8e] mb-1.5">Your progress</p>
-        <span data-testid="court-step-dialog-status" className={`inline-flex items-center gap-1.5 text-[11px] font-bold px-2.5 py-1 rounded-full border border-black/5 ${tone}`}>
+        <p className="text-[0.6875rem] font-extrabold uppercase tracking-wider text-[#5c2c8e] mb-1.5">Your progress</p>
+        <span data-testid="court-step-dialog-status" className={`inline-flex items-center gap-1.5 text-[0.6875rem] font-bold px-2.5 py-1 rounded-full border border-black/5 ${tone}`}>
           <i className={`fa-solid ${icon}`}></i>
           {label}
         </span>

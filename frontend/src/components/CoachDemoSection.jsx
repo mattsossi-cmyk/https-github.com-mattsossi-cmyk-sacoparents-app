@@ -156,7 +156,7 @@ export default function CoachDemoSection() {
       <div className="max-w-6xl mx-auto px-5 sm:px-8">
         {/* Header */}
         <div className="text-center max-w-2xl mx-auto mb-10 sm:mb-14">
-          <div className="inline-flex items-center gap-2 rounded-full bg-white/70 backdrop-blur px-3 py-1 text-[11px] font-semibold tracking-[0.14em] uppercase text-[#3D1A78] shadow-sm">
+          <div className="inline-flex items-center gap-2 rounded-full bg-white/70 backdrop-blur px-3 py-1 text-[0.6875rem] font-semibold tracking-[0.14em] uppercase text-[#3D1A78] shadow-sm">
             <Sparkles size={12} /> Live sample · no signup needed
           </div>
           <h2 className="mt-4 font-serif text-4xl sm:text-5xl leading-[1.05] tracking-tight text-[#1A1330]">
@@ -187,10 +187,10 @@ export default function CoachDemoSection() {
         <div className="rounded-3xl bg-white/85 backdrop-blur border border-[#E5E0EE] shadow-[0_24px_60px_-30px_rgba(61,26,120,0.35)] overflow-hidden">
           {/* Panel header (status pill) */}
           <div className="flex items-center justify-between px-5 sm:px-7 py-4 border-b border-[#EFEBF7] bg-white/50">
-            <div className="flex items-center gap-2 text-[13px] font-semibold text-[#3D1A78]">
+            <div className="flex items-center gap-2 text-[0.8125rem] font-semibold text-[#3D1A78]">
               <MessageSquare size={14} /> AI Communication Coach
             </div>
-            <div className="flex items-center gap-3 text-[11px] text-[#6E6787]">
+            <div className="flex items-center gap-3 text-[0.6875rem] text-[#6E6787]">
               <span className="inline-flex items-center gap-1">
                 <Lock size={11} /> Nothing here is saved
               </span>
@@ -211,7 +211,7 @@ export default function CoachDemoSection() {
           <div className="grid md:grid-cols-[220px_1fr] min-h-[420px]">
             {/* Starter rail (desktop) */}
             <div className="hidden md:flex flex-col gap-2 p-5 border-r border-[#EFEBF7] bg-gradient-to-b from-white to-[#FBFAFF]">
-              <div className="text-[10px] font-bold tracking-[0.16em] uppercase text-[#6E6787] mb-1">
+              <div className="text-[0.625rem] font-bold tracking-[0.16em] uppercase text-[#6E6787] mb-1">
                 Try one
               </div>
               {starters.map((s) => (
@@ -240,7 +240,7 @@ export default function CoachDemoSection() {
                     <div className="text-[14.5px] font-semibold text-[#1A1330] mb-2">
                       Pick a scenario or write your own
                     </div>
-                    <p className="text-[13px] text-[#4B4567] leading-relaxed">
+                    <p className="text-[0.8125rem] text-[#4B4567] leading-relaxed">
                       Tap a starter on the left (or scroll down on mobile) —
                       or describe your own situation below in your own words.
                       The Coach will help you pause, get grounded, and draft
@@ -253,7 +253,7 @@ export default function CoachDemoSection() {
                       className="mt-5 text-left"
                       data-testid="coach-demo-empty-composer"
                     >
-                      <label className="text-[10px] font-bold tracking-[0.16em] uppercase text-[#6E6787]">
+                      <label className="text-[0.625rem] font-bold tracking-[0.16em] uppercase text-[#6E6787]">
                         Or in your own words
                       </label>
                       <AiGuardFrame tp="coach-demo-empty" guard={guard} className="mt-2">
@@ -268,7 +268,7 @@ export default function CoachDemoSection() {
                           data-testid="coach-demo-empty-input"
                           className="w-full resize-none rounded-2xl border border-[#E5E0EE] bg-white px-4 py-3 text-[13.5px] text-[#1A1330] placeholder:text-[#6E6787]/70 focus:outline-none focus:ring-2 focus:ring-[#3D1A78]/30"
                         />
-                        <div className="absolute bottom-1.5 right-3 text-[10px] text-[#6E6787]">
+                        <div className="absolute bottom-1.5 right-3 text-[0.625rem] text-[#6E6787]">
                           {remaining} chars left
                         </div>
                       </div>
@@ -277,7 +277,7 @@ export default function CoachDemoSection() {
                         type="submit"
                         disabled={pending || !composer.trim()}
                         data-testid="coach-demo-empty-send-btn"
-                        className="mt-3 w-full inline-flex items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-[#3D1A78] to-[#2DB5B5] text-white text-[13px] font-semibold px-4 py-2.5 shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all disabled:opacity-50 disabled:hover:translate-y-0"
+                        className="mt-3 w-full inline-flex items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-[#3D1A78] to-[#2DB5B5] text-white text-[0.8125rem] font-semibold px-4 py-2.5 shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all disabled:opacity-50 disabled:hover:translate-y-0"
                       >
                         {pending
                           ? <Loader2 size={14} className="animate-spin" />
@@ -288,7 +288,7 @@ export default function CoachDemoSection() {
 
                     {/* Mobile starter list */}
                     <div className="md:hidden mt-6">
-                      <div className="text-[10px] font-bold tracking-[0.16em] uppercase text-[#6E6787] mb-2">
+                      <div className="text-[0.625rem] font-bold tracking-[0.16em] uppercase text-[#6E6787] mb-2">
                         Or try one
                       </div>
                       <div className="flex flex-col gap-2">
@@ -322,7 +322,7 @@ export default function CoachDemoSection() {
               )}
 
               {safetyFlagged && (
-                <div className="mt-2 rounded-2xl bg-[#FFF4EE] border border-[#F1B08E] p-4 text-[13px] text-[#7C3A1A] leading-relaxed">
+                <div className="mt-2 rounded-2xl bg-[#FFF4EE] border border-[#F1B08E] p-4 text-[0.8125rem] text-[#7C3A1A] leading-relaxed">
                   <div className="flex items-center gap-2 font-semibold mb-1">
                     <ShieldAlert size={14} /> Safety signal detected
                   </div>
@@ -351,7 +351,7 @@ export default function CoachDemoSection() {
             ) : safetyFlagged ? (
               <SignUpCta reason="safety" />
             ) : isEmpty ? (
-              <div className="text-center text-[12px] text-[#6E6787]">
+              <div className="text-center text-[0.75rem] text-[#6E6787]">
                 Every reply is generated live by the same Coach signed-in
                 parents use — nothing here is retained.
               </div>
@@ -373,7 +373,7 @@ export default function CoachDemoSection() {
                     data-testid="coach-demo-input"
                     className="w-full resize-none rounded-2xl border border-[#E5E0EE] bg-white px-4 py-3 text-[13.5px] text-[#1A1330] placeholder:text-[#6E6787]/70 focus:outline-none focus:ring-2 focus:ring-[#3D1A78]/30"
                   />
-                  <div className="absolute bottom-1.5 right-3 text-[10px] text-[#6E6787]">
+                  <div className="absolute bottom-1.5 right-3 text-[0.625rem] text-[#6E6787]">
                     {remaining} chars left
                   </div>
                 </div>
@@ -382,7 +382,7 @@ export default function CoachDemoSection() {
                   type="submit"
                   disabled={pending || !composer.trim()}
                   data-testid="coach-demo-send-btn"
-                  className="inline-flex items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-[#3D1A78] to-[#2DB5B5] text-white text-[13px] font-semibold px-4 py-3 shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all disabled:opacity-50 disabled:hover:translate-y-0"
+                  className="inline-flex items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-[#3D1A78] to-[#2DB5B5] text-white text-[0.8125rem] font-semibold px-4 py-3 shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all disabled:opacity-50 disabled:hover:translate-y-0"
                 >
                   {pending
                     ? <Loader2 size={14} className="animate-spin" />
@@ -395,7 +395,7 @@ export default function CoachDemoSection() {
         </div>
 
         {/* Sub-line beneath the panel */}
-        <div className="mt-6 text-center text-[12px] text-[#6E6787] leading-relaxed max-w-xl mx-auto">
+        <div className="mt-6 text-center text-[0.75rem] text-[#6E6787] leading-relaxed max-w-xl mx-auto">
           Same Coach model, safety guardrails, and BIFF-first tone as the
           signed-in experience. This demo is capped at {MAX_TURNS / 2} exchanges;
           create a free account to keep going and save your conversations.
@@ -450,13 +450,13 @@ function BeforeAfterStrip() {
   return (
     <div className="mt-14 sm:mt-20" data-testid="coach-demo-before-after-strip">
       <div className="text-center max-w-xl mx-auto mb-8">
-        <div className="inline-flex items-center gap-2 rounded-full bg-white/70 backdrop-blur px-3 py-1 text-[11px] font-semibold tracking-[0.14em] uppercase text-[#3D1A78] shadow-sm">
+        <div className="inline-flex items-center gap-2 rounded-full bg-white/70 backdrop-blur px-3 py-1 text-[0.6875rem] font-semibold tracking-[0.14em] uppercase text-[#3D1A78] shadow-sm">
           Real-world reframes
         </div>
         <h3 className="mt-3 font-serif text-2xl sm:text-3xl leading-tight text-[#1A1330]">
           See the tone shift
         </h3>
-        <p className="mt-2 text-[13px] sm:text-[14px] text-[#4B4567] leading-relaxed">
+        <p className="mt-2 text-[0.8125rem] sm:text-[14px] text-[#4B4567] leading-relaxed">
           Three anonymized situations we hear a lot — the raw draft on the
           left, the Coach-refined version on the right.
         </p>
@@ -469,10 +469,10 @@ function BeforeAfterStrip() {
             className="rounded-3xl bg-white/85 backdrop-blur border border-[#E5E0EE] shadow-[0_18px_44px_-28px_rgba(61,26,120,0.35)] overflow-hidden flex flex-col"
           >
             <div className="px-5 pt-5 pb-3 border-b border-[#EFEBF7] bg-gradient-to-b from-white to-[#FBFAFF]">
-              <div className="text-[10px] font-bold tracking-[0.16em] uppercase text-[#6E6787]">
+              <div className="text-[0.625rem] font-bold tracking-[0.16em] uppercase text-[#6E6787]">
                 Scenario
               </div>
-              <div className="mt-1 text-[13px] font-semibold text-[#1A1330] leading-snug">
+              <div className="mt-1 text-[0.8125rem] font-semibold text-[#1A1330] leading-snug">
                 {ex.scenario}
               </div>
             </div>
@@ -482,7 +482,7 @@ function BeforeAfterStrip() {
               <div>
                 <div className="flex items-center gap-2 mb-1.5">
                   <span className="inline-block w-1.5 h-1.5 rounded-full bg-[#C2554A]" />
-                  <span className="text-[10px] font-bold tracking-[0.14em] uppercase text-[#C2554A]">
+                  <span className="text-[0.625rem] font-bold tracking-[0.14em] uppercase text-[#C2554A]">
                     Draft (activated)
                   </span>
                 </div>
@@ -494,7 +494,7 @@ function BeforeAfterStrip() {
               <div>
                 <div className="flex items-center gap-2 mb-1.5">
                   <span className="inline-block w-1.5 h-1.5 rounded-full bg-[#2DB5B5]" />
-                  <span className="text-[10px] font-bold tracking-[0.14em] uppercase text-[#0F7676]">
+                  <span className="text-[0.625rem] font-bold tracking-[0.14em] uppercase text-[#0F7676]">
                     Coach-refined
                   </span>
                 </div>
@@ -506,7 +506,7 @@ function BeforeAfterStrip() {
           </article>
         ))}
       </div>
-      <p className="mt-6 text-center text-[11px] text-[#6E6787] italic max-w-xl mx-auto">
+      <p className="mt-6 text-center text-[0.6875rem] text-[#6E6787] italic max-w-xl mx-auto">
         Illustrative examples · names changed · no real messages included.
       </p>
     </div>
@@ -570,13 +570,13 @@ function SignUpCta({ reason }) {
     : "You've reached the demo's cap — create a free account to keep chatting and save your conversation.";
   return (
     <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4">
-      <div className="flex-1 text-[13px] text-[#1A1330] leading-relaxed">
+      <div className="flex-1 text-[0.8125rem] text-[#1A1330] leading-relaxed">
         {copy}
       </div>
       <Link
         to="/register"
         data-testid="coach-demo-signup-cta"
-        className="inline-flex items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-[#3D1A78] to-[#2DB5B5] text-white text-[13px] font-semibold px-4 py-2.5 shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all"
+        className="inline-flex items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-[#3D1A78] to-[#2DB5B5] text-white text-[0.8125rem] font-semibold px-4 py-2.5 shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all"
       >
         Create a free account <ArrowRight size={13} />
       </Link>

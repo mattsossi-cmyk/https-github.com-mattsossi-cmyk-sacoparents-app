@@ -132,7 +132,7 @@ export default function GmailComposer({ prefill, sourceMessage, onClose, onSent 
         />
         {toneNotes.length > 0 && (
           <div className="mb-4 rounded-lg bg-[#F5F2FA] border border-[#E5E0EE] p-3" data-testid="composer-tone-notes">
-            <div className="flex items-center gap-1.5 text-[10px] uppercase tracking-[0.2em] font-bold text-[#3D1A78] mb-1.5">
+            <div className="flex items-center gap-1.5 text-[0.625rem] uppercase tracking-[0.2em] font-bold text-[#3D1A78] mb-1.5">
               <Sparkles size={11} /> Coach&apos;s notes
             </div>
             <ul className="text-xs text-[#4B4567] space-y-1">

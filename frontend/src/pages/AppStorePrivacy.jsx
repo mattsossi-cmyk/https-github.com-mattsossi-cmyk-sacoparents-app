@@ -255,7 +255,7 @@ export default function AppStorePrivacy() {
 
         <div tabIndex={0} role="region" aria-label="Scrollable table" className="mt-4 overflow-x-auto rounded-2xl border border-[#E5E0EE] bg-white">
           <table
-            className="w-full text-[13px] text-left"
+            className="w-full text-[0.8125rem] text-left"
             data-testid="app-store-privacy-data-table"
           >
             <thead className="bg-[#F8F7FC] text-[#1A1330]">
@@ -279,7 +279,7 @@ export default function AppStorePrivacy() {
                   <td className="px-3 py-3 text-[#1A1330] font-medium">
                     {row.label}
                     {row.note && (
-                      <div className="text-[11px] text-[#6E6787] italic mt-1 leading-snug font-normal">
+                      <div className="text-[0.6875rem] text-[#6E6787] italic mt-1 leading-snug font-normal">
                         {row.note}
                       </div>
                     )}
@@ -308,7 +308,7 @@ export default function AppStorePrivacy() {
           </table>
         </div>
 
-        <p className="text-[12px] text-[#6E6787] italic mt-3 leading-relaxed">
+        <p className="text-[0.75rem] text-[#6E6787] italic mt-3 leading-relaxed">
           &ldquo;Linked?&rdquo; matches Apple&rsquo;s &ldquo;Data Linked to
           You&rdquo; and Google&rsquo;s &ldquo;Personal info collected&rdquo;
           flag. &ldquo;Tracking?&rdquo; is <em>No</em> for every row — SA
@@ -453,7 +453,7 @@ export default function AppStorePrivacy() {
 
         {/* Section 8 — Change log */}
         <H2>Change log</H2>
-        <ul className="space-y-1 text-[13px] text-[#4B4567] leading-relaxed list-disc pl-5">
+        <ul className="space-y-1 text-[0.8125rem] text-[#4B4567] leading-relaxed list-disc pl-5">
           <li>
             <strong className="text-[#1A1330]">June 2026</strong> — Added the
             Google Play Data Safety answers (section 6). Removed product
@@ -499,7 +499,7 @@ function GoogleDataSafety() {
         other type unselected.
       </p>
       <div tabIndex={0} role="region" aria-label="Scrollable table" className="mt-4 overflow-x-auto rounded-2xl border border-[#E5E0EE] bg-white">
-        <table className="w-full text-[13px] text-left" data-testid="app-store-privacy-google-table">
+        <table className="w-full text-[0.8125rem] text-left" data-testid="app-store-privacy-google-table">
           <thead className="bg-[#F8F7FC] text-[#1A1330]">
             <tr>
               <th className="px-3 py-2 font-medium">Google data type</th>
@@ -540,7 +540,7 @@ function GoogleDataSafety() {
         ). Both are explained in the{" "}
         <Link to="/privacy" className="text-[#2A0F5F] underline">Privacy Policy</Link>.
       </p>
-      <p className="text-[13px] text-amber-900 bg-amber-50 border border-amber-200 rounded-xl px-3 py-2 mt-3 leading-relaxed" data-testid="app-store-privacy-google-review">
+      <p className="text-[0.8125rem] text-amber-900 bg-amber-50 border border-amber-200 rounded-xl px-3 py-2 mt-3 leading-relaxed" data-testid="app-store-privacy-google-review">
         <strong>Attorney review:</strong> confirm whether data SA CoParents Align
         reads after a parent links their account counts as &ldquo;sharing&rdquo;
         for Google and Apple.

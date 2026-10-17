@@ -227,7 +227,7 @@ function ChatComposer({ onSend, disabled }) {
         </button>
       </div>
       </AiGuardFrame>
-      <p className="text-[11px] text-[#6E6787] mt-2 text-center">
+      <p className="text-[0.6875rem] text-[#6E6787] mt-2 text-center">
         Not legal, medical, or therapy advice. In an emergency call 911 or
         1-800-799-7233.
       </p>

@@ -18,7 +18,7 @@ export default function ScreenGuardrailPanel({ level }) {
       <div className="rounded-3xl border-2 border-[#3D1A78] bg-[#F8F5FF] p-5 sm:p-7">
         <div className="flex items-center gap-2 mb-3">
           <ShieldAlert size={14} className="text-[#3D1A78]" />
-          <div className="text-[11px] uppercase tracking-[0.22em] font-bold text-[#3D1A78]">
+          <div className="text-[0.6875rem] uppercase tracking-[0.22em] font-bold text-[#3D1A78]">
             What this screen decides — and what it does not
           </div>
         </div>
@@ -37,7 +37,7 @@ export default function ScreenGuardrailPanel({ level }) {
           <li className="flex gap-2"><span className="text-[#3D1A78] mt-1">•</span>a <strong>licensed clinician or forensic evaluator</strong> — for clinical judgement</li>
           <li className="flex gap-2"><span className="text-[#3D1A78] mt-1">•</span>a <strong>domestic-violence advocate</strong> — for safety planning</li>
         </ul>
-        <p className="text-[11px] text-[#6A5799] italic">
+        <p className="text-[0.6875rem] text-[#6A5799] italic">
           This screen has not been independently validated in custody or
           mediation populations. It is not the Danger Assessment,
           MASIC-S, or HITS. Its scoring is heuristic.
@@ -51,7 +51,7 @@ export default function ScreenGuardrailPanel({ level }) {
         >
           <div className="flex items-center gap-2 mb-2">
             <AlertTriangle size={14} className="text-[#9A3A23]" />
-            <div className="text-[11px] uppercase tracking-[0.22em] font-bold text-[#9A3A23]">
+            <div className="text-[0.6875rem] uppercase tracking-[0.22em] font-bold text-[#9A3A23]">
               A note about communication coaching
             </div>
           </div>

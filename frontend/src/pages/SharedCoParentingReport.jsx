@@ -30,7 +30,7 @@ function Banner({ overall, sharedBy, generatedAt }) {
   const date = generatedAt ? new Date(generatedAt).toLocaleDateString(undefined, { year: "numeric", month: "long", day: "numeric" }) : null;
   return (
     <div className={`rounded-3xl border ${tone.border} ${tone.bg} p-6 sm:p-8`} data-testid="sharedcp-banner">
-      <div className="text-[10px] uppercase tracking-[0.22em] font-bold text-[#3D1A78] mb-2">
+      <div className="text-[0.625rem] uppercase tracking-[0.22em] font-bold text-[#3D1A78] mb-2">
         Co-Parenting Assessment · shared report
       </div>
       <h1 className={`font-serif text-3xl sm:text-4xl leading-tight ${tone.text}`} data-testid="sharedcp-overall">
@@ -197,7 +197,7 @@ function SharedCoParentingReport() {
                   <div className="flex items-center gap-2 flex-wrap">
                     <span className="font-semibold text-[#1A1330]">{g.title}</span>
                     {g.rating && (
-                      <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border ${(SECTION_TONE[g.rating] || SECTION_TONE.Fair).chip}`}>
+                      <span className={`text-[0.625rem] font-bold px-2 py-0.5 rounded-full border ${(SECTION_TONE[g.rating] || SECTION_TONE.Fair).chip}`}>
                         {g.rating}
                       </span>
                     )}
@@ -238,7 +238,7 @@ function SharedCoParentingReport() {
                   <div key={sec.id} className="border border-[#E5E0EE] rounded-2xl p-4" data-testid={`sharedcp-sec-${sec.id}`}>
                     <div className="flex items-start justify-between gap-3">
                       <div className="min-w-0">
-                        <div className="text-[10px] uppercase tracking-[0.18em] font-bold text-[#3D1A78] mb-0.5">
+                        <div className="text-[0.625rem] uppercase tracking-[0.18em] font-bold text-[#3D1A78] mb-0.5">
                           Section {sec.number}
                         </div>
                         <div className="font-semibold text-[#1A1330]">{sec.name}</div>
@@ -246,20 +246,20 @@ function SharedCoParentingReport() {
                       </div>
                       <div className="shrink-0 text-right">
                         {sec.rating ? (
-                          <span className={`inline-block text-[10px] font-bold px-2.5 py-1 rounded-full border ${tone.chip}`} data-testid={`sharedcp-rating-${sec.id}`}>
+                          <span className={`inline-block text-[0.625rem] font-bold px-2.5 py-1 rounded-full border ${tone.chip}`} data-testid={`sharedcp-rating-${sec.id}`}>
                             {sec.rating}
                           </span>
                         ) : (
                           <span className="text-xs italic text-[#6E6787]">Not answered</span>
                         )}
                         {typeof sec.avg === "number" && (
-                          <div className="text-[11px] text-[#6E6787] mt-1">Avg {sec.avg} / 4</div>
+                          <div className="text-[0.6875rem] text-[#6E6787] mt-1">Avg {sec.avg} / 4</div>
                         )}
                       </div>
                     </div>
                     {(sec.findings || []).length > 0 && (
                       <div className="mt-3">
-                        <div className="text-[10px] uppercase tracking-[0.18em] font-bold text-[#3D1A78] mb-1">Findings</div>
+                        <div className="text-[0.625rem] uppercase tracking-[0.18em] font-bold text-[#3D1A78] mb-1">Findings</div>
                         <ul className="text-sm text-[#1A1330] list-disc pl-4 space-y-0.5">
                           {sec.findings.map((f, i) => <li key={`f-${i}-${(f || "").slice(0, 30)}`}>{f}</li>)}
                         </ul>
@@ -267,7 +267,7 @@ function SharedCoParentingReport() {
                     )}
                     {(sec.recommendations || []).length > 0 && (
                       <div className="mt-3">
-                        <div className="text-[10px] uppercase tracking-[0.18em] font-bold text-[#3D1A78] mb-1">Recommendations</div>
+                        <div className="text-[0.625rem] uppercase tracking-[0.18em] font-bold text-[#3D1A78] mb-1">Recommendations</div>
                         <ul className="text-sm text-[#1A1330] list-disc pl-4 space-y-0.5">
                           {sec.recommendations.map((f, i) => <li key={`r-${i}-${(f || "").slice(0, 30)}`}>{f}</li>)}
                         </ul>
@@ -302,7 +302,7 @@ function SharedCoParentingReport() {
 
         {/* CTA back to app */}
         <div className="rounded-3xl bg-[#1A1330] text-white p-6 sm:p-8 mt-6" data-testid="sharedcp-cta">
-          <div className="text-[10px] uppercase tracking-[0.22em] font-bold text-[#CFC1EA] mb-2">
+          <div className="text-[0.625rem] uppercase tracking-[0.22em] font-bold text-[#CFC1EA] mb-2">
             Powered by SA CoParents
           </div>
           <div className="font-serif text-2xl leading-tight">
@@ -331,7 +331,7 @@ function SharedCoParentingReport() {
           </div>
         </div>
 
-        <p className="text-[11px] text-[#6E6787] italic text-center px-4">
+        <p className="text-[0.6875rem] text-[#6E6787] italic text-center px-4">
           {report?.disclaimer || "Educational reflection tool. Not a diagnosis, custody evaluation, or legal advice."}
         </p>
       </main>

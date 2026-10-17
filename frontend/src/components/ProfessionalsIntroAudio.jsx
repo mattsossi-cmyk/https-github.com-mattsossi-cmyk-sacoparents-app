@@ -206,7 +206,7 @@ export default function ProfessionalsIntroAudio() {
           <Volume2 size={20} />
         </div>
         <div className="min-w-0 flex-1">
-          <div className="text-[10px] uppercase tracking-[0.22em] font-bold text-[#3D1A78]">
+          <div className="text-[0.625rem] uppercase tracking-[0.22em] font-bold text-[#3D1A78]">
             60-second audio intro
           </div>
           <div className="font-serif text-lg text-[#1A1330] mt-0.5 leading-snug">
@@ -214,7 +214,7 @@ export default function ProfessionalsIntroAudio() {
           </div>
         </div>
         <span
-          className="inline-flex items-center gap-1 rounded-full bg-[#F5F1FB] text-[#3D1A78] text-[10px] uppercase tracking-[0.18em] font-bold px-2.5 py-1"
+          className="inline-flex items-center gap-1 rounded-full bg-[#F5F1FB] text-[#3D1A78] text-[0.625rem] uppercase tracking-[0.18em] font-bold px-2.5 py-1"
           data-testid="for-pros-intro-audio-voice-chip"
         >
           {(VOICE_META[voice] || VOICE_META.rachel).label} voice
@@ -230,7 +230,7 @@ export default function ProfessionalsIntroAudio() {
         aria-label="Audio intro voice"
         data-testid="for-pros-intro-audio-voice-picker"
       >
-        <span className="text-[11px] font-semibold text-[#6E6787] uppercase tracking-[0.14em] mr-1">
+        <span className="text-[0.6875rem] font-semibold text-[#6E6787] uppercase tracking-[0.14em] mr-1">
           Voice
         </span>
         {supportedVoices.map((v) => {
@@ -250,7 +250,7 @@ export default function ProfessionalsIntroAudio() {
                 aria-checked={isActive}
                 onClick={() => setVoice(v)}
                 className={
-                  "px-2.5 py-1 text-[11px] font-semibold transition " +
+                  "px-2.5 py-1 text-[0.6875rem] font-semibold transition " +
                   (isActive
                     ? "bg-[#3D1A78] text-white"
                     : "bg-white text-[#3D1A78] hover:bg-[#F5F1FB]")
@@ -267,7 +267,7 @@ export default function ProfessionalsIntroAudio() {
                 type="button"
                 onClick={() => playPreview(v)}
                 className={
-                  "px-2 flex items-center justify-center border-l text-[10px] transition " +
+                  "px-2 flex items-center justify-center border-l text-[0.625rem] transition " +
                   (isActive
                     ? "border-white/40 bg-[#3D1A78] text-white hover:bg-[#2a0f5f]"
                     : "border-[#D6CFE8] bg-white text-[#3D1A78] hover:bg-[#F5F1FB]")

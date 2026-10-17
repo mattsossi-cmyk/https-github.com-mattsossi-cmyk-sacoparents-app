@@ -53,7 +53,7 @@ export default function LearningCenterCard() {
           <BookOpen size={18} />
         </div>
         <div className="flex-1 min-w-0">
-          <div className="text-[10px] uppercase tracking-[0.22em] text-[#3D1A78] font-bold">
+          <div className="text-[0.625rem] uppercase tracking-[0.22em] text-[#3D1A78] font-bold">
             Learning center
           </div>
           <div className="font-serif text-xl text-[#1A1330] leading-snug mt-0.5">
@@ -95,11 +95,11 @@ export default function LearningCenterCard() {
                   aria-hidden
                 />
               )}
-              <div className="text-[11px] font-semibold text-[#1A1330] truncate">
+              <div className="text-[0.6875rem] font-semibold text-[#1A1330] truncate">
                 {h.name}
               </div>
             </div>
-            <div className="text-[11px] text-[#4B4567] mt-1">
+            <div className="text-[0.6875rem] text-[#4B4567] mt-1">
               {h.read}/{h.total} read
             </div>
           </div>

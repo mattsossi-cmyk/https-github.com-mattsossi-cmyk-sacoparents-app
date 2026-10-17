@@ -27,7 +27,7 @@ export function DailyCountsTable({ onForbidden }) {
       </header>
       <div tabIndex={0} role="region" aria-label="Daily changes table" className="max-h-96 overflow-auto">
         <table className="w-full text-sm" data-testid="admin-daily-counts-table">
-          <thead className="sticky top-0 bg-[#F8F7FC] text-left text-[10px] sm:text-xs uppercase tracking-wider text-[#4B4567]">
+          <thead className="sticky top-0 bg-[#F8F7FC] text-left text-[0.625rem] sm:text-xs uppercase tracking-wider text-[#4B4567]">
             <tr>
               <th className="px-2.5 sm:px-4 py-2">Day</th>
               <th className="px-2.5 sm:px-4 py-2 text-right">Applied</th>

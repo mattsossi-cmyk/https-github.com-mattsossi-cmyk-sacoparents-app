@@ -28,7 +28,7 @@ export default function AlignReportCTA() {
         <Users size={18} />
       </div>
       <div className="min-w-0 flex-1">
-        <div className="text-[10px] uppercase tracking-[0.18em] font-bold text-[#3D1A78]">
+        <div className="text-[0.625rem] uppercase tracking-[0.18em] font-bold text-[#3D1A78]">
           Companion tool
         </div>
         <div className="text-sm sm:text-base font-semibold text-[#1A1330] mt-0.5 leading-tight">

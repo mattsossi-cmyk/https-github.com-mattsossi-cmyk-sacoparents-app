@@ -30,7 +30,7 @@ export default function SecureDocument() {
   return (
     <main className="min-h-screen bg-[#F8F7FC] px-4 py-12 sm:py-20" data-testid="secure-doc-page">
       <div className="max-w-lg mx-auto">
-        <div className="flex items-center gap-2 text-[11px] uppercase tracking-[0.22em] font-bold text-[#3D1A78] mb-4">
+        <div className="flex items-center gap-2 text-[0.6875rem] uppercase tracking-[0.22em] font-bold text-[#3D1A78] mb-4">
           <ShieldCheck size={14} /> SA CoParents · Private document
         </div>
         <section className="rounded-3xl bg-white border border-[#E5E0EE] shadow-sm p-6 sm:p-8">
@@ -43,7 +43,7 @@ export default function SecureDocument() {
           {info && !blocked && !grant && <CodeStep token={token} info={info} onGrant={setGrant} />}
           {info && !blocked && grant && <FilesStep token={token} info={info} grant={grant} />}
         </section>
-        <p className="text-[12px] text-[#6E6787] mt-4 leading-relaxed">
+        <p className="text-[0.75rem] text-[#6E6787] mt-4 leading-relaxed">
           Documents sent through SA CoParents are never attached to emails. Only the person they were sent to can open them.
         </p>
       </div>

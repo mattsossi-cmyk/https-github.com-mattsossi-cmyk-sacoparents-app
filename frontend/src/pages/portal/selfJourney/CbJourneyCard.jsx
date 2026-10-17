@@ -37,7 +37,7 @@ export function CbJourneyCard({ onOpen, countLabel, done }) {
         <span>OPEN COMMUNICATION BUILDER</span>
         <i className="fa-solid fa-arrow-right" aria-hidden="true"></i>
       </button>
-      <p data-testid="door-self-biff-count" className="text-center text-[11px] font-semibold text-purple-800/80">
+      <p data-testid="door-self-biff-count" className="text-center text-[0.6875rem] font-semibold text-purple-800/80">
         {countLabel}.
       </p>
     </section>

@@ -39,7 +39,7 @@ function WeekStrip({ recentDates, testid }) {
                   today ? "ring-2 ring-offset-1 ring-emerald-600" : ""
                 }`}
               />
-              <span className={`text-[9px] font-bold ${today ? "text-emerald-800" : "text-slate-400"}`}>
+              <span className={`text-[0.5625rem] font-bold ${today ? "text-emerald-800" : "text-slate-400"}`}>
                 {d.toLocaleDateString("en-US", { weekday: "narrow" })}
               </span>
             </div>
@@ -47,7 +47,7 @@ function WeekStrip({ recentDates, testid }) {
         })}
       </div>
       {streak > 0 && (
-        <span data-testid={`${testid}-streak`} className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-orange-50 border border-orange-200 text-orange-700 text-[11px] font-extrabold">
+        <span data-testid={`${testid}-streak`} className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-orange-50 border border-orange-200 text-orange-700 text-[0.6875rem] font-extrabold">
           <i className="fa-solid fa-fire text-orange-500"></i>
           {streak}-day streak
         </span>
@@ -71,7 +71,7 @@ function PracticeRow({ practice, onPractise, testid }) {
         data-testid={`${testid}-practise`}
         onClick={onPractise}
         disabled={practisedToday}
-        className="px-3 py-1.5 rounded-full bg-emerald-600 hover:bg-emerald-700 disabled:bg-emerald-100 disabled:text-emerald-800 text-white text-[11px] font-bold transition-colors active:scale-95"
+        className="px-3 py-1.5 rounded-full bg-emerald-600 hover:bg-emerald-700 disabled:bg-emerald-100 disabled:text-emerald-800 text-white text-[0.6875rem] font-bold transition-colors active:scale-95"
       >
         {practisedToday ? (
           <>
@@ -103,11 +103,11 @@ export function GoalBanner({ goal, setAt, practice, onPractise, dueDays = 0, onO
             <i className="fa-solid fa-bullseye"></i>
           </div>
           <div className="min-w-0 flex-1">
-            <div className="text-[10px] uppercase font-bold tracking-wider text-emerald-800">{CONTENT.goal.label}</div>
+            <div className="text-[0.625rem] uppercase font-bold tracking-wider text-emerald-800">{CONTENT.goal.label}</div>
             <p data-testid={`${testid}-text`} className="text-sm font-semibold text-slate-900 leading-snug mt-0.5 break-words">
               {goal}
             </p>
-            {when && <p className="text-[10px] text-slate-500 mt-1">Set {when}</p>}
+            {when && <p className="text-[0.625rem] text-slate-500 mt-1">Set {when}</p>}
           </div>
         </div>
       )}
@@ -115,7 +115,7 @@ export function GoalBanner({ goal, setAt, practice, onPractise, dueDays = 0, onO
       {dueDays > 0 && (
         <div
           data-testid={`${testid}-reassess-due`}
-          className={`${goal ? "mt-3" : ""} rounded-xl bg-amber-50 border border-amber-200 px-3 py-2 text-[12px] text-amber-900 leading-snug`}
+          className={`${goal ? "mt-3" : ""} rounded-xl bg-amber-50 border border-amber-200 px-3 py-2 text-[0.75rem] text-amber-900 leading-snug`}
         >
           <i className="fa-solid fa-clock-rotate-left mr-1.5"></i>
           <span className="font-bold">Time to reassess.</span> It's been {Math.floor(dueDays / 7)} weeks since your

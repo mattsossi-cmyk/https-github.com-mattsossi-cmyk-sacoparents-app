@@ -19,7 +19,7 @@ const Shell = ({ title, children, status }) => (
     </h4>
     {children}
     {status && (
-      <p data-testid="self-assessment-save-status" data-status={status} className="text-[10px] text-slate-400 text-center mt-4">
+      <p data-testid="self-assessment-save-status" data-status={status} className="text-[0.625rem] text-slate-400 text-center mt-4">
         {STATUS_COPY[status] || STATUS_COPY.idle}
       </p>
     )}
@@ -35,7 +35,7 @@ function IntroPanel() {
             {line}
           </p>
         ))}
-        <p data-testid="sa-intro-safety" className="rounded-xl bg-rose-50 border border-rose-100 px-3 py-2 text-[13px] text-rose-900">
+        <p data-testid="sa-intro-safety" className="rounded-xl bg-rose-50 border border-rose-100 px-3 py-2 text-[0.8125rem] text-rose-900">
           <i className="fa-solid fa-shield-heart text-rose-500 mr-1.5"></i>
           {CONTENT.safety_note}
         </p>

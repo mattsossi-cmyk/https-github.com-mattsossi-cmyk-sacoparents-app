@@ -59,7 +59,7 @@ function AlignmentPill({ alignment, label }) {
   const style = ALIGNMENT_STYLE[alignment] || ALIGNMENT_STYLE.insufficient;
   return (
     <span
-      className="inline-flex items-center px-2.5 py-1 rounded-full text-[11px] font-semibold uppercase tracking-wider"
+      className="inline-flex items-center px-2.5 py-1 rounded-full text-[0.6875rem] font-semibold uppercase tracking-wider"
       style={{
         backgroundColor: style.bg,
         border: `1px solid ${style.border}`,
@@ -84,7 +84,7 @@ function ReportRow({ row, parentAName, parentBName }) {
             {row.topic}
           </div>
           {row.pathway_label && (
-            <div className="text-[11px] uppercase tracking-[0.18em] text-[#6E6787] mt-0.5">
+            <div className="text-[0.6875rem] uppercase tracking-[0.18em] text-[#6E6787] mt-0.5">
               {row.pathway_label}
             </div>
           )}
@@ -94,7 +94,7 @@ function ReportRow({ row, parentAName, parentBName }) {
 
       <div className="grid sm:grid-cols-2 gap-3">
         <div className="rounded-xl bg-[#F7F4FC] p-3">
-          <div className="text-[11px] uppercase tracking-wider text-[#3D1A78] font-semibold mb-1">
+          <div className="text-[0.6875rem] uppercase tracking-wider text-[#3D1A78] font-semibold mb-1">
             {parentAName}
           </div>
           <div className="text-sm text-[#1A1330] whitespace-pre-line">
@@ -102,7 +102,7 @@ function ReportRow({ row, parentAName, parentBName }) {
           </div>
         </div>
         <div className="rounded-xl bg-[#EAF7F7] p-3">
-          <div className="text-[11px] uppercase tracking-wider text-[#0F6F6F] font-semibold mb-1">
+          <div className="text-[0.6875rem] uppercase tracking-wider text-[#0F6F6F] font-semibold mb-1">
             {parentBName}
           </div>
           <div className="text-sm text-[#1A1330] whitespace-pre-line">
@@ -113,7 +113,7 @@ function ReportRow({ row, parentAName, parentBName }) {
 
       {row.childs_need && (
         <div className="text-sm">
-          <span className="text-[11px] uppercase tracking-wider text-[#3D1A78] font-semibold mr-2">
+          <span className="text-[0.6875rem] uppercase tracking-wider text-[#3D1A78] font-semibold mr-2">
             Child's need
           </span>
           <span className="text-[#1A1330]">{row.childs_need}</span>
@@ -121,7 +121,7 @@ function ReportRow({ row, parentAName, parentBName }) {
       )}
       {row.issue_for_discussion && (
         <div className="text-sm border-l-4 border-[#D6A374] pl-3">
-          <div className="text-[11px] uppercase tracking-wider text-[#85513F] font-semibold mb-0.5">
+          <div className="text-[0.6875rem] uppercase tracking-wider text-[#85513F] font-semibold mb-0.5">
             For discussion
           </div>
           <div className="text-[#1A1330] italic">{row.issue_for_discussion}</div>
@@ -494,7 +494,7 @@ export default function JointProfessionalReport() {
           />
         </div>
 
-        <div className="text-[10px] uppercase tracking-[0.22em] font-bold text-[#3D1A78]">
+        <div className="text-[0.625rem] uppercase tracking-[0.22em] font-bold text-[#3D1A78]">
           {d.report_type ? d.report_type.replace(/_/g, " ") : "Joint report"}
         </div>
         <h1
@@ -524,7 +524,7 @@ export default function JointProfessionalReport() {
               <ShieldAlert size={16} />
             </div>
             <div className="min-w-0">
-              <div className="text-[10px] uppercase tracking-[0.22em] font-bold text-[#B02A2A]">
+              <div className="text-[0.625rem] uppercase tracking-[0.22em] font-bold text-[#B02A2A]">
                 This is not a custody evaluation
               </div>
               <p className="mt-1 text-sm text-[#1A1330] leading-relaxed">
@@ -540,7 +540,7 @@ export default function JointProfessionalReport() {
             className="rounded-2xl border border-[#E5E0EE] bg-white p-4 text-xs text-[#4B4567] leading-relaxed"
             data-testid="joint-report-neutral-note"
           >
-            <div className="text-[10px] uppercase tracking-[0.2em] text-[#3D1A78] font-semibold mb-1">
+            <div className="text-[0.625rem] uppercase tracking-[0.2em] text-[#3D1A78] font-semibold mb-1">
               Neutral language
             </div>
             {d.neutral_language_note}
@@ -549,7 +549,7 @@ export default function JointProfessionalReport() {
             className="rounded-2xl border border-[#E5E0EE] bg-white p-4 text-xs text-[#4B4567] leading-relaxed"
             data-testid="joint-report-safety-note"
           >
-            <div className="text-[10px] uppercase tracking-[0.2em] text-[#3D1A78] font-semibold mb-1">
+            <div className="text-[0.625rem] uppercase tracking-[0.2em] text-[#3D1A78] font-semibold mb-1">
               Safety-screen privacy
             </div>
             {d.safety_privacy_note}
@@ -570,7 +570,7 @@ export default function JointProfessionalReport() {
         >
           <summary className="cursor-pointer px-5 py-4 flex items-center justify-between gap-3 hover:bg-white/80 transition-colors">
             <div>
-              <div className="text-[10px] uppercase tracking-[0.22em] font-bold text-[#3D1A78]">
+              <div className="text-[0.625rem] uppercase tracking-[0.22em] font-bold text-[#3D1A78]">
                 For attorneys, mediators &amp; therapists
               </div>
               <div className="font-serif text-lg text-[#1A1330] mt-0.5">
@@ -604,7 +604,7 @@ export default function JointProfessionalReport() {
           </div>
         </details>
 
-        <div className="mt-12 text-[11px] text-[#6E6787] leading-relaxed border-t border-[#E5E0EE] pt-4">
+        <div className="mt-12 text-[0.6875rem] text-[#6E6787] leading-relaxed border-t border-[#E5E0EE] pt-4">
           Preparation resource · Not a custody evaluation, diagnosis, or
           recommendation to any court. Share ID {d.share_id}.
         </div>
@@ -632,7 +632,7 @@ export default function JointProfessionalReport() {
               onClick={(e) => e.stopPropagation()}
             >
               <div className="px-6 pt-6">
-                <div className="text-[11px] uppercase tracking-[0.22em] text-[#3D1A78] font-bold mb-1">
+                <div className="text-[0.6875rem] uppercase tracking-[0.22em] text-[#3D1A78] font-bold mb-1">
                   Shareable link
                 </div>
                 <h3
@@ -654,7 +654,7 @@ export default function JointProfessionalReport() {
                   <div>
                     <label
                       htmlFor="joint-report-share-link-expiry"
-                      className="block text-[10px] uppercase tracking-[0.18em] text-[#3D1A78] font-semibold mb-1.5"
+                      className="block text-[0.625rem] uppercase tracking-[0.18em] text-[#3D1A78] font-semibold mb-1.5"
                     >
                       Link expires in
                     </label>
@@ -675,7 +675,7 @@ export default function JointProfessionalReport() {
                   <div>
                     <label
                       htmlFor="joint-report-share-link-note"
-                      className="block text-[10px] uppercase tracking-[0.18em] text-[#3D1A78] font-semibold mb-1.5"
+                      className="block text-[0.625rem] uppercase tracking-[0.18em] text-[#3D1A78] font-semibold mb-1.5"
                     >
                       Optional note for the recipient
                     </label>
@@ -690,7 +690,7 @@ export default function JointProfessionalReport() {
                       data-testid="joint-report-share-link-note-input"
                       className="w-full rounded-xl border border-[#E5E0EE] bg-white px-3 py-2 text-sm text-[#1A1330] leading-relaxed focus:outline-none focus:ring-2 focus:ring-[#3D1A78]/30 disabled:opacity-60 resize-none"
                     />
-                    <div className="mt-1 text-[11px] text-[#6E6787] text-right">
+                    <div className="mt-1 text-[0.6875rem] text-[#6E6787] text-right">
                       {shareLinkNote.length}/500
                     </div>
                   </div>

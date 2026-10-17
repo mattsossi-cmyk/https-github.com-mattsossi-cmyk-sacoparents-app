@@ -24,7 +24,7 @@ export default function ActivitiesSummaryCard({
   return (
     <div className="rounded-3xl border border-[#C7E5D3] bg-white p-6 sm:p-7 shadow-sm">
       <div className="flex flex-wrap items-center gap-2 mb-2">
-        <span className="text-[10px] uppercase tracking-[0.22em] font-bold text-[#1E7A55]">
+        <span className="text-[0.625rem] uppercase tracking-[0.22em] font-bold text-[#1E7A55]">
           Neutral summary
         </span>
         {summary && summaryModel && (

@@ -49,9 +49,9 @@ const BAR_COLORS = {
 };
 const TEXT_COLORS = {
   0: "text-[#6E6787]",
-  1: "text-[#D14A2D]",
+  1: "text-[#B03A20]",
   2: "text-[#965231]",
-  3: "text-[#3D9D6E]",
+  3: "text-[#2A7A52]",
   4: "text-[#0E7A7A]",
 };
 
@@ -70,7 +70,7 @@ export default function PasswordStrengthMeter({ password, testid }) {
         ))}
       </div>
       <div
-        className={`text-[11px] uppercase tracking-[0.12em] font-medium mt-1.5 ${TEXT_COLORS[score]}`}
+        className={`text-[0.6875rem] uppercase tracking-[0.12em] font-medium mt-1.5 ${TEXT_COLORS[score]}`}
         data-testid={`${testid || "password-strength-meter"}-label`}
       >
         {label}

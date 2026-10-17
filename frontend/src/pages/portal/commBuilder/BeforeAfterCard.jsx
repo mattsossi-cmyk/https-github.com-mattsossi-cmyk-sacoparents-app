@@ -27,9 +27,9 @@ export function BeforeAfterCard({ mode, onMode, canShowYours, original, transfor
           <h3 className="text-sm font-extrabold text-[#3B1C6B] uppercase tracking-wider">
             <i className="fa-solid fa-right-left text-purple-600 mr-2"></i>Before &amp; After
           </h3>
-          <p className="text-[11px] text-slate-500 mt-0.5">An original message next to calmer suggested wording.</p>
+          <p className="text-[0.6875rem] text-slate-500 mt-0.5">An original message next to calmer suggested wording.</p>
         </div>
-        <div role="tablist" className="inline-flex bg-purple-50 border border-purple-100 rounded-full p-0.5 text-[11px] font-bold">
+        <div role="tablist" className="inline-flex bg-purple-50 border border-purple-100 rounded-full p-0.5 text-[0.6875rem] font-bold">
           <button type="button" role="tab" aria-selected={!yours} data-testid="cb-ba-example" onClick={() => onMode("example")} className={tab(!yours)}>
             Example
           </button>
@@ -40,13 +40,13 @@ export function BeforeAfterCard({ mode, onMode, canShowYours, original, transfor
       </div>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
         <div data-testid="cb-ba-before" className="rounded-xl border border-rose-200 bg-rose-50/70 p-4">
-          <p data-testid="cb-ba-friction" className="text-[10px] font-bold uppercase tracking-wider text-rose-700 mb-2">
+          <p data-testid="cb-ba-friction" className="text-[0.625rem] font-bold uppercase tracking-wider text-rose-700 mb-2">
             <i className="fa-solid fa-fire-flame-curved mr-1"></i>Original Text ({frictionOf(yours, status, riskLabel)})
           </p>
           <p data-testid="cb-ba-before-text" className="text-sm text-rose-950 leading-relaxed whitespace-pre-wrap break-words">{before}</p>
         </div>
         <div data-testid="cb-ba-after" className="rounded-xl border border-emerald-200 bg-emerald-50/70 p-4">
-          <p className="text-[10px] font-bold uppercase tracking-wider text-emerald-800 mb-2">
+          <p className="text-[0.625rem] font-bold uppercase tracking-wider text-emerald-800 mb-2">
             <i className="fa-solid fa-pen-nib mr-1"></i>Suggested wording
           </p>
           {yours && status === "loading" ? (

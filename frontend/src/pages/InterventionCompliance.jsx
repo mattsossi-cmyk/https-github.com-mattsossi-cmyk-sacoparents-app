@@ -52,7 +52,7 @@ function ComplianceGauge({ pct, total, followed }) {
       className="rounded-3xl border border-[#E5E0EE] bg-white p-5 sm:p-6"
       data-testid="compliance-gauge"
     >
-      <div className="text-[10px] uppercase tracking-[0.22em] font-bold text-[#3D1A78]">
+      <div className="text-[0.625rem] uppercase tracking-[0.22em] font-bold text-[#3D1A78]">
         This week
       </div>
       <div className="flex items-baseline gap-3 flex-wrap mt-1">
@@ -81,7 +81,7 @@ function HistoryStrip({ weeks }) {
       className="rounded-3xl border border-[#E5E0EE] bg-white p-5 sm:p-6"
       data-testid="compliance-history"
     >
-      <div className="text-[10px] uppercase tracking-[0.22em] font-bold text-[#3D1A78]">
+      <div className="text-[0.625rem] uppercase tracking-[0.22em] font-bold text-[#3D1A78]">
         Last {weeks.length} weeks
       </div>
       <div className="flex items-center gap-2 mt-1">
@@ -110,7 +110,7 @@ function HistoryStrip({ weeks }) {
                 className={`w-full rounded-t ${empty ? "bg-[#F0EEF8]" : "bg-gradient-to-t from-[#3D1A78] to-[#2DB5B5]"}`}
                 style={{ height: `${height}%`, minHeight: 4 }}
               />
-              <div className="text-[9px] text-[#6A5799]">
+              <div className="text-[0.5625rem] text-[#6A5799]">
                 {w.week_start.slice(5)}
               </div>
             </div>
@@ -165,14 +165,14 @@ function InterventionRow({ item, onToggle, onNotesChange, saving }) {
             <button
               type="button"
               onClick={() => setNotesOpen((v) => !v)}
-              className="inline-flex items-center gap-1 text-[11px] text-[#3D1A78] font-semibold hover:underline"
+              className="inline-flex items-center gap-1 text-[0.6875rem] text-[#3D1A78] font-semibold hover:underline"
               data-testid={`compliance-notes-toggle-${item.key}`}
             >
               <StickyNote size={11} />
               {notesOpen ? "Hide notes" : (item.notes ? "Edit notes" : "Add notes")}
             </button>
             {item.updated_at && (
-              <span className="text-[10px] text-[#6A5799]">
+              <span className="text-[0.625rem] text-[#6A5799]">
                 Updated {new Date(item.updated_at).toLocaleDateString()}
               </span>
             )}
@@ -278,7 +278,7 @@ export default function InterventionCompliance() {
 
         <div className="flex items-start justify-between gap-3 flex-wrap mb-6">
           <div>
-            <div className="text-[10px] uppercase tracking-[0.22em] font-bold text-[#3D1A78]">
+            <div className="text-[0.625rem] uppercase tracking-[0.22em] font-bold text-[#3D1A78]">
               Intervention Compliance Log
             </div>
             <h1 className="font-serif text-3xl sm:text-4xl text-[#1A1330] mt-1">
@@ -335,7 +335,7 @@ export default function InterventionCompliance() {
           <div className="space-y-6">
             {groups.map(({ group, items }) => (
               <section key={group} data-testid={`compliance-group-${group}`}>
-                <div className="mb-2 text-[10px] uppercase tracking-[0.2em] font-bold text-[#3D1A78]">
+                <div className="mb-2 text-[0.625rem] uppercase tracking-[0.2em] font-bold text-[#3D1A78]">
                   {group}
                 </div>
                 <div className="space-y-2">
@@ -415,7 +415,7 @@ function ReminderPreferencesCard() {
           <Bell size={14} />
         </div>
         <div className="min-w-0">
-          <div className="text-[10px] uppercase tracking-[0.22em] font-bold text-[#3D1A78]">
+          <div className="text-[0.625rem] uppercase tracking-[0.22em] font-bold text-[#3D1A78]">
             Weekly reminder
           </div>
           <div className="font-serif text-lg text-[#1A1330] leading-snug">

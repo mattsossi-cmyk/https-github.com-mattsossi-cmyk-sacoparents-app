@@ -77,7 +77,7 @@ export default function PickerChoicePill() {
         {meta.icon}
       </div>
       <div className="min-w-0 flex-1">
-        <div className="text-[11px] uppercase tracking-[0.14em] font-bold text-[#6E6787] flex items-center gap-1">
+        <div className="text-[0.6875rem] uppercase tracking-[0.14em] font-bold text-[#6E6787] flex items-center gap-1">
           <Compass size={11} /> Your chosen path
         </div>
         <div className={`text-sm font-semibold ${meta.accent} truncate`} data-testid="picker-choice-pill-label">

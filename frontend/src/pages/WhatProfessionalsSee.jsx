@@ -10,7 +10,7 @@ const UPDATED = "June 2026";
 function ReviewTag({ testid }) {
   if (!ATTORNEY_REVIEW_PENDING) return null;
   return (
-    <span data-testid={testid} className="inline-flex items-center gap-1 rounded-full bg-amber-100 border border-amber-300 text-amber-900 text-[10px] font-bold uppercase tracking-wider px-2 py-0.5">
+    <span data-testid={testid} className="inline-flex items-center gap-1 rounded-full bg-amber-100 border border-amber-300 text-amber-900 text-[0.625rem] font-bold uppercase tracking-wider px-2 py-0.5">
       <Scale size={10} /> Attorney review
     </span>
   );
@@ -30,7 +30,7 @@ function Bullets({ items, testid }) {
     <ul data-testid={testid} className="space-y-2">
       {items.map((t) => (
         <li key={t} className="flex items-start gap-2.5 text-[15px] text-[#4B4567] leading-relaxed">
-          <i className="fa-solid fa-circle-check text-[#0F7676] text-[13px] mt-1.5" aria-hidden="true"></i>
+          <i className="fa-solid fa-circle-check text-[#0F7676] text-[0.8125rem] mt-1.5" aria-hidden="true"></i>
           <span>{t}</span>
         </li>
       ))}
@@ -48,7 +48,7 @@ function MethodCard({ m }) {
         <h3 className="font-bold text-[#1A1330] text-lg leading-tight">{m.title}</h3>
         {m.review && <ReviewTag testid={`pros-see-review-${m.key}`} />}
       </div>
-      <p className="text-[13px] text-[#6E6787] mb-3">{m.lead}</p>
+      <p className="text-[0.8125rem] text-[#6E6787] mb-3">{m.lead}</p>
       <Bullets items={m.points} />
     </section>
   );
@@ -92,7 +92,7 @@ export default function WhatProfessionalsSee() {
         {ATTORNEY_REVIEW_PENDING && (
         <div data-testid="pros-see-draft-label" role="note" className="rounded-2xl border-2 border-dashed border-amber-300 bg-amber-50 p-4 flex items-start gap-3 mb-8">
           <Scale size={18} className="text-amber-800 shrink-0 mt-0.5" />
-          <p className="text-[13px] text-amber-950 leading-relaxed">
+          <p className="text-[0.8125rem] text-amber-950 leading-relaxed">
             <strong>Draft, pending attorney review.</strong> This page describes how the app works today. Sections marked
             &ldquo;Attorney review&rdquo; are being checked by our attorney. It isn&rsquo;t legal advice.
           </p>

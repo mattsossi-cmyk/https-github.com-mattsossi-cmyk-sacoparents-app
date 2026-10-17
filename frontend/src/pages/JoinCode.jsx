@@ -97,7 +97,7 @@ export default function JoinCode() {
         data-testid="join-code-page"
       >
         <div className="rounded-3xl bg-white border border-[#E5E0EE] p-6 sm:p-10 shadow-sm">
-          <div className="text-[11px] uppercase tracking-[0.18em] font-bold text-[#3D1A78] mb-2">
+          <div className="text-[0.6875rem] uppercase tracking-[0.18em] font-bold text-[#3D1A78] mb-2">
             Joint Alignment
           </div>
           <h1 className="font-serif text-3xl sm:text-4xl text-[#1A1330] leading-tight">
@@ -113,7 +113,7 @@ export default function JoinCode() {
             <form onSubmit={submit} className="mt-6">
               <label
                 htmlFor="join-code-input"
-                className="text-[11px] uppercase tracking-[0.14em] font-bold text-[#6E6787]"
+                className="text-[0.6875rem] uppercase tracking-[0.14em] font-bold text-[#6E6787]"
               >
                 Alignment Code
               </label>
@@ -145,7 +145,7 @@ export default function JoinCode() {
 
               {error && (
                 <div
-                  className="mt-4 rounded-xl border border-[#F5C5C5] bg-[#FDECEC] p-3 flex items-start gap-2 text-[13px] text-[#8F1D24]"
+                  className="mt-4 rounded-xl border border-[#F5C5C5] bg-[#FDECEC] p-3 flex items-start gap-2 text-[0.8125rem] text-[#8F1D24]"
                   data-testid="join-code-error"
                 >
                   <AlertTriangle size={15} className="flex-shrink-0 mt-0.5" />

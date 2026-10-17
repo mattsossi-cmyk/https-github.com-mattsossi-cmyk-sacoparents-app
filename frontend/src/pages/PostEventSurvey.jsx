@@ -10,7 +10,7 @@ import { logError } from "../lib/logger";
  */
 function Eyebrow({ children }) {
   return (
-    <div className="text-[11px] tracking-[0.22em] uppercase font-bold text-[#3D1A78] mb-2">
+    <div className="text-[0.6875rem] tracking-[0.22em] uppercase font-bold text-[#3D1A78] mb-2">
       {children}
     </div>
   );
@@ -24,7 +24,7 @@ function QuestionWrapper({ index, total, question, children }) {
           Question {index + 1} of {total}
         </Eyebrow>
         {question.optional && (
-          <span className="text-[10px] uppercase tracking-[0.15em] text-[#6E6787]">
+          <span className="text-[0.625rem] uppercase tracking-[0.15em] text-[#6E6787]">
             Optional
           </span>
         )}
@@ -119,7 +119,7 @@ function Scale010({ question, value, onChange }) {
           );
         })}
       </div>
-      <div className="flex justify-between text-[10px] uppercase tracking-[0.15em] text-[#6E6787] mt-2">
+      <div className="flex justify-between text-[0.625rem] uppercase tracking-[0.15em] text-[#6E6787] mt-2">
         <span>{question.low_label}</span>
         <span>{question.high_label}</span>
       </div>
@@ -237,7 +237,7 @@ export default function PostEventSurvey() {
             Your feedback helps us make SA CoParenting App better for every parent
             navigating mediation. We read every response.
           </p>
-          <div className="text-[11px] tracking-[0.22em] uppercase font-bold text-[#3D1A78] mb-2">
+          <div className="text-[0.6875rem] tracking-[0.22em] uppercase font-bold text-[#3D1A78] mb-2">
             One step at a time
           </div>
           <p className="text-xs text-[#6E6787]">
@@ -331,7 +331,7 @@ export default function PostEventSurvey() {
           </button>
         </div>
 
-        <p className="text-[11px] text-[#6E6787] text-center mt-10">
+        <p className="text-[0.6875rem] text-[#6E6787] text-center mt-10">
           SA CoParenting App ·{" "}
           <a
             href="https://sacoparentsapp.online"

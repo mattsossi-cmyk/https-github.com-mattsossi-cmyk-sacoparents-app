@@ -13,7 +13,7 @@ export function CaseVisibilityNotice({ testid, className = "" }) {
         Once you accept, they can see whether each step they asked for is done, in progress or not started, with the dates. They don&rsquo;t see your
         answers. Shared co-parenting results reach them only after both parents finish. Your Self-Assessment answers are never shared.
       </p>
-      <ProSeeLink testid={`${testid}-link`} area="case" className="mt-1 text-[12px]" />
+      <ProSeeLink testid={`${testid}-link`} area="case" className="mt-1 text-[0.75rem]" />
     </div>
   );
 }

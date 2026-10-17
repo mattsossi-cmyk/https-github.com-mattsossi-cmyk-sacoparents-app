@@ -37,7 +37,7 @@ export default function PathwayReportUnlockHint({ shares = [], testidPrefix = "c
           <Scale size={16} />
         </div>
         <div className="min-w-0 flex-1">
-          <div className="inline-flex items-center gap-1.5 text-[10px] uppercase tracking-[0.22em] font-bold text-[#3D1A78]">
+          <div className="inline-flex items-center gap-1.5 text-[0.625rem] uppercase tracking-[0.22em] font-bold text-[#3D1A78]">
             <Sparkles size={11} /> Both of you also unlock
           </div>
           <div className="font-serif text-xl text-[#1A1330] leading-snug mt-1">
@@ -58,7 +58,7 @@ export default function PathwayReportUnlockHint({ shares = [], testidPrefix = "c
             <Link
               to="/pathway-report"
               data-testid={`${testidPrefix}-pathway-unlock-preview`}
-              className="text-[12px] font-semibold text-[#3D1A78] underline hover:text-[#0F7676]"
+              className="text-[0.75rem] font-semibold text-[#3D1A78] underline hover:text-[#0F7676]"
             >
               See a solo preview against your own data →
             </Link>

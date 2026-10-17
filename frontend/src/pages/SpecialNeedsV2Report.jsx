@@ -37,7 +37,7 @@ const STATUS_COLOR = {
 function StatusPill({ status }) {
   if (!status) return null;
   const cls = STATUS_COLOR[status] || STATUS_COLOR.Developing;
-  return <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-[10px] font-semibold border ${cls}`}>{status}</span>;
+  return <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-[0.625rem] font-semibold border ${cls}`}>{status}</span>;
 }
 
 function BulletList({ items = [], testId }) {
@@ -158,7 +158,7 @@ export default function SpecialNeedsV2Report() {
         <Link to="/dashboard" data-testid="snc2-report-back" className="inline-flex items-center gap-2 text-xs text-[#4B4567] underline mb-4">
           <ArrowLeft size={12} /> Back to dashboard
         </Link>
-        <div className="text-[10px] uppercase tracking-[0.22em] font-bold text-[#3D1A78] mb-1">Individual Parent Report</div>
+        <div className="text-[0.625rem] uppercase tracking-[0.22em] font-bold text-[#3D1A78] mb-1">Individual Parent Report</div>
         <h1 className="font-serif text-3xl sm:text-4xl text-[#1A1330] leading-tight">
           {intro.title || "Your Special Needs Co-Parenting Report"}
         </h1>
@@ -214,22 +214,22 @@ export default function SpecialNeedsV2Report() {
 
         {/* Cover meta */}
         <div className="mt-4 grid sm:grid-cols-3 gap-3 text-sm">
-          <div><div className="text-[10px] uppercase tracking-[0.18em] font-semibold text-[#3D1A78] mb-1">Parent</div><div>{cover.parent_name || "—"}</div></div>
-          <div><div className="text-[10px] uppercase tracking-[0.18em] font-semibold text-[#3D1A78] mb-1">Child</div><div>{cover.child_name || "—"}</div></div>
-          <div><div className="text-[10px] uppercase tracking-[0.18em] font-semibold text-[#3D1A78] mb-1">Assessment date</div><div>{cover.assessment_date || "—"}</div></div>
+          <div><div className="text-[0.625rem] uppercase tracking-[0.18em] font-semibold text-[#3D1A78] mb-1">Parent</div><div>{cover.parent_name || "—"}</div></div>
+          <div><div className="text-[0.625rem] uppercase tracking-[0.18em] font-semibold text-[#3D1A78] mb-1">Child</div><div>{cover.child_name || "—"}</div></div>
+          <div><div className="text-[0.625rem] uppercase tracking-[0.18em] font-semibold text-[#3D1A78] mb-1">Assessment date</div><div>{cover.assessment_date || "—"}</div></div>
         </div>
 
         {/* 2. Family Situation */}
         <Section id="family" number={2} title={fam.title || "Your Family Situation"}>
           <div className="text-sm text-[#4B4567] whitespace-pre-wrap">{fam.summary}</div>
           <div className="grid sm:grid-cols-2 gap-4 mt-4">
-            <div><div className="text-[10px] uppercase tracking-[0.18em] font-semibold text-[#3D1A78] mb-1">Professionals involved</div>
+            <div><div className="text-[0.625rem] uppercase tracking-[0.18em] font-semibold text-[#3D1A78] mb-1">Professionals involved</div>
               <BulletList items={fam.professionals_involved} testId="snc2-fam-pros" /></div>
-            <div><div className="text-[10px] uppercase tracking-[0.18em] font-semibold text-[#3D1A78] mb-1">Decisions needed</div>
+            <div><div className="text-[0.625rem] uppercase tracking-[0.18em] font-semibold text-[#3D1A78] mb-1">Decisions needed</div>
               <BulletList items={fam.decisions_needed} testId="snc2-fam-decisions" /></div>
-            <div><div className="text-[10px] uppercase tracking-[0.18em] font-semibold text-[#3D1A78] mb-1">Agreements</div>
+            <div><div className="text-[0.625rem] uppercase tracking-[0.18em] font-semibold text-[#3D1A78] mb-1">Agreements</div>
               <BulletList items={fam.agreements} testId="snc2-fam-agree" /></div>
-            <div><div className="text-[10px] uppercase tracking-[0.18em] font-semibold text-[#3D1A78] mb-1">Disagreements</div>
+            <div><div className="text-[0.625rem] uppercase tracking-[0.18em] font-semibold text-[#3D1A78] mb-1">Disagreements</div>
               <BulletList items={fam.disagreements} testId="snc2-fam-disagree" /></div>
           </div>
         </Section>
@@ -239,18 +239,18 @@ export default function SpecialNeedsV2Report() {
           <div className="space-y-3">
             {(areas.blocks || []).map((b) => (
               <div key={b.id} className="p-4 rounded-2xl border border-[#EEE9F7] bg-[#FBF9FE]" data-testid={`snc2-area-${b.id}`}>
-                <div className="text-[10px] uppercase tracking-[0.22em] font-bold text-[#3D1A78] mb-2">{b.name}</div>
+                <div className="text-[0.625rem] uppercase tracking-[0.22em] font-bold text-[#3D1A78] mb-2">{b.name}</div>
                 {b.concern && <div className="text-sm text-[#1A1330] mb-2"><strong>Concern:</strong> {b.concern}</div>}
                 <div className="text-xs text-[#4B4567]">
                   {b.duration && <span>Duration: {b.duration}. </span>}
                   {b.urgency && <span>Urgency: {b.urgency}.</span>}
                 </div>
                 {(b.current_needs || []).length > 0 && <div className="mt-2">
-                  <div className="text-[10px] uppercase tracking-[0.16em] font-semibold text-[#3D1A78] mb-1">Current needs</div>
+                  <div className="text-[0.625rem] uppercase tracking-[0.16em] font-semibold text-[#3D1A78] mb-1">Current needs</div>
                   <BulletList items={b.current_needs} />
                 </div>}
                 {b.professional_summary && <div className="mt-2">
-                  <div className="text-[10px] uppercase tracking-[0.16em] font-semibold text-[#3D1A78] mb-1">Professional recommendation summary</div>
+                  <div className="text-[0.625rem] uppercase tracking-[0.16em] font-semibold text-[#3D1A78] mb-1">Professional recommendation summary</div>
                   <div className="text-sm text-[#1A1330]">{b.professional_summary}</div>
                 </div>}
               </div>
@@ -275,11 +275,11 @@ export default function SpecialNeedsV2Report() {
                     <div className="font-serif text-lg text-[#1A1330]">{c.pathway_name}: {c.title}</div>
                     <StatusPill status={c.concern_level} />
                   </div>
-                  <div className="mb-2"><div className="text-[10px] uppercase tracking-[0.16em] font-semibold text-[#3D1A78] mb-1">What you reported</div>
+                  <div className="mb-2"><div className="text-[0.625rem] uppercase tracking-[0.16em] font-semibold text-[#3D1A78] mb-1">What you reported</div>
                     <div className="text-sm text-[#1A1330]">{c.reported}</div></div>
-                  <div className="mb-2"><div className="text-[10px] uppercase tracking-[0.16em] font-semibold text-[#3D1A78] mb-1">Why this may matter to your child</div>
+                  <div className="mb-2"><div className="text-[0.625rem] uppercase tracking-[0.16em] font-semibold text-[#3D1A78] mb-1">Why this may matter to your child</div>
                     <div className="text-sm text-[#1A1330]">{c.why_it_matters}</div></div>
-                  <div><div className="text-[10px] uppercase tracking-[0.16em] font-semibold text-[#3D1A78] mb-1">Options to consider</div>
+                  <div><div className="text-[0.625rem] uppercase tracking-[0.16em] font-semibold text-[#3D1A78] mb-1">Options to consider</div>
                     <BulletList items={c.options} /></div>
                 </div>
               ))}
@@ -303,10 +303,10 @@ export default function SpecialNeedsV2Report() {
                   <StatusPill status={row.status} />
                 </div>
                 <div className="text-sm text-[#1A1330] mb-2">{row.explanation}</div>
-                {(row.strengths || []).length > 0 && <div className="mb-2"><div className="text-[10px] uppercase tracking-[0.16em] font-semibold text-[#3D1A78] mb-1">Existing strengths</div><BulletList items={row.strengths} /></div>}
-                {(row.concerns || []).length > 0 && <div className="mb-2"><div className="text-[10px] uppercase tracking-[0.16em] font-semibold text-[#3D1A78] mb-1">Specific concerns</div><BulletList items={row.concerns} /></div>}
-                {(row.actions || []).length > 0 && <div className="mb-2"><div className="text-[10px] uppercase tracking-[0.16em] font-semibold text-[#3D1A78] mb-1">Recommended parent actions</div><BulletList items={row.actions} /></div>}
-                {(row.resources || []).length > 0 && <div><div className="text-[10px] uppercase tracking-[0.16em] font-semibold text-[#3D1A78] mb-1">Professional resources to consider</div><BulletList items={row.resources} /></div>}
+                {(row.strengths || []).length > 0 && <div className="mb-2"><div className="text-[0.625rem] uppercase tracking-[0.16em] font-semibold text-[#3D1A78] mb-1">Existing strengths</div><BulletList items={row.strengths} /></div>}
+                {(row.concerns || []).length > 0 && <div className="mb-2"><div className="text-[0.625rem] uppercase tracking-[0.16em] font-semibold text-[#3D1A78] mb-1">Specific concerns</div><BulletList items={row.concerns} /></div>}
+                {(row.actions || []).length > 0 && <div className="mb-2"><div className="text-[0.625rem] uppercase tracking-[0.16em] font-semibold text-[#3D1A78] mb-1">Recommended parent actions</div><BulletList items={row.actions} /></div>}
+                {(row.resources || []).length > 0 && <div><div className="text-[0.625rem] uppercase tracking-[0.16em] font-semibold text-[#3D1A78] mb-1">Professional resources to consider</div><BulletList items={row.resources} /></div>}
               </div>
             ))}
           </div>
@@ -324,7 +324,7 @@ export default function SpecialNeedsV2Report() {
             <div className="font-serif text-xl text-[#1A1330]">{structure.structure_name}</div>
             <div className="text-sm text-[#4B4567] mt-2">{structure.rationale}</div>
           </div>
-          <div className="text-[10px] uppercase tracking-[0.16em] font-semibold text-[#3D1A78] mb-1">Safeguards to consider</div>
+          <div className="text-[0.625rem] uppercase tracking-[0.16em] font-semibold text-[#3D1A78] mb-1">Safeguards to consider</div>
           <BulletList items={structure.safeguards} testId="snc2-structure-safeguards" />
           <div className="mt-4 rounded-2xl border-2 border-[#F1BDA1] bg-[#FBF2E7] p-3 flex items-start gap-2" data-testid="snc2-structure-safety-notice">
             <ShieldAlert className="text-[#C2481F] shrink-0 mt-0.5" size={18} />

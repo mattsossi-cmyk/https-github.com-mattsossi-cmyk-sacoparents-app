@@ -60,7 +60,7 @@ export function ShareLegalModal({
           </button>
         </div>
 
-        <p className="text-[11px] text-slate-500">{blurb}</p>
+        <p className="text-[0.6875rem] text-slate-500">{blurb}</p>
 
         <div className="space-y-2 text-xs">
           <div>
@@ -76,7 +76,7 @@ export function ShareLegalModal({
               placeholder="Leave empty for no passphrase"
               maxLength={40}
             />
-            <p className="text-[10px] text-slate-400 mt-1">
+            <p className="text-[0.625rem] text-slate-400 mt-1">
               Recipient will be asked to enter this before the PDF loads.
             </p>
           </div>
@@ -117,7 +117,7 @@ export function ShareLegalModal({
         {lastUrl && (
           <div
             data-testid={`${testPrefix}-result`}
-            className="p-2 bg-emerald-50 border border-emerald-200 rounded-lg text-[10px] text-emerald-900 break-all"
+            className="p-2 bg-emerald-50 border border-emerald-200 rounded-lg text-[0.625rem] text-emerald-900 break-all"
           >
             <div className="font-bold mb-1">Link copied — share separately:</div>
             <div>{lastUrl}</div>

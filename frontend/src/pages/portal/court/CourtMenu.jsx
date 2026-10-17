@@ -6,7 +6,7 @@ function Status({ testid, status }) {
   const [label, , icon] = STATUS_PILL[status];
   const tone = status === "done" ? "text-emerald-700" : status === "in_progress" ? "text-amber-700" : "text-slate-500";
   return (
-    <span data-testid={testid} data-status={status} className={`inline-flex items-center gap-1 text-[11px] font-bold whitespace-nowrap ${tone}`}>
+    <span data-testid={testid} data-status={status} className={`inline-flex items-center gap-1 text-[0.6875rem] font-bold whitespace-nowrap ${tone}`}>
       <i className={`fa-solid ${icon}`}></i>
       {label}
     </span>
@@ -15,9 +15,9 @@ function Status({ testid, status }) {
 
 function AskedTick({ testid, asked, onToggle }) {
   return (
-    <button type="button" role="checkbox" aria-checked={asked} data-testid={testid} onClick={onToggle} className="inline-flex items-center gap-2 text-[12px] font-semibold text-[#3b1566] rounded-lg px-1 py-1 hover:bg-[#f2ebfc] transition-colors">
+    <button type="button" role="checkbox" aria-checked={asked} data-testid={testid} onClick={onToggle} className="inline-flex items-center gap-2 text-[0.75rem] font-semibold text-[#3b1566] rounded-lg px-1 py-1 hover:bg-[#f2ebfc] transition-colors">
       <span className={`w-5 h-5 rounded-md border-2 grid place-items-center transition-colors ${asked ? "bg-[#5c2c8e] border-[#5c2c8e] text-white" : "bg-white border-slate-300 text-transparent"}`}>
-        <i className="fa-solid fa-check text-[10px]" aria-hidden="true"></i>
+        <i className="fa-solid fa-check text-[0.625rem]" aria-hidden="true"></i>
       </span>
       Asked by my professional
     </button>
@@ -31,7 +31,7 @@ function ProNote({ testid, asked, name }) {
       Set by {name || "your professional"}
     </span>
   ) : (
-    <span data-testid={testid} className="inline-flex items-center gap-1 text-[11px] font-semibold text-amber-800">
+    <span data-testid={testid} className="inline-flex items-center gap-1 text-[0.6875rem] font-semibold text-amber-800">
       <i className="fa-solid fa-circle-info" aria-hidden="true"></i>
       Your professional asked for this
     </span>
@@ -101,7 +101,7 @@ export function CourtMenu({ statusFor, requested, proKeys = [], proName, onToggl
       {asked.length > 0 && <ul data-testid="court-menu-requested" className="space-y-3">{asked.map(row)}</ul>}
       {others.length > 0 && (
         <>
-          <p data-testid="court-menu-others-label" className={`text-[11px] font-bold uppercase tracking-wider text-slate-500 mb-2 ${asked.length ? "mt-6" : ""}`}>
+          <p data-testid="court-menu-others-label" className={`text-[0.6875rem] font-bold uppercase tracking-wider text-slate-500 mb-2 ${asked.length ? "mt-6" : ""}`}>
             {asked.length ? "Not requested · tick any others your professional asked for" : "All assessments"}
           </p>
           <ul data-testid="court-menu-others" className="space-y-3">{others.map(row)}</ul>

@@ -160,7 +160,7 @@ export default function ProblemSolvingWorksheet() {
 
       <div className="max-w-3xl mx-auto px-4 sm:px-6 py-8 sm:py-12">
         <div className="mb-6">
-          <div className="inline-flex items-center gap-2 text-[11px] uppercase tracking-[0.22em] text-[#3D1A78] font-bold mb-3">
+          <div className="inline-flex items-center gap-2 text-[0.6875rem] uppercase tracking-[0.22em] text-[#3D1A78] font-bold mb-3">
             <Lightbulb size={12} /> Problem-Solving Worksheet
           </div>
           <h1 className="font-bold text-3xl sm:text-4xl text-[#1A1330] tracking-tight mb-3">
@@ -267,7 +267,7 @@ export default function ProblemSolvingWorksheet() {
 
         {history.length > 0 && (
           <div className="mt-10">
-            <div className="text-[11px] uppercase tracking-[0.2em] text-[#6E6787] font-bold mb-3">
+            <div className="text-[0.6875rem] uppercase tracking-[0.2em] text-[#6E6787] font-bold mb-3">
               Recent worksheets
             </div>
             <div className="space-y-3">

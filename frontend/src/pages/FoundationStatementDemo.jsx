@@ -72,7 +72,7 @@ const DEMO_ENTRIES = [
 
 function DemoBadge() {
   return (
-    <span className="inline-flex items-center gap-1.5 text-[10px] uppercase tracking-[0.22em] font-bold text-[#8C5A2C] bg-[#FFF6EC] border border-[#F3D9B5] rounded-full px-2.5 py-1">
+    <span className="inline-flex items-center gap-1.5 text-[0.625rem] uppercase tracking-[0.22em] font-bold text-[#8C5A2C] bg-[#FFF6EC] border border-[#F3D9B5] rounded-full px-2.5 py-1">
       <Sparkles size={10} /> Example
     </span>
   );
@@ -198,7 +198,7 @@ export default function FoundationStatementDemo() {
           </div>
         </div>
 
-        <p className="text-[11px] text-[#6E6787] mt-8 text-center">
+        <p className="text-[0.6875rem] text-[#6E6787] mt-8 text-center">
           Example content — not a real parent's words. SA CoParents ·
           sacoparentsapp.online
         </p>

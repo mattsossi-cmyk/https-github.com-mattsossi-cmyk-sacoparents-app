@@ -49,12 +49,12 @@ export const WelcomeArtwork = ({ testid, actions }) => {
           className="pointer-events-none absolute flex justify-center"
           style={{ left: "66.5%", width: "31.5%", top: "33.6%" }}
         >
-          <span className="rounded-full bg-sky-700/95 text-white font-bold uppercase tracking-wide shadow px-2 py-0.5 text-[7px] sm:text-[10px] whitespace-nowrap">
+          <span className="rounded-full bg-sky-700/95 text-white font-bold uppercase tracking-wide shadow px-2 py-0.5 text-[7px] sm:text-[0.625rem] whitespace-nowrap">
             Tool for either path
           </span>
         </span>
       </section>
-      <figcaption data-testid={`${prefix}-caption`} className="text-[11px] text-slate-600 text-center leading-snug px-2">
+      <figcaption data-testid={`${prefix}-caption`} className="text-[0.6875rem] text-slate-600 text-center leading-snug px-2">
         Tap a picture to open it. The third picture, the Communication Builder, isn&rsquo;t a separate path: it&rsquo;s a message tool you can use with either one.
       </figcaption>
     </figure>

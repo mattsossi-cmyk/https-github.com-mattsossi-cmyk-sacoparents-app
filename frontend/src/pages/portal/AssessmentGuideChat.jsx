@@ -249,19 +249,19 @@ function AssessmentGuideBody({
         {phase === "list" && (
           <>
             <div className="flex justify-start">
-              <div className="max-w-[92%] bg-white border border-slate-200 rounded-2xl rounded-tl-sm p-2.5 text-[12px] text-slate-800 leading-snug shadow-sm">
+              <div className="max-w-[92%] bg-white border border-slate-200 rounded-2xl rounded-tl-sm p-2.5 text-[0.75rem] text-slate-800 leading-snug shadow-sm">
                 Hi! I can help you decide where to start.
               </div>
             </div>
             <div className="flex justify-start">
-              <div className="max-w-[92%] bg-white border border-slate-200 rounded-2xl rounded-tl-sm p-2.5 text-[12px] text-slate-800 leading-snug shadow-sm">
+              <div className="max-w-[92%] bg-white border border-slate-200 rounded-2xl rounded-tl-sm p-2.5 text-[0.75rem] text-slate-800 leading-snug shadow-sm">
                 You don’t have to complete every assessment. Choose the
                 area that best matches what you want help with right
                 now.
               </div>
             </div>
             <div className="flex justify-start">
-              <div className="max-w-[92%] bg-white border border-slate-200 rounded-2xl rounded-tl-sm p-2.5 text-[12px] text-slate-800 leading-snug shadow-sm font-semibold">
+              <div className="max-w-[92%] bg-white border border-slate-200 rounded-2xl rounded-tl-sm p-2.5 text-[0.75rem] text-slate-800 leading-snug shadow-sm font-semibold">
                 What would you like help with?
               </div>
             </div>
@@ -298,7 +298,7 @@ function AssessmentGuideBody({
                     ></i>
                   </div>
                   <div className="min-w-0 flex-1">
-                    <div className="text-[10px] text-slate-400 font-mono">
+                    <div className="text-[0.625rem] text-slate-400 font-mono">
                       {opt.number}
                     </div>
                     <div className="text-xs font-bold text-slate-800 leading-snug">
@@ -307,8 +307,8 @@ function AssessmentGuideBody({
                     <div
                       className={
                         opt.color === "amber"
-                          ? "text-[10px] text-amber-700 font-semibold uppercase tracking-wider mt-0.5"
-                          : "text-[10px] text-purple-700 font-semibold uppercase tracking-wider mt-0.5"
+                          ? "text-[0.625rem] text-amber-700 font-semibold uppercase tracking-wider mt-0.5"
+                          : "text-[0.625rem] text-purple-700 font-semibold uppercase tracking-wider mt-0.5"
                       }
                     >
                       Choose: {opt.label}
@@ -335,13 +335,13 @@ function AssessmentGuideBody({
                   <i className="fa-solid fa-circle-question text-slate-500 text-xs"></i>
                 </div>
                 <div className="min-w-0 flex-1">
-                  <div className="text-[10px] text-slate-400 font-mono">
+                  <div className="text-[0.625rem] text-slate-400 font-mono">
                     8.
                   </div>
                   <div className="text-xs font-bold text-slate-800 leading-snug">
                     I’m Not Sure Where to Start
                   </div>
-                  <div className="text-[10px] text-slate-600 mt-0.5">
+                  <div className="text-[0.625rem] text-slate-600 mt-0.5">
                     That’s okay. I’ll ask you a few simple questions
                     about what is happening and help you identify
                     which assessment may be most relevant.
@@ -356,39 +356,39 @@ function AssessmentGuideBody({
         {phase === "recap" && selected && (
           <>
             <div className="flex justify-start">
-              <div className="max-w-[92%] bg-white border border-slate-200 rounded-2xl rounded-tl-sm p-2.5 text-[12px] text-slate-800 leading-snug shadow-sm">
+              <div className="max-w-[92%] bg-white border border-slate-200 rounded-2xl rounded-tl-sm p-2.5 text-[0.75rem] text-slate-800 leading-snug shadow-sm">
                 You’ve selected <b>{selected.label}</b>.
               </div>
             </div>
             <div className="p-3 bg-white rounded-2xl border border-purple-200 shadow-sm space-y-2">
               <div>
-                <div className="text-[10px] font-bold text-purple-800 uppercase tracking-wider">
+                <div className="text-[0.625rem] font-bold text-purple-800 uppercase tracking-wider">
                   Why parents choose this assessment
                 </div>
-                <p className="text-[12px] text-slate-700 leading-snug mt-0.5">
+                <p className="text-[0.75rem] text-slate-700 leading-snug mt-0.5">
                   {selected.why}
                 </p>
               </div>
               <div>
-                <div className="text-[10px] font-bold text-purple-800 uppercase tracking-wider">
+                <div className="text-[0.625rem] font-bold text-purple-800 uppercase tracking-wider">
                   What you’ll explore
                 </div>
-                <ul className="text-[11px] text-slate-700 pl-3 list-disc space-y-0.5 mt-0.5">
+                <ul className="text-[0.6875rem] text-slate-700 pl-3 list-disc space-y-0.5 mt-0.5">
                   {selected.topics.map((t) => (
                     <li key={t}>{t}</li>
                   ))}
                 </ul>
               </div>
               {selected.footnote && (
-                <div className="p-2 bg-slate-50 border border-slate-200 rounded-lg text-[10px] text-slate-600 leading-snug italic">
+                <div className="p-2 bg-slate-50 border border-slate-200 rounded-lg text-[0.625rem] text-slate-600 leading-snug italic">
                   {selected.footnote}
                 </div>
               )}
               <div>
-                <div className="text-[10px] font-bold text-purple-800 uppercase tracking-wider">
+                <div className="text-[0.625rem] font-bold text-purple-800 uppercase tracking-wider">
                   What happens afterward
                 </div>
-                <p className="text-[11px] text-slate-700 leading-snug mt-0.5">
+                <p className="text-[0.6875rem] text-slate-700 leading-snug mt-0.5">
                   Your responses can help you identify areas of
                   agreement, areas that may need attention, and
                   possible options or resources for moving forward.
@@ -424,7 +424,7 @@ function AssessmentGuideBody({
                         target="_blank"
                         rel="noopener noreferrer"
                         data-testid={`assessment-guide-sample-link-${selected.key}`}
-                        className="inline-flex items-center gap-1.5 text-[11px] font-bold text-purple-800 hover:underline"
+                        className="inline-flex items-center gap-1.5 text-[0.6875rem] font-bold text-purple-800 hover:underline"
                       >
                         <i className="fa-solid fa-file-pdf"></i>
                         See a sample report
@@ -436,7 +436,7 @@ function AssessmentGuideBody({
                         target="_blank"
                         rel="noopener noreferrer"
                         data-testid="assessment-guide-preview-link-coparenting"
-                        className="inline-flex items-center gap-1.5 text-[11px] font-bold text-amber-700 hover:underline"
+                        className="inline-flex items-center gap-1.5 text-[0.6875rem] font-bold text-amber-700 hover:underline"
                       >
                         <i className="fa-solid fa-wand-magic-sparkles"></i>
                         Try the preview — 40 quick questions
@@ -452,7 +452,7 @@ function AssessmentGuideBody({
         {phase === "help" && (
           <>
             <div className="flex justify-start">
-              <div className="max-w-[92%] bg-white border border-slate-200 rounded-2xl rounded-tl-sm p-2.5 text-[12px] text-slate-800 leading-snug shadow-sm">
+              <div className="max-w-[92%] bg-white border border-slate-200 rounded-2xl rounded-tl-sm p-2.5 text-[0.75rem] text-slate-800 leading-snug shadow-sm">
                 A few quick questions and I’ll suggest the best place
                 to start.
               </div>
@@ -466,12 +466,12 @@ function AssessmentGuideBody({
               return (
                 <React.Fragment key={q.key}>
                   <div className="flex justify-start">
-                    <div className="max-w-[92%] bg-white border border-slate-200 rounded-2xl rounded-tl-sm p-2.5 text-[12px] text-slate-800 leading-snug shadow-sm">
+                    <div className="max-w-[92%] bg-white border border-slate-200 rounded-2xl rounded-tl-sm p-2.5 text-[0.75rem] text-slate-800 leading-snug shadow-sm">
                       {q.prompt}
                     </div>
                   </div>
                   <div className="flex justify-end">
-                    <div className="max-w-[85%] bg-purple-800 text-white rounded-2xl rounded-tr-sm p-2.5 text-[12px] leading-snug">
+                    <div className="max-w-[85%] bg-purple-800 text-white rounded-2xl rounded-tr-sm p-2.5 text-[0.75rem] leading-snug">
                       {chosen?.label}
                     </div>
                   </div>
@@ -482,7 +482,7 @@ function AssessmentGuideBody({
               <>
                 <div className="flex justify-start">
                   <div
-                    className="max-w-[92%] bg-white border border-slate-200 rounded-2xl rounded-tl-sm p-2.5 text-[12px] text-slate-800 leading-snug shadow-sm"
+                    className="max-w-[92%] bg-white border border-slate-200 rounded-2xl rounded-tl-sm p-2.5 text-[0.75rem] text-slate-800 leading-snug shadow-sm"
                     data-testid={`assessment-help-q-${helpStep}`}
                   >
                     {HELP_QUESTIONS[helpStep].prompt}
@@ -534,17 +534,17 @@ function AssessmentGuideBody({
               >
                 <div className="flex items-center gap-1.5">
                   <i className="fa-solid fa-lightbulb text-amber-500 text-xs"></i>
-                  <span className="text-[9px] font-bold text-purple-800 uppercase tracking-wider">
+                  <span className="text-[0.5625rem] font-bold text-purple-800 uppercase tracking-wider">
                     Recommended
                   </span>
                 </div>
                 <div
-                  className="text-[13px] font-bold text-slate-800 leading-snug"
+                  className="text-[0.8125rem] font-bold text-slate-800 leading-snug"
                   data-testid="assessment-help-recommend-label"
                 >
                   {helpRecommendation.label}
                 </div>
-                <p className="text-[11px] text-slate-600 leading-snug">
+                <p className="text-[0.6875rem] text-slate-600 leading-snug">
                   {helpRecommendation.why}
                 </p>
               </div>
@@ -555,7 +555,7 @@ function AssessmentGuideBody({
 
       <div className="p-3 border-t border-slate-100 bg-white space-y-2">
         {phase === "list" && (
-          <p className="text-[10px] text-slate-400 text-center leading-snug">
+          <p className="text-[0.625rem] text-slate-400 text-center leading-snug">
             Tap any area above to see the details before starting.
           </p>
         )}
@@ -584,7 +584,7 @@ function AssessmentGuideBody({
                 setPhase("list");
                 setSelectedKey(null);
               }}
-              className="w-full py-1.5 text-[11px] text-slate-500 hover:text-slate-700 underline"
+              className="w-full py-1.5 text-[0.6875rem] text-slate-500 hover:text-slate-700 underline"
             >
               Choose Another Area
             </button>
@@ -599,7 +599,7 @@ function AssessmentGuideBody({
               setHelpStep(0);
               setHelpAnswers({});
             }}
-            className="w-full py-1.5 text-[11px] text-slate-500 hover:text-slate-700 underline"
+            className="w-full py-1.5 text-[0.6875rem] text-slate-500 hover:text-slate-700 underline"
           >
             Back to the list
           </button>
@@ -626,7 +626,7 @@ function AssessmentGuideBody({
               type="button"
               data-testid="assessment-help-back-from-recap"
               onClick={() => setPhase("list")}
-              className="w-full py-1.5 text-[11px] text-slate-500 hover:text-slate-700 underline"
+              className="w-full py-1.5 text-[0.6875rem] text-slate-500 hover:text-slate-700 underline"
             >
               Show me the full list
             </button>
@@ -656,7 +656,7 @@ export function AssessmentGuideChatInline({
           <i className="fa-solid fa-clipboard-question text-white text-sm"></i>
         </div>
         <div className="min-w-0">
-          <div className="text-[9px] font-bold text-purple-800 uppercase tracking-wider">
+          <div className="text-[0.5625rem] font-bold text-purple-800 uppercase tracking-wider">
             {safetyFlagged ? "Grey-rock" : "Assessment Guide"}
           </div>
           <h3 className="font-bold text-slate-800 text-sm truncate">
@@ -702,7 +702,7 @@ export function AssessmentGuideChat({
               <i className="fa-solid fa-clipboard-question text-white text-sm"></i>
             </div>
             <div className="min-w-0">
-              <div className="text-[9px] font-bold text-purple-800 uppercase tracking-wider">
+              <div className="text-[0.5625rem] font-bold text-purple-800 uppercase tracking-wider">
                 {safetyFlagged ? "Grey-rock" : "Assessment Guide"}
               </div>
               <h3 className="font-bold text-slate-800 text-sm truncate">

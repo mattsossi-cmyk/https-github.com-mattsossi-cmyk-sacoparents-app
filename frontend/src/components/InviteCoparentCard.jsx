@@ -194,7 +194,7 @@ export default function InviteCoparentCard({ variant = "dashboard" }) {
               >
                 Send my case to a mediator instead
               </Link>
-              <p className="mt-2 text-[11px] text-[#5B1F1F]/80 leading-relaxed">
+              <p className="mt-2 text-[0.6875rem] text-[#5B1F1F]/80 leading-relaxed">
                 A vetted family-law professional receives your case code and can
                 reach your co-parent safely — you never need to email them
                 directly.
@@ -245,7 +245,7 @@ export default function InviteCoparentCard({ variant = "dashboard" }) {
             </button>
           </div>
           <p
-            className="text-[11px] text-[#6E6787] mt-2 inline-flex items-center gap-1.5"
+            className="text-[0.6875rem] text-[#6E6787] mt-2 inline-flex items-center gap-1.5"
             data-testid="invite-coparent-one-shot-notice"
           >
             <Lock size={11} /> One invitation per co-parent — please double-check the address.
@@ -291,12 +291,12 @@ export default function InviteCoparentCard({ variant = "dashboard" }) {
                     <div className="text-sm text-[#1A1330] truncate">
                       {inv.invitee_email}
                     </div>
-                    <div className="text-[11px] text-[#6E6787] mt-0.5 inline-flex items-center gap-1">
+                    <div className="text-[0.6875rem] text-[#6E6787] mt-0.5 inline-flex items-center gap-1">
                       <Clock size={11} /> Sent {created || "—"}
                     </div>
                   </div>
                   <span
-                    className={`text-[10px] uppercase tracking-[0.12em] px-2 py-0.5 rounded-full ${meta.chip}`}
+                    className={`text-[0.625rem] uppercase tracking-[0.12em] px-2 py-0.5 rounded-full ${meta.chip}`}
                   >
                     {meta.label}
                   </span>
@@ -305,19 +305,19 @@ export default function InviteCoparentCard({ variant = "dashboard" }) {
             })}
           </ul>
           {invites[0].status === "expired" || invites[0].status === "rejected" ? (
-            <p className="text-[11px] text-[#6E6787] mt-3 leading-relaxed">
+            <p className="text-[0.6875rem] text-[#6E6787] mt-3 leading-relaxed">
               This invitation was not accepted within the 30-day window and is
               now closed. Only one invitation is permitted between parents
               through this app — if you still need to reach your co-parent, a
               mediator or attorney can help.
             </p>
           ) : invites[0].status === "signed_up" ? (
-            <p className="text-[11px] text-[#1F6E2E] mt-3 leading-relaxed">
+            <p className="text-[0.6875rem] text-[#1F6E2E] mt-3 leading-relaxed">
               Your co-parent has joined and is prepping in their own private
               workspace.
             </p>
           ) : (
-            <p className="text-[11px] text-[#6E6787] mt-3 leading-relaxed">
+            <p className="text-[0.6875rem] text-[#6E6787] mt-3 leading-relaxed">
               We&rsquo;ll let you know when your co-parent accepts. No further
               invitations can be sent from this app.
             </p>

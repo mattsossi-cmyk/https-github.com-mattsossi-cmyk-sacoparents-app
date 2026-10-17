@@ -13,7 +13,7 @@ function Row({ item }) {
       <i className={`${ICON[item.status]} text-base mt-0.5 shrink-0`} aria-hidden="true"></i>
       <div className="min-w-0 flex-1">
         <p className="text-sm font-semibold text-slate-800">{item.label}</p>
-        <p className={`text-[11px] leading-snug ${done ? "text-emerald-700" : item.status === "in_progress" ? "text-amber-700" : "text-slate-500"}`}>
+        <p className={`text-[0.6875rem] leading-snug ${done ? "text-emerald-700" : item.status === "in_progress" ? "text-amber-700" : "text-slate-500"}`}>
           {done ? item.detail : item.detail ? `${item.detail}. ${item.hint}` : item.hint}
         </p>
       </div>
@@ -31,10 +31,10 @@ export function CourtChecklistCard({ checklist, showDownload = true }) {
           <h4 className="text-sm font-extrabold text-[#3b1566] uppercase tracking-wider flex items-center gap-2">
             <i className="fa-solid fa-list-check text-[#5c2c8e]"></i> Your Court Checklist
           </h4>
-          <p className="text-[11px] text-slate-500 mt-0.5">What's done and what's left. Bring it to your mediator.</p>
+          <p className="text-[0.6875rem] text-slate-500 mt-0.5">What's done and what's left. Bring it to your mediator.</p>
         </div>
         {data && (
-          <span data-testid="court-checklist-count" className="text-[10px] font-bold uppercase tracking-wider text-purple-700 bg-purple-50 border border-purple-100 px-2 py-0.5 rounded-full">
+          <span data-testid="court-checklist-count" className="text-[0.625rem] font-bold uppercase tracking-wider text-purple-700 bg-purple-50 border border-purple-100 px-2 py-0.5 rounded-full">
             {data.done} of {data.total} done
           </span>
         )}
@@ -76,7 +76,7 @@ export function CourtChecklistCard({ checklist, showDownload = true }) {
         <span>Download Checklist PDF</span>
       </button>
       )}
-      {!showDownload && <p className="mt-3 text-[11px] text-slate-500">Download the Checklist PDF from Reports.</p>}
+      {!showDownload && <p className="mt-3 text-[0.6875rem] text-slate-500">Download the Checklist PDF from Reports.</p>}
     </div>
   );
 }

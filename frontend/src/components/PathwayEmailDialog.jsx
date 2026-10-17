@@ -61,7 +61,7 @@ export default function PathwayEmailDialog({
       >
         <div className="flex items-center justify-between gap-3 px-6 sm:px-7 pt-6">
           <div>
-            <div className="text-[11px] uppercase tracking-[0.22em] text-[#3D1A78] font-bold mb-1">
+            <div className="text-[0.6875rem] uppercase tracking-[0.22em] text-[#3D1A78] font-bold mb-1">
               Send Pathway Report
             </div>
             <h3
@@ -83,16 +83,16 @@ export default function PathwayEmailDialog({
         </div>
 
         <div className="px-6 sm:px-7 py-5 space-y-4">
-          <ProSeeLink testid="pathway-email-pros-see-link" className="text-[13px]" />
+          <ProSeeLink testid="pathway-email-pros-see-link" className="text-[0.8125rem]" />
           <div className="rounded-2xl border border-[#E5E0EE] bg-[#F8F7FC] p-3">
-            <div className="text-[10px] uppercase tracking-[0.22em] font-bold text-[#3D1A78] mb-1">
+            <div className="text-[0.625rem] uppercase tracking-[0.22em] font-bold text-[#3D1A78] mb-1">
               Primary pathway (sent as a private link)
             </div>
             <div className="text-sm text-[#1A1330] font-semibold leading-tight"
               data-testid="pathway-email-dialog-pathway-label">
               {pathwayLabel || "Pathway recommendation"}
             </div>
-            <div className="text-[11px] text-[#4B4567] mt-1"
+            <div className="text-[0.6875rem] text-[#4B4567] mt-1"
               data-testid="pathway-email-dialog-scope">
               {isDual
                 ? "Two-parent report — both parents consented via the Compare share."
@@ -106,7 +106,7 @@ export default function PathwayEmailDialog({
           </p>
 
           <div>
-            <label className="block text-[11px] uppercase tracking-[0.18em] text-[#3D1A78] font-bold mb-1">
+            <label className="block text-[0.6875rem] uppercase tracking-[0.18em] text-[#3D1A78] font-bold mb-1">
               Recipient role
             </label>
             <div className="flex flex-wrap gap-1.5">
@@ -116,7 +116,7 @@ export default function PathwayEmailDialog({
                   type="button"
                   onClick={() => setRole(r.key)}
                   data-testid={`pathway-role-${r.key}`}
-                  className={`text-[12px] px-3 py-1.5 rounded-full border transition ${
+                  className={`text-[0.75rem] px-3 py-1.5 rounded-full border transition ${
                     role === r.key
                       ? "bg-[#3D1A78] text-white border-[#3D1A78] font-semibold"
                       : "bg-white text-[#4B4567] border-[#E5E0EE] hover:border-[#3D1A78]"
@@ -130,7 +130,7 @@ export default function PathwayEmailDialog({
           </div>
 
           <div>
-            <label className="block text-[11px] uppercase tracking-[0.18em] text-[#3D1A78] font-bold mb-1">
+            <label className="block text-[0.6875rem] uppercase tracking-[0.18em] text-[#3D1A78] font-bold mb-1">
               Recipient email <span aria-hidden="true" className="text-[#9A3A23]">*</span>
             </label>
             <input
@@ -146,7 +146,7 @@ export default function PathwayEmailDialog({
           </div>
 
           <div>
-            <label className="block text-[11px] uppercase tracking-[0.18em] text-[#3D1A78] font-bold mb-1">
+            <label className="block text-[0.6875rem] uppercase tracking-[0.18em] text-[#3D1A78] font-bold mb-1">
               Recipient name <span className="text-[#6E6787] font-normal normal-case tracking-normal">· optional</span>
             </label>
             <input
@@ -160,7 +160,7 @@ export default function PathwayEmailDialog({
           </div>
 
           <div>
-            <label className="block text-[11px] uppercase tracking-[0.18em] text-[#3D1A78] font-bold mb-1">
+            <label className="block text-[0.6875rem] uppercase tracking-[0.18em] text-[#3D1A78] font-bold mb-1">
               Short message <span className="text-[#6E6787] font-normal normal-case tracking-normal">· optional</span>
             </label>
             <textarea
@@ -174,7 +174,7 @@ export default function PathwayEmailDialog({
             />
           </div>
 
-          <p className="text-[11px] text-[#6A5799] italic">
+          <p className="text-[0.6875rem] text-[#6A5799] italic">
             Reply-to is set to your email so the recipient can respond directly.
             The pathway report is generated from a deterministic rule engine —
             informational only, not legal advice.

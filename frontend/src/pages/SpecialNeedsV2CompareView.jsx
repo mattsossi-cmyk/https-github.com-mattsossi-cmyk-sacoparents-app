@@ -29,7 +29,7 @@ const ALIGN_STYLES = {
 function AlignPill({ alignment, label }) {
   const cls = ALIGN_STYLES[alignment] || ALIGN_STYLES.insufficient;
   return (
-    <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-[10px] font-semibold border ${cls}`}
+    <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-[0.625rem] font-semibold border ${cls}`}
       data-testid={`snc2-align-${alignment}`}>
       {label || alignment}
     </span>
@@ -134,7 +134,7 @@ export default function SpecialNeedsV2CompareView() {
         <Link to="/special-needs-v2/compare" className="inline-flex items-center gap-2 text-xs text-[#4B4567] underline mb-4" data-testid="snc2-compare-view-back">
           <ArrowLeft size={12} /> Back to comparisons
         </Link>
-        <div className="text-[10px] uppercase tracking-[0.22em] font-bold text-[#3D1A78] mb-1">Co-Parent Comparison</div>
+        <div className="text-[0.625rem] uppercase tracking-[0.22em] font-bold text-[#3D1A78] mb-1">Co-Parent Comparison</div>
         <h1 className="font-serif text-3xl sm:text-4xl text-[#1A1330] leading-tight">
           {parentA} <span className="text-[#6A5799]">·</span> {parentB}
         </h1>
@@ -208,7 +208,7 @@ export default function SpecialNeedsV2CompareView() {
               <section className="mt-5 rounded-3xl border border-[#B5DFC5] bg-[#F1F9F4] p-5 sm:p-7 shadow-sm" data-testid="snc2-compare-highlights">
                 <div className="flex items-center gap-2 text-[#1F5C3B]">
                   <Sparkles size={16} />
-                  <span className="text-[10px] uppercase tracking-[0.22em] font-bold">Where you already agree</span>
+                  <span className="text-[0.625rem] uppercase tracking-[0.22em] font-bold">Where you already agree</span>
                 </div>
                 <h2 className="font-serif text-2xl text-[#1A1330] mt-1 mb-1">
                   {(data.comparison.highlights || []).length === 1
@@ -228,7 +228,7 @@ export default function SpecialNeedsV2CompareView() {
                         <div className="flex-1">
                           <div className="text-sm font-semibold text-[#1A1330]">{h.prompt}</div>
                           <div className="text-sm text-[#1F5C3B] mt-1">{h.summary}</div>
-                          <div className="text-[10px] uppercase tracking-[0.16em] text-[#4B4567] mt-2">
+                          <div className="text-[0.625rem] uppercase tracking-[0.16em] text-[#4B4567] mt-2">
                             Step {h.step_number} · {h.step_name} · {h.pathway_name}
                           </div>
                         </div>
@@ -241,7 +241,7 @@ export default function SpecialNeedsV2CompareView() {
 
             {/* Category filter */}
             <div className="mt-4 flex flex-wrap items-center gap-2" data-testid="snc2-compare-category-filter">
-              <span className="text-[10px] uppercase tracking-[0.18em] font-semibold text-[#3D1A78] mr-2">Filter</span>
+              <span className="text-[0.625rem] uppercase tracking-[0.18em] font-semibold text-[#3D1A78] mr-2">Filter</span>
               {[
                 { id: null, label: "All shared" },
                 { id: "medical", label: "Medical" },
@@ -275,7 +275,7 @@ export default function SpecialNeedsV2CompareView() {
                   <h2 className="font-serif text-2xl text-[#1A1330] mb-3">Step {step.number}. {step.name}</h2>
                   {(step.pathways || []).map((path) => (
                     <div key={path.id} className="mt-4">
-                      <div className="text-[10px] uppercase tracking-[0.18em] font-semibold text-[#3D1A78] mb-2">{path.name}</div>
+                      <div className="text-[0.625rem] uppercase tracking-[0.18em] font-semibold text-[#3D1A78] mb-2">{path.name}</div>
                       <div className="space-y-4">
                         {(path.items || []).map((item) => (
                           <div key={item.id} className="rounded-2xl border border-[#EEE9F7] bg-[#FCFBFE] p-4" data-testid={`snc2-compare-item-${step.id}-${path.id}-${item.id}`}>
@@ -285,11 +285,11 @@ export default function SpecialNeedsV2CompareView() {
                             </div>
                             <div className="mt-3 grid sm:grid-cols-2 gap-3">
                               <div>
-                                <div className="text-[10px] uppercase tracking-[0.18em] font-semibold text-[#3D1A78] mb-1">{parentA}</div>
+                                <div className="text-[0.625rem] uppercase tracking-[0.18em] font-semibold text-[#3D1A78] mb-1">{parentA}</div>
                                 <div className="text-sm text-[#1A1330]"><ValueCell item={item} side="parent_a" /></div>
                               </div>
                               <div>
-                                <div className="text-[10px] uppercase tracking-[0.18em] font-semibold text-[#3D1A78] mb-1">{parentB}</div>
+                                <div className="text-[0.625rem] uppercase tracking-[0.18em] font-semibold text-[#3D1A78] mb-1">{parentB}</div>
                                 <div className="text-sm text-[#1A1330]"><ValueCell item={item} side="parent_b" /></div>
                               </div>
                             </div>
@@ -307,7 +307,7 @@ export default function SpecialNeedsV2CompareView() {
 
             <ReportProvenanceFooter variant="comparison" className="mt-8" />
 
-            <p className="text-[11px] text-[#4B4567] mt-8 italic max-w-3xl">
+            <p className="text-[0.6875rem] text-[#4B4567] mt-8 italic max-w-3xl">
               This comparison is neutral and does not determine parental fitness, provide legal advice,
               or diagnose. Either parent can revoke consent at any time from the Comparisons hub.
             </p>

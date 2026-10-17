@@ -178,7 +178,7 @@ export default function IssuesConcerns() {
             <div className="w-8 h-8 rounded-full bg-white grid place-items-center text-[#3D1A78] shrink-0 mt-0.5">
               <ShieldAlert size={14} />
             </div>
-            <div className="text-[13px] sm:text-sm text-[#4B4567] leading-relaxed">
+            <div className="text-[0.8125rem] sm:text-sm text-[#4B4567] leading-relaxed">
               <strong className="text-[#1A1330]">A gentle reminder.</strong>{" "}
               The mediator will read what you write. Short, factual notes —
               <em> "Pickup was 40 minutes late on May 3"</em> — land far better than

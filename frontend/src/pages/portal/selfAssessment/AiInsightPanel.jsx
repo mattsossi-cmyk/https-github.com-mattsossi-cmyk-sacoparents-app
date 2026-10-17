@@ -76,15 +76,15 @@ function FramingForm({ safetyFlag }) {
         </button>
       </div>
       </AiGuardFrame>
-      {error && <p data-testid="sa-ai-error" className="text-[11px] text-rose-700">{error}</p>}
+      {error && <p data-testid="sa-ai-error" className="text-[0.6875rem] text-rose-700">{error}</p>}
       {result && (
         <div data-testid="sa-ai-framing" className="rounded-xl border border-purple-100 bg-white p-3 space-y-2 text-xs">
           <p data-testid="sa-ai-framing-advice" className="text-slate-700">{result.advice}</p>
           {result.suggested && (
             <div className="rounded-lg bg-emerald-50 border border-emerald-100 p-2.5">
               <div className="flex items-center justify-between gap-2 mb-1">
-                <span className="text-[10px] uppercase font-bold tracking-wider text-emerald-800">Suggested wording</span>
-                <button type="button" data-testid="sa-ai-framing-copy" onClick={copy} className="text-[11px] font-semibold text-emerald-800 hover:underline">
+                <span className="text-[0.625rem] uppercase font-bold tracking-wider text-emerald-800">Suggested wording</span>
+                <button type="button" data-testid="sa-ai-framing-copy" onClick={copy} className="text-[0.6875rem] font-semibold text-emerald-800 hover:underline">
                   <i className="fa-regular fa-copy mr-1"></i>Copy
                 </button>
               </div>
@@ -112,10 +112,10 @@ export function AiInsightPanel({ tip, loading, safetyFlag, onOpenBiffCoach, onUs
           </div>
           <div>
             <h4 className="font-bold text-[#3B1C6B] text-base leading-tight">Emergent AI Insight</h4>
-            <p className="text-[11px] text-slate-500 font-medium">Personalized AI Guide &bull; Actively Assessing</p>
+            <p className="text-[0.6875rem] text-slate-500 font-medium">Personalized AI Guide &bull; Actively Assessing</p>
           </div>
         </div>
-        <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-100 text-emerald-800 text-[10px] font-bold">
+        <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-100 text-emerald-800 text-[0.625rem] font-bold">
           <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-ping"></span> Live
         </span>
       </div>
@@ -156,7 +156,7 @@ export function AiInsightPanel({ tip, loading, safetyFlag, onOpenBiffCoach, onUs
         </button>
       </div>
       <div className="mt-5 pt-3 border-t border-purple-100 text-center">
-        <span data-testid="sa-ai-footer-note" className="text-[10px] text-slate-500 font-medium">AI help comes from an outside AI service. Leave out names and sensitive details.</span>
+        <span data-testid="sa-ai-footer-note" className="text-[0.625rem] text-slate-500 font-medium">AI help comes from an outside AI service. Leave out names and sensitive details.</span>
       </div>
       <AiLibraryDialog
         tab={library}

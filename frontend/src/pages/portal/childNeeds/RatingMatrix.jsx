@@ -4,14 +4,14 @@ import React from "react";
 export function RatingMatrix({ label, fields, scale, values, onChange }) {
   return (
     <div>
-      <p className="text-[13px] font-bold text-slate-700 mb-1.5">{label}</p>
+      <p className="text-[0.8125rem] font-bold text-slate-700 mb-1.5">{label}</p>
       <div className="overflow-x-auto">
-        <table data-testid="child-needs-rating-matrix" className="w-full border-collapse text-[12px]">
+        <table data-testid="child-needs-rating-matrix" className="w-full border-collapse text-[0.75rem]">
           <thead>
             <tr>
               <th className="text-left py-2 pr-2 w-[38%] sm:w-1/2 font-semibold text-slate-500">Indicator</th>
               {scale.map((s) => (
-                <th key={s} className="py-2 px-0.5 text-center font-semibold text-slate-500 text-[9.5px] sm:text-[11px]">
+                <th key={s} className="py-2 px-0.5 text-center font-semibold text-slate-500 text-[9.5px] sm:text-[0.6875rem]">
                   {s}
                 </th>
               ))}

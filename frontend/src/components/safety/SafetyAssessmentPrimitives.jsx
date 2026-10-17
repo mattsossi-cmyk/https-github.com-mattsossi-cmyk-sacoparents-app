@@ -79,14 +79,14 @@ export function QuestionRow({ idx, question, value, onChange, highConcern, missi
         <div className="flex-1">
           <p className="text-sm sm:text-base text-[#1A1330] leading-relaxed">{question.text}</p>
           {highConcern && (
-            <div className="mt-1.5 inline-flex items-center gap-1 text-[10px] uppercase tracking-[0.18em] text-[#9A3A23] font-bold">
+            <div className="mt-1.5 inline-flex items-center gap-1 text-[0.625rem] uppercase tracking-[0.18em] text-[#9A3A23] font-bold">
               <ShieldAlert size={11} />
               High safety concern
             </div>
           )}
           {missing && (
             <div
-              className="mt-1.5 inline-flex items-center gap-1 text-[10px] uppercase tracking-[0.18em] text-[#9A3A23] font-bold"
+              className="mt-1.5 inline-flex items-center gap-1 text-[0.625rem] uppercase tracking-[0.18em] text-[#9A3A23] font-bold"
               data-testid={`missing-flag-${question.id}`}
             >
               <AlertTriangle size={11} />
@@ -124,7 +124,7 @@ export function ProgressStrip({ answered, total, testid }) {
         />
       </div>
       <div
-        className="text-[11px] uppercase tracking-[0.18em] font-bold text-[#4B4567] shrink-0"
+        className="text-[0.6875rem] uppercase tracking-[0.18em] font-bold text-[#4B4567] shrink-0"
         data-testid={`${testid}-count`}
       >
         {answered} / {total} answered
@@ -152,7 +152,7 @@ export function ExtensionStep({
   return (
     <div className="fade-up" data-testid={testid}>
       <div className="mb-4">
-        <div className="text-[10px] uppercase tracking-[0.24em] text-[#3D1A78] font-bold mb-1">
+        <div className="text-[0.625rem] uppercase tracking-[0.24em] text-[#3D1A78] font-bold mb-1">
           Optional depth · Trauma-Informed Lens
         </div>
         <h2 className="text-2xl sm:text-3xl font-bold text-[#1A1330] mb-1">{title}</h2>

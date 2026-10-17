@@ -10,7 +10,7 @@ const fmt = (iso) => new Date(iso).toLocaleDateString("en-US", { month: "long", 
 // Notice of Confidentiality + Health Information Privacy Notice, shown at the top of every Child Needs form.
 export function NoticesBox({ ackDate }) {
   return (
-    <div data-testid="child-needs-notices" className="rounded-xl border border-purple-200 bg-[#F4EEF5] p-4 space-y-3 text-[12px] leading-relaxed text-slate-700">
+    <div data-testid="child-needs-notices" className="rounded-xl border border-purple-200 bg-[#F4EEF5] p-4 space-y-3 text-[0.75rem] leading-relaxed text-slate-700">
       {["confidentiality", "privacy"].map((k) => (
         <div key={k} data-testid={`child-needs-notice-${k}`}>
           <p className="font-bold text-[#4A154B] flex items-center gap-1.5 mb-0.5">
@@ -20,9 +20,9 @@ export function NoticesBox({ ackDate }) {
           <p>{N[k].body}</p>
         </div>
       ))}
-      <ProSeeLink testid="child-needs-notices-pros-see-link" area="child-needs" className="text-[12px]" />
+      <ProSeeLink testid="child-needs-notices-pros-see-link" area="child-needs" className="text-[0.75rem]" />
       {ackDate && (
-        <p data-testid="child-needs-ack-done" className="text-[11px] font-semibold text-emerald-700">
+        <p data-testid="child-needs-ack-done" className="text-[0.6875rem] font-semibold text-emerald-700">
           <i className="fa-solid fa-circle-check mr-1"></i>
           {N.ack_done.replace("{date}", fmt(ackDate))}
         </p>

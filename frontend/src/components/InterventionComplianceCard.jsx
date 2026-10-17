@@ -58,7 +58,7 @@ export default function InterventionComplianceCard() {
             <CheckCircle2 size={16} />
           </span>
           <div>
-            <div className="text-[10px] uppercase tracking-[0.22em] font-bold text-[#3D1A78]">
+            <div className="text-[0.625rem] uppercase tracking-[0.22em] font-bold text-[#3D1A78]">
               This week's compliance
             </div>
             <div className="font-serif text-lg text-[#1A1330]">
@@ -88,7 +88,7 @@ export default function InterventionComplianceCard() {
           data-testid="compliance-card-streak"
         >
           <span
-            className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-bold ${
+            className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[0.6875rem] font-bold ${
               current > 0
                 ? "bg-[#FFF5DA] text-[#8A5B00]"
                 : "bg-[#F0EEF8] text-[#4B4567]"
@@ -99,7 +99,7 @@ export default function InterventionComplianceCard() {
           </span>
           {earnedCount > 0 && (
             <span
-              className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-bold bg-[#F0EEF8] text-[#3D1A78]"
+              className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[0.6875rem] font-bold bg-[#F0EEF8] text-[#3D1A78]"
               data-testid="compliance-card-badges"
             >
               <Award size={12} className="text-[#E8A628]" />
@@ -107,7 +107,7 @@ export default function InterventionComplianceCard() {
             </span>
           )}
           {streak.next_badge && (
-            <span className="text-[11px] text-[#4B4567]">
+            <span className="text-[0.6875rem] text-[#4B4567]">
               Next: {streak.next_badge.label} ({current}/{streak.next_badge.weeks})
             </span>
           )}

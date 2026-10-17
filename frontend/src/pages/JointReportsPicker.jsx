@@ -198,7 +198,7 @@ function TopicCircle({ tile, shareId }) {
           <Icon size={22} strokeWidth={2} />
         </div>
         <div className="text-sm font-semibold text-[#4B4567]">{tile.label}</div>
-        <div className="mt-1 text-[10px] uppercase tracking-[0.14em] font-bold text-[#3D1A78] bg-[#EFE9F9] rounded-full px-2 py-0.5">
+        <div className="mt-1 text-[0.625rem] uppercase tracking-[0.14em] font-bold text-[#3D1A78] bg-[#EFE9F9] rounded-full px-2 py-0.5">
           Coming soon
         </div>
       </div>
@@ -224,7 +224,7 @@ function TopicCircle({ tile, shareId }) {
         <Icon size={22} strokeWidth={2} />
       </div>
       <div className="text-sm font-semibold text-[#1A1330]">{tile.label}</div>
-      <div className="mt-1 text-[10px] uppercase tracking-[0.14em] font-semibold text-[#3D1A78]">
+      <div className="mt-1 text-[0.625rem] uppercase tracking-[0.14em] font-semibold text-[#3D1A78]">
         {isStandalone ? "Start reflection" : isReady ? "Open compare" : "Start"}
       </div>
     </Link>
@@ -267,7 +267,7 @@ export default function JointReportsPicker() {
           data-testid="joint-picker-front-door-nudge"
         >
           <div className="flex-1">
-            <div className="text-[11px] uppercase tracking-[0.16em] font-bold text-[#3D1A78]">
+            <div className="text-[0.6875rem] uppercase tracking-[0.16em] font-bold text-[#3D1A78]">
               New home for co-parenting pathways
             </div>
             <p className="text-[14px] text-[#1A1330] leading-relaxed mt-1 !mb-0">
@@ -314,7 +314,7 @@ export default function JointReportsPicker() {
           data-testid="joint-picker-send-to-professional"
         >
           <div className="flex-1">
-            <div className="text-[11px] uppercase tracking-[0.16em] font-bold text-[#3D1A78]">
+            <div className="text-[0.6875rem] uppercase tracking-[0.16em] font-bold text-[#3D1A78]">
               Ready to hand this off?
             </div>
             <p className="text-[14px] text-[#1A1330] leading-relaxed mt-1 !mb-0">

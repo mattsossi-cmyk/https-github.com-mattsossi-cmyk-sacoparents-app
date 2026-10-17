@@ -21,24 +21,24 @@ import PathwayReportUnlockHint from "../components/PathwayReportUnlockHint";
 
 function StatusBadge({ share }) {
   if (share.status === "revoked") {
-    return <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-[#F8D7D7] text-[#B02A2A] border border-[#EFB4B4]" data-testid="share-status-revoked">Revoked</span>;
+    return <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[0.625rem] font-semibold bg-[#F8D7D7] text-[#B02A2A] border border-[#EFB4B4]" data-testid="share-status-revoked">Revoked</span>;
   }
   if (share.ready_to_view) {
-    return <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-[#E6F4EC] text-[#1F5C3B] border border-[#B5DFC5]" data-testid="share-status-ready">Ready to view</span>;
+    return <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[0.625rem] font-semibold bg-[#E6F4EC] text-[#1F5C3B] border border-[#B5DFC5]" data-testid="share-status-ready">Ready to view</span>;
   }
   if (!share.my_consent) {
-    return <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-[#FBEDDA] text-[#8C5A2C] border border-[#EDD5B0]" data-testid="share-status-await-me">Needs your consent</span>;
+    return <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[0.625rem] font-semibold bg-[#FBEDDA] text-[#8C5A2C] border border-[#EDD5B0]" data-testid="share-status-await-me">Needs your consent</span>;
   }
   if (!share.partner_consent) {
-    return <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-[#EEE9F7] text-[#3D1A78] border border-[#D6CFE8]" data-testid="share-status-await-partner">Waiting on co-parent</span>;
+    return <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[0.625rem] font-semibold bg-[#EEE9F7] text-[#3D1A78] border border-[#D6CFE8]" data-testid="share-status-await-partner">Waiting on co-parent</span>;
   }
   if (!share.partner_assessment_complete) {
-    return <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-[#EEE9F7] text-[#3D1A78] border border-[#D6CFE8]">Co-parent not finished</span>;
+    return <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[0.625rem] font-semibold bg-[#EEE9F7] text-[#3D1A78] border border-[#D6CFE8]">Co-parent not finished</span>;
   }
   if (!share.my_assessment_complete) {
-    return <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-[#FBEDDA] text-[#8C5A2C] border border-[#EDD5B0]">Finish your assessment</span>;
+    return <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[0.625rem] font-semibold bg-[#FBEDDA] text-[#8C5A2C] border border-[#EDD5B0]">Finish your assessment</span>;
   }
-  return <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-[#EEE9F7] text-[#3D1A78] border border-[#D6CFE8]">Pending</span>;
+  return <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[0.625rem] font-semibold bg-[#EEE9F7] text-[#3D1A78] border border-[#D6CFE8]">Pending</span>;
 }
 
 export default function SpecialNeedsV2Compare() {
@@ -124,7 +124,7 @@ export default function SpecialNeedsV2Compare() {
           <ArrowLeft size={12} /> Back to Special Needs assessment
         </Link>
 
-        <div className="text-[10px] uppercase tracking-[0.22em] font-bold text-[#3D1A78] mb-1">
+        <div className="text-[0.625rem] uppercase tracking-[0.22em] font-bold text-[#3D1A78] mb-1">
           Co-Parent Comparison
         </div>
         <h1 className="font-serif text-3xl sm:text-4xl text-[#1A1330] leading-tight">
@@ -216,7 +216,7 @@ export default function SpecialNeedsV2Compare() {
                       <div className="mt-2 flex flex-wrap items-center gap-2">
                         <StatusBadge share={s} />
                         {s.shared_pathways && s.shared_pathways.length > 0 && (
-                          <span className="text-[10px] text-[#4B4567]">Shared pathways: {s.shared_pathways.join(", ")}</span>
+                          <span className="text-[0.625rem] text-[#4B4567]">Shared pathways: {s.shared_pathways.join(", ")}</span>
                         )}
                       </div>
                     </div>
@@ -268,7 +268,7 @@ export default function SpecialNeedsV2Compare() {
           )}
         </div>
 
-        <p className="text-[11px] text-[#4B4567] mt-8 italic max-w-3xl">
+        <p className="text-[0.6875rem] text-[#4B4567] mt-8 italic max-w-3xl">
           This tool is neutral: neither parent is labeled as correct. Safety Screen data is never
           shared automatically. Either parent can revoke at any time.
         </p>

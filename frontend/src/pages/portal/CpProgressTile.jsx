@@ -72,8 +72,8 @@ function CpProgressLine({ series }) {
   return (
     <div data-testid="cp-progress-line-chart" className="space-y-1">
       <div className="flex items-baseline justify-between">
-        <div className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">{CP_LINE_TITLE}</div>
-        <div className="text-[10px] text-slate-400">Average (0–4)</div>
+        <div className="text-[0.625rem] font-bold text-slate-500 uppercase tracking-wider">{CP_LINE_TITLE}</div>
+        <div className="text-[0.625rem] text-slate-400">Average (0–4)</div>
       </div>
       <div className="h-44 -ml-4">
         <ResponsiveContainer width="100%" height="100%">
@@ -118,9 +118,9 @@ function ExtraToggle({ testid, checked, onChange, label, warning }) {
         className="mt-0.5 accent-purple-800"
       />
       <span className="min-w-0">
-        <span className="text-[11px] font-bold text-slate-800">{label}</span>
+        <span className="text-[0.6875rem] font-bold text-slate-800">{label}</span>
         {checked && (
-          <span data-testid={`${testid}-warning`} className="block text-[10px] text-amber-800 leading-snug mt-0.5">
+          <span data-testid={`${testid}-warning`} className="block text-[0.625rem] text-amber-800 leading-snug mt-0.5">
             <i className="fa-solid fa-triangle-exclamation mr-1"></i>
             {warning}
           </span>
@@ -134,7 +134,7 @@ function ExtraToggle({ testid, checked, onChange, label, warning }) {
 function ProgressExtras({ includeSafety, setIncludeSafety, includeBiff, setIncludeBiff }) {
   return (
     <div data-testid="cp-progress-extras" className="rounded-xl border border-slate-200 bg-slate-50 p-2.5 space-y-2">
-      <div className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Optional — add to the PDF</div>
+      <div className="text-[0.625rem] font-bold text-slate-500 uppercase tracking-wider">Optional — add to the PDF</div>
       <ExtraToggle
         testid="cp-progress-include-safety"
         checked={includeSafety}
@@ -251,7 +251,7 @@ export function CpProgressTile({
   if (state.loading) {
     return (
       <div
-        className="rounded-2xl border border-slate-200 bg-white p-3 text-[11px] text-slate-500"
+        className="rounded-2xl border border-slate-200 bg-white p-3 text-[0.6875rem] text-slate-500"
         data-testid="cp-progress-tile-loading"
       >
         Loading your assessment progress…
@@ -275,13 +275,13 @@ export function CpProgressTile({
             <i className="fa-solid fa-chart-line text-purple-800 text-xs"></i>
           </div>
           <div className="min-w-0 flex-1">
-            <div className="text-[10px] font-bold text-purple-800 uppercase tracking-wider">
+            <div className="text-[0.625rem] font-bold text-purple-800 uppercase tracking-wider">
               Your assessment progress
             </div>
             <div className="text-xs font-bold text-slate-800 leading-snug">
               No check-ins yet
             </div>
-            <p className="text-[11px] text-slate-600 leading-snug mt-0.5">
+            <p className="text-[0.6875rem] text-slate-600 leading-snug mt-0.5">
               Take the Co-Parenting Assessment to start a 60-day trendline.
               Preview what the finished report looks like first:
             </p>
@@ -290,7 +290,7 @@ export function CpProgressTile({
               target="_blank"
               rel="noopener noreferrer"
               data-testid="cp-progress-sample-link"
-              className="inline-flex items-center gap-1 mt-1 text-[11px] font-bold text-purple-800 hover:underline"
+              className="inline-flex items-center gap-1 mt-1 text-[0.6875rem] font-bold text-purple-800 hover:underline"
             >
               <i className="fa-solid fa-file-pdf"></i>
               See a sample report
@@ -301,7 +301,7 @@ export function CpProgressTile({
               target="_blank"
               rel="noopener noreferrer"
               data-testid="cp-progress-preview-link"
-              className="inline-flex items-center gap-1 mt-1 text-[11px] font-bold text-amber-700 hover:underline"
+              className="inline-flex items-center gap-1 mt-1 text-[0.6875rem] font-bold text-amber-700 hover:underline"
             >
               <i className="fa-solid fa-wand-magic-sparkles"></i>
               Or try the preview — 40 quick questions
@@ -329,10 +329,10 @@ export function CpProgressTile({
         >
           <i className="fa-solid fa-rotate-right text-amber-700 text-xs mt-0.5"></i>
           <div className="min-w-0 flex-1">
-            <div className="text-[11px] font-bold text-amber-800 leading-snug">
+            <div className="text-[0.6875rem] font-bold text-amber-800 leading-snug">
               It's been {days} days since your last check-in
             </div>
-            <p className="text-[10px] text-amber-800/80 leading-snug">
+            <p className="text-[0.625rem] text-amber-800/80 leading-snug">
               Retake the assessment to see how you've changed since then.
             </p>
           </div>
@@ -341,7 +341,7 @@ export function CpProgressTile({
               type="button"
               data-testid="cp-retake-btn"
               onClick={onRetake}
-              className="shrink-0 py-1.5 px-3 bg-amber-700 hover:bg-amber-800 text-white rounded-md text-[10px] font-bold"
+              className="shrink-0 py-1.5 px-3 bg-amber-700 hover:bg-amber-800 text-white rounded-md text-[0.625rem] font-bold"
             >
               Retake
             </button>
@@ -351,7 +351,7 @@ export function CpProgressTile({
 
       <div className="flex items-start justify-between gap-2">
         <div className="min-w-0">
-          <div className="text-[10px] font-bold text-purple-800 uppercase tracking-wider">
+          <div className="text-[0.625rem] font-bold text-purple-800 uppercase tracking-wider">
             Your assessment progress
           </div>
           <div className="text-xs font-bold text-slate-800 leading-snug">
@@ -364,7 +364,7 @@ export function CpProgressTile({
           target="_blank"
           rel="noopener noreferrer"
           data-testid="cp-progress-sample-link"
-          className="shrink-0 text-[10px] font-bold text-purple-800 hover:underline whitespace-nowrap"
+          className="shrink-0 text-[0.625rem] font-bold text-purple-800 hover:underline whitespace-nowrap"
         >
           <i className="fa-solid fa-file-pdf mr-1"></i>
           See sample
@@ -395,7 +395,7 @@ export function CpProgressTile({
               target="_blank"
               rel="noopener noreferrer"
               data-testid="cp-progress-download-btn"
-              className="py-1.5 bg-white hover:bg-purple-50 border border-purple-300 text-purple-800 rounded-lg font-bold text-[11px] text-center"
+              className="py-1.5 bg-white hover:bg-purple-50 border border-purple-300 text-purple-800 rounded-lg font-bold text-[0.6875rem] text-center"
             >
               <i className="fa-solid fa-file-arrow-down mr-1"></i>
               Download PDF
@@ -407,7 +407,7 @@ export function CpProgressTile({
                 setShareState("open");
                 setShareError("");
               }}
-              className="py-1.5 bg-purple-800 hover:bg-purple-900 text-white rounded-lg font-bold text-[11px]"
+              className="py-1.5 bg-purple-800 hover:bg-purple-900 text-white rounded-lg font-bold text-[0.6875rem]"
             >
               <i className="fa-solid fa-paper-plane mr-1"></i>
               Share with mediator
@@ -428,7 +428,7 @@ export function CpProgressTile({
               }
               placeholder="mediator@example.com"
               data-testid="cp-progress-share-email"
-              className="w-full text-[11px] px-2 py-1.5 bg-white border border-purple-300 rounded focus:outline-none focus:ring-1 focus:ring-purple-500"
+              className="w-full text-[0.6875rem] px-2 py-1.5 bg-white border border-purple-300 rounded focus:outline-none focus:ring-1 focus:ring-purple-500"
             />
             <input
               type="text"
@@ -439,7 +439,7 @@ export function CpProgressTile({
               placeholder="Mediator name (optional)"
               maxLength={120}
               data-testid="cp-progress-share-name"
-              className="w-full text-[11px] px-2 py-1.5 bg-white border border-purple-300 rounded focus:outline-none focus:ring-1 focus:ring-purple-500"
+              className="w-full text-[0.6875rem] px-2 py-1.5 bg-white border border-purple-300 rounded focus:outline-none focus:ring-1 focus:ring-purple-500"
             />
             <textarea
               value={shareForm.note}
@@ -450,11 +450,11 @@ export function CpProgressTile({
               maxLength={1200}
               rows={2}
               data-testid="cp-progress-share-note"
-              className="w-full text-[11px] px-2 py-1.5 bg-white border border-purple-300 rounded focus:outline-none focus:ring-1 focus:ring-purple-500 resize-none"
+              className="w-full text-[0.6875rem] px-2 py-1.5 bg-white border border-purple-300 rounded focus:outline-none focus:ring-1 focus:ring-purple-500 resize-none"
             />
             {shareError && (
               <div
-                className="text-[10px] text-rose-700 font-semibold leading-snug"
+                className="text-[0.625rem] text-rose-700 font-semibold leading-snug"
                 data-testid="cp-progress-share-error"
               >
                 {shareError}
@@ -469,7 +469,7 @@ export function CpProgressTile({
                   setShareError("");
                 }}
                 disabled={shareState === "sending"}
-                className="py-1.5 bg-white border border-slate-300 text-slate-600 rounded font-bold text-[11px] disabled:opacity-50"
+                className="py-1.5 bg-white border border-slate-300 text-slate-600 rounded font-bold text-[0.6875rem] disabled:opacity-50"
               >
                 Cancel
               </button>
@@ -478,7 +478,7 @@ export function CpProgressTile({
                 data-testid="cp-progress-share-send"
                 onClick={sendShare}
                 disabled={shareState === "sending"}
-                className="py-1.5 bg-purple-800 hover:bg-purple-900 text-white rounded font-bold text-[11px] disabled:opacity-60"
+                className="py-1.5 bg-purple-800 hover:bg-purple-900 text-white rounded font-bold text-[0.6875rem] disabled:opacity-60"
               >
                 {shareState === "sending" ? (
                   <>
@@ -503,10 +503,10 @@ export function CpProgressTile({
           >
             <i className="fa-solid fa-circle-check text-emerald-700 text-xs mt-0.5"></i>
             <div className="min-w-0 flex-1">
-              <div className="text-[11px] font-bold text-emerald-800 leading-snug">
+              <div className="text-[0.6875rem] font-bold text-emerald-800 leading-snug">
                 Progress Snapshot sent
               </div>
-              <p className="text-[10px] text-emerald-800/80 leading-snug">
+              <p className="text-[0.625rem] text-emerald-800/80 leading-snug">
                 We emailed the one-page PDF to{" "}
                 <span className="font-semibold">{shareForm.to_email}</span>
                 . Replies come straight to you.
@@ -519,7 +519,7 @@ export function CpProgressTile({
                 setShareState("idle");
                 setShareForm({ to_email: "", mediator_name: "", note: "" });
               }}
-              className="shrink-0 text-[10px] font-bold text-emerald-800 underline"
+              className="shrink-0 text-[0.625rem] font-bold text-emerald-800 underline"
             >
               Done
             </button>
@@ -534,7 +534,7 @@ export function CpProgressTile({
             className="pt-1"
             data-testid="cp-progress-share-history"
           >
-            <div className="text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">
+            <div className="text-[0.625rem] font-bold text-slate-500 uppercase tracking-wider mb-1">
               Share history
             </div>
             <ul className="space-y-1">
@@ -558,16 +558,16 @@ export function CpProgressTile({
                     <i
                       className={
                         opened
-                          ? "fa-solid fa-envelope-open-text text-emerald-700 text-[11px] mt-0.5"
-                          : "fa-solid fa-paper-plane text-slate-400 text-[11px] mt-0.5"
+                          ? "fa-solid fa-envelope-open-text text-emerald-700 text-[0.6875rem] mt-0.5"
+                          : "fa-solid fa-paper-plane text-slate-400 text-[0.6875rem] mt-0.5"
                       }
                     ></i>
                     <div className="min-w-0 flex-1">
-                      <div className="text-[11px] font-semibold text-slate-800 leading-tight truncate">
+                      <div className="text-[0.6875rem] font-semibold text-slate-800 leading-tight truncate">
                         {opened ? "Opened by " : "Sent to "}
                         <span className="text-slate-900">{who}</span>
                       </div>
-                      <div className="text-[9px] text-slate-500 leading-tight">
+                      <div className="text-[0.5625rem] text-slate-500 leading-tight">
                         {opened ? (
                           <>
                             {relativeAge(s.last_opened_at || s.opened_at)}
@@ -588,7 +588,7 @@ export function CpProgressTile({
 
       {!retakeDue && days !== null && days !== undefined && (
         <p
-          className="text-[10px] text-slate-400 text-center"
+          className="text-[0.625rem] text-slate-400 text-center"
           data-testid="cp-progress-footnote"
         >
           Next check-in encouraged in {Math.max(0, interval - days)}{" "}

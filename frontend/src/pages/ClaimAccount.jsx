@@ -97,7 +97,7 @@ export default function ClaimAccount() {
                 className="input-soft mt-1.5"
                 data-testid="claim-password-input"
               />
-              <span className="text-[11px] text-[#6E6787] mt-1 block">
+              <span className="text-[0.6875rem] text-[#6E6787] mt-1 block">
                 At least 8 characters.
               </span>
             </label>

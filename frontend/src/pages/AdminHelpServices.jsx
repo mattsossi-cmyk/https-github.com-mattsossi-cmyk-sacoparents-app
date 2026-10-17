@@ -75,7 +75,7 @@ export default function AdminHelpServices() {
       <AppShell>
         <div className="max-w-3xl mx-auto px-1 py-6 space-y-6" data-testid="admin-help-page">
           <div>
-            <div className="text-[11px] uppercase tracking-[0.22em] font-bold text-[#3D1A78] inline-flex items-center gap-2"><LifeBuoy size={12} /> Get help page</div>
+            <div className="text-[0.6875rem] uppercase tracking-[0.22em] font-bold text-[#3D1A78] inline-flex items-center gap-2"><LifeBuoy size={12} /> Get help page</div>
             <h1 className="font-serif text-4xl text-[#1A1330] mt-2">Local services by state</h1>
             <p className="text-sm text-[#4B4567] mt-2">Shown on <Link to="/help" className="underline">Get help</Link> when a visitor picks their state.</p>
           </div>

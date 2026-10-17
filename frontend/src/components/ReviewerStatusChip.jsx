@@ -25,7 +25,7 @@ export default function ReviewerStatusChip() {
     <Link
       to="/methodology#reviewer-panel-title"
       data-testid="reviewer-status-chip"
-      className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-semibold transition hover:opacity-90 ${
+      className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[0.6875rem] font-semibold transition hover:opacity-90 ${
         isReviewed
           ? "bg-[#E6F4EC] text-[#1F5C3B] ring-1 ring-[#1F5C3B]/25"
           : "bg-[#F0EAFB] text-[#3D1A78] ring-1 ring-[#3D1A78]/25"

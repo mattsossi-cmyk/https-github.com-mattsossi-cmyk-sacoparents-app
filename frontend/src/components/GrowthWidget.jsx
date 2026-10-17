@@ -139,7 +139,7 @@ export default function GrowthWidget() {
             )}
           </div>
           {days_tracked > 0 && (
-            <div className="text-[11px] text-[#6E6787] mt-1">
+            <div className="text-[0.6875rem] text-[#6E6787] mt-1">
               Tracking for {days_tracked} day{days_tracked === 1 ? "" : "s"}.
             </div>
           )}

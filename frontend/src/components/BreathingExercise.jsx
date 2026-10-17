@@ -141,16 +141,16 @@ export default function BreathingExercise({ cycles = 4, onComplete, embedded = f
       </div>
 
       {/* Status row */}
-      <div className="flex items-center justify-center gap-6 mb-6 text-[13px] text-[#4B4567]">
+      <div className="flex items-center justify-center gap-6 mb-6 text-[0.8125rem] text-[#4B4567]">
         <div>
-          <div className="uppercase tracking-wider text-[10px] text-[#6E6787]">Cycle</div>
+          <div className="uppercase tracking-wider text-[0.625rem] text-[#6E6787]">Cycle</div>
           <div className="font-serif text-lg text-[#1A1330]" data-testid="breathing-cycle">
             {cycleNum} / {cycles}
           </div>
         </div>
         <div className="w-px h-8 bg-[#E5E0EE]" />
         <div>
-          <div className="uppercase tracking-wider text-[10px] text-[#6E6787]">Time</div>
+          <div className="uppercase tracking-wider text-[0.625rem] text-[#6E6787]">Time</div>
           <div className="font-serif text-lg text-[#1A1330]" data-testid="breathing-countdown">
             {secondsLeft}s
           </div>

@@ -231,7 +231,7 @@ export default function MyPlan() {
                           }
                         >
                           {s.label && (
-                            <div className="text-[10px] uppercase tracking-[0.15em] font-bold text-[#3D1A78] mb-1">
+                            <div className="text-[0.625rem] uppercase tracking-[0.15em] font-bold text-[#3D1A78] mb-1">
                               {s.label}
                             </div>
                           )}
@@ -383,7 +383,7 @@ export default function MyPlan() {
             {/* Overall coaching (Strengths + Growth Areas + One Next Step) */}
             {summary && (
               <div className="md:col-span-2">
-                <div className="flex items-center gap-2 text-[10px] uppercase tracking-[0.22em] font-bold text-[#3D1A78] mb-2">
+                <div className="flex items-center gap-2 text-[0.625rem] uppercase tracking-[0.22em] font-bold text-[#3D1A78] mb-2">
                   <Compass size={12} /> Coach&apos;s view of your journey
                 </div>
                 <SectionCoaching

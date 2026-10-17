@@ -54,7 +54,7 @@ export default function CostSplitterEntriesList({ rows, categories, onRemove }) 
                 <div className="text-sm font-semibold text-[#1A1330]">
                   {r.activity_label}
                 </div>
-                <div className="text-[11px] text-[#4B4567]">
+                <div className="text-[0.6875rem] text-[#4B4567]">
                   {catLookup(r.category)}
                   {r.incurred_on ? ` · ${r.incurred_on}` : ""}
                   {r.note ? ` · ${r.note}` : ""}

@@ -29,7 +29,7 @@ export function EcosystemStrip({ variant = "default" }) {
       <div className={isCompact ? "" : "max-w-6xl mx-auto px-4 sm:px-6"}>
         {!isCompact && (
           <div className="text-center max-w-2xl mx-auto mb-8">
-            <div className="text-[11px] tracking-[0.28em] uppercase font-bold text-[#3D1A78] mb-3">
+            <div className="text-[0.6875rem] tracking-[0.28em] uppercase font-bold text-[#3D1A78] mb-3">
               The SA CoParents Ecosystem
             </div>
             <h2 className="font-serif text-xl sm:text-2xl text-[#1A1330] leading-snug">
@@ -53,7 +53,7 @@ export function EcosystemStrip({ variant = "default" }) {
             }
             data-testid="ecosystem-node-parents"
           >
-            <div className="text-[9px] sm:text-[10px] uppercase tracking-[0.22em] font-bold text-[#3D1A78]">
+            <div className="text-[0.5625rem] sm:text-[0.625rem] uppercase tracking-[0.22em] font-bold text-[#3D1A78]">
               sacoparentsapp.online
             </div>
             <div className="mt-1 flex items-center gap-2">
@@ -71,8 +71,8 @@ export function EcosystemStrip({ variant = "default" }) {
             <div
               className={
                 isCompact
-                  ? "mt-1.5 text-[11px] text-[#4B4567] leading-relaxed"
-                  : "mt-3 text-[13px] text-[#4B4567] leading-relaxed"
+                  ? "mt-1.5 text-[0.6875rem] text-[#4B4567] leading-relaxed"
+                  : "mt-3 text-[0.8125rem] text-[#4B4567] leading-relaxed"
               }
             >
               Reflect · Identify Needs · Build Foundation · Prepare
@@ -100,7 +100,7 @@ export function EcosystemStrip({ variant = "default" }) {
             }
             data-testid="ecosystem-node-professionals"
           >
-            <div className="text-[9px] sm:text-[10px] uppercase tracking-[0.22em] font-bold text-[#0E7A7A]">
+            <div className="text-[0.5625rem] sm:text-[0.625rem] uppercase tracking-[0.22em] font-bold text-[#0E7A7A]">
               sacoparentsalign.com
             </div>
             <div className="mt-1 flex items-center gap-2">
@@ -118,8 +118,8 @@ export function EcosystemStrip({ variant = "default" }) {
             <div
               className={
                 isCompact
-                  ? "mt-1.5 text-[11px] text-[#4B4567] leading-relaxed"
-                  : "mt-3 text-[13px] text-[#4B4567] leading-relaxed"
+                  ? "mt-1.5 text-[0.6875rem] text-[#4B4567] leading-relaxed"
+                  : "mt-3 text-[0.8125rem] text-[#4B4567] leading-relaxed"
               }
             >
               Invite · Compare · Identify Alignment · Guide Conversation
@@ -147,7 +147,7 @@ export function EcosystemStrip({ variant = "default" }) {
             }
             data-testid="ecosystem-node-result"
           >
-            <div className="text-[9px] sm:text-[10px] uppercase tracking-[0.22em] font-bold text-[#B85B00]">
+            <div className="text-[0.5625rem] sm:text-[0.625rem] uppercase tracking-[0.22em] font-bold text-[#B85B00]">
               The Result
             </div>
             <div className="mt-1 flex items-center gap-2">
@@ -165,8 +165,8 @@ export function EcosystemStrip({ variant = "default" }) {
             <div
               className={
                 isCompact
-                  ? "mt-1.5 text-[11px] text-[#4B4567] leading-relaxed"
-                  : "mt-3 text-[13px] text-[#4B4567] leading-relaxed"
+                  ? "mt-1.5 text-[0.6875rem] text-[#4B4567] leading-relaxed"
+                  : "mt-3 text-[0.8125rem] text-[#4B4567] leading-relaxed"
               }
             >
               Clearer priorities, shared understanding, healthier outcomes

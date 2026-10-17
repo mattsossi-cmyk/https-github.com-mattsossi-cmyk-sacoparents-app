@@ -380,7 +380,7 @@ export default function SafetyAssessment() {
               <div className="w-10 h-10 rounded-full bg-[#C28771]/15 text-[#9A5D47] grid place-items-center">
                 <ShieldAlert size={18} />
               </div>
-              <div className="text-[11px] uppercase tracking-[0.22em] text-[#3D1A78] font-bold">
+              <div className="text-[0.6875rem] uppercase tracking-[0.22em] text-[#3D1A78] font-bold">
                 SA CoParents
               </div>
             </div>
@@ -417,7 +417,7 @@ export default function SafetyAssessment() {
             >
               <div className="flex items-center gap-2 mb-2">
                 <FileText size={14} className="text-[#3D1A78]" />
-                <div className="text-[11px] uppercase tracking-[0.18em] font-bold text-[#3D1A78]">
+                <div className="text-[0.6875rem] uppercase tracking-[0.18em] font-bold text-[#3D1A78]">
                   What this assessment is (and is not)
                 </div>
               </div>
@@ -434,7 +434,7 @@ export default function SafetyAssessment() {
             <div className="rounded-2xl bg-[#FCE3DC] border border-[#9A3A23]/25 text-[#9A3A23] p-4 sm:p-5 mb-6">
               <div className="flex items-center gap-2 mb-2">
                 <AlertTriangle size={14} />
-                <div className="text-[11px] uppercase tracking-[0.18em] font-bold">
+                <div className="text-[0.6875rem] uppercase tracking-[0.18em] font-bold">
                   Important safety notice
                 </div>
               </div>
@@ -462,7 +462,7 @@ export default function SafetyAssessment() {
             >
               <div className="flex items-center gap-2 mb-3">
                 <ShieldAlert size={14} className="text-[#3D1A78]" />
-                <div className="text-[11px] uppercase tracking-[0.22em] font-bold text-[#3D1A78]">
+                <div className="text-[0.6875rem] uppercase tracking-[0.22em] font-bold text-[#3D1A78]">
                   Procedural safeguards · Trauma-Informed Lens
                 </div>
               </div>
@@ -485,7 +485,7 @@ export default function SafetyAssessment() {
                 </li>
               </ul>
               <div className="mt-4 rounded-xl border border-[#3D1A78]/20 bg-white p-3 text-xs text-[#4B4567] leading-relaxed">
-                <div className="text-[10px] uppercase tracking-[0.18em] font-bold text-[#3D1A78] mb-1.5">
+                <div className="text-[0.625rem] uppercase tracking-[0.18em] font-bold text-[#3D1A78] mb-1.5">
                   Two interpretation rules
                 </div>
                 <ol className="list-decimal list-inside space-y-1">
@@ -498,10 +498,10 @@ export default function SafetyAssessment() {
             {/* 4-dimension clinical model — Safety is one of four separate lenses */}
             <div className="rounded-2xl border border-[#E5E0EE] bg-[#F8F5FF] p-5 sm:p-6 mb-6" data-testid="four-dimension-model">
               <div className="flex items-center gap-2 mb-3">
-                <div className="w-6 h-6 rounded-full bg-[#3D1A78]/12 grid place-items-center text-[#3D1A78] text-[10px] font-bold">
+                <div className="w-6 h-6 rounded-full bg-[#3D1A78]/12 grid place-items-center text-[#3D1A78] text-[0.625rem] font-bold">
                   1/4
                 </div>
-                <div className="text-[11px] uppercase tracking-[0.22em] font-bold text-[#3D1A78]">
+                <div className="text-[0.6875rem] uppercase tracking-[0.22em] font-bold text-[#3D1A78]">
                   Where this assessment sits in the bigger picture
                 </div>
               </div>
@@ -513,28 +513,28 @@ export default function SafetyAssessment() {
               </p>
               <div className="grid sm:grid-cols-2 gap-3">
                 <div className="rounded-xl border-2 border-[#C28771] bg-white p-3">
-                  <div className="text-[10px] uppercase tracking-[0.18em] font-bold text-[#9A5D47] mb-1">
+                  <div className="text-[0.625rem] uppercase tracking-[0.18em] font-bold text-[#9A5D47] mb-1">
                     Dimension 1 · Safety <span className="text-[#6E6787]">(you are here)</span>
                   </div>
                   <div className="text-sm text-[#1A1330] font-semibold mb-1">Family violence, coercive control, fear</div>
                   <div className="text-xs text-[#4B4567]">→ Safety recommendations &amp; safer pathways</div>
                 </div>
                 <div className="rounded-xl border border-[#E5E0EE] bg-white p-3">
-                  <div className="text-[10px] uppercase tracking-[0.18em] font-bold text-[#3D1A78] mb-1">
+                  <div className="text-[0.625rem] uppercase tracking-[0.18em] font-bold text-[#3D1A78] mb-1">
                     Dimension 2 · Communication
                   </div>
                   <div className="text-sm text-[#1A1330] font-semibold mb-1">Communication profile</div>
                   <div className="text-xs text-[#4B4567]">→ Communication strategies</div>
                 </div>
                 <div className="rounded-xl border border-[#E5E0EE] bg-white p-3">
-                  <div className="text-[10px] uppercase tracking-[0.18em] font-bold text-[#3D1A78] mb-1">
+                  <div className="text-[0.625rem] uppercase tracking-[0.18em] font-bold text-[#3D1A78] mb-1">
                     Dimension 3 · Emotional regulation
                   </div>
                   <div className="text-sm text-[#1A1330] font-semibold mb-1">Stress &amp; conflict response</div>
                   <div className="text-xs text-[#4B4567]">→ Regulation tools</div>
                 </div>
                 <div className="rounded-xl border border-[#E5E0EE] bg-white p-3">
-                  <div className="text-[10px] uppercase tracking-[0.18em] font-bold text-[#3D1A78] mb-1">
+                  <div className="text-[0.625rem] uppercase tracking-[0.18em] font-bold text-[#3D1A78] mb-1">
                     Dimension 4 · Executive function
                   </div>
                   <div className="text-sm text-[#1A1330] font-semibold mb-1">Organisation, planning, follow-through</div>
@@ -793,7 +793,7 @@ export default function SafetyAssessment() {
               className="bg-white rounded-3xl p-6 sm:p-8 max-w-md w-full shadow-xl"
               onClick={(e) => e.stopPropagation()}
             >
-              <div className="text-[10px] uppercase tracking-[0.2em] text-[#3D1A78] font-bold mb-2">
+              <div className="text-[0.625rem] uppercase tracking-[0.2em] text-[#3D1A78] font-bold mb-2">
                 Reviewer co-sign QR
               </div>
               <h3 className="text-xl font-bold text-[#1A1330] mb-3">
@@ -810,7 +810,7 @@ export default function SafetyAssessment() {
                   data-testid="cosign-modal-qr"
                 />
               </div>
-              <div className="text-[10px] uppercase tracking-[0.18em] text-[#6E6787] font-bold mb-1">Link</div>
+              <div className="text-[0.625rem] uppercase tracking-[0.18em] text-[#6E6787] font-bold mb-1">Link</div>
               <div className="text-xs break-all text-[#4B4567] mb-3" data-testid="cosign-modal-url">
                 {cosignModal.verify_url}
               </div>
@@ -917,7 +917,7 @@ export default function SafetyAssessment() {
                 data-testid="safety-companion-cta"
               >
                 <div
-                  className="text-[10px] uppercase tracking-[0.22em] font-bold text-[#3D1A78] mb-2"
+                  className="text-[0.625rem] uppercase tracking-[0.22em] font-bold text-[#3D1A78] mb-2"
                   data-testid="safety-companion-cta-eyebrow"
                 >
                   When you&rsquo;re ready to go further &mdash; no concerns about family violence
@@ -974,7 +974,7 @@ export default function SafetyAssessment() {
                     <Download size={14} /> Download PDF
                   </button>
                 </div>
-                <p className="text-[11px] text-[#6A5799] mt-3 italic">
+                <p className="text-[0.6875rem] text-[#6A5799] mt-3 italic">
                   Briefing includes Safety + whichever companion dimensions you've
                   completed — designed for a mediator, parent facilitator ad litem,
                   or trial court.
@@ -993,7 +993,7 @@ export default function SafetyAssessment() {
                 data-testid="safety-concerned-cta"
               >
                 <div
-                  className="text-[10px] uppercase tracking-[0.22em] font-bold text-[#904B0E] mb-2"
+                  className="text-[0.625rem] uppercase tracking-[0.22em] font-bold text-[#904B0E] mb-2"
                   data-testid="safety-concerned-cta-eyebrow"
                 >
                   When you&rsquo;re ready, on your own timeline &mdash; safe paths for when family violence is present
@@ -1031,7 +1031,7 @@ export default function SafetyAssessment() {
               className="mt-6 rounded-2xl bg-[#FFF7E6] border-2 border-[#E8A628] p-5 sm:p-7 text-[#1A1330]"
               data-testid="safety-important-advisory"
             >
-              <div className="flex items-center gap-2 text-[11px] uppercase tracking-[0.22em] font-bold text-[#B8891C] mb-3">
+              <div className="flex items-center gap-2 text-[0.6875rem] uppercase tracking-[0.22em] font-bold text-[#B8891C] mb-3">
                 <Shield size={13} /> Important Advisory
               </div>
               <p className="leading-relaxed mb-3">
@@ -1051,7 +1051,7 @@ export default function SafetyAssessment() {
                 we strongly encourage you to seek additional guidance before
                 making parenting or communication decisions.
               </p>
-              <div className="text-[11px] uppercase tracking-[0.18em] font-bold text-[#3D1A78] mb-2">
+              <div className="text-[0.6875rem] uppercase tracking-[0.18em] font-bold text-[#3D1A78] mb-2">
                 Consider consulting with
               </div>
               <ul className="space-y-2 text-sm mb-4">
@@ -1089,7 +1089,7 @@ export default function SafetyAssessment() {
             </div>
 
             <div className="mt-6 rounded-2xl bg-[#F8F7FC] border border-[#E5E0EE] p-4 sm:p-5 text-sm text-[#4B4567] leading-relaxed">
-              <div className="text-[11px] uppercase tracking-[0.18em] font-bold text-[#3D1A78] mb-2">
+              <div className="text-[0.6875rem] uppercase tracking-[0.18em] font-bold text-[#3D1A78] mb-2">
                 Texas resources
               </div>
               <p>

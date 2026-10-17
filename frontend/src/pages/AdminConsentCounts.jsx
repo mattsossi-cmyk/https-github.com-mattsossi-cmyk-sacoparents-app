@@ -16,7 +16,7 @@ const SOURCE_LABELS = {
 
 const Stat = ({ label, value, sub, testid }) => (
   <div className="rounded-2xl border border-[#E5E0EE] bg-white p-5" data-testid={testid}>
-    <div className="text-[11px] uppercase tracking-[0.18em] font-bold text-[#6E6787]">{label}</div>
+    <div className="text-[0.6875rem] uppercase tracking-[0.18em] font-bold text-[#6E6787]">{label}</div>
     <div className="font-serif text-4xl text-[#1A1330] mt-1 tabular-nums break-words" data-testid={`${testid}-value`}>{value ?? "–"}</div>
     {sub && <div className="text-xs text-[#4B4567] mt-1">{sub}</div>}
   </div>
@@ -25,7 +25,7 @@ const Stat = ({ label, value, sub, testid }) => (
 const Table = ({ testid, head, rows }) => (
   <div className="rounded-2xl border border-[#E5E0EE] bg-white overflow-x-auto" data-testid={testid}>
     <table className="w-full text-sm">
-      <thead className="bg-[#F8F7FC] text-[11px] uppercase tracking-wider text-[#6E6787]">
+      <thead className="bg-[#F8F7FC] text-[0.6875rem] uppercase tracking-wider text-[#6E6787]">
         <tr>{head.map((h, i) => <th key={h} className={`px-4 py-2.5 font-bold ${i ? "text-right" : "text-left"}`}>{h}</th>)}</tr>
       </thead>
       <tbody>
@@ -73,7 +73,7 @@ export default function AdminConsentCounts() {
     <AppShell>
       <div className="max-w-4xl mx-auto px-1 py-6 space-y-6" data-testid="admin-consent-page">
         <div>
-          <div className="text-[11px] uppercase tracking-[0.22em] font-bold text-[#3D1A78] inline-flex items-center gap-2">
+          <div className="text-[0.6875rem] uppercase tracking-[0.22em] font-bold text-[#3D1A78] inline-flex items-center gap-2">
             <FileCheck2 size={12} /> Privacy Notice consent · counts only
           </div>
           <h1 className="font-serif text-4xl sm:text-5xl text-[#1A1330] mt-2">Who has consented</h1>

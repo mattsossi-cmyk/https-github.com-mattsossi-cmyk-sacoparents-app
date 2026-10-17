@@ -65,7 +65,7 @@ function SectionBlock({ icon: Icon, label, body }) {
         <Icon size={14} className="text-[#3D1A78]" />
       </div>
       <div className="min-w-0">
-        <div className="text-[10px] uppercase tracking-[0.16em] font-bold text-[#3D1A78] mb-1">
+        <div className="text-[0.625rem] uppercase tracking-[0.16em] font-bold text-[#3D1A78] mb-1">
           {label}
         </div>
         {isList ? (
@@ -97,12 +97,12 @@ export default function MethodologyCard({ id, defaultOpen = false }) {
         <div className="min-w-0">
           <div className="flex items-center gap-2 flex-wrap mb-2">
             <span
-              className={`text-[10px] uppercase tracking-[0.16em] font-bold px-2 py-0.5 rounded-full ${style.chip}`}
+              className={`text-[0.625rem] uppercase tracking-[0.16em] font-bold px-2 py-0.5 rounded-full ${style.chip}`}
               data-testid={`methodology-category-${id}`}
             >
               {style.label}
             </span>
-            <span className="text-[10px] uppercase tracking-[0.16em] font-bold text-[#6E6787] flex items-center gap-1">
+            <span className="text-[0.625rem] uppercase tracking-[0.16em] font-bold text-[#6E6787] flex items-center gap-1">
               <Compass size={11} /> How this assessment works
             </span>
           </div>
@@ -152,7 +152,7 @@ export default function MethodologyCard({ id, defaultOpen = false }) {
       )}
 
       <div
-        className="mt-4 flex items-start gap-2 text-[11px] text-[#4B4567] italic"
+        className="mt-4 flex items-start gap-2 text-[0.6875rem] text-[#4B4567] italic"
         data-testid={`methodology-disclaimer-${id}`}
       >
         <AlertTriangle size={12} className="text-[#8C5A2C] mt-0.5 shrink-0" />

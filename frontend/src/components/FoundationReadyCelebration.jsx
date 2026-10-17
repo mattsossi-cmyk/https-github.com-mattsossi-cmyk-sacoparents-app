@@ -130,7 +130,7 @@ export default function FoundationReadyCelebration({ done, total }) {
       <Confetti />
       <div className="relative flex items-start justify-between gap-4 flex-wrap">
         <div className="min-w-0">
-          <div className="text-[10px] uppercase tracking-[0.22em] font-bold text-[#8C5A2C] flex items-center gap-2">
+          <div className="text-[0.625rem] uppercase tracking-[0.22em] font-bold text-[#8C5A2C] flex items-center gap-2">
             <PartyPopper size={12} /> Badge unlocked
           </div>
           <h2
@@ -188,7 +188,7 @@ export function FoundationReadyBadge({ done, total }) {
   if (!(done > 0 && total > 0 && done === total)) return null;
   return (
     <span
-      className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-bold bg-gradient-to-r from-[#F1D9A0] via-[#F1F9F4] to-[#D6CFE8] text-[#1A1330] shadow-sm"
+      className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[0.625rem] font-bold bg-gradient-to-r from-[#F1D9A0] via-[#F1F9F4] to-[#D6CFE8] text-[#1A1330] shadow-sm"
       data-testid="foundation-ready-badge"
       title="You've lit all five milestones."
     >

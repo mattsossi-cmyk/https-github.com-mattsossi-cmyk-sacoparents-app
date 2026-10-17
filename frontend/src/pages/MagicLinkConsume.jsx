@@ -59,7 +59,7 @@ export default function MagicLinkConsume() {
               Back to sign in
             </Link>
           </div>
-          <div className="text-[11px] uppercase tracking-[0.2em] text-[#A7B3AD] mt-6">
+          <div className="text-[0.6875rem] uppercase tracking-[0.2em] text-[#A7B3AD] mt-6">
             Code: {error.code}
           </div>
         </div>

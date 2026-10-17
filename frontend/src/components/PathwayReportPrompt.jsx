@@ -32,7 +32,7 @@ export default function PathwayReportPrompt({ shareId, testidPrefix = "compare" 
             <Scale size={16} />
           </div>
           <div className="min-w-0">
-            <div className="text-[10px] uppercase tracking-[0.22em] font-bold text-[#3D1A78]">
+            <div className="text-[0.625rem] uppercase tracking-[0.22em] font-bold text-[#3D1A78]">
               Dispute Resolution Pathway Report
             </div>
             <div className="font-serif text-xl text-[#1A1330] leading-snug mt-1">

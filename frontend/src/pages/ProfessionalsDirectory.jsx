@@ -122,7 +122,7 @@ export default function ProfessionalsDirectory() {
           <ArrowLeft size={14} /> Back to dashboard
         </button>
 
-        <div className="text-[11px] uppercase tracking-[0.18em] font-bold text-[#3D1A78] mb-2">
+        <div className="text-[0.6875rem] uppercase tracking-[0.18em] font-bold text-[#3D1A78] mb-2">
           Send my alignment code to a professional
         </div>
         <h1
@@ -147,7 +147,7 @@ export default function ProfessionalsDirectory() {
               </div>
             )}
             {error && (
-              <div className="mt-8 text-[13px] text-[#8F1D24]">{error}</div>
+              <div className="mt-8 text-[0.8125rem] text-[#8F1D24]">{error}</div>
             )}
             {professionals && professionals.length > 0 && (
               <div
@@ -176,7 +176,7 @@ export default function ProfessionalsDirectory() {
                 </h2>
 
                 <label className="block mt-5">
-                  <span className="text-[11px] uppercase tracking-[0.14em] font-bold text-[#6E6787]">
+                  <span className="text-[0.6875rem] uppercase tracking-[0.14em] font-bold text-[#6E6787]">
                     Which assessment?
                   </span>
                   <select
@@ -196,7 +196,7 @@ export default function ProfessionalsDirectory() {
                 </label>
 
                 <label className="block mt-5">
-                  <span className="text-[11px] uppercase tracking-[0.14em] font-bold text-[#6E6787]">
+                  <span className="text-[0.6875rem] uppercase tracking-[0.14em] font-bold text-[#6E6787]">
                     Optional short message to the professional
                   </span>
                   <textarea
@@ -210,7 +210,7 @@ export default function ProfessionalsDirectory() {
                   />
                 </label>
 
-                <div className="mt-4 rounded-2xl bg-[#F8F7FC] border border-[#E5E0EE] p-4 flex gap-3 items-start text-[13px] text-[#4B4567] leading-relaxed">
+                <div className="mt-4 rounded-2xl bg-[#F8F7FC] border border-[#E5E0EE] p-4 flex gap-3 items-start text-[0.8125rem] text-[#4B4567] leading-relaxed">
                   <ShieldCheck
                     size={16}
                     className="text-[#3D1A78] flex-shrink-0 mt-0.5"
@@ -252,7 +252,7 @@ export default function ProfessionalsDirectory() {
                 : `Code minted for ${sent.professional.name}`}
             </h2>
             {!sent.delivered && (
-              <div className="mt-3 rounded-xl border border-[#F1D9B7] bg-[#FFF6EA] p-3 flex items-start gap-2 text-[13px] text-[#8A4610]">
+              <div className="mt-3 rounded-xl border border-[#F1D9B7] bg-[#FFF6EA] p-3 flex items-start gap-2 text-[0.8125rem] text-[#8A4610]">
                 <AlertTriangle size={14} className="flex-shrink-0 mt-0.5" />
                 <span>
                   {sent.delivered_error ||
@@ -276,7 +276,7 @@ export default function ProfessionalsDirectory() {
               <button
                 type="button"
                 onClick={() => copyCode(sent.code)}
-                className="inline-flex items-center gap-2 rounded-full border border-[#E5E0EE] text-[#3D1A78] px-4 py-2 text-[13px] font-semibold hover:border-[#3D1A78] transition"
+                className="inline-flex items-center gap-2 rounded-full border border-[#E5E0EE] text-[#3D1A78] px-4 py-2 text-[0.8125rem] font-semibold hover:border-[#3D1A78] transition"
                 data-testid="professionals-copy-code"
               >
                 <Copy size={13} />
@@ -337,16 +337,16 @@ function ProfessionalCard({ professional, selected, onSelect }) {
           <div className="font-serif text-xl text-[#1A1330] leading-tight">
             {professional.name}
           </div>
-          <div className="text-[13px] text-[#4B4567] mt-1 leading-snug">
+          <div className="text-[0.8125rem] text-[#4B4567] mt-1 leading-snug">
             {professional.credentials}
           </div>
           {professional.license && (
-            <div className="text-[12px] text-[#6E6787] italic mt-0.5 leading-snug">
+            <div className="text-[0.75rem] text-[#6E6787] italic mt-0.5 leading-snug">
               {professional.license}
             </div>
           )}
           {professional.bio && (
-            <p className="text-[13px] text-[#4B4567] mt-2 leading-relaxed">
+            <p className="text-[0.8125rem] text-[#4B4567] mt-2 leading-relaxed">
               {professional.bio}
             </p>
           )}

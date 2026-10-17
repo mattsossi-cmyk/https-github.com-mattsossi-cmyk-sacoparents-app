@@ -74,7 +74,7 @@ function StatePill({ state }) {
   const { Icon } = meta;
   return (
     <span
-      className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold ${meta.bg} ${meta.color} ring-1 ${meta.ring}`}
+      className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[0.625rem] font-bold ${meta.bg} ${meta.color} ring-1 ${meta.ring}`}
       data-testid={`masic-state-${state}`}
     >
       <Icon size={10} /> {meta.label}
@@ -93,7 +93,7 @@ export default function MasicComparison() {
       data-testid="masic-comparison"
       aria-labelledby="masic-comparison-title"
     >
-      <div className="text-[10px] uppercase tracking-[0.22em] font-bold text-[#3D1A78] mb-1">
+      <div className="text-[0.625rem] uppercase tracking-[0.22em] font-bold text-[#3D1A78] mb-1">
         Transparency sidebar
       </div>
       <h3
@@ -127,7 +127,7 @@ export default function MasicComparison() {
         {["covered", "partial", "gap", "pending"].map((s) => (
           <span
             key={s}
-            className="inline-flex items-center gap-1.5 text-[11px] text-[#4B4567]"
+            className="inline-flex items-center gap-1.5 text-[0.6875rem] text-[#4B4567]"
           >
             <StatePill state={s} />
             <span>{counts[s] || 0}</span>
@@ -139,9 +139,9 @@ export default function MasicComparison() {
         <table className="w-full text-sm" data-testid="masic-comparison-table">
           <thead className="bg-[#F8F5FF] text-[#3D1A78]">
             <tr className="text-left">
-              <th className="px-3 py-2 text-[10px] uppercase tracking-[0.15em] font-bold">MASIC-S domain</th>
-              <th className="px-3 py-2 text-[10px] uppercase tracking-[0.15em] font-bold">Our coverage</th>
-              <th className="px-3 py-2 text-[10px] uppercase tracking-[0.15em] font-bold hidden sm:table-cell">Notes</th>
+              <th className="px-3 py-2 text-[0.625rem] uppercase tracking-[0.15em] font-bold">MASIC-S domain</th>
+              <th className="px-3 py-2 text-[0.625rem] uppercase tracking-[0.15em] font-bold">Our coverage</th>
+              <th className="px-3 py-2 text-[0.625rem] uppercase tracking-[0.15em] font-bold hidden sm:table-cell">Notes</th>
             </tr>
           </thead>
           <tbody>
@@ -156,7 +156,7 @@ export default function MasicComparison() {
                 <td className="px-3 py-2.5 align-top">
                   <StatePill state={row.state} />
                 </td>
-                <td className="px-3 py-2.5 align-top text-[12px] text-[#4B4567] hidden sm:table-cell">
+                <td className="px-3 py-2.5 align-top text-[0.75rem] text-[#4B4567] hidden sm:table-cell">
                   {row.note}
                 </td>
               </tr>
@@ -165,7 +165,7 @@ export default function MasicComparison() {
         </table>
       </div>
 
-      <p className="text-[11px] text-[#6A5799] italic mt-3">
+      <p className="text-[0.6875rem] text-[#6A5799] italic mt-3">
         Last coverage audit: February 26, 2026. This table will move rows
         from <em>Gap</em> / <em>Reviewer pending</em> to <em>Covered</em>{" "}
         only after items are approved by the reviewer panel and printed

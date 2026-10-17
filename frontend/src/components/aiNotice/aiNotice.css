@@ -11,7 +11,7 @@
   border-radius: 8px; padding: 10px 14px; margin: 8px 0; font-size: 15px;
 }
 .sa-ai-alert ul, .sa-ai-modal ul { margin: 6px 0 8px; padding-left: 1.3em; }
-.sa-ai-link { background: none; border: 0; padding: 0; color: inherit; text-decoration: underline; cursor: pointer; font: inherit; }
+.sa-ai-link { background: none; border: 0; padding: 4px 0; color: inherit; text-decoration: underline; cursor: pointer; font: inherit; }
 .sa-ai-modal {
   position: fixed; inset: 0; z-index: 9999; background: rgba(15, 23, 30, 0.6);
   display: flex; align-items: center; justify-content: center; padding: 16px;

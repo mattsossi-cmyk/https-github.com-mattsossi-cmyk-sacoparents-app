@@ -35,7 +35,7 @@ export const ProgressPdfButton = ({ path, caseId, testid, hasNotes = false }) =>
         {busy ? <Loader2 size={12} className="animate-spin" /> : <BarChart3 size={12} />} Progress PDF
       </button>
       {hasNotes && (
-        <label className="inline-flex items-center gap-1.5 text-[11px] text-[#4B4567] cursor-pointer">
+        <label className="inline-flex items-center gap-1.5 text-[0.6875rem] text-[#4B4567] cursor-pointer">
           <input type="checkbox" checked={withNotes} onChange={(e) => setWithNotes(e.target.checked)} className="accent-[#3D1A78]" data-testid={`${testid}-include-notes`} />
           Include my private case notes
         </label>

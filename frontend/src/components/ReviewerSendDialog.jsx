@@ -43,7 +43,7 @@ export default function ReviewerSendDialog({ open, onClose, onSend, sending }) {
       >
         <div className="flex items-center justify-between gap-3 px-6 sm:px-7 pt-6">
           <div>
-            <div className="text-[11px] uppercase tracking-[0.22em] text-[#3D1A78] font-bold mb-1">
+            <div className="text-[0.6875rem] uppercase tracking-[0.22em] text-[#3D1A78] font-bold mb-1">
               Operator only · Send reviewer packet
             </div>
             <h3
@@ -72,7 +72,7 @@ export default function ReviewerSendDialog({ open, onClose, onSend, sending }) {
           </p>
 
           <div>
-            <label className="block text-[11px] uppercase tracking-[0.18em] text-[#3D1A78] font-bold mb-1">
+            <label className="block text-[0.6875rem] uppercase tracking-[0.18em] text-[#3D1A78] font-bold mb-1">
               Reviewer role
             </label>
             <div className="flex flex-wrap gap-1.5">
@@ -82,7 +82,7 @@ export default function ReviewerSendDialog({ open, onClose, onSend, sending }) {
                   type="button"
                   onClick={() => setRole(r.key)}
                   data-testid={`reviewer-send-role-${r.key}`}
-                  className={`text-[12px] px-3 py-1.5 rounded-full border transition ${
+                  className={`text-[0.75rem] px-3 py-1.5 rounded-full border transition ${
                     role === r.key
                       ? "bg-[#3D1A78] text-white border-[#3D1A78] font-semibold"
                       : "bg-white text-[#4B4567] border-[#E5E0EE] hover:border-[#3D1A78]"
@@ -96,7 +96,7 @@ export default function ReviewerSendDialog({ open, onClose, onSend, sending }) {
           </div>
 
           <div>
-            <label className="block text-[11px] uppercase tracking-[0.18em] text-[#3D1A78] font-bold mb-1">
+            <label className="block text-[0.6875rem] uppercase tracking-[0.18em] text-[#3D1A78] font-bold mb-1">
               Reviewer email <span className="text-[#9A3A23]">*</span>
             </label>
             <input
@@ -112,7 +112,7 @@ export default function ReviewerSendDialog({ open, onClose, onSend, sending }) {
           </div>
 
           <div>
-            <label className="block text-[11px] uppercase tracking-[0.18em] text-[#3D1A78] font-bold mb-1">
+            <label className="block text-[0.6875rem] uppercase tracking-[0.18em] text-[#3D1A78] font-bold mb-1">
               Reviewer name{" "}
               <span className="text-[#6E6787] font-normal normal-case tracking-normal">· optional</span>
             </label>
@@ -127,7 +127,7 @@ export default function ReviewerSendDialog({ open, onClose, onSend, sending }) {
           </div>
 
           <div>
-            <label className="block text-[11px] uppercase tracking-[0.18em] text-[#3D1A78] font-bold mb-1">
+            <label className="block text-[0.6875rem] uppercase tracking-[0.18em] text-[#3D1A78] font-bold mb-1">
               Personal note{" "}
               <span className="text-[#6E6787] font-normal normal-case tracking-normal">· optional</span>
             </label>

@@ -62,7 +62,7 @@ export default function GuestBanner() {
         <Link
           to="/claim"
           data-testid="guest-banner-claim-link"
-          className="shrink-0 inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/70 hover:bg-white font-semibold text-[11px] sm:text-xs transition-colors"
+          className="shrink-0 inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/70 hover:bg-white font-semibold text-[0.6875rem] sm:text-xs transition-colors"
         >
           <BookmarkPlus size={12} />
           Save my work

@@ -80,7 +80,7 @@ export default function NDRiskTimelineCard() {
             <ShieldCheck size={16} />
           </span>
           <div>
-            <div className="text-[10px] uppercase tracking-[0.22em] font-bold text-[#3D1A78]">
+            <div className="text-[0.625rem] uppercase tracking-[0.22em] font-bold text-[#3D1A78]">
               ND Risk · Progression
             </div>
             <div className="font-serif text-lg text-[#1A1330]">
@@ -89,7 +89,7 @@ export default function NDRiskTimelineCard() {
           </div>
         </div>
         <span
-          className="inline-flex items-center px-2.5 py-0.5 rounded-full text-[11px] font-bold"
+          className="inline-flex items-center px-2.5 py-0.5 rounded-full text-[0.6875rem] font-bold"
           style={{ background: latestTier.bg, color: latestTier.color }}
           data-testid="nd-risk-timeline-card-latest-tier"
         >
@@ -100,7 +100,7 @@ export default function NDRiskTimelineCard() {
       {trend && (
         <div className="mt-3">
           <span
-            className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-bold ${trend.tone}`}
+            className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[0.6875rem] font-bold ${trend.tone}`}
             data-testid="nd-risk-timeline-card-trend"
           >
             {trend.icon}
@@ -136,12 +136,12 @@ export default function NDRiskTimelineCard() {
                 </div>
                 <div className="flex items-center gap-2">
                   <span
-                    className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold"
+                    className="inline-flex items-center px-2 py-0.5 rounded-full text-[0.625rem] font-bold"
                     style={{ background: meta.bg, color: meta.color }}
                   >
                     {meta.label}
                   </span>
-                  <span className="text-[11px] text-[#4B4567]">
+                  <span className="text-[0.6875rem] text-[#4B4567]">
                     {s.total_score}/16
                   </span>
                 </div>

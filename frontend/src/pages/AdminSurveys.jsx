@@ -184,7 +184,7 @@ export default function AdminSurveys() {
             .filter((q) => q.type === "single" || q.type === "scale_0_10")
             .map((q) => (
               <div key={q.id} className="card-soft p-6">
-                <div className="text-[11px] tracking-[0.22em] uppercase font-bold text-[#3D1A78] mb-2">
+                <div className="text-[0.6875rem] tracking-[0.22em] uppercase font-bold text-[#3D1A78] mb-2">
                   {q.id}
                 </div>
                 <div className="font-serif text-sm text-[#1A1330] mb-4 leading-snug">
@@ -218,7 +218,7 @@ export default function AdminSurveys() {
                       if (!val) return null;
                       return (
                         <div key={q.id} className="mb-3">
-                          <div className="text-[10px] uppercase tracking-[0.15em] text-[#3D1A78] font-bold mb-1">
+                          <div className="text-[0.625rem] uppercase tracking-[0.15em] text-[#3D1A78] font-bold mb-1">
                             {q.label}
                           </div>
                           <div className="text-sm text-[#1A1330] whitespace-pre-wrap">
@@ -242,7 +242,7 @@ export default function AdminSurveys() {
             <div tabIndex={0} role="region" aria-label="Scrollable table" className="overflow-x-auto">
               <table className="w-full text-sm" data-testid="survey-rows-table">
                 <thead>
-                  <tr className="text-[10px] uppercase tracking-[0.15em] text-[#6E6787]">
+                  <tr className="text-[0.625rem] uppercase tracking-[0.15em] text-[#6E6787]">
                     <th className="text-left py-2 pr-3">Parent</th>
                     <th className="text-left py-2 pr-3">Email</th>
                     <th className="text-left py-2 pr-3">Status</th>
@@ -262,7 +262,7 @@ export default function AdminSurveys() {
                       </td>
                       <td className="py-2 pr-3">
                         <span
-                          className={`text-[10px] uppercase tracking-[0.12em] px-2 py-0.5 rounded-full ${
+                          className={`text-[0.625rem] uppercase tracking-[0.12em] px-2 py-0.5 rounded-full ${
                             r.status === "responded"
                               ? "bg-[#D5F2F2] text-[#0E7A7A]"
                               : "bg-[#F0EDF7] text-[#4B4567]"

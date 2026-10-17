@@ -82,7 +82,7 @@ function IntroHeroVideo() {
       {showOverlay && (
         <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/35 to-black/40 grid place-items-center px-6 text-center">
           <div className="max-w-md">
-            <div className="inline-flex items-center gap-2 rounded-full bg-white/15 backdrop-blur-sm border border-white/25 text-white px-3 py-1 text-[10px] uppercase tracking-[0.22em] font-bold mb-4">
+            <div className="inline-flex items-center gap-2 rounded-full bg-white/15 backdrop-blur-sm border border-white/25 text-white px-3 py-1 text-[0.625rem] uppercase tracking-[0.22em] font-bold mb-4">
               <Film size={12} /> 55-second welcome
             </div>
             <h2 className="font-serif text-3xl sm:text-4xl text-white leading-tight mb-3 drop-shadow-lg">
@@ -186,7 +186,7 @@ function TrailerRow({ trailer, autoOpen = false }) {
                 <Play size={38} className="text-[#3D1A78] translate-x-1" />
               </div>
             </div>
-            <div className="absolute top-3 left-3 inline-flex items-center gap-2 rounded-full bg-white/90 backdrop-blur-sm px-3 py-1 text-[10px] uppercase tracking-[0.22em] font-bold text-[#3D1A78]">
+            <div className="absolute top-3 left-3 inline-flex items-center gap-2 rounded-full bg-white/90 backdrop-blur-sm px-3 py-1 text-[0.625rem] uppercase tracking-[0.22em] font-bold text-[#3D1A78]">
               <Film size={12} /> {trailer.eyebrow}
             </div>
           </button>
@@ -204,7 +204,7 @@ function TrailerRow({ trailer, autoOpen = false }) {
         )}
       </div>
       <div className="p-6 sm:p-7">
-        <div className="text-[11px] uppercase tracking-[0.22em] font-bold text-[#3D1A78] mb-1">
+        <div className="text-[0.6875rem] uppercase tracking-[0.22em] font-bold text-[#3D1A78] mb-1">
           {trailer.eyebrow}
         </div>
         <h2 className="font-serif text-2xl sm:text-3xl text-[#1A1330] leading-tight mb-2">
@@ -283,7 +283,7 @@ export default function Watch() {
         </section>
 
         <section className="max-w-3xl mb-10 sm:mb-14">
-          <div className="inline-flex items-center gap-2 rounded-full bg-[#EFE9F9] text-[#3D1A78] px-4 py-1.5 text-[10px] uppercase tracking-[0.22em] font-bold mb-4">
+          <div className="inline-flex items-center gap-2 rounded-full bg-[#EFE9F9] text-[#3D1A78] px-4 py-1.5 text-[0.625rem] uppercase tracking-[0.22em] font-bold mb-4">
             <Heart size={12} /> A preview of the program
           </div>
           <h1 className="font-serif text-4xl sm:text-5xl lg:text-6xl text-[#1A1330] leading-tight mb-4">
@@ -307,7 +307,7 @@ export default function Watch() {
           data-testid="watch-cta"
         >
           <div className="max-w-2xl">
-            <div className="inline-flex items-center gap-2 rounded-full bg-white/10 border border-white/20 px-3 py-1 text-[10px] uppercase tracking-[0.22em] font-bold text-[#FFD766] mb-4">
+            <div className="inline-flex items-center gap-2 rounded-full bg-white/10 border border-white/20 px-3 py-1 text-[0.625rem] uppercase tracking-[0.22em] font-bold text-[#FFD766] mb-4">
               <Heart size={12} /> Different parents. Same goal — our children.
             </div>
             <h2 className="font-serif text-3xl sm:text-4xl leading-tight mb-3">
@@ -351,7 +351,7 @@ export default function Watch() {
                 <Facebook size={22} />
               </div>
               <div className="flex-1">
-                <div className="text-[11px] uppercase tracking-[0.22em] text-[#1460C8] font-bold mb-1">
+                <div className="text-[0.6875rem] uppercase tracking-[0.22em] text-[#1460C8] font-bold mb-1">
                   Facebook
                 </div>
                 <div className="font-serif text-xl text-[#1A1330] mb-1">
@@ -378,7 +378,7 @@ export default function Watch() {
                 <Heart size={22} />
               </div>
               <div className="flex-1">
-                <div className="text-[11px] uppercase tracking-[0.22em] text-[#0F7676] font-bold mb-1">
+                <div className="text-[0.6875rem] uppercase tracking-[0.22em] text-[#0F7676] font-bold mb-1">
                   Website
                 </div>
                 <div className="font-serif text-xl text-[#1A1330] mb-1">

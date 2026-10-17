@@ -5,7 +5,7 @@ import { Loader2, Sparkles } from "lucide-react";
 export function AddAiSummaryCard({ tp, busy, onAdd }) {
   return (
     <div className="rounded-3xl border border-dashed border-[#D6CFE8] bg-white p-5 sm:p-6" data-testid={`${tp}-add-ai-summary-card`}>
-      <div className="text-[10px] uppercase tracking-[0.22em] font-bold text-[#3D1A78] flex items-center gap-2 mb-1">
+      <div className="text-[0.625rem] uppercase tracking-[0.22em] font-bold text-[#3D1A78] flex items-center gap-2 mb-1">
         <Sparkles size={12} /> AI executive summary
       </div>
       <p className="text-sm text-[#4B4567]">This report has no AI summary. You can ask AI to write one from the report above.</p>

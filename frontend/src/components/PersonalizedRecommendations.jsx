@@ -105,7 +105,7 @@ export default function PersonalizedRecommendations({ summary }) {
       style={{ background: bg }}
       data-testid="personalized-recommendations"
     >
-      <div className="flex items-center gap-2 text-[10px] uppercase tracking-[0.22em] font-bold" style={{ color: accent }}>
+      <div className="flex items-center gap-2 text-[0.625rem] uppercase tracking-[0.22em] font-bold" style={{ color: accent }}>
         {isStrength ? <Sparkles size={12} /> : <Compass size={12} />}
         Based on your responses
       </div>

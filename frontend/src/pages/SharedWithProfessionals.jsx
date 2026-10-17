@@ -208,7 +208,7 @@ export default function SharedWithProfessionals() {
         </Link>
         <div className="flex items-start justify-between gap-3 flex-wrap">
           <div>
-            <div className="text-[10px] uppercase tracking-[0.22em] font-bold text-[#3D1A78] flex items-center gap-1.5">
+            <div className="text-[0.625rem] uppercase tracking-[0.22em] font-bold text-[#3D1A78] flex items-center gap-1.5">
               <ShieldCheck size={12} /> Shared with professionals
             </div>
             <h1
@@ -268,7 +268,7 @@ export default function SharedWithProfessionals() {
                       ? "1 invitation is about to expire"
                       : `${expiringSoon.invitations.length} invitations are about to expire`}
                   </div>
-                  <p className="text-[12px] text-[#7A5300] mt-0.5 leading-relaxed">
+                  <p className="text-[0.75rem] text-[#7A5300] mt-0.5 leading-relaxed">
                     Access will end within the next {expiringSoon.window_days || 7} days.
                     Extend now if the professional still needs to review your reports —
                     a reminder email will otherwise be sent {expiringSoon.window_days || 7} days
@@ -289,13 +289,13 @@ export default function SharedWithProfessionals() {
                           data-testid={`expiring-soon-row-${inv.invitation_id}`}
                         >
                           <div className="min-w-0 flex-1">
-                            <div className="text-[13px] font-semibold text-[#5C3D00] truncate">
+                            <div className="text-[0.8125rem] font-semibold text-[#5C3D00] truncate">
                               {inv.professional_first_name} {inv.professional_last_name}
-                              <span className="text-[11px] font-normal text-[#8A5B00] ml-1">
+                              <span className="text-[0.6875rem] font-normal text-[#8A5B00] ml-1">
                                 · {daysCopy}
                               </span>
                             </div>
-                            <div className="text-[11px] text-[#7A5300] truncate">
+                            <div className="text-[0.6875rem] text-[#7A5300] truncate">
                               {(inv.selected_reports || []).map((r) => r.title).join(", ") || "—"}
                             </div>
                           </div>
@@ -305,7 +305,7 @@ export default function SharedWithProfessionals() {
                               inv, expiringSoon.default_extend_days || 14,
                             )}
                             disabled={busyId === inv.invitation_id}
-                            className="inline-flex items-center gap-1 rounded-full bg-[#3D1A78] hover:bg-[#2a0f5f] text-white px-3 py-1 text-[11px] font-semibold disabled:opacity-50 flex-shrink-0"
+                            className="inline-flex items-center gap-1 rounded-full bg-[#3D1A78] hover:bg-[#2a0f5f] text-white px-3 py-1 text-[0.6875rem] font-semibold disabled:opacity-50 flex-shrink-0"
                             data-testid={`expiring-soon-extend-${inv.invitation_id}`}
                           >
                             {busyId === inv.invitation_id
@@ -341,13 +341,13 @@ export default function SharedWithProfessionals() {
           >
             <div className="flex items-start justify-between gap-3 flex-wrap">
               <div className="min-w-0 flex-1">
-                <div className="text-[10px] uppercase tracking-[0.18em] font-bold text-[#3D1A78]">
+                <div className="text-[0.625rem] uppercase tracking-[0.18em] font-bold text-[#3D1A78]">
                   Notification preferences
                 </div>
                 <h3 className="text-sm font-semibold text-[#1A1330] mt-0.5">
                   How should we notify you about professional activity?
                 </h3>
-                <p className="text-[12px] text-[#4B4567] mt-1 leading-relaxed">
+                <p className="text-[0.75rem] text-[#4B4567] mt-1 leading-relaxed">
                   {prefs.mode === "digest" ? (
                     <>
                       You&rsquo;re in <strong>daily digest</strong> mode — one
@@ -380,7 +380,7 @@ export default function SharedWithProfessionals() {
                 disabled={prefsBusy}
                 aria-pressed={prefs.mode === "immediate"}
                 data-testid="notification-mode-immediate"
-                className={`inline-flex items-center gap-1 rounded-full px-3 py-1 text-[11px] font-semibold border transition-colors ${
+                className={`inline-flex items-center gap-1 rounded-full px-3 py-1 text-[0.6875rem] font-semibold border transition-colors ${
                   prefs.mode === "immediate"
                     ? "bg-[#3D1A78] text-white border-[#3D1A78]"
                     : "bg-white text-[#3D1A78] border-[#D6CFE8] hover:bg-[#F5F1FB]"
@@ -394,7 +394,7 @@ export default function SharedWithProfessionals() {
                 disabled={prefsBusy}
                 aria-pressed={prefs.mode === "digest"}
                 data-testid="notification-mode-digest"
-                className={`inline-flex items-center gap-1 rounded-full px-3 py-1 text-[11px] font-semibold border transition-colors ${
+                className={`inline-flex items-center gap-1 rounded-full px-3 py-1 text-[0.6875rem] font-semibold border transition-colors ${
                   prefs.mode === "digest"
                     ? "bg-[#3D1A78] text-white border-[#3D1A78]"
                     : "bg-white text-[#3D1A78] border-[#D6CFE8] hover:bg-[#F5F1FB]"
@@ -408,7 +408,7 @@ export default function SharedWithProfessionals() {
                   onClick={() => setMode("auto")}
                   disabled={prefsBusy}
                   data-testid="notification-mode-auto"
-                  className="inline-flex items-center gap-1 rounded-full px-3 py-1 text-[11px] font-semibold text-[#6E6787] hover:text-[#3D1A78]"
+                  className="inline-flex items-center gap-1 rounded-full px-3 py-1 text-[0.6875rem] font-semibold text-[#6E6787] hover:text-[#3D1A78]"
                 >
                   Use automatic
                 </button>
@@ -418,7 +418,7 @@ export default function SharedWithProfessionals() {
                 onClick={handleSendTestDigest}
                 disabled={testDigestBusy}
                 data-testid="notification-mode-preview"
-                className="inline-flex items-center gap-1 rounded-full px-3 py-1 text-[11px] font-semibold text-[#3D1A78] hover:bg-[#F5F1FB] border border-transparent"
+                className="inline-flex items-center gap-1 rounded-full px-3 py-1 text-[0.6875rem] font-semibold text-[#3D1A78] hover:bg-[#F5F1FB] border border-transparent"
                 title="Send a sample digest email to your inbox"
               >
                 {testDigestBusy ? (
@@ -480,33 +480,33 @@ export default function SharedWithProfessionals() {
                         <span className="text-sm font-semibold text-[#1A1330]">
                           {inv.professional_first_name} {inv.professional_last_name}
                         </span>
-                        <span className="text-[11px] text-[#6E6787]">·</span>
-                        <span className="text-[11px] text-[#6E6787] capitalize">
+                        <span className="text-[0.6875rem] text-[#6E6787]">·</span>
+                        <span className="text-[0.6875rem] text-[#6E6787] capitalize">
                           {(inv.professional_role || "").replace("-", " ")}
                         </span>
                         <span
-                          className={`ml-1 rounded-full px-2 py-0.5 text-[10px] font-semibold ${pill.cls}`}
+                          className={`ml-1 rounded-full px-2 py-0.5 text-[0.625rem] font-semibold ${pill.cls}`}
                           data-testid={`shared-row-status-${inv.invitation_id}`}
                         >
                           {pill.label}
                         </span>
                         {soonExpiring && (
-                          <span className="rounded-full px-2 py-0.5 text-[10px] font-semibold bg-[#FFF6E5] text-[#8A5B00]">
+                          <span className="rounded-full px-2 py-0.5 text-[0.625rem] font-semibold bg-[#FFF6E5] text-[#8A5B00]">
                             Access expires in {daysToAccessExpire}d
                           </span>
                         )}
                       </div>
-                      <div className="text-[12px] text-[#4B4567] mt-1 flex items-center gap-1.5 flex-wrap">
+                      <div className="text-[0.75rem] text-[#4B4567] mt-1 flex items-center gap-1.5 flex-wrap">
                         <Mail size={11} /> {inv.professional_email}
                         {inv.organization && <span>· {inv.organization}</span>}
                       </div>
-                      <div className="mt-2 flex items-start gap-1.5 text-[12px] text-[#4B4567]">
+                      <div className="mt-2 flex items-start gap-1.5 text-[0.75rem] text-[#4B4567]">
                         <FileText size={11} className="mt-0.5 flex-shrink-0" />
                         <span>
                           {(inv.selected_reports || []).map((r) => r.title).join(", ") || "—"}
                         </span>
                       </div>
-                      <div className="mt-2 text-[11px] text-[#6E6787] flex flex-wrap gap-x-3 gap-y-0.5">
+                      <div className="mt-2 text-[0.6875rem] text-[#6E6787] flex flex-wrap gap-x-3 gap-y-0.5">
                         <span>Sent {formatDate(inv.created_at)}</span>
                         <span>Access expires {formatDate(inv.access_expiration)}</span>
                         {inv.download_permission
@@ -528,7 +528,7 @@ export default function SharedWithProfessionals() {
                         type="button"
                         onClick={() => handleResend(inv)}
                         disabled={busyId === inv.invitation_id}
-                        className="inline-flex items-center gap-1 rounded-full bg-white border border-[#D6CFE8] hover:bg-[#F5F1FB] text-[#3D1A78] px-3 py-1 text-[11px] font-semibold disabled:opacity-50"
+                        className="inline-flex items-center gap-1 rounded-full bg-white border border-[#D6CFE8] hover:bg-[#F5F1FB] text-[#3D1A78] px-3 py-1 text-[0.6875rem] font-semibold disabled:opacity-50"
                         data-testid={`shared-row-resend-${inv.invitation_id}`}
                       >
                         <Send size={11} /> Resend
@@ -539,7 +539,7 @@ export default function SharedWithProfessionals() {
                         type="button"
                         onClick={() => handleExtend(inv)}
                         disabled={busyId === inv.invitation_id}
-                        className="inline-flex items-center gap-1 rounded-full bg-white border border-[#D6CFE8] hover:bg-[#F5F1FB] text-[#3D1A78] px-3 py-1 text-[11px] font-semibold disabled:opacity-50"
+                        className="inline-flex items-center gap-1 rounded-full bg-white border border-[#D6CFE8] hover:bg-[#F5F1FB] text-[#3D1A78] px-3 py-1 text-[0.6875rem] font-semibold disabled:opacity-50"
                         data-testid={`shared-row-extend-${inv.invitation_id}`}
                       >
                         <CalendarClock size={11} /> Extend
@@ -550,7 +550,7 @@ export default function SharedWithProfessionals() {
                         type="button"
                         onClick={() => handleRevoke(inv)}
                         disabled={busyId === inv.invitation_id}
-                        className="inline-flex items-center gap-1 rounded-full border border-[#F5D0C5] text-[#9A3A23] hover:bg-[#FCE3DC] bg-white px-3 py-1 text-[11px] font-semibold disabled:opacity-50"
+                        className="inline-flex items-center gap-1 rounded-full border border-[#F5D0C5] text-[#9A3A23] hover:bg-[#FCE3DC] bg-white px-3 py-1 text-[0.6875rem] font-semibold disabled:opacity-50"
                         data-testid={`shared-row-revoke-${inv.invitation_id}`}
                       >
                         {busyId === inv.invitation_id ? <Loader2 size={10} className="animate-spin" /> : <Ban size={11} />}
@@ -558,7 +558,7 @@ export default function SharedWithProfessionals() {
                       </button>
                     )}
                     {isRevoked && (
-                      <span className="text-[11px] text-[#6E6787] italic">
+                      <span className="text-[0.6875rem] text-[#6E6787] italic">
                         Access was revoked on {formatDate(inv.revoked_at)}
                       </span>
                     )}
@@ -571,7 +571,7 @@ export default function SharedWithProfessionals() {
 
         <SecureDocsSent />
 
-        <div className="mt-8 rounded-2xl bg-[#F5F1FB] border border-[#D6CFE8] p-4 text-[12px] text-[#3D1A78]" data-testid="shared-privacy-note">
+        <div className="mt-8 rounded-2xl bg-[#F5F1FB] border border-[#D6CFE8] p-4 text-[0.75rem] text-[#3D1A78]" data-testid="shared-privacy-note">
           <div className="font-semibold flex items-center gap-1.5 mb-1">
             <ShieldCheck size={12} /> Privacy at a glance
           </div>
@@ -580,7 +580,7 @@ export default function SharedWithProfessionals() {
           give access to another professional. Revoking prevents future portal
           access — but SA CoParents can&rsquo;t recall a copy already downloaded.
           <div className="mt-2">
-            <ProSeeLink testid="shared-pros-see-link" className="text-[12px]" />
+            <ProSeeLink testid="shared-pros-see-link" className="text-[0.75rem]" />
           </div>
         </div>
       </div>

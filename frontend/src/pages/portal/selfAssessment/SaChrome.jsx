@@ -33,7 +33,7 @@ export function SafetyBanner({ tp = "sa", icon = "fa-shield-heart", label = "Con
 export function PageHeader({ onBack, onQuickExit, tp = "sa", backLabel = "Back to Self Journey", tagline = "Align • Support • Thrive", badgeLabel = "Engineered With", tm = false }) {
   return (
     <header className="flex flex-col md:flex-row justify-between items-center gap-4 bg-white/80 backdrop-blur-md rounded-2xl p-4 sm:p-5 mb-8 shadow-sm border border-purple-100/50">
-      <div className="flex items-center gap-3 w-full md:w-auto">
+      <div className="flex items-center gap-3 w-full md:w-auto min-w-0">
         <button
           type="button"
           data-testid={`${tp}-back`}
@@ -47,24 +47,24 @@ export function PageHeader({ onBack, onQuickExit, tp = "sa", backLabel = "Back t
           <i className="fa-solid fa-people-roof"></i>
         </div>
         <div className="min-w-0">
-          <h1 className="text-lg sm:text-2xl font-extrabold text-[#3B1C6B] tracking-tight whitespace-nowrap">
-            SA CoParents{tm && <span className="text-[9px] font-bold align-top text-purple-500 ml-0.5">TM</span>}
-          </h1>
-          <p data-testid={`${tp}-tagline`} className="text-[9px] sm:text-xs font-semibold tracking-wider text-purple-600 uppercase sm:whitespace-nowrap">{tagline}</p>
+          <p className="text-lg sm:text-2xl font-extrabold text-[#3B1C6B] tracking-tight break-words">
+            SA CoParents{tm && <span className="text-[0.5625rem] font-bold align-top text-purple-700 ml-0.5">TM</span>}
+          </p>
+          <p data-testid={`${tp}-tagline`} className="text-[0.5625rem] sm:text-xs font-semibold tracking-wider text-purple-600 uppercase sm:whitespace-nowrap">{tagline}</p>
         </div>
         <button
           type="button"
           data-testid={`${tp}-quick-exit`}
           onClick={onQuickExit}
-          className="md:hidden ml-auto shrink-0 px-2.5 py-1.5 rounded-md text-[10px] font-bold bg-rose-600 hover:bg-rose-700 text-white shadow-sm transition-colors whitespace-nowrap"
+          className="md:hidden ml-auto shrink-0 px-2.5 py-1.5 rounded-md text-[0.625rem] font-bold bg-rose-600 hover:bg-rose-700 text-white shadow-sm transition-colors whitespace-nowrap"
         >
           <i className="fa-solid fa-bolt mr-1"></i>Quick Exit
         </button>
       </div>
-      <div className="flex items-center gap-3">
-        <div data-testid={`${tp}-emergent-badge`} className="flex items-center gap-2 bg-slate-900 text-white px-4 py-2 rounded-xl shadow-md border border-slate-700">
+      <div className="flex items-center gap-3 max-w-full">
+        <div data-testid={`${tp}-emergent-badge`} className="flex items-center gap-2 bg-slate-900 text-white px-4 py-2 rounded-xl shadow-md border border-slate-700 max-w-full">
           <div className="flex flex-col text-right">
-            <span className="text-[10px] text-purple-300 font-semibold tracking-wider uppercase">{badgeLabel}</span>
+            <span className="text-[0.625rem] text-purple-300 font-semibold tracking-wider uppercase">{badgeLabel}</span>
             <span className="text-sm font-bold tracking-wide">Powered by Emergent AI</span>
           </div>
           <div className="w-8 h-8 rounded-lg bg-gradient-to-tr from-purple-500 to-indigo-400 flex items-center justify-center text-white">
@@ -87,11 +87,11 @@ export function PageHeader({ onBack, onQuickExit, tp = "sa", backLabel = "Back t
 export function Hero({ title, subtitle, pill, pct, tp = "sa", textClassName = "" }) {
   return (
     <div className="text-center max-w-2xl mx-auto mb-10">
-      <h2 className={`text-4xl md:text-5xl font-extrabold text-[#3B1C6B] tracking-tight mb-3 ${textClassName}`}>{title}</h2>
+      <h1 className={`text-4xl md:text-5xl font-extrabold text-[#3B1C6B] tracking-tight mb-3 ${textClassName}`}>{title}</h1>
       <p className={`text-slate-600 text-base md:text-lg leading-relaxed ${textClassName}`}>{subtitle}</p>
-      <div data-testid={`${tp}-step-pill`} className="mt-6 inline-flex items-center gap-3 bg-white/90 px-5 py-2 rounded-full shadow-sm border border-purple-100">
+      <div data-testid={`${tp}-step-pill`} className="mt-6 inline-flex flex-wrap justify-center items-center gap-3 max-w-full bg-white/90 px-5 py-2 rounded-full shadow-sm border border-purple-100">
         <span className="text-xs font-bold text-purple-800 uppercase tracking-wider">{pill}</span>
-        <div className="w-32 bg-purple-100 rounded-full h-2">
+        <div className="w-32 max-w-full bg-purple-100 rounded-full h-2">
           <div data-testid={`${tp}-step-bar`} className="bg-purple-600 h-2 rounded-full transition-[width] duration-300" style={{ width: `${pct}%` }} />
         </div>
       </div>

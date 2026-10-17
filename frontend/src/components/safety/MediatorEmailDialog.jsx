@@ -33,7 +33,7 @@ export default function MediatorEmailDialog({ open, onClose, onSend, sending }) 
       >
         <div className="flex items-center justify-between gap-3 px-6 sm:px-7 pt-6">
           <div>
-            <div className="text-[11px] uppercase tracking-[0.22em] text-[#3D1A78] font-bold mb-1">
+            <div className="text-[0.6875rem] uppercase tracking-[0.22em] text-[#3D1A78] font-bold mb-1">
               Send to your mediator
             </div>
             <h3
@@ -60,7 +60,7 @@ export default function MediatorEmailDialog({ open, onClose, onSend, sending }) 
             code. They can reply directly to your email address.
           </p>
           <div>
-            <label className="block text-[11px] uppercase tracking-[0.18em] text-[#3D1A78] font-bold mb-1">
+            <label className="block text-[0.6875rem] uppercase tracking-[0.18em] text-[#3D1A78] font-bold mb-1">
               Mediator email <span aria-hidden="true" className="text-[#9A3A23]">*</span>
             </label>
             <input
@@ -75,7 +75,7 @@ export default function MediatorEmailDialog({ open, onClose, onSend, sending }) 
             />
           </div>
           <div>
-            <label className="block text-[11px] uppercase tracking-[0.18em] text-[#3D1A78] font-bold mb-1">
+            <label className="block text-[0.6875rem] uppercase tracking-[0.18em] text-[#3D1A78] font-bold mb-1">
               Mediator name <span className="text-[#6E6787] font-normal normal-case tracking-normal">· optional</span>
             </label>
             <input
@@ -88,7 +88,7 @@ export default function MediatorEmailDialog({ open, onClose, onSend, sending }) 
             />
           </div>
           <div>
-            <label className="block text-[11px] uppercase tracking-[0.18em] text-[#3D1A78] font-bold mb-1">
+            <label className="block text-[0.6875rem] uppercase tracking-[0.18em] text-[#3D1A78] font-bold mb-1">
               Message to your mediator <span className="text-[#6E6787] font-normal normal-case tracking-normal">· optional</span>
             </label>
             <textarea
@@ -108,7 +108,7 @@ export default function MediatorEmailDialog({ open, onClose, onSend, sending }) 
               data-testid="mediator-include-answers"
               className="mt-0.5 h-4 w-4 accent-[#3D1A78]"
             />
-            <span className="text-[13px] text-[#4B4567] leading-relaxed">
+            <span className="text-[0.8125rem] text-[#4B4567] leading-relaxed">
               <span className="font-semibold text-[#1A1330]">Include my answers</span>
               <span className="block" data-testid="mediator-include-answers-hint">
                 {includeAnswers

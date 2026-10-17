@@ -86,7 +86,7 @@ export default function VerifyPathway() {
         </Link>
 
         <div className="rounded-3xl border border-[#E5E0EE] bg-white p-6 sm:p-8 shadow-sm">
-          <div className="text-[10px] uppercase tracking-[0.22em] font-bold text-[#3D1A78]">
+          <div className="text-[0.625rem] uppercase tracking-[0.22em] font-bold text-[#3D1A78]">
             Pathway Report Verification
           </div>
           <h1 className="mt-1 font-serif text-2xl text-[#1A1330]">
@@ -132,7 +132,7 @@ export default function VerifyPathway() {
                   </p>
                 </div>
               </div>
-              <div className="mt-4 text-[10px] text-[#4B4567]">
+              <div className="mt-4 text-[0.625rem] text-[#4B4567]">
                 Pathway report ID:{" "}
                 <span className="font-mono" data-testid="verify-pathway-id">
                   {state.data.sig_id}
@@ -160,7 +160,7 @@ export default function VerifyPathway() {
                   </p>
                 </div>
               </div>
-              <div className="mt-3 text-[10px] text-[#4B4567]">
+              <div className="mt-3 text-[0.625rem] text-[#4B4567]">
                 Checked id:{" "}
                 <span className="font-mono">{state.data.sig_id}</span>
               </div>
@@ -180,7 +180,7 @@ export default function VerifyPathway() {
             <ReviewerCommentsSection sigId={sigId} />
           )}
 
-          <p className="mt-6 text-[11px] text-[#4B4567] italic">
+          <p className="mt-6 text-[0.6875rem] text-[#4B4567] italic">
             This check only confirms that a pathway report id was issued
             here and when. It does not attest to the truth of any content
             in the report, nor does it constitute a clinical, legal, or
@@ -273,7 +273,7 @@ function ReviewerCommentsSection({ sigId }) {
 
   return (
     <div className="mt-6" data-testid="verify-pathway-comments-root">
-      <div className="text-[10px] uppercase tracking-[0.22em] font-bold text-[#3D1A78] mb-2 inline-flex items-center gap-1.5">
+      <div className="text-[0.625rem] uppercase tracking-[0.22em] font-bold text-[#3D1A78] mb-2 inline-flex items-center gap-1.5">
         <MessageSquare size={12} />
         Reviewer comments
       </div>
@@ -302,13 +302,13 @@ function ReviewerCommentsSection({ sigId }) {
                 <span className="text-sm font-semibold text-[#1A1330]">
                   {c.reviewer_name}
                 </span>
-                <span className="text-[10px] uppercase tracking-[0.16em] font-bold text-[#3D1A78] bg-[#F5F1FB] rounded-full px-2 py-0.5">
+                <span className="text-[0.625rem] uppercase tracking-[0.16em] font-bold text-[#3D1A78] bg-[#F5F1FB] rounded-full px-2 py-0.5">
                   {ROLE_LABEL[c.reviewer_role] || c.reviewer_role}
                 </span>
                 {c.reviewer_org && (
-                  <span className="text-[11px] text-[#4B4567]">· {c.reviewer_org}</span>
+                  <span className="text-[0.6875rem] text-[#4B4567]">· {c.reviewer_org}</span>
                 )}
-                <span className="text-[11px] text-[#6E6787] ml-auto">
+                <span className="text-[0.6875rem] text-[#6E6787] ml-auto">
                   {formatWhen(c.created_at)}
                 </span>
               </div>
@@ -336,7 +336,7 @@ function ReviewerCommentsSection({ sigId }) {
         <div className="rounded-3xl border border-[#E5E0EE] bg-[#F8F7FC] p-4 space-y-3"
           data-testid="verify-pathway-comment-form">
           <div>
-            <label className="block text-[11px] uppercase tracking-[0.18em] text-[#3D1A78] font-bold mb-1">
+            <label className="block text-[0.6875rem] uppercase tracking-[0.18em] text-[#3D1A78] font-bold mb-1">
               Your role
             </label>
             <div className="flex flex-wrap gap-1.5">
@@ -347,7 +347,7 @@ function ReviewerCommentsSection({ sigId }) {
                   onClick={() => setForm({ ...form, reviewer_role: r.key })}
                   data-testid={`verify-pathway-role-${r.key}`}
                   aria-pressed={form.reviewer_role === r.key}
-                  className={`text-[12px] px-3 py-1.5 rounded-full border transition ${
+                  className={`text-[0.75rem] px-3 py-1.5 rounded-full border transition ${
                     form.reviewer_role === r.key
                       ? "bg-[#3D1A78] text-white border-[#3D1A78] font-semibold"
                       : "bg-white text-[#4B4567] border-[#E5E0EE] hover:border-[#3D1A78]"
@@ -361,7 +361,7 @@ function ReviewerCommentsSection({ sigId }) {
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
-              <label className="block text-[11px] uppercase tracking-[0.18em] text-[#3D1A78] font-bold mb-1">
+              <label className="block text-[0.6875rem] uppercase tracking-[0.18em] text-[#3D1A78] font-bold mb-1">
                 Your name <span aria-hidden="true" className="text-[#9A3A23]">*</span>
               </label>
               <input
@@ -375,7 +375,7 @@ function ReviewerCommentsSection({ sigId }) {
               />
             </div>
             <div>
-              <label className="block text-[11px] uppercase tracking-[0.18em] text-[#3D1A78] font-bold mb-1">
+              <label className="block text-[0.6875rem] uppercase tracking-[0.18em] text-[#3D1A78] font-bold mb-1">
                 Organisation <span className="text-[#6E6787] font-normal normal-case tracking-normal">· optional</span>
               </label>
               <input
@@ -391,7 +391,7 @@ function ReviewerCommentsSection({ sigId }) {
           </div>
 
           <div>
-            <label className="block text-[11px] uppercase tracking-[0.18em] text-[#3D1A78] font-bold mb-1">
+            <label className="block text-[0.6875rem] uppercase tracking-[0.18em] text-[#3D1A78] font-bold mb-1">
               Comment <span aria-hidden="true" className="text-[#9A3A23]">*</span>
             </label>
             <textarea
@@ -403,7 +403,7 @@ function ReviewerCommentsSection({ sigId }) {
               data-testid="verify-pathway-comment-text"
               className="w-full rounded-xl border border-[#E5E0EE] bg-white px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#3D1A78]/30 resize-none"
             />
-            <p className="text-[11px] text-[#6E6787] mt-1">
+            <p className="text-[0.6875rem] text-[#6E6787] mt-1">
               Comments are permanent and visible to the parent on their
               dashboard. This is not a clinical record or a legal filing.
             </p>

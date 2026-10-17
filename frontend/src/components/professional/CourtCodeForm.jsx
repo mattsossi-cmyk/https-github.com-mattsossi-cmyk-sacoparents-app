@@ -49,7 +49,7 @@ export const CourtCodeForm = ({ onCreated }) => {
   return (
     <form onSubmit={submit} className="rounded-xl border border-[#D6CFE8] bg-[#FBF9FE] p-4 space-y-3" data-testid="court-code-form">
       <fieldset>
-        <legend className="text-[11px] uppercase tracking-[0.15em] font-bold text-[#3D1A78] mb-2">Assessments you&rsquo;re asking for</legend>
+        <legend className="text-[0.6875rem] uppercase tracking-[0.15em] font-bold text-[#3D1A78] mb-2">Assessments you&rsquo;re asking for</legend>
         <div className="grid sm:grid-cols-2 gap-1.5">
           {ASSESSMENTS.map(([k, t]) => (
             <label key={k} className="flex items-center gap-2 text-sm text-[#1A1330] cursor-pointer">
@@ -82,9 +82,9 @@ const CodeCreated = ({ code, onDone }) => (
         <Copy size={12} /> Copy code
       </button>
     </div>
-    <p className="text-[12px] text-[#8A5B00] font-semibold">Copy it now. For privacy we only keep a scrambled version, so it can&rsquo;t be shown again.</p>
-    <div className="rounded-lg bg-white border border-[#E5E0EE] p-3 text-[13px] text-[#4B4567] leading-relaxed" data-testid="court-code-parent-note">
-      <div className="text-[10px] uppercase tracking-[0.15em] font-bold text-[#3D1A78] mb-1">What to tell the parent</div>
+    <p className="text-[0.75rem] text-[#8A5B00] font-semibold">Copy it now. For privacy we only keep a scrambled version, so it can&rsquo;t be shown again.</p>
+    <div className="rounded-lg bg-white border border-[#E5E0EE] p-3 text-[0.8125rem] text-[#4B4567] leading-relaxed" data-testid="court-code-parent-note">
+      <div className="text-[0.625rem] uppercase tracking-[0.15em] font-bold text-[#3D1A78] mb-1">What to tell the parent</div>
       {parentNote(code)}
     </div>
     <div className="flex gap-3 flex-wrap">

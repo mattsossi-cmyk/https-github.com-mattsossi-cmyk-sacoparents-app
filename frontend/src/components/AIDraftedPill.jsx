@@ -38,7 +38,7 @@ export default function AIDraftedPill({
   const toneClass = TONE_CLASSES[tone] || TONE_CLASSES.neutral;
   return (
     <span
-      className={`inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.14em] ${toneClass} ${className}`}
+      className={`inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-[0.625rem] font-semibold uppercase tracking-[0.14em] ${toneClass} ${className}`}
       data-testid={testId}
       data-model={model}
       title="This paragraph was drafted by a language model from the neutral compare payload. Parent answers themselves stay verbatim."

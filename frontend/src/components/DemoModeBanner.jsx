@@ -43,7 +43,7 @@ export default function DemoModeBanner() {
         </div>
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 mb-1">
-            <span className="text-[10px] uppercase tracking-[0.22em] font-bold">
+            <span className="text-[0.625rem] uppercase tracking-[0.22em] font-bold">
               You&apos;re in demo mode
             </span>
             <ShieldCheck size={12} className="opacity-80" aria-hidden />

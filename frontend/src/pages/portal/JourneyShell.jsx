@@ -975,7 +975,7 @@ export function JourneyShell({
             type="button"
             data-testid="door-back"
             onClick={goBack}
-            className="text-[12px] font-semibold text-purple-700 hover:text-purple-900"
+            className="text-[0.75rem] font-semibold text-purple-700 hover:text-purple-900"
           >
             <i className="fa-solid fa-arrow-left mr-1"></i>
             Back
@@ -986,7 +986,7 @@ export function JourneyShell({
               data-testid="door-switch"
               data-target={otherDoor}
               onClick={() => openDoor(otherDoor)}
-              className="px-2.5 py-1 rounded-full text-[10px] font-bold bg-white hover:bg-purple-50 border border-purple-300 text-purple-800 transition"
+              className="px-2.5 py-1 rounded-full text-[0.625rem] font-bold bg-white hover:bg-purple-50 border border-purple-300 text-purple-800 transition"
             >
               <i className={`fa-solid ${otherIcon} mr-1`}></i>
               Switch to {otherLabel}
@@ -995,7 +995,7 @@ export function JourneyShell({
               type="button"
               data-testid="door-quick-exit"
               onClick={quickExitAction}
-              className="px-2.5 py-1 rounded-md text-[10px] font-bold bg-rose-600 hover:bg-rose-700 text-white shadow-sm transition"
+              className="px-2.5 py-1 rounded-md text-[0.625rem] font-bold bg-rose-600 hover:bg-rose-700 text-white shadow-sm transition"
             >
               <i className="fa-solid fa-bolt mr-1"></i>
               Quick Exit
@@ -1003,7 +1003,7 @@ export function JourneyShell({
           </div>
         </div>
         <div>
-          <div className="text-[10px] uppercase font-bold tracking-wider text-purple-700">
+          <div className="text-[0.625rem] uppercase font-bold tracking-wider text-purple-700">
             {greetingName ? `Welcome, ${greetingName}` : "Welcome"}
           </div>
           <h2 className="text-lg font-bold text-slate-900 leading-tight">
@@ -1030,7 +1030,7 @@ export function JourneyShell({
           className="rounded-2xl bg-white border border-slate-200 p-4 shadow-sm"
         >
           <div className="text-center space-y-1 pb-3">
-            <div className="text-[10px] uppercase font-bold tracking-wider text-purple-700">
+            <div className="text-[0.625rem] uppercase font-bold tracking-wider text-purple-700">
               {greetingName ? `Welcome, ${greetingName}` : "Welcome"}
             </div>
             <h1 className="text-xl font-bold text-slate-900">
@@ -1054,7 +1054,7 @@ export function JourneyShell({
                 <div className="text-sm font-bold text-slate-900">
                   Court Ordered
                 </div>
-                <p className="text-[11px] text-indigo-700 mt-0.5 leading-snug">
+                <p className="text-[0.6875rem] text-indigo-700 mt-0.5 leading-snug">
                   Referred by a court, mediator, or attorney.
                 </p>
               </div>
@@ -1073,7 +1073,7 @@ export function JourneyShell({
                 <div className="text-sm font-bold text-slate-900">
                   Self Journey
                 </div>
-                <p className="text-[11px] text-purple-700 mt-0.5 leading-snug">
+                <p className="text-[0.6875rem] text-purple-700 mt-0.5 leading-snug">
                   Starting on my own.
                 </p>
               </div>
@@ -1092,7 +1092,7 @@ export function JourneyShell({
                 <div className="text-sm font-bold text-slate-900">
                   Communication Builder
                 </div>
-                <p className="text-[11px] text-sky-800 mt-0.5 leading-snug">
+                <p className="text-[0.6875rem] text-sky-800 mt-0.5 leading-snug">
                   Not a separate path. A message-writing tool you can open any time, from either path.
                 </p>
               </div>
@@ -1238,7 +1238,7 @@ export function JourneyShell({
         type="button"
         data-testid="door-quick-exit"
         onClick={quickExitAction}
-        className="px-2.5 py-1 rounded-md text-[10px] font-bold bg-rose-600 hover:bg-rose-700 text-white shadow-sm transition"
+        className="px-2.5 py-1 rounded-md text-[0.625rem] font-bold bg-rose-600 hover:bg-rose-700 text-white shadow-sm transition"
       >
         <i className="fa-solid fa-bolt mr-1"></i>
         Quick Exit
@@ -1291,7 +1291,7 @@ export function JourneyShell({
 
           <JourneyArtCard testid="door-self-art-assess" art={ASSESS_ART} done={assessDone} nextKey={nextAssess} onAction={openAssessKey}>
             {saHistory.latest && (
-              <p data-testid="door-self-card-assess-last" className="text-[11px] font-semibold text-purple-700 text-center">
+              <p data-testid="door-self-card-assess-last" className="text-[0.6875rem] font-semibold text-purple-700 text-center">
                 Latest Self-Assessment: {saHistory.latest.scores.overall}/100 · {saHistory.history.length} completed
               </p>
             )}
@@ -1320,7 +1320,7 @@ export function JourneyShell({
               <div className="text-sm font-bold text-slate-900 leading-tight">
                 Create Your Foundation Statement
               </div>
-              <p className="text-[11px] text-slate-600 mt-0.5 leading-snug">
+              <p className="text-[0.6875rem] text-slate-600 mt-0.5 leading-snug">
                 Define your shared goals and values. Build the
                 foundation for productive discussions and future
                 agreements.
@@ -1328,7 +1328,7 @@ export function JourneyShell({
               {foundationBuilder.savedAt && (
                 <p
                   data-testid="door-self-card-foundation-saved"
-                  className="text-[10px] font-bold text-emerald-700 mt-1"
+                  className="text-[0.625rem] font-bold text-emerald-700 mt-1"
                 >
                   Saved <i className="fa-solid fa-check mx-0.5"></i> · Edit
                 </p>
@@ -1365,7 +1365,7 @@ export function JourneyShell({
               <SendToProvider
                 completedAt={childNeeds.state.completed_at}
                 testid="door-self-send-provider"
-                className="w-full py-2.5 rounded-full bg-white hover:bg-purple-50 border border-purple-300 text-purple-900 text-[13px] font-bold transition-colors"
+                className="w-full py-2.5 rounded-full bg-white hover:bg-purple-50 border border-purple-300 text-purple-900 text-[0.8125rem] font-bold transition-colors"
               />
             )}
           </div>
@@ -1378,18 +1378,18 @@ export function JourneyShell({
             data-testid="door-self-finale-rewards"
             className="rounded-xl border border-purple-200 bg-purple-50/70 p-3 space-y-2"
           >
-            <div className="text-[10px] uppercase font-bold tracking-wider text-purple-700">
+            <div className="text-[0.625rem] uppercase font-bold tracking-wider text-purple-700">
               Keep your momentum
             </div>
             <button
               type="button"
               data-testid="door-self-replay-celebration"
               onClick={replayCelebration}
-              className="w-full text-left bg-white hover:bg-purple-100 border border-purple-200 rounded-lg px-3 py-2 text-[11px] font-semibold text-purple-800 transition flex items-center gap-2"
+              className="w-full text-left bg-white hover:bg-purple-100 border border-purple-200 rounded-lg px-3 py-2 text-[0.6875rem] font-semibold text-purple-800 transition flex items-center gap-2"
             >
               <i className="fa-solid fa-wand-sparkles"></i>
               Replay celebration
-              <span className="ml-auto text-[10px] text-slate-500">
+              <span className="ml-auto text-[0.625rem] text-slate-500">
                 Relive your reflection wins
               </span>
             </button>
@@ -1397,22 +1397,22 @@ export function JourneyShell({
               type="button"
               data-testid="door-self-share-badge"
               onClick={() => openBadgePreview("solo")}
-              className="w-full text-left bg-white hover:bg-purple-100 border border-purple-200 rounded-lg px-3 py-2.5 text-[11px] font-semibold text-purple-900 transition flex items-center gap-2"
+              className="w-full text-left bg-white hover:bg-purple-100 border border-purple-200 rounded-lg px-3 py-2.5 text-[0.6875rem] font-semibold text-purple-900 transition flex items-center gap-2"
             >
               <i className="fa-solid fa-award"></i>
               Save my Reflection Milestone badge
-              <i className="fa-solid fa-arrow-down-to-line ml-auto text-slate-400 text-[10px]"></i>
+              <i className="fa-solid fa-arrow-down-to-line ml-auto text-slate-400 text-[0.625rem]"></i>
             </button>
             {pairBothDone && (
               <button
                 type="button"
                 data-testid="door-self-share-joint-badge"
                 onClick={() => openBadgePreview("joint")}
-                className="w-full text-left bg-white hover:bg-emerald-50 border border-emerald-200 rounded-lg px-3 py-2.5 text-[11px] font-semibold text-emerald-900 transition flex items-center gap-2"
+                className="w-full text-left bg-white hover:bg-emerald-50 border border-emerald-200 rounded-lg px-3 py-2.5 text-[0.6875rem] font-semibold text-emerald-900 transition flex items-center gap-2"
               >
                 <i className="fa-solid fa-award"></i>
                 Save our Shared Reflection Milestone badge
-                <i className="fa-solid fa-arrow-down-to-line ml-auto text-slate-400 text-[10px]"></i>
+                <i className="fa-solid fa-arrow-down-to-line ml-auto text-slate-400 text-[0.625rem]"></i>
               </button>
             )}
             {!safetyFlag && (
@@ -1420,11 +1420,11 @@ export function JourneyShell({
                 type="button"
                 data-testid="door-self-invite-partner"
                 onClick={() => setInviteOpen(true)}
-                className="w-full text-left bg-white hover:bg-emerald-50 border border-emerald-200 rounded-lg px-3 py-2.5 text-[11px] font-semibold text-emerald-900 transition flex items-center gap-2"
+                className="w-full text-left bg-white hover:bg-emerald-50 border border-emerald-200 rounded-lg px-3 py-2.5 text-[0.6875rem] font-semibold text-emerald-900 transition flex items-center gap-2"
               >
                 <i className="fa-solid fa-user-plus"></i>
                 Invite the other parent
-                <i className="fa-solid fa-arrow-right ml-auto text-slate-400 text-[10px]"></i>
+                <i className="fa-solid fa-arrow-right ml-auto text-slate-400 text-[0.625rem]"></i>
               </button>
             )}
           </div>

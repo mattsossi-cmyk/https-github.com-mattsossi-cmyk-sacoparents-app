@@ -202,7 +202,7 @@ function ProgressRail({ current, doneMap }) {
                 />
               )}
               <span
-                className={`text-[10px] uppercase tracking-[0.14em] font-bold ${
+                className={`text-[0.625rem] uppercase tracking-[0.14em] font-bold ${
                   isCurrent
                     ? "text-[#3D1A78]"
                     : isDone
@@ -233,13 +233,13 @@ function StageHero({ stage, isFirstEver, allDone }) {
       <div className="relative">
         <div className="flex items-center gap-2 flex-wrap mb-3">
           <span
-            className="text-[10px] uppercase tracking-[0.2em] font-bold text-white/80"
+            className="text-[0.625rem] uppercase tracking-[0.2em] font-bold text-white/80"
             data-testid="journey-stage-number"
           >
             Step {stage.number} of {STAGES.length}
           </span>
           <span
-            className={`text-[10px] uppercase tracking-[0.14em] font-bold px-2 py-0.5 rounded-full border ${cat.chip}`}
+            className={`text-[0.625rem] uppercase tracking-[0.14em] font-bold px-2 py-0.5 rounded-full border ${cat.chip}`}
             data-testid="journey-stage-category"
           >
             {cat.label}
@@ -307,11 +307,11 @@ function UpNextTeaser({ nextStage }) {
       className="mt-4 flex items-center gap-3 text-sm text-[#4B4567]"
       data-testid="journey-up-next"
     >
-      <span className="text-[10px] uppercase tracking-[0.14em] font-bold text-[#6E6787]">
+      <span className="text-[0.625rem] uppercase tracking-[0.14em] font-bold text-[#6E6787]">
         Up next
       </span>
       <span
-        className={`text-[10px] uppercase tracking-[0.14em] font-bold px-2 py-0.5 rounded-full border ${cat.chip}`}
+        className={`text-[0.625rem] uppercase tracking-[0.14em] font-bold px-2 py-0.5 rounded-full border ${cat.chip}`}
       >
         {cat.label}
       </span>

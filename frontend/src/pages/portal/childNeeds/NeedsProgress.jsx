@@ -9,8 +9,8 @@ function StatusChip({ k, done, draft, active, onPick }) {
   const [text, tone] = done ? ["Completed ✓", "text-emerald-700 bg-emerald-50 border-emerald-200"] : draft ? ["Draft saved", "text-amber-700 bg-amber-50 border-amber-200"] : ["Not started", "text-slate-500 bg-slate-50 border-slate-200"];
   return (
     <button type="button" data-testid={`child-needs-progress-${k}`} onClick={() => onPick(k)} className={`w-full flex items-center justify-between gap-2 rounded-lg border px-3 py-2 text-left transition-colors hover:border-[#611663] ${active ? "ring-2 ring-[#4A154B]/30" : ""} ${tone}`}>
-      <span className="text-[13px] font-semibold text-slate-800">{CATS[k].card_title}</span>
-      <span className="text-[11px] font-bold whitespace-nowrap">{text}</span>
+      <span className="text-[0.8125rem] font-semibold text-slate-800">{CATS[k].card_title}</span>
+      <span className="text-[0.6875rem] font-bold whitespace-nowrap">{text}</span>
     </button>
   );
 }
@@ -22,7 +22,7 @@ export function NeedsProgress({ order, done, drafts, activeKey, onPick, shares, 
     <section data-testid="child-needs-progress" className="bg-white rounded-xl border border-[#E2E8F0] shadow-[0_10px_15px_-3px_rgba(0,0,0,0.05)] p-5 sm:p-6">
       <div className="flex items-center justify-between gap-3 mb-3">
         <h3 className="text-base font-extrabold text-[#4A154B]">Your progress</h3>
-        <span data-testid="child-needs-progress-count" className="text-[12px] font-bold text-[#4A154B] bg-[#F4EEF5] rounded-full px-3 py-1">
+        <span data-testid="child-needs-progress-count" className="text-[0.75rem] font-bold text-[#4A154B] bg-[#F4EEF5] rounded-full px-3 py-1">
           {count} of {order.length} completed
         </span>
       </div>
@@ -45,7 +45,7 @@ export function NeedsProgress({ order, done, drafts, activeKey, onPick, shares, 
           <i className="fa-solid fa-file-pdf mr-1.5"></i>Download my Child's Specific Needs report
         </button>
       )}
-      <p className="mt-3 text-[11px] text-slate-500 text-center">{CONTENT.disclaimer}</p>
+      <p className="mt-3 text-[0.6875rem] text-slate-500 text-center">{CONTENT.disclaimer}</p>
     </section>
   );
 }

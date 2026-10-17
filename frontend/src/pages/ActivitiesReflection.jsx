@@ -41,7 +41,7 @@ function Likert({ id, labels, value, onChange }) {
             className={`min-h-[64px] rounded-2xl border px-2 py-3 flex flex-col items-center justify-center transition-all active:scale-95 ${LIKERT_TONE(v, selected)}`}
           >
             <span className="text-lg font-bold leading-none">{v}</span>
-            <span className={`text-[10px] mt-1 leading-tight text-center ${selected ? "text-white" : "text-[#4B4567]"}`}>
+            <span className={`text-[0.625rem] mt-1 leading-tight text-center ${selected ? "text-white" : "text-[#4B4567]"}`}>
               {label}
             </span>
           </button>
@@ -179,7 +179,7 @@ export default function ActivitiesReflection() {
             <Palette size={20} strokeWidth={2.2} />
           </div>
           <div>
-            <div className="text-[10px] uppercase tracking-[0.22em] font-bold text-[#1E7A55]">
+            <div className="text-[0.625rem] uppercase tracking-[0.22em] font-bold text-[#1E7A55]">
               Private activities reflection
             </div>
             <h1 className="font-serif text-2xl sm:text-3xl text-[#1A1330] leading-tight mt-1">
@@ -225,7 +225,7 @@ export default function ActivitiesReflection() {
           className="bg-white rounded-3xl border border-[#C7E5D3] p-6 sm:p-8 shadow-sm animate-[fadeUp_240ms_ease-out]"
           data-testid={`activities-reflection-q-${q.id}`}
         >
-          <div className="text-[10px] uppercase tracking-[0.22em] font-bold text-[#1E7A55] mb-2">
+          <div className="text-[0.625rem] uppercase tracking-[0.22em] font-bold text-[#1E7A55] mb-2">
             {(schema.dimensions?.[q.dimension]?.label) || q.dimension}
           </div>
           <label className="block font-serif text-lg sm:text-xl text-[#1A1330] leading-snug mb-6">

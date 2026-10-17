@@ -128,7 +128,7 @@ function PillarCard({ pillar, completed, flags }) {
         </div>
         <div className="flex-1 min-w-0">
           <div
-            className="text-[10px] uppercase tracking-[0.22em] font-bold"
+            className="text-[0.625rem] uppercase tracking-[0.22em] font-bold"
             style={{ color }}
           >
             Pillar {pillar.id}

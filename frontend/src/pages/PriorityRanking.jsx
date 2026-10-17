@@ -186,7 +186,7 @@ export default function PriorityRanking() {
                         >
                           <GripVertical size={14} className="text-[#6E6787] shrink-0" />
                           <span
-                            className={`text-[10px] uppercase tracking-[0.15em] px-1.5 py-0.5 rounded ${meta.chipBg} ${meta.text} shrink-0`}
+                            className={`text-[0.625rem] uppercase tracking-[0.15em] px-1.5 py-0.5 rounded ${meta.chipBg} ${meta.text} shrink-0`}
                             data-testid={`priority-item-${it.id}-chip`}
                           >
                             {meta.label}

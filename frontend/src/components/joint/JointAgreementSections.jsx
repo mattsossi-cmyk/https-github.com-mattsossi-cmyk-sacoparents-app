@@ -16,7 +16,7 @@ export function Bucket({ label, colour, items, mode, parentAName, parentBName })
       data-testid={`joint-agreement-bucket-${mode}`}
     >
       <div
-        className="text-[11px] uppercase tracking-[0.22em] font-bold mb-3"
+        className="text-[0.6875rem] uppercase tracking-[0.22em] font-bold mb-3"
         style={{ color: colour }}
       >
         {label}{" "}
@@ -32,19 +32,19 @@ export function Bucket({ label, colour, items, mode, parentAName, parentBName })
               return (
                 <li key={rowKey} className="rounded-xl bg-white p-3 border border-white/60">
                   {it.area && (
-                    <div className="text-[10px] uppercase tracking-wider text-[#6E6787] font-semibold mb-1">
+                    <div className="text-[0.625rem] uppercase tracking-wider text-[#6E6787] font-semibold mb-1">
                       {it.area}
                     </div>
                   )}
                   <div className="grid sm:grid-cols-2 gap-3">
                     <div className="rounded-lg bg-[#F7F4FC] p-2.5">
-                      <div className="text-[10px] uppercase tracking-wider text-[#3D1A78] font-semibold mb-1">
+                      <div className="text-[0.625rem] uppercase tracking-wider text-[#3D1A78] font-semibold mb-1">
                         {parentAName}
                       </div>
                       <div className="text-sm text-[#1A1330]">{it.parent_a_text}</div>
                     </div>
                     <div className="rounded-lg bg-[#EAF7F7] p-2.5">
-                      <div className="text-[10px] uppercase tracking-wider text-[#0F6F6F] font-semibold mb-1">
+                      <div className="text-[0.625rem] uppercase tracking-wider text-[#0F6F6F] font-semibold mb-1">
                         {parentBName}
                       </div>
                       <div className="text-sm text-[#1A1330]">{it.parent_b_text}</div>
@@ -60,7 +60,7 @@ export function Bucket({ label, colour, items, mode, parentAName, parentBName })
                 className="rounded-xl bg-white p-3 border border-white/60"
               >
                 {it.area && (
-                  <div className="text-[10px] uppercase tracking-wider text-[#6E6787] font-semibold mb-1">
+                  <div className="text-[0.625rem] uppercase tracking-wider text-[#6E6787] font-semibold mb-1">
                     {it.area}
                   </div>
                 )}

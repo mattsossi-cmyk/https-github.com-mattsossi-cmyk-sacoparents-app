@@ -35,7 +35,7 @@ export default function AdminAuditLog() {
     <AdminGate tp="admin-audit" err={err}>
       <AppShell>
         <div className="max-w-2xl mx-auto px-1 py-6 space-y-5" data-testid="admin-audit-page">
-          <div className="text-[11px] uppercase tracking-[0.22em] font-bold text-[#3D1A78] inline-flex items-center gap-2">
+          <div className="text-[0.6875rem] uppercase tracking-[0.22em] font-bold text-[#3D1A78] inline-flex items-center gap-2">
             <FileLock2 size={12} /> Admin only
           </div>
           <h1 className="font-serif text-4xl text-[#1A1330]">Case settings audit log</h1>

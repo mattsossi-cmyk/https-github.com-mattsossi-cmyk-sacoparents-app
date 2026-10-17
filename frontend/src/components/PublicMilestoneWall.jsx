@@ -71,7 +71,7 @@ function AnonAvatar({ userHash }) {
   const hue = parseInt((userHash || "0").slice(0, 4), 16) % 360;
   return (
     <span
-      className="shrink-0 h-8 w-8 rounded-full border border-white shadow-sm flex items-center justify-center text-white font-semibold text-[11px]"
+      className="shrink-0 h-8 w-8 rounded-full border border-white shadow-sm flex items-center justify-center text-white font-semibold text-[0.6875rem]"
       style={{
         background: `linear-gradient(135deg, hsl(${hue}, 45%, 45%), hsl(${(hue + 40) % 360}, 45%, 60%))`,
       }}
@@ -188,7 +188,7 @@ export default function PublicMilestoneWall() {
     >
       <div className="flex items-start justify-between gap-3 flex-wrap">
         <div className="min-w-0">
-          <div className="text-[10px] uppercase tracking-[0.22em] text-[#3D1A78] font-bold flex items-center gap-1.5">
+          <div className="text-[0.625rem] uppercase tracking-[0.22em] text-[#3D1A78] font-bold flex items-center gap-1.5">
             <Users size={12} /> Community wall
           </div>
           <h2
@@ -249,7 +249,7 @@ export default function PublicMilestoneWall() {
                 onClick={() => setCategory(c.key)}
                 data-testid={`wall-category-chip-${c.key}`}
                 data-active={active ? "1" : "0"}
-                className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[11px] font-semibold border transition-all ${
+                className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[0.6875rem] font-semibold border transition-all ${
                   active
                     ? "bg-[#3D1A78] text-white border-[#3D1A78]"
                     : "bg-white text-[#3D1A78] border-[#D6CFE8] hover:bg-[#F5F1FB]"
@@ -257,7 +257,7 @@ export default function PublicMilestoneWall() {
               >
                 {c.label}
                 <span
-                  className={`inline-flex items-center justify-center min-w-[18px] px-1 rounded-full text-[10px] tabular-nums ${
+                  className={`inline-flex items-center justify-center min-w-[18px] px-1 rounded-full text-[0.625rem] tabular-nums ${
                     active
                       ? "bg-white/25 text-white"
                       : "bg-[#F1EEF7] text-[#4B4567]"
@@ -276,7 +276,7 @@ export default function PublicMilestoneWall() {
           className="mt-5 rounded-2xl border border-[#F1D9A0] bg-gradient-to-br from-[#FDF4E6] to-[#FBEDDA] p-4"
           data-testid="wall-top-cheered"
         >
-          <div className="flex items-center gap-1.5 text-[10px] uppercase tracking-[0.22em] font-bold text-[#8C5A2C]">
+          <div className="flex items-center gap-1.5 text-[0.625rem] uppercase tracking-[0.22em] font-bold text-[#8C5A2C]">
             <Heart size={12} className="fill-[#B23C3C] text-[#B23C3C]" />
             Most cheered this week
           </div>
@@ -388,7 +388,7 @@ export default function PublicMilestoneWall() {
                     }
                     data-testid={`wall-cheer-${ev.event_id}`}
                     data-cheered={cheered ? "1" : "0"}
-                    className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-[11px] font-semibold border transition-all ${
+                    className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-[0.6875rem] font-semibold border transition-all ${
                       cheered
                         ? "bg-[#FBEDED] border-[#EDD1D1] text-[#B23C3C]"
                         : "bg-white border-[#E5E0EE] text-[#3D1A78] hover:bg-[#F5F1FB]"
@@ -412,7 +412,7 @@ export default function PublicMilestoneWall() {
 
       {!optIn && (
         <div
-          className="mt-4 flex items-start gap-2 text-[11px] text-[#4B4567]"
+          className="mt-4 flex items-start gap-2 text-[0.6875rem] text-[#4B4567]"
           data-testid="wall-privacy-note"
         >
           <EyeOff size={12} className="shrink-0 mt-0.5" />

@@ -58,7 +58,7 @@ export default function ReportSectionCoachStrip({ apiPrefix, testidBase, userSta
             <Sparkles size={16} />
           </div>
           <div>
-            <div className="text-[10px] uppercase tracking-[0.22em] text-[#3D1A78] font-bold">
+            <div className="text-[0.625rem] uppercase tracking-[0.22em] text-[#3D1A78] font-bold">
               AI Personal Coach · Section by Section
             </div>
             <h2 className="font-serif text-2xl text-[#1A1330] leading-snug mt-1">

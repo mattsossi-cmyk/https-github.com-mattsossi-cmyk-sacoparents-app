@@ -17,10 +17,10 @@ export function GreyRockToggleChip({ on = false, onChange = () => {} }) {
     <div
       data-testid="grey-rock-toggle-chip"
       data-on={on ? "true" : "false"}
-      className="flex items-center justify-between gap-2 rounded-xl border border-amber-300 bg-amber-50 px-3 py-2 text-[11px] text-amber-900"
+      className="flex items-center justify-between gap-2 rounded-xl border border-amber-300 bg-amber-50 px-3 py-2 text-[0.6875rem] text-amber-900"
     >
       <span className="flex items-center gap-2 leading-snug">
-        <i className="fa-solid fa-shield-halved text-amber-600"></i>
+        <i className="fa-solid fa-sliders text-amber-700" aria-hidden="true"></i>
         <span>
           <span className="font-semibold">Grey-rock tone is {on ? "on" : "off"}.</span>{" "}
           <span className="text-amber-800">Shorter, more neutral wording in the tools.</span>
@@ -31,7 +31,7 @@ export function GreyRockToggleChip({ on = false, onChange = () => {} }) {
         data-testid={on ? "grey-rock-toggle-off-btn" : "grey-rock-toggle-on-btn"}
         onClick={flip}
         aria-pressed={on}
-        className="shrink-0 px-2.5 py-1 bg-amber-600 hover:bg-amber-700 text-white rounded-md font-semibold text-[10px] transition"
+        className="shrink-0 px-2.5 py-1 min-h-6 bg-amber-700 hover:bg-amber-800 text-white rounded-md font-semibold text-[0.625rem] transition-colors"
       >
         {on ? "Turn off" : "Turn on"}
       </button>
@@ -123,13 +123,13 @@ export function AlignmentHub({
         >
           <div className="flex justify-between items-start">
             <div>
-              <span className="bg-purple-100 text-purple-800 text-[9px] font-bold px-2 py-0.5 rounded uppercase tracking-wider">
+              <span className="bg-purple-100 text-purple-800 text-[0.5625rem] font-bold px-2 py-0.5 rounded uppercase tracking-wider">
                 Coparenting Journey Toolkit
               </span>
               <h3 className="font-bold text-slate-800 text-sm mt-1">
                 Assessments, Alignment & Joint Reports
               </h3>
-              <p className="text-[11px] text-slate-500 leading-snug">
+              <p className="text-[0.6875rem] text-slate-500 leading-snug">
                 Open a full-featured tool. Your work saves to your
                 account — you can share the finished report with your
                 co-parent, a mediator, or an attorney.
@@ -172,10 +172,10 @@ export function AlignmentHub({
                 className="block p-3 pb-8 bg-purple-50 hover:bg-purple-100 border border-purple-200 rounded-xl text-slate-800 transition"
               >
                 <i className="fa-solid fa-clipboard-question text-purple-800 text-base"></i>
-                <div className="font-bold text-[11px] mt-1.5 leading-snug">
+                <div className="font-bold text-[0.6875rem] mt-1.5 leading-snug">
                   Co-parenting Assessment
                 </div>
-                <div className="text-[10px] text-slate-500 leading-snug">
+                <div className="text-[0.625rem] text-slate-500 leading-snug">
                   Take the risk-and-strengths self-assessment
                 </div>
                 <a
@@ -184,7 +184,7 @@ export function AlignmentHub({
                   rel="noopener noreferrer"
                   onClick={(e) => e.stopPropagation()}
                   data-testid="toolkit-coparenting-sample-link"
-                  className="inline-flex items-center gap-1 mt-1 text-[9px] font-bold text-purple-800 hover:underline"
+                  className="inline-flex items-center gap-1 mt-1 text-[0.5625rem] font-bold text-purple-800 hover:underline"
                 >
                   <i className="fa-solid fa-file-pdf"></i>
                   See a sample
@@ -195,7 +195,7 @@ export function AlignmentHub({
                   rel="noopener noreferrer"
                   onClick={(e) => e.stopPropagation()}
                   data-testid="toolkit-coparenting-preview-link"
-                  className="inline-flex items-center gap-1 mt-1 ml-2 text-[9px] font-bold text-amber-700 hover:underline"
+                  className="inline-flex items-center gap-1 mt-1 ml-2 text-[0.5625rem] font-bold text-amber-700 hover:underline"
                 >
                   <i className="fa-solid fa-wand-magic-sparkles"></i>
                   Try the preview
@@ -205,7 +205,7 @@ export function AlignmentHub({
                 type="button"
                 data-testid="toolkit-guided-coparenting"
                 onClick={() => openGuidedJourney("coparenting")}
-                className="absolute bottom-1.5 right-1.5 text-[9px] font-bold text-purple-800 bg-white/80 hover:bg-white px-2 py-0.5 rounded-full border border-purple-300"
+                className="absolute bottom-1.5 right-1.5 text-[0.5625rem] font-bold text-purple-800 bg-white/80 hover:bg-white px-2 py-0.5 rounded-full border border-purple-300"
               >
                 <i className="fa-solid fa-comments mr-1"></i>Guided chat
               </button>
@@ -224,10 +224,10 @@ export function AlignmentHub({
               className="block p-3 bg-gradient-to-br from-purple-700 to-purple-900 hover:from-purple-800 hover:to-purple-950 border border-purple-900 rounded-xl text-white transition"
             >
               <i className="fa-solid fa-wand-magic-sparkles text-amber-300 text-base"></i>
-              <div className="font-bold text-[11px] mt-1.5 leading-snug">
+              <div className="font-bold text-[0.6875rem] mt-1.5 leading-snug">
                 Self Assessment
               </div>
-              <div className="text-[10px] text-purple-100/90 leading-snug">
+              <div className="text-[0.625rem] text-purple-100/90 leading-snug">
                 40 quick questions · 8-domain profile · save or share
               </div>
             </a>
@@ -239,8 +239,8 @@ export function AlignmentHub({
               className="block w-full text-left p-3 bg-rose-50 hover:bg-rose-100 border border-rose-200 rounded-xl text-slate-800 transition"
             >
               <i className="fa-solid fa-comments text-rose-700 text-base"></i>
-              <div className="font-bold text-[11px] mt-1.5 leading-snug">Conflict Readiness</div>
-              <div className="text-[10px] text-slate-500 leading-snug">Three questions for calmer hand-offs</div>
+              <div className="font-bold text-[0.6875rem] mt-1.5 leading-snug">Conflict Readiness</div>
+              <div className="text-[0.625rem] text-slate-500 leading-snug">Three questions for calmer hand-offs</div>
             </button>
 
             <div className="relative">
@@ -250,10 +250,10 @@ export function AlignmentHub({
                 className="block p-3 pb-8 bg-amber-50 hover:bg-amber-100 border border-amber-200 rounded-xl text-slate-800 transition"
               >
                 <i className="fa-solid fa-file-signature text-amber-700 text-base"></i>
-                <div className="font-bold text-[11px] mt-1.5 leading-snug">
+                <div className="font-bold text-[0.6875rem] mt-1.5 leading-snug">
                   Mediation Prep & Report
                 </div>
-                <div className="text-[10px] text-slate-500 leading-snug">
+                <div className="text-[0.625rem] text-slate-500 leading-snug">
                   Build your Foundation Statement + summary
                 </div>
               </Link>
@@ -261,7 +261,7 @@ export function AlignmentHub({
                 type="button"
                 data-testid="toolkit-guided-foundation"
                 onClick={() => openGuidedJourney("foundation")}
-                className="absolute bottom-1.5 right-1.5 text-[9px] font-bold text-amber-800 bg-white/80 hover:bg-white px-2 py-0.5 rounded-full border border-amber-300"
+                className="absolute bottom-1.5 right-1.5 text-[0.5625rem] font-bold text-amber-800 bg-white/80 hover:bg-white px-2 py-0.5 rounded-full border border-amber-300"
               >
                 <i className="fa-solid fa-comments mr-1"></i>Guided chat
               </button>
@@ -275,10 +275,10 @@ export function AlignmentHub({
                 className="w-full p-3 pb-8 bg-purple-50 hover:bg-purple-100 border border-purple-200 rounded-xl text-slate-800 text-left transition"
               >
                 <i className="fa-solid fa-file-lines text-purple-800 text-base"></i>
-                <div className="font-bold text-[11px] mt-1.5 leading-snug">
+                <div className="font-bold text-[0.6875rem] mt-1.5 leading-snug">
                   Foundation Statement PDF
                 </div>
-                <div className="text-[10px] text-slate-500 leading-snug">
+                <div className="text-[0.625rem] text-slate-500 leading-snug">
                   Download your child-first anchor as PDF
                 </div>
               </button>
@@ -286,7 +286,7 @@ export function AlignmentHub({
                 type="button"
                 data-testid="toolkit-guided-foundation-pdf"
                 onClick={() => openGuidedJourney("foundation")}
-                className="absolute bottom-1.5 right-1.5 text-[9px] font-bold text-purple-800 bg-white/80 hover:bg-white px-2 py-0.5 rounded-full border border-purple-300"
+                className="absolute bottom-1.5 right-1.5 text-[0.5625rem] font-bold text-purple-800 bg-white/80 hover:bg-white px-2 py-0.5 rounded-full border border-purple-300"
               >
                 <i className="fa-solid fa-comments mr-1"></i>Guided chat
               </button>
@@ -300,10 +300,10 @@ export function AlignmentHub({
                 className="w-full p-3 pb-8 bg-sky-50 hover:bg-sky-100 border border-sky-200 rounded-xl text-slate-800 text-left transition"
               >
                 <i className="fa-solid fa-stethoscope text-sky-700 text-base"></i>
-                <div className="font-bold text-[11px] mt-1.5 leading-snug">
+                <div className="font-bold text-[0.6875rem] mt-1.5 leading-snug">
                   Medical Needs Assessment
                 </div>
-                <div className="text-[10px] text-slate-500 leading-snug">
+                <div className="text-[0.625rem] text-slate-500 leading-snug">
                   Log providers, meds, appointments
                 </div>
               </button>
@@ -311,7 +311,7 @@ export function AlignmentHub({
                 type="button"
                 data-testid="toolkit-guided-medical"
                 onClick={() => openGuidedJourney("medical")}
-                className="absolute bottom-1.5 right-1.5 text-[9px] font-bold text-sky-800 bg-white/80 hover:bg-white px-2 py-0.5 rounded-full border border-sky-300"
+                className="absolute bottom-1.5 right-1.5 text-[0.5625rem] font-bold text-sky-800 bg-white/80 hover:bg-white px-2 py-0.5 rounded-full border border-sky-300"
               >
                 <i className="fa-solid fa-comments mr-1"></i>Guided chat
               </button>
@@ -325,10 +325,10 @@ export function AlignmentHub({
                 className="w-full p-3 pb-8 bg-amber-50 hover:bg-amber-100 border border-amber-200 rounded-xl text-slate-800 text-left transition"
               >
                 <i className="fa-solid fa-graduation-cap text-amber-700 text-base"></i>
-                <div className="font-bold text-[11px] mt-1.5 leading-snug">
+                <div className="font-bold text-[0.6875rem] mt-1.5 leading-snug">
                   Educational Assessment
                 </div>
-                <div className="text-[10px] text-slate-500 leading-snug">
+                <div className="text-[0.625rem] text-slate-500 leading-snug">
                   Log IEPs, tutoring, teacher notes
                 </div>
               </button>
@@ -336,7 +336,7 @@ export function AlignmentHub({
                 type="button"
                 data-testid="toolkit-guided-educational"
                 onClick={() => openGuidedJourney("educational")}
-                className="absolute bottom-1.5 right-1.5 text-[9px] font-bold text-amber-800 bg-white/80 hover:bg-white px-2 py-0.5 rounded-full border border-amber-300"
+                className="absolute bottom-1.5 right-1.5 text-[0.5625rem] font-bold text-amber-800 bg-white/80 hover:bg-white px-2 py-0.5 rounded-full border border-amber-300"
               >
                 <i className="fa-solid fa-comments mr-1"></i>Guided chat
               </button>
@@ -350,10 +350,10 @@ export function AlignmentHub({
                 className="w-full p-3 pb-8 bg-indigo-50 hover:bg-indigo-100 border border-indigo-200 rounded-xl text-slate-800 text-left transition"
               >
                 <i className="fa-solid fa-brain text-indigo-700 text-base"></i>
-                <div className="font-bold text-[11px] mt-1.5 leading-snug">
+                <div className="font-bold text-[0.6875rem] mt-1.5 leading-snug">
                   Psychological Assessment
                 </div>
-                <div className="text-[10px] text-slate-500 leading-snug">
+                <div className="text-[0.625rem] text-slate-500 leading-snug">
                   Log therapists, evals, behavioural notes
                 </div>
               </button>
@@ -361,7 +361,7 @@ export function AlignmentHub({
                 type="button"
                 data-testid="toolkit-guided-psychological"
                 onClick={() => openGuidedJourney("psychological")}
-                className="absolute bottom-1.5 right-1.5 text-[9px] font-bold text-indigo-800 bg-white/80 hover:bg-white px-2 py-0.5 rounded-full border border-indigo-300"
+                className="absolute bottom-1.5 right-1.5 text-[0.5625rem] font-bold text-indigo-800 bg-white/80 hover:bg-white px-2 py-0.5 rounded-full border border-indigo-300"
               >
                 <i className="fa-solid fa-comments mr-1"></i>Guided chat
               </button>
@@ -373,10 +373,10 @@ export function AlignmentHub({
               className="p-3 bg-slate-50 hover:bg-slate-100 border border-slate-200 rounded-xl text-slate-800 transition"
             >
               <i className="fa-solid fa-share-nodes text-slate-700 text-base"></i>
-              <div className="font-bold text-[11px] mt-1.5 leading-snug">
+              <div className="font-bold text-[0.6875rem] mt-1.5 leading-snug">
                 Share Joint Reports
               </div>
-              <div className="text-[10px] text-slate-500 leading-snug">
+              <div className="text-[0.625rem] text-slate-500 leading-snug">
                 Send a joint report to a professional
               </div>
             </Link>
@@ -402,7 +402,7 @@ export function AlignmentHub({
               type="button"
               data-testid="share-complete-report-btn"
               onClick={onShareCompleteReport}
-              className="w-full mt-2 p-2 bg-white hover:bg-purple-50 border border-purple-300 text-purple-800 rounded-xl font-bold text-[11px] transition flex items-center justify-center gap-2 disabled:opacity-40"
+              className="w-full mt-2 p-2 bg-white hover:bg-purple-50 border border-purple-300 text-purple-800 rounded-xl font-bold text-[0.6875rem] transition flex items-center justify-center gap-2 disabled:opacity-40"
               disabled={shareStatus?.complete === "loading"}
             >
               <i className="fa-solid fa-link"></i>
@@ -412,7 +412,7 @@ export function AlignmentHub({
                 ? "Creating share link..."
                 : "Share the Complete Report (link + passphrase)"}
             </button>
-            <p className="text-[10px] text-slate-500 leading-snug mt-1.5 text-center">
+            <p className="text-[0.625rem] text-slate-500 leading-snug mt-1.5 text-center">
               Includes: Family Violence Assessment · Co-parenting
               Assessment · Individual + Joint Align Before Agreement
               (Medical / Educational / Psychological) · Foundation
@@ -430,18 +430,18 @@ export function AlignmentHub({
         <div className="bg-purple-900 text-white p-4">
           <div className="flex justify-between items-start">
             <div>
-              <span className="bg-purple-800 text-purple-200 text-[9px] font-bold px-2 py-0.5 rounded uppercase tracking-wider">
+              <span className="bg-purple-800 text-purple-200 text-[0.5625rem] font-bold px-2 py-0.5 rounded uppercase tracking-wider">
                 Official Legal Module
               </span>
               <h3 className="font-bold text-base mt-1">
                 Official Legal Conflict Resolution Report
               </h3>
             </div>
-            <span className="bg-emerald-500 text-white text-[9px] font-bold px-2 py-0.5 rounded">
+            <span className="bg-emerald-500 text-white text-[0.5625rem] font-bold px-2 py-0.5 rounded">
               Matt Sossi Methodology
             </span>
           </div>
-          <p className="text-[11px] text-purple-200 mt-1">
+          <p className="text-[0.6875rem] text-purple-200 mt-1">
             San Antonio, TX Court & Mediation Standard Document
           </p>
         </div>
@@ -449,7 +449,7 @@ export function AlignmentHub({
         <div className="p-4 space-y-4 text-xs">
           {/* Health Index Diagnostic */}
           <div className="bg-purple-50/60 p-3 rounded-xl border border-purple-200 space-y-2">
-            <span className="text-[10px] font-bold text-purple-900 uppercase tracking-wider block">
+            <span className="text-[0.625rem] font-bold text-purple-900 uppercase tracking-wider block">
               1. Conflict Escalation & Compliance Diagnostic
             </span>
 
@@ -482,7 +482,7 @@ export function AlignmentHub({
 
             <div className="p-2.5 bg-white rounded-lg border border-purple-200 flex justify-between items-center mt-2">
               <div>
-                <span className="text-[9px] font-bold text-purple-800 uppercase block">
+                <span className="text-[0.5625rem] font-bold text-purple-800 uppercase block">
                   Overall Co-Parenting Health Index
                 </span>
                 <span
@@ -495,7 +495,7 @@ export function AlignmentHub({
               <button
                 data-testid="log-reassessment-btn"
                 onClick={onLogReassessment}
-                className="no-print bg-purple-800 text-white text-[10px] font-bold px-2 py-1 rounded"
+                className="no-print bg-purple-800 text-white text-[0.625rem] font-bold px-2 py-1 rounded"
               >
                 Log Reassessment
               </button>
@@ -509,10 +509,10 @@ export function AlignmentHub({
 
           {/* Dispute Resolution Matrix */}
           <div className="space-y-2">
-            <span className="text-[10px] font-bold text-purple-900 uppercase tracking-wider block">
+            <span className="text-[0.625rem] font-bold text-purple-900 uppercase tracking-wider block">
               2. Legal Dispute Resolution Matrix
             </span>
-            <div className="border border-slate-200 rounded-xl overflow-hidden text-[11px]">
+            <div className="border border-slate-200 rounded-xl overflow-hidden text-[0.6875rem]">
               <table className="w-full text-left">
                 <thead className="bg-slate-100 text-slate-700 font-bold border-b border-slate-200">
                   <tr>
@@ -546,12 +546,12 @@ export function AlignmentHub({
 
           {/* Signatures */}
           <div className="bg-slate-50 p-3 rounded-xl border border-slate-200 space-y-2">
-            <span className="text-[10px] font-bold text-purple-900 uppercase tracking-wider block">
+            <span className="text-[0.625rem] font-bold text-purple-900 uppercase tracking-wider block">
               3. Digital Affirmation & Certification
             </span>
             <div className="grid grid-cols-2 gap-2">
               <div>
-                <label className="font-semibold text-slate-700 text-[10px] block">
+                <label className="font-semibold text-slate-700 text-[0.625rem] block">
                   Parent A Signature
                 </label>
                 <input
@@ -566,7 +566,7 @@ export function AlignmentHub({
                 />
               </div>
               <div>
-                <label className="font-semibold text-slate-700 text-[10px] block">
+                <label className="font-semibold text-slate-700 text-[0.625rem] block">
                   Parent B Signature
                 </label>
                 <input
@@ -582,7 +582,7 @@ export function AlignmentHub({
               </div>
             </div>
             <div>
-              <label className="font-semibold text-slate-700 text-[10px] block">
+              <label className="font-semibold text-slate-700 text-[0.625rem] block">
                 Certified Mediator / Attorney
               </label>
               <input
@@ -639,7 +639,7 @@ export function AlignmentHub({
       >
         <div className="flex justify-between items-center border-b border-slate-100 pb-2">
           <div>
-            <span className="text-[10px] font-bold text-emerald-600 uppercase">
+            <span className="text-[0.625rem] font-bold text-emerald-600 uppercase">
               Assessments
             </span>
             <h3 className="font-bold text-slate-800 text-sm">
@@ -649,7 +649,7 @@ export function AlignmentHub({
           <button
             data-testid="add-alignment-btn"
             onClick={onAddAlignment}
-            className="no-print bg-emerald-600 text-white text-[10px] font-bold px-2.5 py-1 rounded-lg"
+            className="no-print bg-emerald-600 text-white text-[0.625rem] font-bold px-2.5 py-1 rounded-lg"
           >
             + Add Record
           </button>
@@ -669,7 +669,7 @@ export function AlignmentHub({
             </div>
             <span
               data-testid="count-medical"
-              className="bg-white text-emerald-800 font-bold px-2 py-0.5 rounded-full text-[10px]"
+              className="bg-white text-emerald-800 font-bold px-2 py-0.5 rounded-full text-[0.625rem]"
             >
               {alignmentCounts.Medical} Records
             </span>
@@ -688,7 +688,7 @@ export function AlignmentHub({
             </div>
             <span
               data-testid="count-educational"
-              className="bg-white text-blue-800 font-bold px-2 py-0.5 rounded-full text-[10px]"
+              className="bg-white text-blue-800 font-bold px-2 py-0.5 rounded-full text-[0.625rem]"
             >
               {alignmentCounts.Educational} Records
             </span>
@@ -707,7 +707,7 @@ export function AlignmentHub({
             </div>
             <span
               data-testid="count-psychological"
-              className="bg-white text-purple-800 font-bold px-2 py-0.5 rounded-full text-[10px]"
+              className="bg-white text-purple-800 font-bold px-2 py-0.5 rounded-full text-[0.625rem]"
             >
               {alignmentCounts.Psychological} Records
             </span>
@@ -718,7 +718,7 @@ export function AlignmentHub({
           <button
             onClick={() => setFolderFilter("All")}
             data-testid="clear-folder-filter"
-            className="no-print text-[10px] text-purple-700 font-bold underline"
+            className="no-print text-[0.625rem] text-purple-700 font-bold underline"
           >
             Show all records
           </button>
@@ -736,7 +736,7 @@ export function AlignmentHub({
                   ? "You have 0 assessment records yet"
                   : `You have 0 ${folderFilter.toLowerCase()} records yet`}
               </div>
-              <p className="text-[10px] text-slate-500 leading-snug">
+              <p className="text-[0.625rem] text-slate-500 leading-snug">
                 {folderFilter === "All"
                   ? "Add your first record — a provider name, a date, a short note. It saves privately to this device."
                   : folderFilter === "Medical"
@@ -749,7 +749,7 @@ export function AlignmentHub({
                 type="button"
                 data-testid={`assessment-empty-add-${folderFilter.toLowerCase()}`}
                 onClick={onAddAlignment}
-                className="mt-1 px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg font-bold text-[11px]"
+                className="mt-1 px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg font-bold text-[0.6875rem]"
               >
                 <i className="fa-solid fa-plus mr-1"></i>Add your first{" "}
                 {folderFilter === "All" ? "record" : folderFilter.toLowerCase() + " record"}
@@ -764,14 +764,14 @@ export function AlignmentHub({
               >
                 <div className="flex justify-between items-start">
                   <span className="font-bold text-slate-800">{item.title}</span>
-                  <span className="text-[10px] text-slate-400 font-medium">
+                  <span className="text-[0.625rem] text-slate-400 font-medium">
                     {item.date}
                   </span>
                 </div>
-                <div className="text-[11px] text-slate-500 font-medium">
+                <div className="text-[0.6875rem] text-slate-500 font-medium">
                   Specialist: {item.provider}
                 </div>
-                <div className="text-[11px] text-slate-600 bg-white p-2 rounded-lg border border-slate-100">
+                <div className="text-[0.6875rem] text-slate-600 bg-white p-2 rounded-lg border border-slate-100">
                   {item.summary}
                 </div>
               </div>
@@ -787,14 +787,14 @@ export function AlignmentHub({
       >
         <div className="flex justify-between items-start border-b border-slate-100 pb-2">
           <div>
-            <span className="text-[10px] font-bold text-purple-700 uppercase">
+            <span className="text-[0.625rem] font-bold text-purple-700 uppercase">
               Step 4 PDF Statement
             </span>
             <h3 className="font-bold text-slate-800 text-sm">
               Foundation Statement
             </h3>
           </div>
-          <span className="bg-purple-100 text-purple-900 text-[10px] font-bold px-2 py-0.5 rounded">
+          <span className="bg-purple-100 text-purple-900 text-[0.625rem] font-bold px-2 py-0.5 rounded">
             Anchor PDF
           </span>
         </div>
@@ -847,7 +847,7 @@ export function AlignmentHub({
             data-testid="email-foundation-coparent-btn"
             onClick={onEmailFoundationToCoparent}
             disabled={shareStatus.foundation_email === "loading"}
-            className="w-full p-2 bg-white hover:bg-purple-50 border border-purple-300 text-purple-800 rounded-xl font-bold text-[11px] transition flex items-center justify-center gap-2 disabled:opacity-40 no-print"
+            className="w-full p-2 bg-white hover:bg-purple-50 border border-purple-300 text-purple-800 rounded-xl font-bold text-[0.6875rem] transition flex items-center justify-center gap-2 disabled:opacity-40 no-print"
           >
             <i className="fa-solid fa-envelope"></i>
             {shareStatus.foundation_email === "loading"

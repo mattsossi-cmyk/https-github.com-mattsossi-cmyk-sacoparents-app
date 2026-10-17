@@ -265,7 +265,7 @@ export default function FoundationStatementShareModal({
           <X size={16} />
         </button>
 
-        <div className="text-[11px] uppercase tracking-[0.15em] font-bold text-[#3D1A78]">
+        <div className="text-[0.6875rem] uppercase tracking-[0.15em] font-bold text-[#3D1A78]">
           Foundation Statement
         </div>
         <h3
@@ -319,7 +319,7 @@ export default function FoundationStatementShareModal({
             <div>
               <label
                 htmlFor="foundation-share-recipient-email"
-                className="text-[11px] uppercase tracking-[0.15em] font-bold text-[#3D1A78]"
+                className="text-[0.6875rem] uppercase tracking-[0.15em] font-bold text-[#3D1A78]"
               >
                 Recipient email <span className="text-[#C05621]">*</span>
               </label>
@@ -338,7 +338,7 @@ export default function FoundationStatementShareModal({
             <div>
               <label
                 htmlFor="foundation-share-recipient-name"
-                className="text-[11px] uppercase tracking-[0.15em] font-bold text-[#3D1A78]"
+                className="text-[0.6875rem] uppercase tracking-[0.15em] font-bold text-[#3D1A78]"
               >
                 Recipient name (optional)
               </label>
@@ -356,7 +356,7 @@ export default function FoundationStatementShareModal({
             <div>
               <label
                 htmlFor="foundation-share-note"
-                className="text-[11px] uppercase tracking-[0.15em] font-bold text-[#3D1A78]"
+                className="text-[0.6875rem] uppercase tracking-[0.15em] font-bold text-[#3D1A78]"
               >
                 Personal note (optional)
               </label>
@@ -370,13 +370,13 @@ export default function FoundationStatementShareModal({
                 className="mt-1 block w-full rounded-xl border border-[#E5E0EE] bg-white text-[#1A1330] text-sm px-3 py-2 focus:outline-none focus:border-[#3D1A78] resize-none"
                 data-testid="foundation-share-note"
               />
-              <div className="mt-1 text-[11px] text-[#6E6787] text-right">
+              <div className="mt-1 text-[0.6875rem] text-[#6E6787] text-right">
                 {note.length}/500
               </div>
             </div>
 
             <div
-              className="flex items-start gap-2 rounded-2xl bg-[#F5F1FB] border border-[#D6CFE8] px-3 py-2 text-[12px] text-[#3D1A78]"
+              className="flex items-start gap-2 rounded-2xl bg-[#F5F1FB] border border-[#D6CFE8] px-3 py-2 text-[0.75rem] text-[#3D1A78]"
               data-testid="foundation-share-privacy-strip"
             >
               <ShieldCheck size={14} className="flex-shrink-0 mt-0.5" />
@@ -384,7 +384,7 @@ export default function FoundationStatementShareModal({
                 The PDF is stamped with a court-report disclaimer so nobody
                 mistakes it for an evaluation. Replies come back to your
                 email address.{" "}
-                <ProSeeLink testid="foundation-share-pros-see-link" area="foundation-statement" className="text-[12px]" />
+                <ProSeeLink testid="foundation-share-pros-see-link" area="foundation-statement" className="text-[0.75rem]" />
               </p>
             </div>
 
@@ -515,12 +515,12 @@ export default function FoundationStatementShareModal({
                               ? `${s.recipient_name} · ${s.recipient_email}`
                               : s.recipient_email}
                           </div>
-                          <div className="text-[11px] text-[#6E6787] mt-0.5 flex flex-wrap items-center gap-x-2 gap-y-0.5">
+                          <div className="text-[0.6875rem] text-[#6E6787] mt-0.5 flex flex-wrap items-center gap-x-2 gap-y-0.5">
                             <span>{when}</span>
                             {s.personal_note && <span>· note included</span>}
                             {statusPill && (
                               <span
-                                className={`rounded-full px-1.5 py-0.5 text-[10px] font-semibold ${statusPill.cls}`}
+                                className={`rounded-full px-1.5 py-0.5 text-[0.625rem] font-semibold ${statusPill.cls}`}
                                 data-testid={`foundation-history-status-${s.share_id}`}
                               >
                                 {statusPill.label}
@@ -548,7 +548,7 @@ export default function FoundationStatementShareModal({
                           className="mt-1.5 flex items-center gap-2 flex-wrap"
                           data-testid={`foundation-history-opens-${s.share_id}`}
                         >
-                          <div className="inline-flex items-center gap-1.5 text-[11px] text-[#3D1A78]">
+                          <div className="inline-flex items-center gap-1.5 text-[0.6875rem] text-[#3D1A78]">
                             <Eye size={11} />
                             <span className="font-semibold">
                               {opens} open{opens === 1 ? "" : "s"}
@@ -575,7 +575,7 @@ export default function FoundationStatementShareModal({
                             type="button"
                             onClick={() => handleRevoke(s.preview_jti, s.recipient_email)}
                             disabled={!!revokingJti}
-                            className="inline-flex items-center gap-1 rounded-full border border-[#F5D0C5] text-[#9A3A23] hover:bg-[#FCE3DC] bg-white px-2.5 py-1 text-[11px] font-semibold disabled:opacity-60"
+                            className="inline-flex items-center gap-1 rounded-full border border-[#F5D0C5] text-[#9A3A23] hover:bg-[#FCE3DC] bg-white px-2.5 py-1 text-[0.6875rem] font-semibold disabled:opacity-60"
                             data-testid={`foundation-history-revoke-${s.share_id}`}
                             title="Turn off the online preview link for this recipient"
                           >
@@ -593,7 +593,7 @@ export default function FoundationStatementShareModal({
                 })}
               </ul>
             )}
-            <p className="mt-3 text-[11px] text-[#6E6787]">
+            <p className="mt-3 text-[0.6875rem] text-[#6E6787]">
               Resends use your CURRENT Foundation Statement — if you&rsquo;ve
               updated it, the recipient sees the newest version.
             </p>

@@ -56,7 +56,7 @@ export function PillarCards({ onPillar }) {
               <i className={`fa-solid ${p.icon}`}></i>
             </span>
             <span className="block text-sm font-bold text-[#3b1566]">{p.title}</span>
-            <span className="block text-[11px] text-slate-600 leading-snug mt-0.5">{p.sub}</span>
+            <span className="block text-[0.6875rem] text-slate-600 leading-snug mt-0.5">{p.sub}</span>
           </button>
         ))}
       </div>

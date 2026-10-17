@@ -69,7 +69,7 @@ function StepCard({ step, index, onDone, onDismiss, onUndo }) {
           <div className="shrink-0 w-9 h-9 rounded-full bg-[#3D1A78] text-white grid place-items-center font-bold text-sm">
             {index + 1}
           </div>
-          <span className={`text-[10px] uppercase tracking-[0.16em] font-bold px-2 py-0.5 rounded-full ${chipClass}`}>
+          <span className={`text-[0.625rem] uppercase tracking-[0.16em] font-bold px-2 py-0.5 rounded-full ${chipClass}`}>
             {step.category}
           </span>
           {isDone && (

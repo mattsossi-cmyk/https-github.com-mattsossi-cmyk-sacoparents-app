@@ -85,7 +85,7 @@ export default function ActivitiesShareCodeCard({
           className="rounded-2xl bg-[#F1F9F4] border border-[#C7E5D3] p-5"
           data-testid="activities-alignment-share-success"
         >
-          <div className="text-[10px] uppercase tracking-[0.18em] font-bold text-[#1E7A55] mb-1">
+          <div className="text-[0.625rem] uppercase tracking-[0.18em] font-bold text-[#1E7A55] mb-1">
             Share code
           </div>
           <div className="flex flex-wrap items-center gap-3">

@@ -11,7 +11,7 @@ const weekLabel = (iso) =>
 
 const Big = ({ label, value, hint, testid }) => (
   <div className="rounded-2xl border border-[#E5E0EE] bg-[#FAF8FD] p-4" data-testid={testid}>
-    <div className="text-[10px] uppercase tracking-[0.15em] text-[#6E6787]">{label}</div>
+    <div className="text-[0.625rem] uppercase tracking-[0.15em] text-[#6E6787]">{label}</div>
     <div className="font-serif text-3xl text-[#1A1330] mt-1">{value}</div>
     <div className="text-xs text-[#6E6787] mt-1">{hint}</div>
   </div>
@@ -22,7 +22,7 @@ const Row = ({ w }) => (
     <td className="py-2 pr-3 text-[#1A1330] font-semibold">
       {weekLabel(w.sent_on)}
       {w.counting && (
-        <span className="block sm:inline-block sm:ml-2 mt-1 sm:mt-0 w-fit text-[10px] font-semibold text-amber-700 bg-amber-50 border border-amber-200 rounded-full px-2 py-0.5">
+        <span className="block sm:inline-block sm:ml-2 mt-1 sm:mt-0 w-fit text-[0.625rem] font-semibold text-amber-700 bg-amber-50 border border-amber-200 rounded-full px-2 py-0.5">
           still counting
         </span>
       )}
@@ -114,7 +114,7 @@ export default function WeeklyNoteStatsTile() {
           <div className="overflow-x-auto">
             <table className="w-full text-xs sm:text-sm" data-testid="admin-weekly-note-table">
               <thead>
-                <tr className="text-[10px] uppercase tracking-[0.15em] text-[#6E6787]">
+                <tr className="text-[0.625rem] uppercase tracking-[0.15em] text-[#6E6787]">
                   <th className="text-left pb-2 font-semibold">Week</th>
                   <th className="text-right pb-2 pr-3 font-semibold">Sent</th>
                   <th className="text-right pb-2 pr-3 font-semibold">Progress</th>

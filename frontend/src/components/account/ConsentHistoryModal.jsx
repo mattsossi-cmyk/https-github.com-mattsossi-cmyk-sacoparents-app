@@ -66,14 +66,14 @@ function EventRow({ ev }) {
         <div className="text-sm font-semibold text-[#1A1330]">
           {meta.label}
         </div>
-        <div className="text-[11px] text-[#4B4567] mt-0.5">
+        <div className="text-[0.6875rem] text-[#4B4567] mt-0.5">
           {formatWhen(ev.at)}
           {ev.ip && <> · <span className="font-mono">{ev.ip}</span></>}
           {ev.resource_id && <> · notice {ev.resource_id}</>}
         </div>
         {ev.user_agent && (
           <div
-            className="text-[10px] text-[#6E6787] mt-0.5 truncate max-w-[520px]"
+            className="text-[0.625rem] text-[#6E6787] mt-0.5 truncate max-w-[520px]"
             title={ev.user_agent}
           >
             {ev.user_agent}
@@ -133,7 +133,7 @@ export default function ConsentHistoryModal({ open, onClose }) {
       >
         <div className="flex items-start justify-between p-5 border-b border-[#E5E0EE]">
           <div>
-            <div className="text-[10px] uppercase tracking-[0.18em] font-bold text-[#3D1A78]">
+            <div className="text-[0.625rem] uppercase tracking-[0.18em] font-bold text-[#3D1A78]">
               HB 300 &sect;181.152 · &sect;181.154
             </div>
             <h2

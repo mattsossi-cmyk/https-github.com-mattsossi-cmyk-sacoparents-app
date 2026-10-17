@@ -302,6 +302,12 @@ h1, h2, h3, h4, .font-serif {
     border-color: var(--brand-sage);
     box-shadow: 0 0 0 4px rgba(61, 26, 120, 0.15);
 }
+/* Date fields focus inner segments, so give them a clear outline too. */
+input[type="date"].input-soft:focus,
+input[type="date"].input-soft:focus-within {
+    outline: 2px solid #3D1A78;
+    outline-offset: 2px;
+}
 
 /* Mobile-friendly base — prevent iOS form auto-zoom + improve readability */
 @media (max-width: 640px) {

@@ -185,7 +185,7 @@ export default function AdminReviewers() {
         <div className="rounded-3xl border border-[#E5E0EE] bg-white p-6 sm:p-8 shadow-sm">
           <div className="flex items-start justify-between gap-4 flex-wrap mb-4">
             <div>
-              <div className="text-[10px] uppercase tracking-[0.22em] font-bold text-[#3D1A78]">
+              <div className="text-[0.625rem] uppercase tracking-[0.22em] font-bold text-[#3D1A78]">
                 Operator tools
               </div>
               <h1 className="mt-1 font-serif text-2xl text-[#1A1330]">
@@ -209,7 +209,7 @@ export default function AdminReviewers() {
             )}
           </div>
 
-          <div className="text-[11px] text-[#6A5799] mb-6">
+          <div className="text-[0.6875rem] text-[#6A5799] mb-6">
             Screen version: <strong>{panelVersion || "v1.0"}</strong>
             {lastUpdated ? ` · Last updated ${lastUpdated}` : ""}
           </div>
@@ -246,7 +246,7 @@ export default function AdminReviewers() {
                   <div className="flex items-start justify-between gap-3 flex-wrap">
                     <div className="min-w-0 flex-1">
                       <div className="font-bold text-[#1A1330]">{r.name}</div>
-                      <div className="text-[11px] uppercase tracking-[0.15em] text-[#3D1A78] font-bold mt-0.5">
+                      <div className="text-[0.6875rem] uppercase tracking-[0.15em] text-[#3D1A78] font-bold mt-0.5">
                         {(roles.find((x) => x.key === r.role) || {}).label || r.role}
                         {r.org ? ` · ${r.org}` : ""}
                       </div>
@@ -254,7 +254,7 @@ export default function AdminReviewers() {
                         Reviewed {r.review_date}
                       </div>
                       {r.review_scope && (
-                        <div className="mt-1 text-[12px] text-[#4B4567]">
+                        <div className="mt-1 text-[0.75rem] text-[#4B4567]">
                           <strong>Scope:</strong> {r.review_scope}
                         </div>
                       )}
@@ -298,7 +298,7 @@ function ReviewerForm({ form, setForm, roles, onCancel, onSubmit, saving, isNew 
   return (
     <div className="rounded-2xl border-2 border-[#3D1A78]/20 bg-[#FAF8FE] p-4 sm:p-5 mb-6"
       data-testid="admin-reviewers-form">
-      <div className="text-[10px] uppercase tracking-[0.22em] font-bold text-[#3D1A78] mb-3">
+      <div className="text-[0.625rem] uppercase tracking-[0.22em] font-bold text-[#3D1A78] mb-3">
         {isNew ? "Add a new reviewer" : "Edit reviewer"}
       </div>
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">

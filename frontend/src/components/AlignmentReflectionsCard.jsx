@@ -39,7 +39,7 @@ function ProgressPill({ answered, total }) {
         />
       </div>
       <span
-        className={`text-[10px] uppercase tracking-[0.14em] font-bold whitespace-nowrap ${
+        className={`text-[0.625rem] uppercase tracking-[0.14em] font-bold whitespace-nowrap ${
           done ? "text-[#1F5C3B]" : "text-[#6E6787]"
         }`}
       >
@@ -65,7 +65,7 @@ function SubjectRow({ subject }) {
           </span>
           {subject.sensitive && (
             <span
-              className="inline-flex items-center gap-0.5 rounded-full bg-[#AA0033]/10 text-[#AA0033] px-1.5 py-0.5 text-[9px] uppercase tracking-[0.1em] font-bold"
+              className="inline-flex items-center gap-0.5 rounded-full bg-[#AA0033]/10 text-[#AA0033] px-1.5 py-0.5 text-[0.5625rem] uppercase tracking-[0.1em] font-bold"
               data-testid={`dashboard-alignment-subject-${subject.id}-sensitive`}
             >
               <ShieldAlert size={9} /> Dual-consent
@@ -111,7 +111,7 @@ export default function AlignmentReflectionsCard() {
     >
       <div className="flex items-start justify-between gap-4 flex-wrap">
         <div className="min-w-0 flex-1">
-          <div className="text-[10px] uppercase tracking-[0.22em] font-bold text-[#3D1A78] flex items-center gap-1.5">
+          <div className="text-[0.625rem] uppercase tracking-[0.22em] font-bold text-[#3D1A78] flex items-center gap-1.5">
             <Sparkles size={11} /> Alignment reflections
           </div>
           <h3 className="font-serif text-xl sm:text-2xl text-[#1A1330] mt-1 leading-snug">
@@ -119,7 +119,7 @@ export default function AlignmentReflectionsCard() {
               ? "Keep going — your co-parent is waiting on this."
               : "Six prompts. Your voice. Your child."}
           </h3>
-          <p className="text-[13px] text-[#4B4567] mt-2 leading-relaxed max-w-2xl">
+          <p className="text-[0.8125rem] text-[#4B4567] mt-2 leading-relaxed max-w-2xl">
             Pick a subject and answer six short prompts in your own words.
             Once both you and your co-parent finish a subject, a neutral
             Co-Parenting Agreement highlights where you already agree,
@@ -128,7 +128,7 @@ export default function AlignmentReflectionsCard() {
         </div>
         {!loading && (
           <div
-            className="rounded-full bg-white/70 backdrop-blur px-3 py-1.5 text-[11px] font-bold text-[#3D1A78] shrink-0"
+            className="rounded-full bg-white/70 backdrop-blur px-3 py-1.5 text-[0.6875rem] font-bold text-[#3D1A78] shrink-0"
             data-testid="dashboard-alignment-reflections-total"
           >
             {answeredTotal} / {promptTotal} answered

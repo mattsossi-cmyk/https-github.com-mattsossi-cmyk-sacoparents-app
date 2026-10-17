@@ -361,7 +361,7 @@ export default function JointAgreement() {
           </div>
         </div>
         <div className="mt-3 max-w-xl ml-auto">
-          <p className="text-[11px] text-slate-500 mb-1.5">
+          <p className="text-[0.6875rem] text-slate-500 mb-1.5">
             The PDF ends with signature lines for both parents and a notary section. Add your typed e-signature if you'd like.
           </p>
           <ESignField testid="joint-agreement-esign" name={esignName} onName={setEsignName} agreed={esignAgreed} onAgree={setEsignAgreed} />
@@ -377,7 +377,7 @@ export default function JointAgreement() {
           />
         </div>
 
-        <div className="text-[10px] uppercase tracking-[0.22em] font-bold text-[#3D1A78]">
+        <div className="text-[0.625rem] uppercase tracking-[0.22em] font-bold text-[#3D1A78]">
           {d.report_subtitle || "Co-Parenting Agreement"}
         </div>
         <h1
@@ -412,7 +412,7 @@ export default function JointAgreement() {
               <ShieldCheck size={16} />
             </div>
             <div className="min-w-0">
-              <div className="text-[10px] uppercase tracking-[0.22em] font-bold text-[#8A6B12]">
+              <div className="text-[0.625rem] uppercase tracking-[0.22em] font-bold text-[#8A6B12]">
                 This is a draft for discussion
               </div>
               <p className="mt-1 text-sm text-[#1A1330] leading-relaxed">
@@ -430,7 +430,7 @@ export default function JointAgreement() {
           >
             <div className="flex items-center gap-2 mb-2">
               <Users size={14} className="text-[#3D1A78]" />
-              <div className="text-[10px] uppercase tracking-[0.2em] text-[#3D1A78] font-semibold">
+              <div className="text-[0.625rem] uppercase tracking-[0.2em] text-[#3D1A78] font-semibold">
                 At a glance
               </div>
             </div>
@@ -446,7 +446,7 @@ export default function JointAgreement() {
           <div className="rounded-2xl border border-[#E5E0EE] bg-white p-4 text-xs text-[#4B4567] leading-relaxed">
             <div className="flex items-center gap-2 mb-1">
               <Info size={14} className="text-[#3D1A78]" />
-              <div className="text-[10px] uppercase tracking-[0.2em] text-[#3D1A78] font-semibold">
+              <div className="text-[0.625rem] uppercase tracking-[0.2em] text-[#3D1A78] font-semibold">
                 Neutral language
               </div>
             </div>
@@ -469,7 +469,7 @@ export default function JointAgreement() {
         >
           <summary className="cursor-pointer px-5 py-4 flex items-center justify-between gap-3 hover:bg-white/80 transition-colors">
             <div>
-              <div className="text-[10px] uppercase tracking-[0.22em] font-bold text-[#3D1A78]">
+              <div className="text-[0.625rem] uppercase tracking-[0.22em] font-bold text-[#3D1A78]">
                 For attorneys, mediators &amp; therapists
               </div>
               <div className="font-serif text-lg text-[#1A1330] mt-0.5">
@@ -505,7 +505,7 @@ export default function JointAgreement() {
             <div className="grid sm:grid-cols-2 gap-3">
               {d.closing_notes?.parent_a && (
                 <div className="rounded-2xl border border-[#E5E0EE] bg-[#F7F4FC] p-4">
-                  <div className="text-[10px] uppercase tracking-wider text-[#3D1A78] font-semibold mb-1">
+                  <div className="text-[0.625rem] uppercase tracking-wider text-[#3D1A78] font-semibold mb-1">
                     {parentA}
                   </div>
                   <div className="text-sm text-[#1A1330] italic">
@@ -515,7 +515,7 @@ export default function JointAgreement() {
               )}
               {d.closing_notes?.parent_b && (
                 <div className="rounded-2xl border border-[#E5E0EE] bg-[#EAF7F7] p-4">
-                  <div className="text-[10px] uppercase tracking-wider text-[#0F6F6F] font-semibold mb-1">
+                  <div className="text-[0.625rem] uppercase tracking-wider text-[#0F6F6F] font-semibold mb-1">
                     {parentB}
                   </div>
                   <div className="text-sm text-[#1A1330] italic">
@@ -529,7 +529,7 @@ export default function JointAgreement() {
 
         {d.next_step && (
           <div className="mt-8 rounded-2xl bg-[#EFE9F9] border border-[#D6CFE8] p-4">
-            <div className="text-[10px] uppercase tracking-[0.2em] text-[#3D1A78] font-semibold mb-1">
+            <div className="text-[0.625rem] uppercase tracking-[0.2em] text-[#3D1A78] font-semibold mb-1">
               Suggested next step
             </div>
             <p className="text-sm text-[#1A1330]">{d.next_step}</p>
@@ -550,7 +550,7 @@ export default function JointAgreement() {
           testId="joint-agreement-end-cta"
         />
 
-        <div className="mt-10 text-[11px] text-[#6E6787] leading-relaxed border-t border-[#E5E0EE] pt-4">
+        <div className="mt-10 text-[0.6875rem] text-[#6E6787] leading-relaxed border-t border-[#E5E0EE] pt-4">
           Draft for discussion · Not a court order or legal advice, and not legally binding unless a court
           approves it. Share ID {d.share_id}.
         </div>

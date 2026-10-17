@@ -42,7 +42,7 @@ function PortalBar() {
         <span className="w-9 h-9 shrink-0 rounded-lg bg-white text-[#4A154B] font-extrabold flex items-center justify-center text-sm">SA</span>
         <span className="font-semibold tracking-wide text-[14px] sm:text-[15px] leading-tight">{CONTENT.portal_title}</span>
       </div>
-      <span className="text-[11px] opacity-85 whitespace-nowrap">
+      <span className="text-[0.6875rem] opacity-85 whitespace-nowrap">
         <i className="fa-solid fa-lock mr-1"></i>
         {CONTENT.portal_badge}
       </span>
@@ -63,17 +63,17 @@ function Tabs({ activeKey, done, drafts, onPick }) {
             aria-selected={on}
             data-testid={`child-needs-tab-${k}`}
             onClick={() => onPick(k)}
-            className={`shrink-0 rounded-lg border-2 px-4 py-2.5 text-left font-semibold text-[13px] whitespace-nowrap transition-colors ${
+            className={`shrink-0 rounded-lg border-2 px-4 py-2.5 text-left font-semibold text-[0.8125rem] whitespace-nowrap transition-colors ${
               on ? "bg-[#4A154B] border-[#4A154B] text-white" : "bg-white border-[#E2E8F0] text-[#718096] hover:border-[#611663] hover:text-[#4A154B]"
             }`}
           >
             {CATS[k].card_title}
             {done[k] ? (
-              <span data-testid={`child-needs-${k}-completed`} className={`block text-[10px] font-bold ${on ? "text-emerald-200" : "text-emerald-700"}`}>
-                Completed <i className="fa-solid fa-check text-[9px]"></i>
+              <span data-testid={`child-needs-${k}-completed`} className={`block text-[0.625rem] font-bold ${on ? "text-emerald-200" : "text-emerald-700"}`}>
+                Completed <i className="fa-solid fa-check text-[0.5625rem]"></i>
               </span>
             ) : (
-              <span data-testid={`child-needs-${k}-status`} className={`block text-[10px] font-semibold ${on ? "text-purple-200" : "text-slate-400"}`}>
+              <span data-testid={`child-needs-${k}-status`} className={`block text-[0.625rem] font-semibold ${on ? "text-purple-200" : "text-slate-400"}`}>
                 {drafts[k] ? "Draft saved" : "Not started"}
               </span>
             )}
@@ -181,7 +181,7 @@ export function ChildNeedsView({ onBack, onQuickExit, needs, parentName, initial
               type="button"
               data-testid="child-needs-ask-guide"
               onClick={askGuide}
-              className="shrink-0 text-[11px] font-bold text-[#611663] bg-[#F4EEF5] hover:bg-[#E2D6E5] rounded-full px-3 py-1.5 transition-colors"
+              className="shrink-0 text-[0.6875rem] font-bold text-[#611663] bg-[#F4EEF5] hover:bg-[#E2D6E5] rounded-full px-3 py-1.5 transition-colors"
             >
               <i className="fa-solid fa-comments mr-1"></i>Ask the Guide
             </button>

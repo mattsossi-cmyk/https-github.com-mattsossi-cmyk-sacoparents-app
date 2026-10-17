@@ -923,45 +923,24 @@ export default function SacoparentsPortal() {
   );
 
   const addMilestoneLog = useCallback(() => {
-    const flagged = greyRock;
-    const title = window.prompt(
-      flagged
-        ? "Log this for advocate/attorney review (e.g. Missed pickup, Coercive text):"
-        : "Enter Milestone Title (e.g. Smooth Holiday Transition):"
-    );
+    const title = window.prompt("Enter Milestone Title (e.g. Smooth Holiday Transition):");
     if (!title) return;
-    let entry;
-    if (flagged) {
-      // Skip the success/friction dichotomy entirely — the collaborative
-      // frame doesn't fit the parent's stated situation. Log everything
-      // as friction with an advocate-review source marker so the Weekly
-      // Progress PDF and downstream reviewers can spot the context.
-      entry = {
-        id: Date.now(),
-        type: "friction",
-        title,
-        date: new Date().toISOString().substring(0, 10),
-        note: "Logged for advocate review — flagged safety context.",
-        source: "advocate_review",
-      };
-    } else {
-      const isSuccess = window.confirm(
-        "Click OK for Successful Resolution, or Cancel for Friction Point."
-      );
-      entry = {
-        id: Date.now(),
-        type: isSuccess ? "success" : "friction",
-        title,
-        date: new Date().toISOString().substring(0, 10),
-        note: isSuccess
-          ? "Logged as positive co-parenting milestone."
-          : "Logged as friction point for mediation review.",
-      };
-    }
+    const isSuccess = window.confirm(
+      "Click OK for Successful Resolution, or Cancel for Friction Point."
+    );
+    const entry = {
+      id: Date.now(),
+      type: isSuccess ? "success" : "friction",
+      title,
+      date: new Date().toISOString().substring(0, 10),
+      note: isSuccess
+        ? "Logged as positive co-parenting milestone."
+        : "Logged as friction point for mediation review.",
+    };
     const next = [entry, ...milestones];
     setMilestones(next);
     writeJson(MILESTONE_KEY, next);
-  }, [milestones, greyRock]);
+  }, [milestones]);
 
   const saveReassessment = useCallback(
     (e) => {
@@ -1590,10 +1569,10 @@ export default function SacoparentsPortal() {
               <i className="fa-solid fa-hands-holding-child text-purple-300 text-lg"></i>
             </div>
             <div className="min-w-0">
-              <h1 className="text-base font-bold tracking-tight truncate">
+              <p className="text-base font-bold tracking-tight truncate">
                 sacoparentsapp.online
-              </h1>
-              <p className="text-[10px] text-purple-200 truncate">
+              </p>
+              <p className="text-[0.625rem] text-purple-200 truncate">
                 SA CoParents Assessment & Alignment Portal
               </p>
             </div>
@@ -1687,7 +1666,7 @@ export default function SacoparentsPortal() {
 
       </main>
       {/* The site-wide footer sits under the fixed bottom bar here, so the link is repeated above it. */}
-      <div data-testid="portal-privacy-footer" className="no-print py-4 text-center text-[13px]">
+      <div data-testid="portal-privacy-footer" className="no-print py-4 text-center text-[0.8125rem]">
         <Link to="/privacy-notice" data-testid="portal-privacy-footer-link" className="font-semibold text-[#3D1A78] underline underline-offset-2">
           Privacy Notice
         </Link>
@@ -1711,7 +1690,7 @@ export default function SacoparentsPortal() {
           }
         >
           <i className="fa-solid fa-compass text-base"></i>
-          <span className="text-[9px] font-semibold">Journey</span>
+          <span className="text-[0.5625rem] font-semibold">Journey</span>
         </button>
         <button
           data-testid="nav-report"
@@ -1729,7 +1708,7 @@ export default function SacoparentsPortal() {
           }
         >
           <i className="fa-solid fa-scale-balanced text-base"></i>
-          <span className="text-[9px] font-semibold">Report</span>
+          <span className="text-[0.5625rem] font-semibold">Report</span>
         </button>
         <button
           data-testid="nav-biff"
@@ -1745,7 +1724,7 @@ export default function SacoparentsPortal() {
           }
         >
           <i className="fa-solid fa-comments text-base"></i>
-          <span className="text-[9px] font-semibold">BIFF Tool</span>
+          <span className="text-[0.5625rem] font-semibold">BIFF Tool</span>
         </button>
         <button
           data-testid="nav-print"
@@ -1753,7 +1732,7 @@ export default function SacoparentsPortal() {
           className="flex flex-col items-center space-y-0.5 text-slate-500 hover:text-purple-800"
         >
           <i className="fa-solid fa-file-pdf text-base"></i>
-          <span className="text-[9px] font-semibold">PDF Export</span>
+          <span className="text-[0.5625rem] font-semibold">PDF Export</span>
         </button>
         <button
           data-testid="nav-get-help"
@@ -1761,7 +1740,7 @@ export default function SacoparentsPortal() {
           className="flex flex-col items-center space-y-0.5 text-slate-500 hover:text-purple-800"
         >
           <i className="fa-solid fa-life-ring text-base"></i>
-          <span className="text-[9px] font-semibold">Get help</span>
+          <span className="text-[0.5625rem] font-semibold">Get help</span>
         </button>
       </nav>
 

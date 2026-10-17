@@ -53,7 +53,7 @@ export default function JoinInvitationSamplePreview() {
               <div className="text-sm font-semibold text-[#5C3D00]">
                 You&rsquo;re viewing a sample preview
               </div>
-              <p className="text-[12px] text-[#7A5300] mt-0.5 leading-relaxed">
+              <p className="text-[0.75rem] text-[#7A5300] mt-0.5 leading-relaxed">
                 This case is fictional. No real invitation exists. Use
                 this to see what an invited parent will see when they
                 open the email link from a professional.
@@ -71,7 +71,7 @@ export default function JoinInvitationSamplePreview() {
           </div>
         )}
 
-        <div className="text-[10px] uppercase tracking-[0.22em] font-bold text-[#3D1A78] flex items-center gap-1.5">
+        <div className="text-[0.625rem] uppercase tracking-[0.22em] font-bold text-[#3D1A78] flex items-center gap-1.5">
           <ShieldCheck size={12} /> Invitation preview
         </div>
         <p
@@ -117,7 +117,7 @@ export default function JoinInvitationSamplePreview() {
             <ArrowRight size={14} />
           </button>
         </div>
-        <p className="text-[11px] text-[#6E6787] mt-2">
+        <p className="text-[0.6875rem] text-[#6E6787] mt-2">
           Buttons are disabled on this sample. Ask your professional to
           send a real invitation email to see the working version.
         </p>

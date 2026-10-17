@@ -254,10 +254,10 @@ export default function Gmail() {
               className="mt-6 mx-auto max-w-2xl rounded-2xl border border-[#E5E0EE] bg-[#FCFBFE] p-5 text-left text-sm text-[#1A1330]"
               data-testid="gmail-disclosure"
             >
-              <div className="text-[10px] uppercase tracking-[0.22em] font-bold text-[#3D1A78] mb-2">
+              <div className="text-[0.625rem] uppercase tracking-[0.22em] font-bold text-[#3D1A78] mb-2">
                 What we read, store, and retain
               </div>
-              <ul className="space-y-2.5 text-[13px] leading-relaxed">
+              <ul className="space-y-2.5 text-[0.8125rem] leading-relaxed">
                 <li className="flex gap-2">
                   <span className="text-[#3D1A78] font-bold shrink-0">Read:</span>
                   <span>

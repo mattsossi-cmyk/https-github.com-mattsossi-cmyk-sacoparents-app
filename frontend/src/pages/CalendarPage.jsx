@@ -23,7 +23,7 @@ export default function CalendarPage() {
       <div className="max-w-lg mx-auto">
         <div className="flex items-center justify-between mb-6">
           <h1 className="text-2xl font-bold text-slate-900">Calendar</h1>
-          <Link to="/" data-testid="calendar-home-link" className="text-sm font-semibold text-[#3D1A78]">Home</Link>
+          <Link to="/" data-testid="calendar-home-link" className="inline-flex min-h-6 items-center text-sm font-semibold text-[#3D1A78]">Home</Link>
         </div>
         <div className="flex items-center justify-between mb-4">
           <button type="button" onClick={() => shift(-1)} aria-label="Previous month" data-testid="calendar-prev" className="p-2 rounded-lg hover:bg-slate-100">
@@ -36,7 +36,7 @@ export default function CalendarPage() {
         </div>
         <div className="grid grid-cols-7 gap-1 text-center" data-testid="calendar-grid">
           {DAYS.map((d) => (
-            <div key={d} className="text-[11px] font-bold uppercase text-slate-500 py-1">{d}</div>
+            <div key={d} className="text-[0.6875rem] font-bold uppercase text-slate-500 py-1">{d}</div>
           ))}
           {cells.map((d, i) => (
             <div

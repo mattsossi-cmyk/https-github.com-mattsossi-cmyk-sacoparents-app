@@ -27,7 +27,7 @@ const ALIGN_STYLES = {
 function AlignPill({ alignment, label, testidPrefix }) {
   const cls = ALIGN_STYLES[alignment] || ALIGN_STYLES.insufficient;
   return (
-    <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-[10px] font-semibold border ${cls}`}
+    <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-[0.625rem] font-semibold border ${cls}`}
       data-testid={`${testidPrefix}-align-${alignment}`}>
       {label || alignment}
     </span>
@@ -80,7 +80,7 @@ function MultiBreakdown({ item, parentA, parentB }) {
 // the row is dropped entirely.
 function GapCell({ gap }) {
   if (gap === null || gap === undefined) {
-    return <span className="text-[10px] text-[#6A5799] italic">—</span>;
+    return <span className="text-[0.625rem] text-[#6A5799] italic">—</span>;
   }
   const cls =
     gap <= 1
@@ -89,7 +89,7 @@ function GapCell({ gap }) {
       ? "bg-[#EEE9F7] text-[#3D1A78] border-[#D6CFE8]"
       : "bg-[#F8D7D7] text-[#B02A2A] border-[#EFB4B4]";
   return (
-    <span className={`inline-flex items-center justify-center min-w-[26px] px-1.5 py-0.5 rounded-full text-[11px] font-bold border ${cls}`}>
+    <span className={`inline-flex items-center justify-center min-w-[26px] px-1.5 py-0.5 rounded-full text-[0.6875rem] font-bold border ${cls}`}>
       {gap}
     </span>
   );
@@ -116,7 +116,7 @@ function AlignmentMatrix({ sections, parentA, parentB, testidPrefix }) {
     >
       <div className="flex items-center gap-2 text-[#3D1A78]">
         <Grid3x3 size={16} />
-        <span className="text-[10px] uppercase tracking-[0.22em] font-bold">
+        <span className="text-[0.625rem] uppercase tracking-[0.22em] font-bold">
           Side-by-side matrix
         </span>
       </div>
@@ -131,7 +131,7 @@ function AlignmentMatrix({ sections, parentA, parentB, testidPrefix }) {
       </div>
 
       {/* Legend */}
-      <div className="mt-3 flex flex-wrap gap-2 text-[10px]" data-testid={`${testidPrefix}-matrix-legend`}>
+      <div className="mt-3 flex flex-wrap gap-2 text-[0.625rem]" data-testid={`${testidPrefix}-matrix-legend`}>
         <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-[#E6F4EC] text-[#1F5C3B] border border-[#B5DFC5] font-semibold">Gap 0-1 · aligned</span>
         <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-[#EEE9F7] text-[#3D1A78] border border-[#D6CFE8] font-semibold">Gap 2 · close</span>
         <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-[#F8D7D7] text-[#B02A2A] border border-[#EFB4B4] font-semibold">Gap 3-4 · different</span>
@@ -140,13 +140,13 @@ function AlignmentMatrix({ sections, parentA, parentB, testidPrefix }) {
       <div className="mt-4 space-y-5">
         {numericSections.map((sec) => (
           <div key={sec.id} data-testid={`${testidPrefix}-matrix-section-${sec.id}`}>
-            <div className="text-[10px] uppercase tracking-[0.18em] font-bold text-[#3D1A78] mb-1">
+            <div className="text-[0.625rem] uppercase tracking-[0.18em] font-bold text-[#3D1A78] mb-1">
               Part {sec.number} · {sec.name}
             </div>
             <div className="overflow-x-auto">
               <table className="w-full text-xs border-collapse">
                 <thead>
-                  <tr className="text-left text-[10px] uppercase tracking-[0.14em] text-[#6A5799] border-b border-[#E5E0EE]">
+                  <tr className="text-left text-[0.625rem] uppercase tracking-[0.14em] text-[#6A5799] border-b border-[#E5E0EE]">
                     <th className="py-2 pr-2 w-8">#</th>
                     <th className="py-2 pr-3">Question</th>
                     <th className="py-2 px-2 text-center w-20">{parentA}</th>
@@ -194,9 +194,9 @@ function AlignmentList({ testid, title, icon, tint, intro, emptyLabel, items, re
   const count = items?.length || 0;
   return (
     <div className={`rounded-3xl border-2 ${tint.border} ${tint.bg} p-5 shadow-sm`} data-testid={testid}>
-      <div className={`text-[10px] uppercase tracking-[0.22em] font-bold ${tint.text} flex items-center gap-2`}>
+      <div className={`text-[0.625rem] uppercase tracking-[0.22em] font-bold ${tint.text} flex items-center gap-2`}>
         {icon} {title}
-        <span className="ml-auto text-[10px] font-normal opacity-70" data-testid={`${testid}-count`}>{count}</span>
+        <span className="ml-auto text-[0.625rem] font-normal opacity-70" data-testid={`${testid}-count`}>{count}</span>
       </div>
       <p className="text-xs text-[#4B4567] italic mt-1 mb-3">{intro}</p>
       {count === 0 ? (
@@ -287,7 +287,7 @@ export default function DeepDiveCompareView({ pathway }) {
         <Link to={pathway.hubRoute} className="inline-flex items-center gap-2 text-xs text-[#4B4567] underline mb-4" data-testid={`${t}-view-back`}>
           <ArrowLeft size={12} /> {pathway.hubLabel}
         </Link>
-        <div className="text-[10px] uppercase tracking-[0.22em] font-bold text-[#3D1A78] mb-1">{pathway.eyebrow}</div>
+        <div className="text-[0.625rem] uppercase tracking-[0.22em] font-bold text-[#3D1A78] mb-1">{pathway.eyebrow}</div>
         <h1 className="font-serif text-3xl sm:text-4xl text-[#1A1330] leading-tight">
           {parentA} <span className="text-[#6A5799]">·</span> {parentB}
         </h1>
@@ -360,7 +360,7 @@ export default function DeepDiveCompareView({ pathway }) {
               <section className="mt-5 rounded-3xl border border-[#E5E0EE] bg-white p-5 sm:p-7 shadow-sm" data-testid={`${t}-timeline`}>
                 <div className="flex items-center gap-2 text-[#3D1A78]">
                   <TrendingUp size={16} />
-                  <span className="text-[10px] uppercase tracking-[0.22em] font-bold">Alignment over time</span>
+                  <span className="text-[0.625rem] uppercase tracking-[0.22em] font-bold">Alignment over time</span>
                 </div>
                 <div className="mt-1 flex flex-wrap items-baseline gap-3">
                   <h2 className="font-serif text-2xl text-[#1A1330]" data-testid={`${t}-timeline-headline`}>
@@ -394,7 +394,7 @@ export default function DeepDiveCompareView({ pathway }) {
                           style={{ height: `${h}%` }}
                           title={`${new Date(s.created_at).toLocaleDateString()} — ${s.aligned_pct}% aligned`}
                         />
-                        <div className="text-[9px] text-[#4B4567] mt-1">{s.aligned_pct}%</div>
+                        <div className="text-[0.5625rem] text-[#4B4567] mt-1">{s.aligned_pct}%</div>
                       </div>
                     );
                   })}
@@ -431,7 +431,7 @@ export default function DeepDiveCompareView({ pathway }) {
                   items={data.comparison.shared_priorities || []}
                   renderRow={(r) => (
                     <>
-                      <div className="text-[10px] uppercase tracking-[0.14em] text-[#4B4567]">Section {r.section_number} · {r.section_name}</div>
+                      <div className="text-[0.625rem] uppercase tracking-[0.14em] text-[#4B4567]">Section {r.section_number} · {r.section_name}</div>
                       <div className="text-sm text-[#1A1330] font-semibold mt-0.5">{r.prompt}</div>
                       <div className="text-xs text-[#1F5C3B] mt-1">{r.reason}</div>
                     </>
@@ -447,7 +447,7 @@ export default function DeepDiveCompareView({ pathway }) {
                   items={data.comparison.discussion_points || []}
                   renderRow={(r) => (
                     <>
-                      <div className="text-[10px] uppercase tracking-[0.14em] text-[#4B4567]">Section {r.section_number} · {r.section_name}</div>
+                      <div className="text-[0.625rem] uppercase tracking-[0.14em] text-[#4B4567]">Section {r.section_number} · {r.section_name}</div>
                       <div className="text-sm text-[#1A1330] font-semibold mt-0.5">{r.prompt}</div>
                       <div className="text-xs text-[#3D1A78] mt-1">{r.reason}</div>
                     </>
@@ -463,7 +463,7 @@ export default function DeepDiveCompareView({ pathway }) {
                   items={data.comparison.mediation_questions || []}
                   renderRow={(r) => (
                     <>
-                      <div className="text-[10px] uppercase tracking-[0.14em] text-[#4B4567]">Section {r.section_number} · {r.section_name}</div>
+                      <div className="text-[0.625rem] uppercase tracking-[0.14em] text-[#4B4567]">Section {r.section_number} · {r.section_name}</div>
                       <div className="text-sm text-[#1A1330] mt-0.5 italic">"{r.question}"</div>
                     </>
                   )}
@@ -475,7 +475,7 @@ export default function DeepDiveCompareView({ pathway }) {
               <section className="mt-5 rounded-3xl border border-[#B5DFC5] bg-[#F1F9F4] p-5 sm:p-7 shadow-sm" data-testid={`${t}-highlights`}>
                 <div className="flex items-center gap-2 text-[#1F5C3B]">
                   <Sparkles size={16} />
-                  <span className="text-[10px] uppercase tracking-[0.22em] font-bold">Where you already agree</span>
+                  <span className="text-[0.625rem] uppercase tracking-[0.22em] font-bold">Where you already agree</span>
                 </div>
                 <h2 className="font-serif text-2xl text-[#1A1330] mt-1 mb-1">
                   {(data.comparison.highlights || []).length === 1
@@ -495,7 +495,7 @@ export default function DeepDiveCompareView({ pathway }) {
                         <div className="flex-1">
                           <div className="text-sm font-semibold text-[#1A1330]">{h.prompt}</div>
                           <div className="text-sm text-[#1F5C3B] mt-1">{h.summary}</div>
-                          <div className="text-[10px] uppercase tracking-[0.16em] text-[#4B4567] mt-2">
+                          <div className="text-[0.625rem] uppercase tracking-[0.16em] text-[#4B4567] mt-2">
                             Section {h.section_number} · {h.section_name}
                           </div>
                         </div>
@@ -528,11 +528,11 @@ export default function DeepDiveCompareView({ pathway }) {
                       </div>
                       <div className="mt-3 grid sm:grid-cols-2 gap-3">
                         <div>
-                          <div className="text-[10px] uppercase tracking-[0.18em] font-semibold text-[#3D1A78] mb-1">{parentA}</div>
+                          <div className="text-[0.625rem] uppercase tracking-[0.18em] font-semibold text-[#3D1A78] mb-1">{parentA}</div>
                           <div className="text-sm text-[#1A1330]"><ValueCell item={item} side="parent_a" /></div>
                         </div>
                         <div>
-                          <div className="text-[10px] uppercase tracking-[0.18em] font-semibold text-[#3D1A78] mb-1">{parentB}</div>
+                          <div className="text-[0.625rem] uppercase tracking-[0.18em] font-semibold text-[#3D1A78] mb-1">{parentB}</div>
                           <div className="text-sm text-[#1A1330]"><ValueCell item={item} side="parent_b" /></div>
                         </div>
                       </div>
@@ -547,7 +547,7 @@ export default function DeepDiveCompareView({ pathway }) {
 
             <ReportProvenanceFooter variant="comparison" className="mt-8" />
 
-            <p className="text-[11px] text-[#4B4567] mt-8 italic max-w-3xl">
+            <p className="text-[0.6875rem] text-[#4B4567] mt-8 italic max-w-3xl">
               This comparison is neutral and does not determine parental fitness, provide legal advice,
               or diagnose. Either parent can revoke consent at any time from the Comparisons hub.
             </p>

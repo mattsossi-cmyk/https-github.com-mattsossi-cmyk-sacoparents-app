@@ -80,7 +80,7 @@ export default function PathwayReportCard() {
             {hardLocked ? <ShieldAlert size={16} /> : <Scale size={16} />}
           </span>
           <div className="min-w-0">
-            <div className="text-[10px] uppercase tracking-[0.22em] font-bold text-[#3D1A78]">
+            <div className="text-[0.625rem] uppercase tracking-[0.22em] font-bold text-[#3D1A78]">
               Dispute Resolution · Pathway
             </div>
             <div className="font-serif text-lg text-[#1A1330] leading-snug truncate"
@@ -90,7 +90,7 @@ export default function PathwayReportCard() {
           </div>
         </div>
         <span
-          className="inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] uppercase tracking-[0.16em] font-bold shrink-0"
+          className="inline-flex items-center px-2.5 py-0.5 rounded-full text-[0.625rem] uppercase tracking-[0.16em] font-bold shrink-0"
           style={{
             background: hardLocked ? "#F8D7D7" : "#F0EEF8",
             color:      hardLocked ? "#7A1A1A" : "#3D1A78",
@@ -110,7 +110,7 @@ export default function PathwayReportCard() {
 
       {hardLocked && (
         <div
-          className="mt-3 inline-flex items-center gap-1.5 px-2 py-1 rounded-full text-[11px] font-bold bg-white/70 text-[#B02A2A] border border-[#EFB4B4]"
+          className="mt-3 inline-flex items-center gap-1.5 px-2 py-1 rounded-full text-[0.6875rem] font-bold bg-white/70 text-[#B02A2A] border border-[#EFB4B4]"
           data-testid="pathway-report-card-hard-lock"
         >
           <ShieldAlert size={11} />
@@ -119,12 +119,12 @@ export default function PathwayReportCard() {
       )}
 
       <div className="mt-4 flex items-center justify-between gap-3">
-        <span className="text-[11px] text-[#4B4567] italic">
+        <span className="text-[0.6875rem] text-[#4B4567] italic">
           {d.is_dual_party
             ? "Both parents have consented via Compare Share."
             : "Single-parent preview. Invite your co-parent to unlock the full report."}
         </span>
-        <span className="inline-flex items-center gap-1 text-[11px] font-bold text-[#3D1A78]"
+        <span className="inline-flex items-center gap-1 text-[0.6875rem] font-bold text-[#3D1A78]"
           data-testid="pathway-report-card-cta">
           View full report <ArrowRight size={12} />
         </span>

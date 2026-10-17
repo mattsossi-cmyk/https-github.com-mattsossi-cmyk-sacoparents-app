@@ -19,7 +19,7 @@ function OptionCard({ q, o, selected, onPick }) {
           selected ? "border-[#4a2574] bg-[#4a2574] text-white" : "border-slate-300"
         }`}
       >
-        {selected && <i className="fa-solid fa-check text-[9px]"></i>}
+        {selected && <i className="fa-solid fa-check text-[0.5625rem]"></i>}
       </span>
       <span>
         <span className="block text-sm font-semibold text-slate-900">{o.label}</span>
@@ -36,7 +36,7 @@ function TipCard({ step, tip, busy, error }) {
         <i className="fa-solid fa-lightbulb"></i>
       </span>
       <div className="min-w-0">
-        <p className="text-[10px] font-bold uppercase tracking-wider text-emerald-800">Tip from your Guide · after {step.title}</p>
+        <p className="text-[0.625rem] font-bold uppercase tracking-wider text-emerald-800">Tip from your Guide · after {step.title}</p>
         {busy ? (
           <p data-testid="pp-tip-loading" className="text-sm text-emerald-900/70 mt-1">Your Guide is writing a tip…</p>
         ) : tip ? (
@@ -60,7 +60,7 @@ export function PpStep({ step, index, total, plan, prevStep, tipBusy, tipError, 
       {!showTip && prevStep && aiNeeded && <AiNoticeNeeded tp="pp-tip">Your Guide&apos;s step tips appear here after you read and accept the AI privacy notice.</AiNoticeNeeded>}
       <div className="bg-white rounded-3xl border border-purple-100 shadow-lg p-5 sm:p-8">
         <div className="md:hidden mb-4">
-          <div className="flex justify-between text-[11px] font-bold text-[#4a2574] uppercase mb-1">
+          <div className="flex justify-between text-[0.6875rem] font-bold text-[#4a2574] uppercase mb-1">
             <span data-testid="pp-mobile-step">Step {index + 1} of {total}</span>
             <span>{Math.round(((index + 1) / total) * 100)}%</span>
           </div>
@@ -73,7 +73,7 @@ export function PpStep({ step, index, total, plan, prevStep, tipBusy, tipError, 
             <i className={`fa-solid ${step.icon}`}></i>
           </div>
           <div>
-            <p className="text-[11px] font-bold uppercase tracking-wider text-[#8251b8]">Step {index + 1} of {total}</p>
+            <p className="text-[0.6875rem] font-bold uppercase tracking-wider text-[#8251b8]">Step {index + 1} of {total}</p>
             <h2 data-testid="pp-step-title" className="text-2xl sm:text-3xl font-extrabold text-[#2d1548]">{step.title}</h2>
             <p className="text-sm text-slate-600 mt-1">{step.intro}</p>
           </div>

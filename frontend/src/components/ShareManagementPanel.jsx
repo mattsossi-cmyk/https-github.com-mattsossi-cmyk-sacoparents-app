@@ -111,7 +111,7 @@ function ShareRow({ row, onRevoke, revoking }) {
         </div>
         <div className="min-w-0 flex-1">
           <div
-            className="text-[10px] uppercase tracking-[0.18em] font-bold"
+            className="text-[0.625rem] uppercase tracking-[0.18em] font-bold"
             style={{ color: meta.accent }}
           >
             {meta.label}
@@ -119,7 +119,7 @@ function ShareRow({ row, onRevoke, revoking }) {
           <div className="text-sm text-[#1A1330] mt-0.5 leading-tight truncate">
             {row.label || "Untitled share"}
           </div>
-          <div className="mt-2 flex flex-wrap items-center gap-1.5 text-[11px] font-medium">
+          <div className="mt-2 flex flex-wrap items-center gap-1.5 text-[0.6875rem] font-medium">
             <span
               className="inline-flex items-center gap-1 rounded-full px-2 py-0.5"
               style={{
@@ -170,7 +170,7 @@ function ShareRow({ row, onRevoke, revoking }) {
             href={spaUrl}
             target="_blank"
             rel="noreferrer"
-            className="inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[11px] font-semibold border border-[#E5E0EE] bg-white text-[#3D1A78] hover:bg-[#F5F1FB] transition-colors"
+            className="inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[0.6875rem] font-semibold border border-[#E5E0EE] bg-white text-[#3D1A78] hover:bg-[#F5F1FB] transition-colors"
             data-testid={`share-row-${row.jti}-open`}
           >
             <ExternalLink size={11} strokeWidth={2.4} />
@@ -180,7 +180,7 @@ function ShareRow({ row, onRevoke, revoking }) {
         <button
           type="button"
           onClick={copyLink}
-          className="inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[11px] font-semibold border border-[#E5E0EE] bg-white text-[#3D1A78] hover:bg-[#F5F1FB] transition-colors"
+          className="inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[0.6875rem] font-semibold border border-[#E5E0EE] bg-white text-[#3D1A78] hover:bg-[#F5F1FB] transition-colors"
           data-testid={`share-row-${row.jti}-copy`}
         >
           <Copy size={11} strokeWidth={2.4} />
@@ -190,7 +190,7 @@ function ShareRow({ row, onRevoke, revoking }) {
           type="button"
           onClick={() => onRevoke(row)}
           disabled={revoking}
-          className="ml-auto inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[11px] font-semibold border border-[#EFB4B4] bg-white text-[#B02A2A] hover:bg-[#FCEDEB] transition-colors disabled:opacity-60"
+          className="ml-auto inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[0.6875rem] font-semibold border border-[#EFB4B4] bg-white text-[#B02A2A] hover:bg-[#FCEDEB] transition-colors disabled:opacity-60"
           data-testid={`share-row-${row.jti}-revoke`}
         >
           <Trash2 size={11} strokeWidth={2.4} />
@@ -257,7 +257,7 @@ export default function ShareManagementPanel() {
     >
       <div className="flex items-baseline justify-between flex-wrap gap-2 mb-4">
         <div>
-          <div className="text-[11px] uppercase tracking-[0.16em] font-bold text-[#3D1A78]">
+          <div className="text-[0.6875rem] uppercase tracking-[0.16em] font-bold text-[#3D1A78]">
             Active share links
           </div>
           <div className="text-sm text-[#4B4567] mt-0.5 leading-relaxed">

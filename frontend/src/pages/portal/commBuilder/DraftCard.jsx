@@ -13,7 +13,7 @@ export function DraftCard({ value, onChange, onPreset, onTransform, busy, guard 
     <div data-testid="cb-draft-card" className="bg-white rounded-2xl p-6 shadow-md border border-purple-100 mt-6">
       <div className="flex justify-between items-center mb-3 gap-2">
         <h4 className="text-base font-bold text-[#3B1C6B]">Draft Communication Message</h4>
-        <span className="text-[11px] font-semibold text-purple-600 bg-purple-50 px-2.5 py-1 rounded-full whitespace-nowrap">BIFF style</span>
+        <span className="text-[0.6875rem] font-semibold text-purple-600 bg-purple-50 px-2.5 py-1 rounded-full whitespace-nowrap">BIFF style</span>
       </div>
       <AiGuardFrame tp="cb" guard={guard} className="mb-3">
         <textarea
@@ -36,7 +36,7 @@ export function DraftCard({ value, onChange, onPreset, onTransform, busy, guard 
             data-testid={`cb-chip-${c.key}`}
             onClick={() => onPreset(c.key)}
             disabled={busy}
-            className="text-[11px] font-medium bg-slate-100 hover:bg-purple-100 text-slate-700 px-3 py-1.5 rounded-lg transition-colors disabled:opacity-60"
+            className="text-[0.6875rem] font-medium bg-slate-100 hover:bg-purple-100 text-slate-700 px-3 py-1.5 rounded-lg transition-colors disabled:opacity-60"
           >
             <i className={`${c.icon} text-purple-600 mr-1`}></i> {c.label}
           </button>

@@ -229,7 +229,7 @@ export default function ProgressPage() {
 
               <div className="grid gap-6 sm:grid-cols-2">
                 <div data-testid="progress-report-completed">
-                  <div className="text-[11px] uppercase tracking-[0.22em] font-bold text-[#3D1A78] mb-3">
+                  <div className="text-[0.6875rem] uppercase tracking-[0.22em] font-bold text-[#3D1A78] mb-3">
                     Completed
                   </div>
                   {completedKeys.length === 0 ? (
@@ -249,7 +249,7 @@ export default function ProgressPage() {
                 </div>
 
                 <div data-testid="progress-report-next-step">
-                  <div className="text-[11px] uppercase tracking-[0.22em] font-bold text-[#3D1A78] mb-3">
+                  <div className="text-[0.6875rem] uppercase tracking-[0.22em] font-bold text-[#3D1A78] mb-3">
                     Next step
                   </div>
                   {nextKey ? (

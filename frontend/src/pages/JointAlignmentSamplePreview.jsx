@@ -197,7 +197,7 @@ function CountPill({ count, label, tone }) {
       data-testid={`sample-preview-count-${label.toLowerCase()}`}
     >
       <div className="text-2xl font-serif leading-none">{count}</div>
-      <div className="text-[11px] uppercase tracking-[0.14em] font-semibold mt-1">
+      <div className="text-[0.6875rem] uppercase tracking-[0.14em] font-semibold mt-1">
         {label}
       </div>
     </div>
@@ -214,7 +214,7 @@ function TopicRow({ topic }) {
     >
       <div className={`shrink-0 rounded-xl border px-2.5 py-1 flex items-center gap-1.5 ${meta.cls}`}>
         <Icon size={13} strokeWidth={2.2} />
-        <span className="text-[11px] uppercase tracking-[0.14em] font-semibold">
+        <span className="text-[0.6875rem] uppercase tracking-[0.14em] font-semibold">
           {meta.label}
         </span>
       </div>
@@ -222,10 +222,10 @@ function TopicRow({ topic }) {
         <div className="font-serif text-[15px] text-[#1A1330] leading-snug">
           {topic.title}
         </div>
-        <div className="text-[11px] uppercase tracking-[0.16em] font-semibold text-[#6E6787] mt-0.5">
+        <div className="text-[0.6875rem] uppercase tracking-[0.16em] font-semibold text-[#6E6787] mt-0.5">
           {topic.section}
         </div>
-        <p className="text-[13px] text-[#4B4567] mt-1.5 leading-relaxed">
+        <p className="text-[0.8125rem] text-[#4B4567] mt-1.5 leading-relaxed">
           {topic.note}
         </p>
       </div>
@@ -257,7 +257,7 @@ export default function JointAlignmentSamplePreview() {
       {/* Sample banner — always visible so a parent skimming the
           page never mistakes this for their own case. */}
       <div
-        className="bg-[#3D1A78] text-white text-center px-4 py-2 text-[12px] tracking-[0.12em] uppercase font-semibold"
+        className="bg-[#3D1A78] text-white text-center px-4 py-2 text-[0.75rem] tracking-[0.12em] uppercase font-semibold"
         data-testid="sample-preview-sample-banner"
       >
         Sample · Not your data · {SAMPLE_CASE_META.parents.join(" & ")} with
@@ -273,7 +273,7 @@ export default function JointAlignmentSamplePreview() {
           <ArrowLeft size={14} /> Back to home
         </Link>
 
-        <div className="text-[10px] uppercase tracking-[0.22em] font-bold text-[#3D1A78] flex items-center gap-1.5">
+        <div className="text-[0.625rem] uppercase tracking-[0.22em] font-bold text-[#3D1A78] flex items-center gap-1.5">
           <ShieldCheck size={12} /> What you and your co-parent would see
         </div>
         <h1
@@ -311,7 +311,7 @@ export default function JointAlignmentSamplePreview() {
                 aria-selected={isActive}
                 onClick={() => setScenarioKey(s.key)}
                 className={
-                  "px-4 py-2 rounded-xl text-[13px] font-semibold transition " +
+                  "px-4 py-2 rounded-xl text-[0.8125rem] font-semibold transition " +
                   (isActive
                     ? "bg-[#3D1A78] text-white shadow-sm"
                     : "text-[#3D1A78] hover:bg-[#F5F1FB]")
@@ -324,14 +324,14 @@ export default function JointAlignmentSamplePreview() {
           })}
         </div>
         <p
-          className="mt-2 text-[12px] text-[#6E6787]"
+          className="mt-2 text-[0.75rem] text-[#6E6787]"
           data-testid="sample-preview-scenario-caption"
         >
           {scenario.caption}
         </p>
 
         <div
-          className="mt-6 rounded-2xl border border-[#D6CFE8] bg-[#F5F1FB] p-4 text-[13px] text-[#3D1A78]"
+          className="mt-6 rounded-2xl border border-[#D6CFE8] bg-[#F5F1FB] p-4 text-[0.8125rem] text-[#3D1A78]"
           data-testid="sample-preview-privacy-banner"
         >
           <div className="font-semibold flex items-center gap-1.5 mb-1">
@@ -365,7 +365,7 @@ export default function JointAlignmentSamplePreview() {
         {/* Topic-by-topic */}
         <div className="mt-6 rounded-2xl border border-[#E5E0EE] bg-white overflow-hidden">
           <div className="px-5 py-3 border-b border-[#EEE8F7] bg-[#FAF8FD]">
-            <div className="text-[11px] uppercase tracking-[0.18em] font-bold text-[#3D1A78]">
+            <div className="text-[0.6875rem] uppercase tracking-[0.18em] font-bold text-[#3D1A78]">
               Topic-by-topic
             </div>
           </div>
@@ -381,7 +381,7 @@ export default function JointAlignmentSamplePreview() {
           className="mt-10 rounded-3xl border-2 border-[#3D1A78]/20 bg-white p-6 sm:p-8"
           data-testid="sample-preview-ctas"
         >
-          <div className="text-[10px] uppercase tracking-[0.22em] font-bold text-[#3D1A78] flex items-center gap-1.5">
+          <div className="text-[0.625rem] uppercase tracking-[0.22em] font-bold text-[#3D1A78] flex items-center gap-1.5">
             <Sparkles size={12} /> Ready to build yours?
           </div>
           <h2 className="font-serif text-2xl sm:text-3xl text-[#1A1330] leading-snug mt-1">
@@ -422,10 +422,10 @@ export default function JointAlignmentSamplePreview() {
             className="mt-6 pt-6 border-t border-[#EEE8F7]"
             data-testid="sample-preview-share-strip"
           >
-            <div className="text-[10px] uppercase tracking-[0.22em] font-bold text-[#3D1A78] mb-2">
+            <div className="text-[0.625rem] uppercase tracking-[0.22em] font-bold text-[#3D1A78] mb-2">
               Share this sample with your co-parent
             </div>
-            <p className="text-[13px] text-[#4B4567] leading-relaxed mb-3">
+            <p className="text-[0.8125rem] text-[#4B4567] leading-relaxed mb-3">
               Some parents like to send this concept to their co-parent
               first — before either of you signs up.
             </p>
@@ -459,7 +459,7 @@ export default function JointAlignmentSamplePreview() {
 
         {/* Small fine-print / attribution row */}
         <p
-          className="mt-6 text-[11px] text-[#6E6787] leading-relaxed"
+          className="mt-6 text-[0.6875rem] text-[#6E6787] leading-relaxed"
           data-testid="sample-preview-fineprint"
         >
           The people, child, and topics on this page are fictional.

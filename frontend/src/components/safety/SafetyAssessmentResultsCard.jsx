@@ -83,11 +83,11 @@ export default function SafetyAssessmentResultsCard({
       data-testid="results-card"
     >
       <div className={`${tone.badge} px-6 sm:px-8 py-3 flex items-center justify-between gap-3`}>
-        <div className="text-[11px] uppercase tracking-[0.22em] font-bold">Level {level} pathway</div>
-        <div className="text-[11px] uppercase tracking-[0.18em] opacity-90">{result.pathway_tone}</div>
+        <div className="text-[0.6875rem] uppercase tracking-[0.22em] font-bold">Level {level} pathway</div>
+        <div className="text-[0.6875rem] uppercase tracking-[0.18em] opacity-90">{result.pathway_tone}</div>
       </div>
       <div className="p-6 sm:p-8">
-        <div className="text-[10px] uppercase tracking-[0.24em] text-[#3D1A78] font-bold mb-1.5">
+        <div className="text-[0.625rem] uppercase tracking-[0.24em] text-[#3D1A78] font-bold mb-1.5">
           Family Safety and Functioning Reflection
         </div>
         <h2 className="font-bold text-2xl sm:text-3xl text-[#1A1330] mb-3" data-testid="results-pathway-title">
@@ -97,7 +97,7 @@ export default function SafetyAssessmentResultsCard({
           className="rounded-2xl bg-[#F5F1FB] border border-[#3D1A78]/20 p-3.5 mb-4 text-xs text-[#1A1330] leading-relaxed"
           data-testid="results-self-reflection-disclaimer"
         >
-          <span className="text-[10px] uppercase tracking-[0.2em] font-bold text-[#3D1A78] mr-1">
+          <span className="text-[0.625rem] uppercase tracking-[0.2em] font-bold text-[#3D1A78] mr-1">
             Read this first ·
           </span>
           This assessment is a guided self-reflection and preparation
@@ -113,7 +113,7 @@ export default function SafetyAssessmentResultsCard({
             className="mb-6 rounded-2xl border border-[#3D1A78]/20 bg-[#F5F1FB] p-4 sm:p-5"
             data-testid="results-interpretation-rules"
           >
-            <div className="text-[10px] uppercase tracking-[0.22em] font-bold text-[#3D1A78] mb-2">
+            <div className="text-[0.625rem] uppercase tracking-[0.22em] font-bold text-[#3D1A78] mb-2">
               Two interpretation rules
             </div>
             <ol className="list-decimal list-inside text-sm text-[#1A1330] space-y-1.5">
@@ -126,7 +126,7 @@ export default function SafetyAssessmentResultsCard({
 
         {findings && (
           <div className="mb-6 space-y-3" data-testid="results-three-findings">
-            <div className="text-[11px] uppercase tracking-[0.22em] text-[#6E6787] font-bold">
+            <div className="text-[0.6875rem] uppercase tracking-[0.22em] text-[#6E6787] font-bold">
               Three findings
             </div>
             {[
@@ -143,7 +143,7 @@ export default function SafetyAssessmentResultsCard({
                   className={`rounded-2xl bg-white border border-[#E5E0EE] border-l-4 ${accent} p-4 sm:p-5`}
                   data-testid={`finding-${key.replace(/_/g, "-")}`}
                 >
-                  <div className={`text-[10px] uppercase tracking-[0.22em] font-bold ${label} mb-1`}>
+                  <div className={`text-[0.625rem] uppercase tracking-[0.22em] font-bold ${label} mb-1`}>
                     {f.title}
                   </div>
                   <div className="text-xs italic text-[#6E6787] mb-2">
@@ -153,7 +153,7 @@ export default function SafetyAssessmentResultsCard({
                   <p className="text-sm text-[#4B4567] leading-relaxed">{f.summary}</p>
                   {f.pattern_typology && (
                     <div className="mt-3 rounded-xl bg-[#FDF3F0] border border-[#9A3A23]/20 p-3">
-                      <div className="text-[10px] uppercase tracking-[0.2em] font-bold text-[#9A3A23] mb-1">
+                      <div className="text-[0.625rem] uppercase tracking-[0.2em] font-bold text-[#9A3A23] mb-1">
                         Pattern typology · {f.pattern_typology.label}
                       </div>
                       <p className="text-xs text-[#1A1330] leading-relaxed">{f.pattern_typology.framing}</p>
@@ -161,7 +161,7 @@ export default function SafetyAssessmentResultsCard({
                   )}
                   {f.domain_signals && (
                     <div className="mt-3 rounded-xl bg-[#FEF5EA] border border-[#B7791F]/20 p-3">
-                      <div className="text-[10px] uppercase tracking-[0.2em] font-bold text-[#B7791F] mb-2">
+                      <div className="text-[0.625rem] uppercase tracking-[0.2em] font-bold text-[#B7791F] mb-2">
                         Behavioural signals · overall {f.domain_signals.overall_intensity}
                       </div>
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5">
@@ -169,7 +169,7 @@ export default function SafetyAssessmentResultsCard({
                           <div key={k} className="flex items-center justify-between text-xs">
                             <span className="text-[#4B4567]">{d.label}</span>
                             <span
-                              className={`text-[10px] uppercase tracking-[0.14em] font-bold px-2 py-0.5 rounded-full ${
+                              className={`text-[0.625rem] uppercase tracking-[0.14em] font-bold px-2 py-0.5 rounded-full ${
                                 d.intensity === "high"
                                   ? "bg-[#9A3A23]/15 text-[#9A3A23]"
                                   : d.intensity === "moderate"
@@ -186,12 +186,12 @@ export default function SafetyAssessmentResultsCard({
                   )}
                   {f.concern_domains && f.concern_domains.length > 0 && (
                     <div className="mt-3 rounded-xl bg-[#FDF3F0] border border-[#9A3A23]/20 p-3">
-                      <div className="text-[10px] uppercase tracking-[0.2em] font-bold text-[#9A3A23] mb-1">
+                      <div className="text-[0.625rem] uppercase tracking-[0.2em] font-bold text-[#9A3A23] mb-1">
                         Reported concern areas
                       </div>
                       <div className="flex flex-wrap gap-1.5">
                         {f.concern_domains.map((d) => (
-                          <span key={d} className="text-[11px] font-semibold text-[#9A3A23] bg-white border border-[#9A3A23]/20 rounded-full px-2 py-0.5">
+                          <span key={d} className="text-[0.6875rem] font-semibold text-[#9A3A23] bg-white border border-[#9A3A23]/20 rounded-full px-2 py-0.5">
                             {d}
                           </span>
                         ))}
@@ -212,7 +212,7 @@ export default function SafetyAssessmentResultsCard({
                       className="mt-3 rounded-xl bg-white border border-[#3D1A78]/25 p-3"
                       data-testid={`finding-feasibility-tier-${f.feasibility_tier.tier}`}
                     >
-                      <div className="text-[10px] uppercase tracking-[0.2em] font-bold text-[#3D1A78] mb-1">
+                      <div className="text-[0.625rem] uppercase tracking-[0.2em] font-bold text-[#3D1A78] mb-1">
                         Coparenting Feasibility Spectrum · Tier {f.feasibility_tier.order} of 6
                       </div>
                       <div className="text-sm font-semibold text-[#1A1330]">
@@ -221,11 +221,11 @@ export default function SafetyAssessmentResultsCard({
                       <p className="text-xs text-[#4B4567] leading-relaxed mt-1">
                         {f.feasibility_tier.narrative}
                       </p>
-                      <div className="mt-2 text-[11px] uppercase tracking-[0.14em] text-[#6E6787]">
+                      <div className="mt-2 text-[0.6875rem] uppercase tracking-[0.14em] text-[#6E6787]">
                         Review point in {f.feasibility_tier.review_point_days} days
                       </div>
                       {Array.isArray(f.feasibility_tier.triggers) && f.feasibility_tier.triggers.length > 0 && (
-                        <div className="mt-2 text-[11px] text-[#4B4567]">
+                        <div className="mt-2 text-[0.6875rem] text-[#4B4567]">
                           <span className="font-bold uppercase tracking-[0.12em] text-[#9A3A23]">
                             Escalated by:
                           </span>{" "}
@@ -240,7 +240,7 @@ export default function SafetyAssessmentResultsCard({
                     </div>
                   )}
                   {f.arrangement_spectrum && !f.feasibility_tier && (
-                    <div className="mt-2 text-[11px] uppercase tracking-[0.18em] font-bold text-[#3D1A78]">
+                    <div className="mt-2 text-[0.6875rem] uppercase tracking-[0.18em] font-bold text-[#3D1A78]">
                       Recommended structure: <span className="normal-case">{f.arrangement_spectrum}</span>
                     </div>
                   )}
@@ -251,7 +251,7 @@ export default function SafetyAssessmentResultsCard({
         )}
 
         <div className="mb-6">
-          <div className="text-[11px] uppercase tracking-[0.2em] text-[#6E6787] font-bold mb-3">
+          <div className="text-[0.6875rem] uppercase tracking-[0.2em] text-[#6E6787] font-bold mb-3">
             Recommended pathway
           </div>
           <ul className="space-y-2">
@@ -276,7 +276,7 @@ export default function SafetyAssessmentResultsCard({
             <CheckCircle2 size={18} />
           </div>
           <div className="min-w-0 flex-1">
-            <div className="text-[10px] uppercase tracking-[0.22em] font-bold text-[#3D1A78]">
+            <div className="text-[0.625rem] uppercase tracking-[0.22em] font-bold text-[#3D1A78]">
               Recommended next
             </div>
             <div className="text-sm sm:text-base font-serif text-[#1A1330] mt-0.5">
@@ -294,7 +294,7 @@ export default function SafetyAssessmentResultsCard({
         <div className="rounded-2xl bg-[#F8F7FC] border border-[#E5E0EE] p-4 sm:p-5 mb-6">
           <div className="flex items-center gap-2 text-[#3D1A78] mb-2">
             <Lightbulb size={14} />
-            <div className="text-[11px] uppercase tracking-[0.18em] font-bold">Note about your co-parent</div>
+            <div className="text-[0.6875rem] uppercase tracking-[0.18em] font-bold">Note about your co-parent</div>
           </div>
           <p className="text-sm text-[#4B4567] leading-relaxed">
             This screen reflects only your responses. The other parent should
@@ -310,7 +310,7 @@ export default function SafetyAssessmentResultsCard({
           bothParents={false}
           testId="safety-results-court-disclaimer"
         />
-        <p className="mb-4 text-[13px] text-[#4B4567]">
+        <p className="mb-4 text-[0.8125rem] text-[#4B4567]">
           When you email your mediator, your answers are left out unless you choose to include them. The court report includes summary findings only.{" "}
           <ProSeeLink testid="safety-results-pros-see-link" area="safety-check" />
         </p>

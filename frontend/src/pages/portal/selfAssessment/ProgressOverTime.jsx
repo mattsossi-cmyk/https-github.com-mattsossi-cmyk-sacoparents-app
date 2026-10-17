@@ -15,7 +15,7 @@ function AreaChart({ section, history }) {
   return (
     <div data-testid={`sa-pot-area-${section.key}`} className="rounded-2xl border border-purple-100 bg-white p-3">
       <div className="flex items-start justify-between gap-2">
-        <h5 className="text-[12px] font-bold text-slate-800 leading-tight">{section.score_label}</h5>
+        <h5 className="text-[0.75rem] font-bold text-slate-800 leading-tight">{section.score_label}</h5>
         <span data-testid={`sa-pot-area-${section.key}-latest`} className="text-lg font-extrabold leading-none" style={{ color }}>
           {latest}
         </span>
@@ -44,7 +44,7 @@ export function ProgressOverTime({ history, onReached }) {
     <div data-testid="sa-progress-over-time" className="space-y-5">
       <div>
         <h4 className="text-base font-extrabold text-slate-900">My progress over time</h4>
-        <p data-testid="sa-pot-summary" className="text-[12px] text-slate-600">
+        <p data-testid="sa-pot-summary" className="text-[0.75rem] text-slate-600">
           {history.length} Self-Assessment{history.length === 1 ? "" : "s"} since {fmt(history[0].completed_at)}
           {history.length < 2 && ". Your next one will start drawing your lines."}
         </p>

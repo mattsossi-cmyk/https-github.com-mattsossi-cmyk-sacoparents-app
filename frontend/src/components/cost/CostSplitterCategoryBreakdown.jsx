@@ -34,7 +34,7 @@ export default function CostSplitterCategoryBreakdown({ perCategory, hasCompare 
   if (!perCategory || perCategory.length === 0) return null;
   return (
     <div className="mb-5">
-      <div className="text-[10px] uppercase tracking-[0.16em] font-bold text-[#4B4567] mb-2">
+      <div className="text-[0.625rem] uppercase tracking-[0.16em] font-bold text-[#4B4567] mb-2">
         By category
       </div>
       <div className="grid gap-2" data-testid="cost-splitter-categories">
@@ -54,7 +54,7 @@ export default function CostSplitterCategoryBreakdown({ perCategory, hasCompare 
               <div className="text-xs text-[#1E7A55] font-semibold">
                 {formatMoney(cat.self_cents || 0)}
               </div>
-              <div className="text-[11px] text-[#6A5799]">
+              <div className="text-[0.6875rem] text-[#6A5799]">
                 {hasCompare ? formatMoney(cat.coparent_cents || 0) : ""}
               </div>
             </div>

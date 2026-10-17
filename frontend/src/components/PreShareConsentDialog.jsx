@@ -94,7 +94,7 @@ export function PreShareConsentHost() {
       >
         <div className="flex items-start justify-between gap-3 px-6 sm:px-7 pt-6">
           <div className="flex-1">
-            <div className="text-[11px] uppercase tracking-[0.22em] text-[#B02A2A] font-bold mb-1 flex items-center gap-1.5">
+            <div className="text-[0.6875rem] uppercase tracking-[0.22em] text-[#B02A2A] font-bold mb-1 flex items-center gap-1.5">
               <ShieldAlert size={14} /> You control this report
             </div>
             <h3
@@ -120,11 +120,11 @@ export function PreShareConsentHost() {
             className="rounded-2xl border border-[#E5E0EE] bg-gradient-to-br from-[#F1EAFF] to-[#F8F7FC] p-4 space-y-3"
             data-testid="preshare-consent-headline"
           >
-            <p className="text-[13px] leading-relaxed text-[#1A1330] !m-0">
+            <p className="text-[0.8125rem] leading-relaxed text-[#1A1330] !m-0">
               <strong>Your information is private by default.</strong>{" "}
               SA CoParents does not share your assessment or reports with your co-parent or a professional unless you choose to share them, except where disclosure is required by law.
             </p>
-            <p className="text-[13px] leading-relaxed text-[#1A1330] !m-0">
+            <p className="text-[0.8125rem] leading-relaxed text-[#1A1330] !m-0">
               <strong>Use of SA CoParents does not by itself create an attorney-client, therapist-patient, mediator-client, or other privileged relationship.</strong>
             </p>
           </div>
@@ -149,7 +149,7 @@ export function PreShareConsentHost() {
               data-testid="preshare-consent-ack-checkbox"
               className="mt-1 h-4 w-4 accent-[#3D1A78] shrink-0"
             />
-            <span className="text-[13px] text-[#1A1330] leading-relaxed">
+            <span className="text-[0.8125rem] text-[#1A1330] leading-relaxed">
               <strong>I understand.</strong> I&apos;ve read the six points above and I want to share {state.label} anyway.
             </span>
           </label>

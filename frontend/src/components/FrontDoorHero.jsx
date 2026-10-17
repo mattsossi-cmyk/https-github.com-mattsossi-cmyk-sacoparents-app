@@ -44,7 +44,7 @@ export default function FrontDoorHero({
       data-testid={testidPrefix}
     >
       <header className="text-center max-w-3xl mx-auto">
-        <div className="text-[11px] uppercase tracking-[0.28em] font-bold text-[#3D1A78]">
+        <div className="text-[0.6875rem] uppercase tracking-[0.28em] font-bold text-[#3D1A78]">
           SA CoParents
         </div>
         <h1
@@ -96,7 +96,7 @@ export default function FrontDoorHero({
           data-testid={`${testidPrefix}-continue`}
         >
           <div>
-            <div className="text-[10px] uppercase tracking-[0.22em] font-bold text-[#3D1A78]">
+            <div className="text-[0.625rem] uppercase tracking-[0.22em] font-bold text-[#3D1A78]">
               Already started?
             </div>
             <div className="text-sm text-[#4B4567] mt-1">
@@ -148,7 +148,7 @@ function FrontDoorCard({ testid, icon: Icon, eyebrow, headline, body, cta, to, t
       data-testid={testid}
       className={`group text-left rounded-3xl bg-white border-2 ${palette.border} p-6 sm:p-8 transition-all hover:-translate-y-0.5 hover:shadow-lg flex flex-col`}
     >
-      <div className={`inline-flex items-center gap-2 self-start rounded-full ${palette.chipBg} ${palette.chipText} px-3 py-1 text-[10px] uppercase tracking-[0.22em] font-bold`}>
+      <div className={`inline-flex items-center gap-2 self-start rounded-full ${palette.chipBg} ${palette.chipText} px-3 py-1 text-[0.625rem] uppercase tracking-[0.22em] font-bold`}>
         <Icon size={12} strokeWidth={2.4} />
         {eyebrow}
       </div>
@@ -172,7 +172,7 @@ function FrontDoorCard({ testid, icon: Icon, eyebrow, headline, body, cta, to, t
 function CourtOrderBanner({ testidPrefix }) {
   return (
     <div
-      className="mt-6 max-w-4xl mx-auto rounded-2xl border border-[#F1D9B7] bg-[#FFF6EA] px-5 py-4 flex items-start gap-3 text-[13px] leading-relaxed"
+      className="mt-6 max-w-4xl mx-auto rounded-2xl border border-[#F1D9B7] bg-[#FFF6EA] px-5 py-4 flex items-start gap-3 text-[0.8125rem] leading-relaxed"
       data-testid={`${testidPrefix}-court-banner`}
     >
       <KeyRound

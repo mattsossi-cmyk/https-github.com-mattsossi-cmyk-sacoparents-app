@@ -32,14 +32,14 @@ export function ProgressChart({ history }) {
   return (
     <div data-testid="sa-progress-chart" className="space-y-2">
       <div className="flex items-center justify-between gap-2">
-        <h5 className="text-[12px] font-bold text-slate-800">{CONTENT.chart.title}</h5>
+        <h5 className="text-[0.75rem] font-bold text-slate-800">{CONTENT.chart.title}</h5>
         <button
           type="button"
           role="switch"
           aria-checked={showAreas}
           data-testid="sa-chart-toggle-areas"
           onClick={() => setShowAreas((v) => !v)}
-          className="inline-flex items-center gap-1.5 text-[11px] font-semibold text-purple-900"
+          className="inline-flex items-center gap-1.5 text-[0.6875rem] font-semibold text-purple-900"
         >
           <span className={`w-8 h-[18px] rounded-full p-0.5 transition-colors ${showAreas ? "bg-purple-700" : "bg-slate-300"}`}>
             <span className={`block w-3.5 h-3.5 rounded-full bg-white shadow transition-transform ${showAreas ? "translate-x-3.5" : ""}`} />

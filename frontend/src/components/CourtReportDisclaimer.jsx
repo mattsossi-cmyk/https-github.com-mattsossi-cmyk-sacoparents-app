@@ -64,7 +64,7 @@ export default function CourtReportDisclaimer({
   if (variant === "inline") {
     return (
       <div
-        className={`inline-flex items-start gap-2 rounded-full border border-[#F1D9B7] bg-[#FFF6EA] px-3 py-1.5 text-[11px] text-[#5A3C10] ${className}`}
+        className={`inline-flex items-start gap-2 rounded-full border border-[#F1D9B7] bg-[#FFF6EA] px-3 py-1.5 text-[0.6875rem] text-[#5A3C10] ${className}`}
         data-testid={`${testId}-inline`}
       >
         <Info size={12} className="mt-0.5 shrink-0" />
@@ -84,11 +84,11 @@ export default function CourtReportDisclaimer({
     >
       <div className="flex items-center gap-2 mb-3">
         <ShieldAlert size={16} className="text-[#8A4610]" />
-        <div className="text-[10px] uppercase tracking-[0.18em] font-bold text-[#8A4610]">
+        <div className="text-[0.625rem] uppercase tracking-[0.18em] font-bold text-[#8A4610]">
           Before this document is used in a court, mediation, or legal setting
         </div>
       </div>
-      <ul className="grid gap-2 text-[13px] text-[#5A3C10] leading-relaxed">
+      <ul className="grid gap-2 text-[0.8125rem] text-[#5A3C10] leading-relaxed">
         {BULLETS.map((b) => (
           <li key={b.key} className="flex gap-2">
             <span className="mt-1.5 h-1.5 w-1.5 rounded-full bg-[#8A4610] shrink-0" />

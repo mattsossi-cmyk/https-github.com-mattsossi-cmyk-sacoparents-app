@@ -54,7 +54,7 @@ export default function Account() {
           <ArrowLeft size={14} /> Back to Dashboard
         </Link>
 
-        <div className="text-[10px] uppercase tracking-[0.18em] font-bold text-[#3D1A78] mb-2">
+        <div className="text-[0.625rem] uppercase tracking-[0.18em] font-bold text-[#3D1A78] mb-2">
           Your Account
         </div>
         <h1 className="font-serif text-3xl sm:text-4xl text-[#1A1330] leading-tight">
@@ -76,7 +76,7 @@ export default function Account() {
               <UserIcon size={15} />
             </div>
             <div className="min-w-0 flex-1">
-              <div className="text-[10px] uppercase tracking-[0.18em] font-bold text-[#3D1A78]">
+              <div className="text-[0.625rem] uppercase tracking-[0.18em] font-bold text-[#3D1A78]">
                 Identity
               </div>
               <div className="text-sm font-semibold text-[#1A1330] mt-0.5">

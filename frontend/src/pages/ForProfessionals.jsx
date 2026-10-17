@@ -163,7 +163,7 @@ export default function ForProfessionals() {
         <div className="max-w-6xl mx-auto">
           <div className="inline-flex items-center gap-2 rounded-full bg-white border border-[#D6CFE8] px-3 py-1 mb-6" data-testid="for-pros-eyebrow">
             <Award size={12} className="text-[#3D1A78]" />
-            <span className="text-[11px] uppercase tracking-[0.22em] font-bold text-[#3D1A78]">
+            <span className="text-[0.6875rem] uppercase tracking-[0.22em] font-bold text-[#3D1A78]">
               For mediators &amp; family attorneys
             </span>
           </div>
@@ -267,14 +267,14 @@ export default function ForProfessionals() {
                     <div className="shrink-0 w-10 h-10 rounded-2xl bg-[#3D1A78] text-white flex items-center justify-center">
                       <Icon size={18} strokeWidth={2.2} />
                     </div>
-                    <div className="text-[10px] uppercase tracking-[0.22em] font-bold text-[#3D1A78]">
+                    <div className="text-[0.625rem] uppercase tracking-[0.22em] font-bold text-[#3D1A78]">
                       Step {i + 1}
                     </div>
                   </div>
                   <div className="font-serif text-lg text-[#1A1330] leading-tight">
                     {step.label}
                   </div>
-                  <p className="mt-2 text-[13px] text-[#4B4567] leading-relaxed">
+                  <p className="mt-2 text-[0.8125rem] text-[#4B4567] leading-relaxed">
                     {step.body}
                   </p>
                 </li>
@@ -299,7 +299,7 @@ export default function ForProfessionals() {
                   <Icon size={18} />
                 </div>
                 <div className="min-w-0">
-                  <div className="text-[13px] font-semibold text-[#1A1330]">
+                  <div className="text-[0.8125rem] font-semibold text-[#1A1330]">
                     {h.label}
                   </div>
                   <div className="text-xs text-[#4B4567] mt-0.5 leading-relaxed">
@@ -395,7 +395,7 @@ export default function ForProfessionals() {
             </a>
           </div>
 
-          <div className="mt-10 text-[11px] uppercase tracking-[0.22em] text-[#CFC1EA]">
+          <div className="mt-10 text-[0.6875rem] uppercase tracking-[0.22em] text-[#CFC1EA]">
             SA CoParents · San Antonio, Texas
           </div>
         </div>

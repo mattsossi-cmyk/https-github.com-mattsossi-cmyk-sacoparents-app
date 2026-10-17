@@ -119,7 +119,7 @@ export default function ReminderPreviewModal({ open, caseId, onClose }) {
         </button>
 
         <div className="px-6 pt-6 pb-4 border-b border-[#EEE8F7]">
-          <div className="text-[10px] uppercase tracking-[0.22em] font-bold text-[#3D1A78] flex items-center gap-1.5">
+          <div className="text-[0.625rem] uppercase tracking-[0.22em] font-bold text-[#3D1A78] flex items-center gap-1.5">
             <Mail size={12} /> Reminder email preview
           </div>
           <h3
@@ -130,14 +130,14 @@ export default function ReminderPreviewModal({ open, caseId, onClose }) {
               ? `What ${preview.parent_name || preview.parent_email} will receive`
               : "What the parent will receive"}
           </h3>
-          <p className="text-[13px] text-[#4B4567] mt-1 leading-relaxed">
+          <p className="text-[0.8125rem] text-[#4B4567] mt-1 leading-relaxed">
             This is the exact email that the 5-day gentle-nudge sweep sends.
             Nothing is dispatched — this preview is for your eyes only.
           </p>
 
           {/* Parent selector — only shown when the case has both parents */}
           {preview && (
-            <div className="mt-3 flex flex-wrap items-center gap-2 text-[11px] text-[#4B4567]">
+            <div className="mt-3 flex flex-wrap items-center gap-2 text-[0.6875rem] text-[#4B4567]">
               <span className="inline-flex items-center gap-1">
                 <User size={11} />
                 <span className="font-semibold text-[#1A1330]">
@@ -156,7 +156,7 @@ export default function ReminderPreviewModal({ open, caseId, onClose }) {
                 <button
                   type="button"
                   onClick={() => setParentIndex(0)}
-                  className={`px-2.5 py-0.5 rounded-full text-[11px] font-semibold transition ${
+                  className={`px-2.5 py-0.5 rounded-full text-[0.6875rem] font-semibold transition ${
                     parentIndex === 0 ? "bg-white text-[#3D1A78] shadow" : "text-[#4B4567]"
                   }`}
                   data-testid="reminder-preview-parent-0"
@@ -166,7 +166,7 @@ export default function ReminderPreviewModal({ open, caseId, onClose }) {
                 <button
                   type="button"
                   onClick={() => setParentIndex(1)}
-                  className={`px-2.5 py-0.5 rounded-full text-[11px] font-semibold transition ${
+                  className={`px-2.5 py-0.5 rounded-full text-[0.6875rem] font-semibold transition ${
                     parentIndex === 1 ? "bg-white text-[#3D1A78] shadow" : "text-[#4B4567]"
                   }`}
                   data-testid="reminder-preview-parent-1"
@@ -179,11 +179,11 @@ export default function ReminderPreviewModal({ open, caseId, onClose }) {
         </div>
 
         <div className="px-6 py-3 border-b border-[#EEE8F7] flex items-center gap-2 flex-wrap">
-          <div className="text-[10px] uppercase tracking-[0.22em] font-bold text-[#6E6787]">
+          <div className="text-[0.625rem] uppercase tracking-[0.22em] font-bold text-[#6E6787]">
             Subject
           </div>
           <div
-            className="text-[13px] text-[#1A1330] font-semibold flex-1 truncate"
+            className="text-[0.8125rem] text-[#1A1330] font-semibold flex-1 truncate"
             data-testid="reminder-preview-subject"
           >
             {preview?.subject || "—"}
@@ -192,7 +192,7 @@ export default function ReminderPreviewModal({ open, caseId, onClose }) {
             <button
               type="button"
               onClick={() => setTab("html")}
-              className={`px-2.5 py-0.5 rounded-full text-[11px] font-semibold inline-flex items-center gap-1 transition ${
+              className={`px-2.5 py-0.5 rounded-full text-[0.6875rem] font-semibold inline-flex items-center gap-1 transition ${
                 tab === "html" ? "bg-white text-[#3D1A78] shadow" : "text-[#4B4567]"
               }`}
               data-testid="reminder-preview-tab-html"
@@ -202,7 +202,7 @@ export default function ReminderPreviewModal({ open, caseId, onClose }) {
             <button
               type="button"
               onClick={() => setTab("text")}
-              className={`px-2.5 py-0.5 rounded-full text-[11px] font-semibold inline-flex items-center gap-1 transition ${
+              className={`px-2.5 py-0.5 rounded-full text-[0.6875rem] font-semibold inline-flex items-center gap-1 transition ${
                 tab === "text" ? "bg-white text-[#3D1A78] shadow" : "text-[#4B4567]"
               }`}
               data-testid="reminder-preview-tab-text"
@@ -238,7 +238,7 @@ export default function ReminderPreviewModal({ open, caseId, onClose }) {
             />
           ) : (
             <pre
-              className="w-full h-[55vh] overflow-auto whitespace-pre-wrap font-mono text-[12px] text-[#1A1330] bg-white rounded-xl border border-[#E5E0EE] px-4 py-3"
+              className="w-full h-[55vh] overflow-auto whitespace-pre-wrap font-mono text-[0.75rem] text-[#1A1330] bg-white rounded-xl border border-[#E5E0EE] px-4 py-3"
               data-testid="reminder-preview-plaintext"
             >
               {preview?.text || ""}

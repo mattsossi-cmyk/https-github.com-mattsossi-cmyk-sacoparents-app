@@ -72,7 +72,7 @@ export default function VerifyBriefing() {
         </Link>
 
         <div className="rounded-3xl border border-[#E5E0EE] bg-white p-6 sm:p-8 shadow-sm">
-          <div className="text-[10px] uppercase tracking-[0.22em] font-bold text-[#3D1A78]">
+          <div className="text-[0.625rem] uppercase tracking-[0.22em] font-bold text-[#3D1A78]">
             Briefing Verification
           </div>
           <h1 className="mt-1 font-serif text-2xl text-[#1A1330]">
@@ -108,7 +108,7 @@ export default function VerifyBriefing() {
                   </p>
                 </div>
               </div>
-              <div className="mt-4 text-[10px] text-[#4B4567]">
+              <div className="mt-4 text-[0.625rem] text-[#4B4567]">
                 Briefing ID:{" "}
                 <span className="font-mono" data-testid="verify-briefing-id">
                   {state.data.sig_id}
@@ -136,7 +136,7 @@ export default function VerifyBriefing() {
                   </p>
                 </div>
               </div>
-              <div className="mt-3 text-[10px] text-[#4B4567]">
+              <div className="mt-3 text-[0.625rem] text-[#4B4567]">
                 Checked id:{" "}
                 <span className="font-mono">{state.data.sig_id}</span>
               </div>
@@ -152,7 +152,7 @@ export default function VerifyBriefing() {
             </div>
           )}
 
-          <p className="mt-6 text-[11px] text-[#4B4567] italic">
+          <p className="mt-6 text-[0.6875rem] text-[#4B4567] italic">
             This check only confirms that a briefing id was issued here and
             when. It does not attest to the truth of any content in the
             report, nor does it constitute a clinical, legal, or

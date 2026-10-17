@@ -170,7 +170,7 @@ export default function PathwayReport() {
           </div>
         </div>
 
-        <div className="text-[10px] uppercase tracking-[0.22em] font-bold text-[#3D1A78]">
+        <div className="text-[0.625rem] uppercase tracking-[0.22em] font-bold text-[#3D1A78]">
           Dispute Resolution Pathway Report
         </div>
         <h1 className="font-serif text-3xl sm:text-4xl text-[#1A1330] mt-1 leading-tight">
@@ -203,7 +203,7 @@ export default function PathwayReport() {
               {hardLocked ? <ShieldAlert size={16} /> : <Scale size={16} />}
             </div>
             <div className="min-w-0 flex-1">
-              <div className="text-[10px] uppercase tracking-[0.22em] font-bold"
+              <div className="text-[0.625rem] uppercase tracking-[0.22em] font-bold"
                 style={{ color: hardLocked ? "#B02A2A" : "#3D1A78" }}>
                 Primary pathway
               </div>
@@ -220,7 +220,7 @@ export default function PathwayReport() {
           {hardLocked && (
             <div className="mt-4 rounded-2xl bg-white border border-[#EFB4B4] p-4"
               data-testid="pathway-report-hard-lock">
-              <div className="text-[10px] uppercase tracking-[0.22em] font-bold text-[#B02A2A]">
+              <div className="text-[0.625rem] uppercase tracking-[0.22em] font-bold text-[#B02A2A]">
                 Safety trigger applied
               </div>
               <ul className="mt-1 text-sm text-[#B02A2A] list-disc pl-5 space-y-1">
@@ -271,7 +271,7 @@ export default function PathwayReport() {
                 >
                   <div className="text-sm font-semibold text-[#1A1330]">{row.label}</div>
                   <span
-                    className="text-[10px] uppercase tracking-[0.16em] font-bold px-2.5 py-1 rounded-full"
+                    className="text-[0.625rem] uppercase tracking-[0.16em] font-bold px-2.5 py-1 rounded-full"
                     style={{ background: meta.bg, color: meta.color, border: `1px solid ${meta.border}` }}
                   >
                     {meta.label}
@@ -318,7 +318,7 @@ export default function PathwayReport() {
 function Section({ title, testid, children }) {
   return (
     <section className="mt-6" data-testid={testid}>
-      <div className="text-[10px] uppercase tracking-[0.22em] font-bold text-[#3D1A78] mb-2">
+      <div className="text-[0.625rem] uppercase tracking-[0.22em] font-bold text-[#3D1A78] mb-2">
         {title}
       </div>
       {children}

@@ -32,7 +32,7 @@ export function ArtPicture({ tp, art, onAction, done = {}, activeKey, nextKey, o
             {done[it.key] && (
               <span
                 data-testid={`${tp}-done-${it.key}`}
-                className={`absolute top-1.5 left-1.5 w-6 h-6 rounded-full ${tickClass} text-white text-[11px] flex items-center justify-center shadow ring-2 ring-white`}
+                className={`absolute top-1.5 left-1.5 w-6 h-6 rounded-full ${tickClass} text-white text-[0.6875rem] flex items-center justify-center shadow ring-2 ring-white`}
               >
                 <i className="fa-solid fa-check"></i>
               </span>

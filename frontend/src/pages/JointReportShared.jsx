@@ -149,7 +149,7 @@ export default function JointReportShared() {
               <ExternalLink size={16} />
             </div>
             <div className="min-w-0">
-              <div className="text-[10px] uppercase tracking-[0.22em] font-bold text-[#3D1A78]">
+              <div className="text-[0.625rem] uppercase tracking-[0.22em] font-bold text-[#3D1A78]">
                 Shared with you
               </div>
               <p className="mt-1 text-sm text-[#1A1330] leading-relaxed">
@@ -173,7 +173,7 @@ export default function JointReportShared() {
                 &ldquo;
               </div>
               <div className="min-w-0">
-                <div className="text-[10px] uppercase tracking-[0.22em] font-bold text-[#3D1A78] mb-1">
+                <div className="text-[0.625rem] uppercase tracking-[0.22em] font-bold text-[#3D1A78] mb-1">
                   A note from {sharedBy}
                 </div>
                 <p className="text-[15px] text-[#1A1330] leading-relaxed whitespace-pre-wrap">
@@ -187,7 +187,7 @@ export default function JointReportShared() {
         {/* Header */}
         <div className="mt-6 flex items-center justify-between gap-3 flex-wrap">
           <div>
-            <div className="text-[10px] uppercase tracking-[0.22em] font-bold text-[#3D1A78]">
+            <div className="text-[0.625rem] uppercase tracking-[0.22em] font-bold text-[#3D1A78]">
               {d.report_type ? d.report_type.replace(/_/g, " ") : "Joint report"}
             </div>
             <h1
@@ -225,7 +225,7 @@ export default function JointReportShared() {
               <ShieldAlert size={16} />
             </div>
             <div className="min-w-0">
-              <div className="text-[10px] uppercase tracking-[0.22em] font-bold text-[#B02A2A]">
+              <div className="text-[0.625rem] uppercase tracking-[0.22em] font-bold text-[#B02A2A]">
                 Not a custody evaluation
               </div>
               <p className="mt-1 text-sm text-[#1A1330] leading-relaxed">
@@ -242,7 +242,7 @@ export default function JointReportShared() {
         >
           <div className="flex items-center gap-2 mb-2">
             <Users size={14} className="text-[#3D1A78]" />
-            <div className="text-[10px] uppercase tracking-[0.2em] text-[#3D1A78] font-semibold">
+            <div className="text-[0.625rem] uppercase tracking-[0.2em] text-[#3D1A78] font-semibold">
               At a glance
             </div>
           </div>
@@ -267,7 +267,7 @@ export default function JointReportShared() {
             className="mt-6 rounded-2xl border border-[#E5E0EE] bg-white p-5"
             data-testid="joint-report-shared-sections-outline"
           >
-            <div className="text-[10px] uppercase tracking-[0.2em] text-[#3D1A78] font-semibold mb-3">
+            <div className="text-[0.625rem] uppercase tracking-[0.2em] text-[#3D1A78] font-semibold mb-3">
               Detailed sections in the PDF
             </div>
             <ul className="space-y-1.5 text-sm text-[#1A1330]">
@@ -287,7 +287,7 @@ export default function JointReportShared() {
           </div>
         )}
 
-        <div className="mt-10 text-[11px] text-[#6E6787] leading-relaxed border-t border-[#E5E0EE] pt-4">
+        <div className="mt-10 text-[0.6875rem] text-[#6E6787] leading-relaxed border-t border-[#E5E0EE] pt-4">
           Preparation resource · Not a custody evaluation, diagnosis, or
           recommendation to any court. Rendered via a signed link the
           sending parent created; the link can be revoked at any time

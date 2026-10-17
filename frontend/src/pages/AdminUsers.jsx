@@ -43,7 +43,7 @@ function Badge({ children, tone = "muted", testid }) {
   return (
     <span
       data-testid={testid}
-      className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] uppercase tracking-[0.12em] font-medium ${tones[tone] || tones.muted}`}
+      className={`inline-flex items-center px-2 py-0.5 rounded-full text-[0.625rem] uppercase tracking-[0.12em] font-medium ${tones[tone] || tones.muted}`}
     >
       {children}
     </span>
@@ -283,7 +283,7 @@ export default function AdminUsers() {
             <div className="overflow-x-auto">
               <table className="w-full text-sm" data-testid="admin-users-table">
                 <thead className="bg-[#F7F4FC]">
-                  <tr className="text-[10px] uppercase tracking-[0.15em] text-[#6E6787]">
+                  <tr className="text-[0.625rem] uppercase tracking-[0.15em] text-[#6E6787]">
                     <th className="text-left py-2.5 px-4">Name</th>
                     <th className="text-left py-2.5 px-4">Email</th>
                     <th className="text-left py-2.5 px-4">Auth</th>

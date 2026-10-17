@@ -83,7 +83,7 @@ export default function AlignLinkCard() {
         <Link2 size={15} />
       </div>
       <div className="min-w-0 flex-1">
-        <div className="text-[10px] uppercase tracking-[0.18em] font-bold text-[#3D1A78]">SA CoParents Align</div>
+        <div className="text-[0.625rem] uppercase tracking-[0.18em] font-bold text-[#3D1A78]">SA CoParents Align</div>
         <div data-testid="align-link-state" className="text-sm font-semibold text-[#1A1330] mt-0.5">
           {!status ? "Checking..." : status.linked ? `Linked since ${when(status.linked_at)}` : "Not linked"}
         </div>

@@ -36,7 +36,7 @@ function Code({ children, testid }) {
         <button
           type="button"
           onClick={handleCopy}
-          className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity inline-flex items-center gap-1 rounded-full bg-[#3D1A78] text-white text-[10px] font-semibold px-2 py-1"
+          className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity inline-flex items-center gap-1 rounded-full bg-[#3D1A78] text-white text-[0.625rem] font-semibold px-2 py-1"
           data-testid={testid ? `${testid}-copy` : undefined}
           aria-label="Copy code"
         >
@@ -72,7 +72,7 @@ export default function ForPortalEngineers() {
           <ArrowLeft size={14} /> Back to sacoparentsapp.online
         </Link>
 
-        <div className="text-[10px] uppercase tracking-[0.22em] font-bold text-[#3D1A78] flex items-center gap-1.5">
+        <div className="text-[0.625rem] uppercase tracking-[0.22em] font-bold text-[#3D1A78] flex items-center gap-1.5">
           <Terminal size={12} /> For sacoparentsalign.com engineers
         </div>
         <h1
@@ -86,17 +86,17 @@ export default function ForPortalEngineers() {
           must implement to render reports parents share with your
           site. Two endpoints on our side; two callbacks from you.
           There&rsquo;s a CLI simulator at{" "}
-          <code className="bg-white border border-[#E5E0EE] rounded px-1 py-0.5 font-mono text-[12px]">
+          <code className="bg-white border border-[#E5E0EE] rounded px-1 py-0.5 font-mono text-[0.75rem]">
             scripts/portal_handshake_simulator.py
           </code>{" "}
           if you want to test byte-for-byte.
         </p>
 
         <div className="mt-6 rounded-2xl border border-[#F5D0C5] bg-[#FEF5F0] p-4">
-          <div className="text-[11px] uppercase tracking-[0.15em] font-bold text-[#9A3A23] mb-1 flex items-center gap-1.5">
+          <div className="text-[0.6875rem] uppercase tracking-[0.15em] font-bold text-[#9A3A23] mb-1 flex items-center gap-1.5">
             <ShieldCheck size={11} /> Contract rule zero
           </div>
-          <p className="text-[13px] text-[#4B4567] leading-relaxed">
+          <p className="text-[0.8125rem] text-[#4B4567] leading-relaxed">
             <strong>Never render a report body without a fresh
             permission check.</strong> Every view AND every download
             MUST first call <code>GET /report-permissions/&#123;id&#125;</code>{" "}
@@ -121,7 +121,7 @@ export default function ForPortalEngineers() {
 Content-Type: application/json
 Accept: application/json`}
           </Code>
-          <p className="text-[13px] text-[#6E6787]">
+          <p className="text-[0.8125rem] text-[#6E6787]">
             Missing or wrong key → <code>401 Invalid integration key</code>.
             Missing secret on our environment → <code>503 Integration not configured</code>{" "}
             (this should never happen in production; if you see it,
@@ -162,7 +162,7 @@ X-Integration-Key: $INTEGRATION_SHARED_SECRET`}
 { "active": false, "reason": "expired",  "permission_id": "…" }
 { "active": false, "reason": "unknown" }`}
           </Code>
-          <p className="text-[13px] text-[#6E6787]">
+          <p className="text-[0.8125rem] text-[#6E6787]">
             When <code>active</code> is <code>false</code>, your portal
             must show the professional a "This access has ended" screen
             and stop. Never fall back to a cached previous response.
@@ -210,7 +210,7 @@ Content-Type: application/json
               from the permission-check response.
             </li>
           </ul>
-          <p className="text-[13px] text-[#6E6787]">
+          <p className="text-[0.8125rem] text-[#6E6787]">
             Response is <code>{`{ "event_id": "…", "recorded": true }`}</code>.
             Non-200 → retry once with backoff, then log locally.
             Missing X-Integration-Key → <code>401</code>. Unknown
@@ -240,7 +240,7 @@ Content-Type: application/json
   "professional_email": "nomsa@sacoparentsalign.com"
 }`}
           </Code>
-          <p className="text-[13px] text-[#6E6787]">
+          <p className="text-[0.8125rem] text-[#6E6787]">
             Signature key is <code>SACOPARENTSALIGN_WEBHOOK_SECRET</code> —
             a DIFFERENT shared secret from <code>INTEGRATION_SHARED_SECRET</code>{" "}
             above. Idempotent: second call returns
@@ -293,7 +293,7 @@ python scripts/portal_handshake_simulator.py \\
         </Section>
 
         <div className="mt-12 rounded-2xl border border-[#D6CFE8] bg-[#F5F1FB] p-5">
-          <div className="text-[11px] uppercase tracking-[0.15em] font-bold text-[#3D1A78]">
+          <div className="text-[0.6875rem] uppercase tracking-[0.15em] font-bold text-[#3D1A78]">
             Questions?
           </div>
           <p className="text-[13.5px] text-[#4B4567] mt-1 leading-relaxed">

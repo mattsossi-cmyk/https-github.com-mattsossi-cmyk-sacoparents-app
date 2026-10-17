@@ -56,7 +56,7 @@ export default function AssessmentHistoryCard({
         </div>
         {ready && (
           <span
-            className="inline-flex items-center gap-1.5 text-[11px] uppercase tracking-[0.14em] font-bold text-[#1F5C3B] bg-[#EAF7F0] border border-[#C6DECF] rounded-full px-2.5 py-1 shrink-0"
+            className="inline-flex items-center gap-1.5 text-[0.6875rem] uppercase tracking-[0.14em] font-bold text-[#1F5C3B] bg-[#EAF7F0] border border-[#C6DECF] rounded-full px-2.5 py-1 shrink-0"
             data-testid={`${testidPrefix}-report-ready-chip`}
           >
             <Sparkles size={11} /> Joint Report ready
@@ -84,7 +84,7 @@ export default function AssessmentHistoryCard({
                   {s.label}
                 </div>
                 <div className="flex items-center gap-2 mt-0.5">
-                  <span className="inline-flex items-center gap-1 text-[10px] uppercase tracking-[0.14em] font-semibold text-[#1F5C3B]">
+                  <span className="inline-flex items-center gap-1 text-[0.625rem] uppercase tracking-[0.14em] font-semibold text-[#1F5C3B]">
                     <CheckCircle2 size={10} />
                     Completed
                   </span>
@@ -118,7 +118,7 @@ export default function AssessmentHistoryCard({
 
       {!ready && (
         <p
-          className="text-[11px] text-[#6E6787] mt-3"
+          className="text-[0.6875rem] text-[#6E6787] mt-3"
           data-testid={`${testidPrefix}-waiting-hint`}
         >
           Invite your co-parent to see a Co-Parenting Agreement link appear

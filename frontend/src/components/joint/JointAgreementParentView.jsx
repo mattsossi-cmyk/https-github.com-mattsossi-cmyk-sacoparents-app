@@ -70,7 +70,7 @@ function BucketBothProposed({ data }) {
           className="rounded-xl bg-white/70 border border-white p-3"
         >
           {(it.area || it.section_title) && (
-            <div className="text-[10px] uppercase tracking-[0.18em] font-bold text-[#1F5C3B] mb-1">
+            <div className="text-[0.625rem] uppercase tracking-[0.18em] font-bold text-[#1F5C3B] mb-1">
               {it.area || it.section_title}
             </div>
           )}
@@ -98,18 +98,18 @@ function BucketDifferentIdeas({ data, parentAName, parentBName }) {
           key={`${it.topic}-${i}`}
           className="rounded-xl bg-white/70 border border-white p-3"
         >
-          <div className="text-[10px] uppercase tracking-[0.18em] font-bold text-[#8A5B00] mb-1.5">
+          <div className="text-[0.625rem] uppercase tracking-[0.18em] font-bold text-[#8A5B00] mb-1.5">
             {it.topic}
           </div>
           <div className="grid sm:grid-cols-2 gap-2">
             <div className={`rounded-lg p-2 text-sm text-[#1A1330] ${it.parent_a ? "bg-[#F7F4FC]" : "bg-white/50"}`}>
-              <div className="text-[10px] uppercase tracking-wider text-[#3D1A78] font-semibold mb-0.5">
+              <div className="text-[0.625rem] uppercase tracking-wider text-[#3D1A78] font-semibold mb-0.5">
                 {parentAName}
               </div>
               {it.parent_a || <em className="text-[#6E6787]">no clause proposed</em>}
             </div>
             <div className={`rounded-lg p-2 text-sm text-[#1A1330] ${it.parent_b ? "bg-[#EAF7F7]" : "bg-white/50"}`}>
-              <div className="text-[10px] uppercase tracking-wider text-[#0F6F6F] font-semibold mb-0.5">
+              <div className="text-[0.625rem] uppercase tracking-wider text-[#0F6F6F] font-semibold mb-0.5">
                 {parentBName}
               </div>
               {it.parent_b || <em className="text-[#6E6787]">no clause proposed</em>}
@@ -143,7 +143,7 @@ function BucketRefinement({ data }) {
               {it.topic || "Open item"}
             </div>
             {it.both_flagged && (
-              <span className="text-[10px] uppercase tracking-wider text-[#B02A2A] font-bold">
+              <span className="text-[0.625rem] uppercase tracking-wider text-[#B02A2A] font-bold">
                 Both flagged
               </span>
             )}
@@ -189,7 +189,7 @@ function BucketQuestions({ data }) {
           key={`${it.topic}-${i}`}
           className="rounded-xl bg-white/70 border border-white p-3"
         >
-          <div className="text-[10px] uppercase tracking-[0.18em] font-bold text-[#0F6F6F] mb-1">
+          <div className="text-[0.625rem] uppercase tracking-[0.18em] font-bold text-[#0F6F6F] mb-1">
             {it.topic}
           </div>
           <div className="text-sm text-[#1A1330] leading-relaxed italic">

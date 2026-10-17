@@ -158,7 +158,7 @@ export default function ActivitiesAlignment() {
             <div className="w-12 h-12 rounded-full bg-white/15 grid place-items-center backdrop-blur-sm">
               <Palette size={22} strokeWidth={2.2} />
             </div>
-            <div className="text-[11px] uppercase tracking-[0.18em] font-bold text-white/85">
+            <div className="text-[0.6875rem] uppercase tracking-[0.18em] font-bold text-white/85">
               Activities Alignment Report
             </div>
           </div>
@@ -282,7 +282,7 @@ export default function ActivitiesAlignment() {
 
             {payload.shared && payload.shared.length > 0 && (
               <div>
-                <div className="text-[11px] uppercase tracking-[0.16em] font-bold text-[#1E7A55] mb-2 flex items-center gap-2">
+                <div className="text-[0.6875rem] uppercase tracking-[0.16em] font-bold text-[#1E7A55] mb-2 flex items-center gap-2">
                   <CheckCircle2 size={13} /> Where you agree
                 </div>
                 <div className="grid gap-3">
@@ -295,7 +295,7 @@ export default function ActivitiesAlignment() {
 
             {payload.gaps && payload.gaps.length > 0 && (
               <div>
-                <div className="text-[11px] uppercase tracking-[0.16em] font-bold text-[#904B0E] mb-2 flex items-center gap-2">
+                <div className="text-[0.6875rem] uppercase tracking-[0.16em] font-bold text-[#904B0E] mb-2 flex items-center gap-2">
                   <ShieldAlert size={13} /> Where a small tune-up would help
                 </div>
                 <div className="grid gap-3">

@@ -51,7 +51,7 @@ export function AgreeControls({ row, i, compare, step4 }) {
   useEffect(() => setNote(row.note), [row.note]);
   const busy = compare.agreeBusy === row.key;
   const small =
-    "text-[11px] font-bold px-3 py-1.5 rounded-full transition-colors disabled:opacity-60";
+    "text-[0.6875rem] font-bold px-3 py-1.5 rounded-full transition-colors disabled:opacity-60";
   if (!row.agreed) {
     return (
       <button
@@ -74,12 +74,12 @@ export function AgreeControls({ row, i, compare, step4 }) {
       className="mt-2 bg-emerald-50 border border-emerald-100 rounded-lg p-2.5"
     >
       <div className="flex flex-wrap items-center gap-2 mb-2">
-        <span className="text-[11px] font-extrabold text-emerald-800">
+        <span className="text-[0.6875rem] font-extrabold text-emerald-800">
           <i className="fa-solid fa-handshake mr-1"></i>Agreed
         </span>
         <span
           data-testid={`court-agreed-by-${i}`}
-          className="text-[11px] text-emerald-900"
+          className="text-[0.6875rem] text-emerald-900"
         >
           {whoMarked(row)}
         </span>
@@ -107,7 +107,7 @@ export function AgreeControls({ row, i, compare, step4 }) {
       </div>
       <label
         htmlFor={`court-agree-note-${i}`}
-        className="block text-[10px] font-bold uppercase tracking-wider text-emerald-900 mb-1"
+        className="block text-[0.625rem] font-bold uppercase tracking-wider text-emerald-900 mb-1"
       >
         What we agreed (optional)
       </label>
@@ -122,7 +122,7 @@ export function AgreeControls({ row, i, compare, step4 }) {
         className="w-full text-xs rounded-md border border-emerald-200 bg-white px-2.5 py-2 focus:outline-none focus:ring-2 focus:ring-emerald-400"
       />
       <div className="flex items-center justify-between mt-1">
-        <span className="text-[10px] text-emerald-900/70">
+        <span className="text-[0.625rem] text-emerald-900/70">
           {note.length}/{NOTE_MAX} · Both of you can see this
         </span>
         <span className="flex items-center gap-1.5">
@@ -156,7 +156,7 @@ export function AgreeControls({ row, i, compare, step4 }) {
 export function AgreedList({ rows }) {
   return (
     <div data-testid="court-agreed-list" className="mt-3">
-      <p className="text-[11px] font-extrabold uppercase tracking-wider text-emerald-800 mb-1.5">
+      <p className="text-[0.6875rem] font-extrabold uppercase tracking-wider text-emerald-800 mb-1.5">
         <i className="fa-solid fa-handshake mr-1"></i>Agreed after talking
       </p>
       <ul className="space-y-1.5">
@@ -167,7 +167,7 @@ export function AgreedList({ rows }) {
           >
             <p className="text-xs font-semibold text-[#202124]">{r.area}</p>
             {r.note && (
-              <p className="text-[11px] text-emerald-900 mt-0.5">{r.note}</p>
+              <p className="text-[0.6875rem] text-emerald-900 mt-0.5">{r.note}</p>
             )}
           </li>
         ))}

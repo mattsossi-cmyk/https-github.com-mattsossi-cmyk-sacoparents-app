@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 
 const backBtn =
-  "text-[11px] font-semibold text-slate-500 hover:text-purple-800 transition-colors disabled:opacity-40";
+  "text-[0.6875rem] font-semibold text-slate-500 hover:text-purple-800 transition-colors disabled:opacity-40";
 
 export function BackLink({ onBack }) {
   if (!onBack) return null;

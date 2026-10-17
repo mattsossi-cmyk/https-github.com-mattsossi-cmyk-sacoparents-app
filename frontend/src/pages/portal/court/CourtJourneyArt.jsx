@@ -26,7 +26,7 @@ function StepPill({ n, status }) {
     <span
       data-testid={`court-step-${n}-status`}
       data-status={status}
-      className={`absolute bottom-1 left-1 sm:bottom-2 sm:left-2 inline-flex items-center gap-1 rounded-full px-1.5 sm:px-2 py-0.5 text-[8px] sm:text-[11px] font-bold shadow ${tone}`}
+      className={`absolute bottom-1 left-1 sm:bottom-2 sm:left-2 inline-flex items-center gap-1 rounded-full px-1.5 sm:px-2 py-0.5 text-[0.5rem] sm:text-[0.6875rem] font-bold shadow ${tone}`}
     >
       <i className={`fa-solid ${icon}`}></i>
       {label}
@@ -37,7 +37,7 @@ function StepPill({ n, status }) {
 function HintsToggle({ hints, onToggle }) {
   return (
     <div className="flex items-center justify-between gap-2 mb-2.5">
-      <span className="text-[10px] sm:text-[11px] font-bold uppercase tracking-wider text-purple-700 whitespace-nowrap">Tap the picture or the cards</span>
+      <span className="text-[0.625rem] sm:text-[0.6875rem] font-bold uppercase tracking-wider text-purple-700 whitespace-nowrap">Tap the picture or the cards</span>
       <button
         type="button"
         data-testid="court-hints-toggle"

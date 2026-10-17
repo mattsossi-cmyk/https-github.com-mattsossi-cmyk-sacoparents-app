@@ -45,7 +45,7 @@ function LikertRow({ q, likert, value, onChange }) {
               key={lb.value}
               type="button"
               onClick={() => onChange(lb.value)}
-              className={`text-[11px] py-2 px-1 rounded-lg border transition ${
+              className={`text-[0.6875rem] py-2 px-1 rounded-lg border transition ${
                 selected
                   ? "bg-[#3D1A78] text-white border-[#3D1A78] font-bold"
                   : "bg-white text-[#4B4567] border-[#E5E0EE] hover:border-[#3D1A78]"
@@ -54,7 +54,7 @@ function LikertRow({ q, likert, value, onChange }) {
               aria-pressed={selected}
             >
               <div className="text-base font-bold">{lb.value}</div>
-              <div className="hidden sm:block text-[10px] leading-tight mt-0.5">
+              <div className="hidden sm:block text-[0.625rem] leading-tight mt-0.5">
                 {lb.label.split(" / ")[0]}
               </div>
             </button>
@@ -69,7 +69,7 @@ function DimStep({ dim, likert, answers, setAnswer }) {
   return (
     <div className="fade-up" data-testid={`companion-dim-${dim.key}`}>
       <div className="mb-6">
-        <div className="text-[10px] uppercase tracking-[0.22em] font-bold text-[#3D1A78]">
+        <div className="text-[0.625rem] uppercase tracking-[0.22em] font-bold text-[#3D1A78]">
           Dimension {dim.number}
         </div>
         <h2 className="font-serif text-2xl sm:text-3xl text-[#1A1330] mt-1">
@@ -102,13 +102,13 @@ function DimensionResultCard({ dim }) {
     >
       <div className="flex items-start justify-between gap-3 flex-wrap">
         <div>
-          <div className="text-[10px] uppercase tracking-[0.2em] font-bold text-[#3D1A78]">
+          <div className="text-[0.625rem] uppercase tracking-[0.2em] font-bold text-[#3D1A78]">
             Dimension {dim.dimension_num}
           </div>
           <div className="font-serif text-lg text-[#1A1330] mt-0.5">{dim.label}</div>
         </div>
         <span
-          className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-[11px] font-bold ${style.pill}`}
+          className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-[0.6875rem] font-bold ${style.pill}`}
           data-testid={`companion-result-${dim.dimension}-tier`}
         >
           {dim.tier_label}
@@ -123,7 +123,7 @@ function DimensionResultCard({ dim }) {
             style={{ width: `${Math.max(4, pctToStrained * 100)}%` }}
           />
         </div>
-        <div className="text-[11px] text-[#6A5799] mt-1">
+        <div className="text-[0.6875rem] text-[#6A5799] mt-1">
           Concern level {dim.score.toFixed(2)} / 5 (lower is better)
         </div>
       </div>
@@ -131,7 +131,7 @@ function DimensionResultCard({ dim }) {
       <p className="text-sm text-[#4B4567] mt-3">{dim.summary}</p>
 
       <div className="mt-3">
-        <div className="text-[10px] uppercase tracking-[0.2em] font-bold text-[#3D1A78] mb-2">
+        <div className="text-[0.625rem] uppercase tracking-[0.2em] font-bold text-[#3D1A78] mb-2">
           Recommended supports
         </div>
         <ul className="space-y-1.5">
@@ -275,7 +275,7 @@ export default function DimensionCompanion() {
         {/* Step progress */}
         {step >= 1 && step <= 3 && (
           <div className="mb-6" data-testid="companion-progress">
-            <div className="flex items-center justify-between text-[11px] text-[#6A5799] mb-1">
+            <div className="flex items-center justify-between text-[0.6875rem] text-[#6A5799] mb-1">
               <span>Step {step} of 3 · Dimension {bundle.dimensions[step - 1].number}</span>
               <span>{Math.round((step / 3) * 100)}%</span>
             </div>
@@ -290,7 +290,7 @@ export default function DimensionCompanion() {
 
         {step === 0 && (
           <div className="fade-up" data-testid="companion-intro">
-            <div className="text-[10px] uppercase tracking-[0.22em] font-bold text-[#3D1A78]">
+            <div className="text-[0.625rem] uppercase tracking-[0.22em] font-bold text-[#3D1A78]">
               Companion assessment
             </div>
             <h1 className="font-serif text-3xl sm:text-4xl text-[#1A1330] mt-1">
@@ -305,7 +305,7 @@ export default function DimensionCompanion() {
             </p>
 
             <div className="mt-6 rounded-2xl border border-[#E5E0EE] bg-[#F8F5FF] p-5">
-              <div className="flex items-center gap-2 mb-2 text-[11px] uppercase tracking-[0.2em] font-bold text-[#3D1A78]">
+              <div className="flex items-center gap-2 mb-2 text-[0.6875rem] uppercase tracking-[0.2em] font-bold text-[#3D1A78]">
                 <ShieldCheck size={13} /> Why the Safety firewall matters
               </div>
               <p className="text-sm text-[#4B4567] leading-relaxed">
@@ -380,14 +380,14 @@ export default function DimensionCompanion() {
 
         {step === 4 && result && (
           <div className="fade-up" data-testid="companion-result">
-            <div className="text-[10px] uppercase tracking-[0.22em] font-bold text-[#3D1A78]">
+            <div className="text-[0.625rem] uppercase tracking-[0.22em] font-bold text-[#3D1A78]">
               Companion result
             </div>
             <h1 className="font-serif text-3xl sm:text-4xl text-[#1A1330] mt-1">
               Your Dimensions 2, 3 &amp; 4
             </h1>
             <div className="mt-3 rounded-2xl border border-[#E5E0EE] bg-[#F8F5FF] p-5">
-              <div className="text-[11px] uppercase tracking-[0.2em] font-bold text-[#3D1A78] mb-1">
+              <div className="text-[0.6875rem] uppercase tracking-[0.2em] font-bold text-[#3D1A78] mb-1">
                 Focus first on
               </div>
               <p className="text-sm text-[#1A1330]" data-testid="companion-result-overall">

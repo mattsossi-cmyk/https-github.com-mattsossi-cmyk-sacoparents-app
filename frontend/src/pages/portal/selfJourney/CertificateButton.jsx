@@ -50,7 +50,7 @@ export function CertificateButton({ defaultName }) {
           setName(defaultName || "");
           setOpen(true);
         }}
-        className="shrink-0 rounded-full bg-white hover:bg-purple-50 text-[#4a1d7a] text-[13px] font-bold px-4 py-2 transition-colors"
+        className="shrink-0 rounded-full bg-white hover:bg-purple-50 text-[#4a1d7a] text-[0.8125rem] font-bold px-4 py-2 transition-colors"
       >
         <i className="fa-solid fa-award mr-1.5"></i>Download certificate
       </button>
@@ -60,7 +60,7 @@ export function CertificateButton({ defaultName }) {
             <DialogTitle className="text-[#4a1d7a]">Self Journey certificate</DialogTitle>
             <DialogDescription>Check how your name should be printed, then download.</DialogDescription>
           </DialogHeader>
-          <label className="block text-[12px] font-bold text-slate-700" htmlFor="certificate-name">
+          <label className="block text-[0.75rem] font-bold text-slate-700" htmlFor="certificate-name">
             Name on the certificate
           </label>
           <input
@@ -71,7 +71,7 @@ export function CertificateButton({ defaultName }) {
             onChange={(e) => setName(e.target.value)}
             className="w-full border border-slate-300 rounded-md px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-purple-400"
           />
-          <p className="text-[11px] text-slate-500 leading-relaxed">
+          <p className="text-[0.6875rem] text-slate-500 leading-relaxed">
             A certificate of completion for the self-guided SA CoParents Self Journey. It is not a court-approved parenting course certificate and not legal advice.
           </p>
           <div className="flex flex-col-reverse sm:flex-row sm:justify-end gap-2 pt-1">

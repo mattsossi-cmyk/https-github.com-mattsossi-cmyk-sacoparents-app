@@ -57,7 +57,7 @@ export default function ShareReportQuickAction({ sncHighlights }) {
       className="flex flex-wrap items-center gap-2"
       data-testid="dashboard-share-report-quick-actions"
     >
-      <span className="inline-flex items-center gap-1.5 text-[11px] uppercase tracking-[0.14em] font-semibold text-[#3D1A78] mr-1">
+      <span className="inline-flex items-center gap-1.5 text-[0.6875rem] uppercase tracking-[0.14em] font-semibold text-[#3D1A78] mr-1">
         <Share2 size={12} />
         Share
       </span>

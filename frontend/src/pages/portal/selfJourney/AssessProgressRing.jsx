@@ -12,7 +12,7 @@ export function JourneySummaryButton({ onClick, downloading }) {
       data-testid="door-self-journey-summary-pdf"
       onClick={onClick}
       disabled={downloading}
-      className="w-full py-2.5 rounded-full bg-white hover:bg-purple-50 border border-purple-300 text-purple-900 text-[13px] font-bold transition-colors disabled:opacity-60"
+      className="w-full py-2.5 rounded-full bg-white hover:bg-purple-50 border border-purple-300 text-purple-900 text-[0.8125rem] font-bold transition-colors disabled:opacity-60"
     >
       <i className={`fa-solid ${downloading ? "fa-spinner fa-spin" : "fa-file-pdf"} mr-1.5`}></i>
       Download my Journey Summary (PDF)
@@ -50,7 +50,7 @@ export function AssessProgressRing({ done, onOpen }) {
             className="transition-[stroke-dashoffset] duration-700 ease-out"
           />
         </svg>
-        <span className="absolute inset-0 flex items-center justify-center text-[13px] font-extrabold text-[#3b1566]">
+        <span className="absolute inset-0 flex items-center justify-center text-[0.8125rem] font-extrabold text-[#3b1566]">
           {count}/{ASSESS_ORDER.length}
         </span>
       </span>
@@ -58,7 +58,7 @@ export function AssessProgressRing({ done, onOpen }) {
         <span data-testid="door-self-progress-count" className="block text-sm font-extrabold text-[#3b1566] leading-tight">
           {count} of {ASSESS_ORDER.length} assessments done
         </span>
-        <span data-testid="door-self-progress-next" className="block text-[11px] text-slate-600 mt-0.5 leading-snug">
+        <span data-testid="door-self-progress-next" className="block text-[0.6875rem] text-slate-600 mt-0.5 leading-snug">
           {next ? (
             <>
               Next: <span className="font-semibold text-purple-800">{ASSESS_NAMES[next]}</span>

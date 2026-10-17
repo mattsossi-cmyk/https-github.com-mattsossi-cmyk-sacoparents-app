@@ -78,7 +78,7 @@ function BucketCareAbout({ data }) {
       ))}
       {(data.shared_pathways || []).length > 0 && (
         <li className="rounded-xl bg-white/70 border border-white p-3">
-          <div className="text-[10px] uppercase tracking-[0.18em] font-bold text-[#1F5C3B] mb-1">
+          <div className="text-[0.625rem] uppercase tracking-[0.18em] font-bold text-[#1F5C3B] mb-1">
             Pathways both of you named
           </div>
           <div className="flex flex-wrap gap-1.5">
@@ -115,16 +115,16 @@ function BucketDifferences({ data }) {
           key={`${it.topic}-${i}`}
           className="rounded-xl bg-white/70 border border-white p-3"
         >
-          <div className="text-[10px] uppercase tracking-[0.18em] font-bold text-[#8A5B00] mb-1.5">
+          <div className="text-[0.625rem] uppercase tracking-[0.18em] font-bold text-[#8A5B00] mb-1.5">
             {it.topic}
           </div>
           <div className="grid sm:grid-cols-2 gap-2">
             <div className="rounded-lg bg-[#F7F4FC] p-2 text-sm text-[#1A1330]">
-              <div className="text-[10px] uppercase tracking-wider text-[#3D1A78] font-semibold mb-0.5">Parent A</div>
+              <div className="text-[0.625rem] uppercase tracking-wider text-[#3D1A78] font-semibold mb-0.5">Parent A</div>
               {it.parent_a || <em className="text-[#6E6787]">no response</em>}
             </div>
             <div className="rounded-lg bg-[#EAF7F7] p-2 text-sm text-[#1A1330]">
-              <div className="text-[10px] uppercase tracking-wider text-[#0F6F6F] font-semibold mb-0.5">Parent B</div>
+              <div className="text-[0.625rem] uppercase tracking-wider text-[#0F6F6F] font-semibold mb-0.5">Parent B</div>
               {it.parent_b || <em className="text-[#6E6787]">no response</em>}
             </div>
           </div>
@@ -195,7 +195,7 @@ function BucketQuestions({ data }) {
           key={`${it.topic}-${i}`}
           className="rounded-xl bg-white/70 border border-white p-3"
         >
-          <div className="text-[10px] uppercase tracking-[0.18em] font-bold text-[#0F6F6F] mb-1">
+          <div className="text-[0.625rem] uppercase tracking-[0.18em] font-bold text-[#0F6F6F] mb-1">
             {it.topic}
           </div>
           <div className="text-sm text-[#1A1330] leading-relaxed italic">

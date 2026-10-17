@@ -53,7 +53,7 @@ export default function SafetyAlert({ level, onDismiss }) {
               </button>
             )}
           </div>
-          <p className={`text-[13px] sm:text-[14px] ${palette.body} mt-1 leading-relaxed`}>
+          <p className={`text-[0.8125rem] sm:text-[14px] ${palette.body} mt-1 leading-relaxed`}>
             {res.message}
           </p>
 
@@ -65,7 +65,7 @@ export default function SafetyAlert({ level, onDismiss }) {
                   ? "bg-[#9A5D47] hover:bg-[#7F4B39] text-white"
                   : "bg-[#3D1A78] hover:bg-[#2a0f5f] text-white"
                 : "bg-white hover:bg-[#EFE9F9] text-[#1A1330] border border-[#E5E0EE]";
-              const className = `inline-flex items-center gap-1.5 text-[13px] px-3.5 py-2 rounded-full transition-colors ${cls}`;
+              const className = `inline-flex items-center gap-1.5 text-[0.8125rem] px-3.5 py-2 rounded-full transition-colors ${cls}`;
               const testId = `safety-action-${res.level}-${i}`;
               if (a.to) {
                 return (

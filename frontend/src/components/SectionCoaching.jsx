@@ -74,7 +74,7 @@ export default function SectionCoaching({ section, data, ready, testid }) {
       className="rounded-2xl p-6 sm:p-7 border border-black/5 shadow-sm bg-[#F1EBFA]"
       data-testid={rootTestId}
     >
-      <div className="flex items-center gap-2 text-[10px] uppercase tracking-[0.22em] font-bold text-[#3D1A78]">
+      <div className="flex items-center gap-2 text-[0.625rem] uppercase tracking-[0.22em] font-bold text-[#3D1A78]">
         <Compass size={12} />
         Coaching insights
       </div>
@@ -109,7 +109,7 @@ export default function SectionCoaching({ section, data, ready, testid }) {
           <div className="mt-5 space-y-4">
             {state.data.strengths && (
               <div>
-                <div className="flex items-center gap-2 text-[11px] uppercase tracking-[0.18em] font-semibold text-[#0F7676]">
+                <div className="flex items-center gap-2 text-[0.6875rem] uppercase tracking-[0.18em] font-semibold text-[#0F7676]">
                   <HeartHandshake size={13} /> What you&apos;re doing well
                 </div>
                 <p
@@ -122,7 +122,7 @@ export default function SectionCoaching({ section, data, ready, testid }) {
             )}
             {state.data.attention && (
               <div>
-                <div className="flex items-center gap-2 text-[11px] uppercase tracking-[0.18em] font-semibold text-[#B8891C]">
+                <div className="flex items-center gap-2 text-[0.6875rem] uppercase tracking-[0.18em] font-semibold text-[#B8891C]">
                   <Sprout size={13} /> What may deserve attention
                 </div>
                 <p
@@ -135,7 +135,7 @@ export default function SectionCoaching({ section, data, ready, testid }) {
             )}
             {state.data.next_step && (
               <div>
-                <div className="flex items-center gap-2 text-[11px] uppercase tracking-[0.18em] font-semibold text-[#3D1A78]">
+                <div className="flex items-center gap-2 text-[0.6875rem] uppercase tracking-[0.18em] font-semibold text-[#3D1A78]">
                   <ArrowRight size={13} /> One next step
                 </div>
                 <p

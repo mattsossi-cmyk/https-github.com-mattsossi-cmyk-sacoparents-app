@@ -227,7 +227,7 @@ export default function ShareChildNeedsNudge() {
           <Users size={16} className="text-[#3D1A78]" />
         </div>
         <div className="min-w-0 flex-1">
-          <div className="text-[10px] uppercase tracking-[0.22em] font-bold text-[#3D1A78]">
+          <div className="text-[0.625rem] uppercase tracking-[0.22em] font-bold text-[#3D1A78]">
             Optional · you're in control
           </div>
           <h3
@@ -272,7 +272,7 @@ export default function ShareChildNeedsNudge() {
                   data-testid={`child-needs-share-nudge-toggle-${c.case_id}`}
                 />
                 <div className="flex-1 min-w-0">
-                  <div className="text-[13px] font-semibold text-[#1A1330]">
+                  <div className="text-[0.8125rem] font-semibold text-[#1A1330]">
                     {c.case_id}
                     <span className="text-[#4B4567] font-normal">
                       {" "}
@@ -280,7 +280,7 @@ export default function ShareChildNeedsNudge() {
                     </span>
                   </div>
                   <div
-                    className="text-[11px] uppercase tracking-[0.14em] font-bold mt-1"
+                    className="text-[0.6875rem] uppercase tracking-[0.14em] font-bold mt-1"
                     data-testid={`child-needs-share-nudge-status-${c.case_id}`}
                   >
                     {isOn && c.coparent_has_consented ? (
@@ -314,14 +314,14 @@ export default function ShareChildNeedsNudge() {
 
       {error && (
         <div
-          className="mt-3 text-[12px] text-[#AA0033]"
+          className="mt-3 text-[0.75rem] text-[#AA0033]"
           data-testid="child-needs-share-nudge-error"
         >
           {error}
         </div>
       )}
 
-      <p className="mt-3 text-[11px] text-[#6E6787] italic leading-relaxed">
+      <p className="mt-3 text-[0.6875rem] text-[#6E6787] italic leading-relaxed">
         Educational and organizational — not a diagnosis, not a court
         submission. You can change this any time from the joint report
         page.

@@ -26,7 +26,7 @@ function RecipientList({ recipients, onPick }) {
         <button key={r.recipient_id} type="button" data-testid={`cert-share-recipient-${r.recipient_id}`} onClick={() => onPick(r)} className="w-full flex items-center justify-between gap-3 text-left rounded-lg border-2 border-[#E2E8F0] bg-white hover:border-[#611663] px-3.5 py-2.5 transition-colors">
           <span className="min-w-0">
             <span className="block text-sm font-bold text-slate-900">{r.name}</span>
-            <span className="block text-[12px] text-slate-500 break-words">{r.role_label} · {r.email}</span>
+            <span className="block text-[0.75rem] text-slate-500 break-words">{r.role_label} · {r.email}</span>
           </span>
           <i className="fa-solid fa-paper-plane text-[#611663]"></i>
         </button>
@@ -66,7 +66,7 @@ export function CertificateShare({ defaultName, onSent }) {
 
   return (
     <>
-      <button type="button" data-testid="door-self-certificate-share-btn" onClick={start} className="shrink-0 rounded-full bg-white/15 hover:bg-white/25 border border-white/40 text-white text-[13px] font-bold px-4 py-2 transition-colors">
+      <button type="button" data-testid="door-self-certificate-share-btn" onClick={start} className="shrink-0 rounded-full bg-white/15 hover:bg-white/25 border border-white/40 text-white text-[0.8125rem] font-bold px-4 py-2 transition-colors">
         <i className="fa-solid fa-paper-plane mr-1.5"></i>Share certificate
       </button>
       <Dialog open={open} onOpenChange={(v) => !busy && setOpen(v)}>
@@ -88,7 +88,7 @@ export function CertificateShare({ defaultName, onSent }) {
           ) : (
             <div className="space-y-4">
               <div>
-                <label className="block text-[12px] font-bold text-slate-700 mb-1" htmlFor="cert-share-name">
+                <label className="block text-[0.75rem] font-bold text-slate-700 mb-1" htmlFor="cert-share-name">
                   Name on the certificate
                 </label>
                 <input id="cert-share-name" data-testid="cert-share-name-input" value={name} maxLength={80} onChange={(e) => setName(e.target.value)} className="w-full border border-slate-300 rounded-md px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-purple-400" />

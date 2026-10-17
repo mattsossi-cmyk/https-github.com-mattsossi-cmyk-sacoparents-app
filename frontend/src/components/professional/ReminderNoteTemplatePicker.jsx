@@ -120,7 +120,7 @@ export default function ReminderNoteTemplatePicker({
             type="button"
             onClick={() => setPickerOpen((v) => !v)}
             disabled={!hasTemplates}
-            className="inline-flex items-center gap-1 rounded-full bg-[#EFE9F9] hover:bg-[#E5DAF7] text-[#3D1A78] disabled:bg-[#F5F1FB] disabled:text-[#6E6787] disabled:cursor-not-allowed px-2.5 py-1 text-[11px] font-semibold transition-colors"
+            className="inline-flex items-center gap-1 rounded-full bg-[#EFE9F9] hover:bg-[#E5DAF7] text-[#3D1A78] disabled:bg-[#F5F1FB] disabled:text-[#6E6787] disabled:cursor-not-allowed px-2.5 py-1 text-[0.6875rem] font-semibold transition-colors"
             data-testid={`${testidPrefix}-insert`}
             title={hasTemplates ? "Insert a saved template" : "No templates yet"}
           >
@@ -142,10 +142,10 @@ export default function ReminderNoteTemplatePicker({
                       className="w-full text-left rounded-lg px-2 py-1.5 hover:bg-[#F5F1FB] transition-colors"
                       data-testid={`${testidPrefix}-menu-item-${tpl.template_id}`}
                     >
-                      <div className="text-[12px] font-semibold text-[#1A1330] truncate">
+                      <div className="text-[0.75rem] font-semibold text-[#1A1330] truncate">
                         {tpl.label}
                       </div>
-                      <div className="text-[11px] text-[#6E6787] truncate">
+                      <div className="text-[0.6875rem] text-[#6E6787] truncate">
                         {tpl.body}
                       </div>
                     </button>
@@ -161,7 +161,7 @@ export default function ReminderNoteTemplatePicker({
           type="button"
           onClick={() => setSaveOpen((v) => !v)}
           disabled={!currentTrimmed}
-          className="inline-flex items-center gap-1 rounded-full bg-white border border-[#D6CFE8] hover:bg-[#F5F1FB] text-[#3D1A78] disabled:opacity-50 disabled:cursor-not-allowed px-2.5 py-1 text-[11px] font-semibold transition-colors"
+          className="inline-flex items-center gap-1 rounded-full bg-white border border-[#D6CFE8] hover:bg-[#F5F1FB] text-[#3D1A78] disabled:opacity-50 disabled:cursor-not-allowed px-2.5 py-1 text-[0.6875rem] font-semibold transition-colors"
           data-testid={`${testidPrefix}-save`}
           title={currentTrimmed ? "Save current note as a template" : "Type a note first"}
         >
@@ -172,7 +172,7 @@ export default function ReminderNoteTemplatePicker({
         <button
           type="button"
           onClick={() => setManageOpen(true)}
-          className="inline-flex items-center gap-1 rounded-full text-[#6E6787] hover:text-[#3D1A78] px-2 py-1 text-[11px] font-semibold transition-colors"
+          className="inline-flex items-center gap-1 rounded-full text-[#6E6787] hover:text-[#3D1A78] px-2 py-1 text-[0.6875rem] font-semibold transition-colors"
           data-testid={`${testidPrefix}-manage`}
           title="Manage saved templates"
         >
@@ -188,7 +188,7 @@ export default function ReminderNoteTemplatePicker({
         >
           <label
             htmlFor={`${testidPrefix}-save-label`}
-            className="text-[10px] uppercase tracking-[0.15em] font-bold text-[#3D1A78]"
+            className="text-[0.625rem] uppercase tracking-[0.15em] font-bold text-[#3D1A78]"
           >
             Template label
           </label>
@@ -207,7 +207,7 @@ export default function ReminderNoteTemplatePicker({
             <button
               type="button"
               onClick={() => { setSaveOpen(false); setSaveLabel(""); }}
-              className="rounded-full border border-[#E5E0EE] text-[#4B4567] hover:bg-white px-3 py-1 text-[11px] font-semibold"
+              className="rounded-full border border-[#E5E0EE] text-[#4B4567] hover:bg-white px-3 py-1 text-[0.6875rem] font-semibold"
               data-testid={`${testidPrefix}-save-cancel`}
             >
               Cancel
@@ -216,7 +216,7 @@ export default function ReminderNoteTemplatePicker({
               type="button"
               onClick={handleSaveAsTemplate}
               disabled={saving || !saveLabel.trim() || !currentTrimmed}
-              className="rounded-full bg-[#3D1A78] hover:bg-[#2a0f5f] disabled:bg-[#C9C0DC] text-white px-3 py-1 text-[11px] font-semibold inline-flex items-center gap-1"
+              className="rounded-full bg-[#3D1A78] hover:bg-[#2a0f5f] disabled:bg-[#C9C0DC] text-white px-3 py-1 text-[0.6875rem] font-semibold inline-flex items-center gap-1"
               data-testid={`${testidPrefix}-save-confirm`}
             >
               {saving ? <Loader2 size={11} className="animate-spin" /> : <BookmarkPlus size={11} />}
@@ -278,10 +278,10 @@ export default function ReminderNoteTemplatePicker({
                       data-testid={`${testidPrefix}-manage-row-${tpl.template_id}`}
                     >
                       <div className="min-w-0 flex-1">
-                        <div className="text-[12px] font-semibold text-[#1A1330] truncate">
+                        <div className="text-[0.75rem] font-semibold text-[#1A1330] truncate">
                           {tpl.label}
                         </div>
-                        <div className="text-[12px] text-[#4B4567] mt-0.5 whitespace-pre-wrap">
+                        <div className="text-[0.75rem] text-[#4B4567] mt-0.5 whitespace-pre-wrap">
                           {tpl.body}
                         </div>
                       </div>
@@ -303,7 +303,7 @@ export default function ReminderNoteTemplatePicker({
                   ))}
                 </ul>
               )}
-              <p className="text-[11px] text-[#6E6787] mt-4">
+              <p className="text-[0.6875rem] text-[#6E6787] mt-4">
                 Up to 12 templates per account. Templates are private to
                 your account.
               </p>

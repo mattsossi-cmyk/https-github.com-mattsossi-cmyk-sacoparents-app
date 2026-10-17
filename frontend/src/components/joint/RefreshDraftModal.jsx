@@ -33,7 +33,7 @@ export default function RefreshDraftModal({
         onClick={(e) => e.stopPropagation()}
       >
         <div className="px-6 pt-6">
-          <div className="text-[11px] uppercase tracking-[0.22em] text-[#1F5C3B] font-bold mb-1">
+          <div className="text-[0.6875rem] uppercase tracking-[0.22em] text-[#1F5C3B] font-bold mb-1">
             Refresh my draft
           </div>
           <h3

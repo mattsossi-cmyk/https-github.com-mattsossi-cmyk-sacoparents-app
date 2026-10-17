@@ -142,7 +142,7 @@ export default function WatchFirstVideo({
           </button>
         )}
         {/* Top label */}
-        <div className="absolute top-0 left-0 right-0 p-3 sm:p-4 flex items-center justify-between text-white text-[10px] uppercase tracking-[0.22em] font-bold pointer-events-none">
+        <div className="absolute top-0 left-0 right-0 p-3 sm:p-4 flex items-center justify-between text-white text-[0.625rem] uppercase tracking-[0.22em] font-bold pointer-events-none">
           <span className="inline-flex items-center gap-1.5 bg-black/40 rounded-full px-2.5 py-1 backdrop-blur-sm">
             <Film size={11} />
             {label}
@@ -173,7 +173,7 @@ export default function WatchFirstVideo({
                   style={{ width: `${pct}%` }}
                 />
               </div>
-              <span className="text-[11px] tabular-nums opacity-90 shrink-0">
+              <span className="text-[0.6875rem] tabular-nums opacity-90 shrink-0">
                 {fmt(progress)} / {fmt(duration)}
               </span>
             </div>
@@ -198,7 +198,7 @@ export default function WatchFirstVideo({
           </button>
         </div>
         {error && (
-          <div className="text-[11px] text-white/90 mt-1.5" data-testid={`${testid}-error`}>
+          <div className="text-[0.6875rem] text-white/90 mt-1.5" data-testid={`${testid}-error`}>
             {error}
           </div>
         )}

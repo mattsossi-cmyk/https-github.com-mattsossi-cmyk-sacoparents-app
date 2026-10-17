@@ -59,11 +59,11 @@ function DimensionRow({ row, coparentName }) {
           <div className="font-serif text-lg text-[#1A1330] leading-tight">
             {row.label}
           </div>
-          <p className="text-[12px] text-[#4B4567] mt-0.5 leading-snug">
+          <p className="text-[0.75rem] text-[#4B4567] mt-0.5 leading-snug">
             {row.blurb}
           </p>
         </div>
-        <div className="text-[11px] text-[#4B4567]">
+        <div className="text-[0.6875rem] text-[#4B4567]">
           Delta:{" "}
           <span
             className={`font-semibold ${row.delta <= 15 ? "text-[#1E7A55]" : "text-[#904B0E]"}`}
@@ -74,13 +74,13 @@ function DimensionRow({ row, coparentName }) {
       </div>
       <div className="mt-3 grid gap-3">
         <div>
-          <div className="text-[10px] uppercase tracking-[0.16em] font-bold text-[#904B0E] mb-1">
+          <div className="text-[0.625rem] uppercase tracking-[0.16em] font-bold text-[#904B0E] mb-1">
             You · {row.self_score}
           </div>
           <ScoreBar value={row.self_score} tone="self" />
         </div>
         <div>
-          <div className="text-[10px] uppercase tracking-[0.16em] font-bold text-[#6A5799] mb-1">
+          <div className="text-[0.625rem] uppercase tracking-[0.16em] font-bold text-[#6A5799] mb-1">
             {coparentName || "Co-parent"} · {row.coparent_score}
           </div>
           <ScoreBar value={row.coparent_score} tone="coparent" />
@@ -220,7 +220,7 @@ export default function ParentingScheduleAlignment() {
             <div className="w-12 h-12 rounded-full bg-white/15 grid place-items-center backdrop-blur-sm">
               <CalendarDays size={22} strokeWidth={2.2} />
             </div>
-            <div className="text-[11px] uppercase tracking-[0.18em] font-bold text-white/85">
+            <div className="text-[0.6875rem] uppercase tracking-[0.18em] font-bold text-white/85">
               Parenting Schedule Alignment Report
             </div>
           </div>
@@ -339,7 +339,7 @@ export default function ParentingScheduleAlignment() {
           <div className="mt-6 space-y-6" data-testid="schedule-alignment-ready">
             <div className="rounded-3xl border border-[#E6D8C1] bg-white p-6 sm:p-7 shadow-sm">
               <div className="flex flex-wrap items-center gap-2 mb-2">
-                <span className="text-[10px] uppercase tracking-[0.22em] font-bold text-[#904B0E]">
+                <span className="text-[0.625rem] uppercase tracking-[0.22em] font-bold text-[#904B0E]">
                   Neutral summary
                 </span>
                 {summary && summaryModel && (
@@ -376,7 +376,7 @@ export default function ParentingScheduleAlignment() {
 
             {payload.shared && payload.shared.length > 0 && (
               <div>
-                <div className="text-[11px] uppercase tracking-[0.16em] font-bold text-[#1E7A55] mb-2 flex items-center gap-2">
+                <div className="text-[0.6875rem] uppercase tracking-[0.16em] font-bold text-[#1E7A55] mb-2 flex items-center gap-2">
                   <CheckCircle2 size={13} /> Where you agree
                 </div>
                 <div className="grid gap-3">
@@ -389,7 +389,7 @@ export default function ParentingScheduleAlignment() {
 
             {payload.gaps && payload.gaps.length > 0 && (
               <div>
-                <div className="text-[11px] uppercase tracking-[0.16em] font-bold text-[#904B0E] mb-2 flex items-center gap-2">
+                <div className="text-[0.6875rem] uppercase tracking-[0.16em] font-bold text-[#904B0E] mb-2 flex items-center gap-2">
                   <ShieldAlert size={13} /> Where a small tune-up would help
                 </div>
                 <div className="grid gap-3">
@@ -453,7 +453,7 @@ export default function ParentingScheduleAlignment() {
                   className="rounded-2xl bg-[#F1F9F4] border border-[#C7E5D3] p-5"
                   data-testid="schedule-alignment-share-success"
                 >
-                  <div className="text-[10px] uppercase tracking-[0.18em] font-bold text-[#1E7A55] mb-1">
+                  <div className="text-[0.625rem] uppercase tracking-[0.18em] font-bold text-[#1E7A55] mb-1">
                     Share code
                   </div>
                   <div className="flex flex-wrap items-center gap-3">

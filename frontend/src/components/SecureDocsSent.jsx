@@ -30,22 +30,22 @@ export function SecureDocsSent() {
   return (
     <section className="mt-8 rounded-3xl border border-[#E5E0EE] bg-white p-5 sm:p-6" data-testid="secure-docs-sent">
       <h2 className="text-sm font-semibold text-[#1A1330] flex items-center gap-2"><FileLock2 size={15} className="text-[#3D1A78]" /> Documents you sent securely</h2>
-      <p className="text-[12px] text-[#4B4567] mt-1">Emails never carry the file. The person opens it here with a one-time code, until the link expires or you cancel it.</p>
+      <p className="text-[0.75rem] text-[#4B4567] mt-1">Emails never carry the file. The person opens it here with a one-time code, until the link expires or you cancel it.</p>
       <ul className="mt-4 divide-y divide-[#EEE8F7]" data-testid="secure-docs-sent-list">
         {docs.map((d) => {
           const [label, cls] = PILL[pillKey(d)];
           return (
             <li key={d.doc_id} className="py-3 flex flex-wrap items-center justify-between gap-2" data-testid={`secure-doc-row-${d.doc_id}`}>
               <div className="min-w-0 flex-1">
-                <div className="text-[13px] font-semibold text-[#1A1330] break-words">{d.label}</div>
-                <div className="text-[11px] text-[#6E6787] break-words">
+                <div className="text-[0.8125rem] font-semibold text-[#1A1330] break-words">{d.label}</div>
+                <div className="text-[0.6875rem] text-[#6E6787] break-words">
                   To {d.recipient_email} · Sent {day(d.created_at)} · Link ends {day(d.expires_at)}
                 </div>
               </div>
-              <span className={`rounded-full px-2 py-0.5 text-[10px] font-semibold ${cls}`} data-testid={`secure-doc-status-${d.doc_id}`}>{label}</span>
+              <span className={`rounded-full px-2 py-0.5 text-[0.625rem] font-semibold ${cls}`} data-testid={`secure-doc-status-${d.doc_id}`}>{label}</span>
               {d.status === "ready" && (
                 <button type="button" onClick={() => cancel(d)} disabled={busy === d.doc_id}
-                  className="inline-flex items-center gap-1 rounded-full border border-[#F5D0C5] text-[#9A3A23] hover:bg-[#FCE3DC] bg-white px-3 py-1 text-[11px] font-semibold disabled:opacity-50"
+                  className="inline-flex items-center gap-1 rounded-full border border-[#F5D0C5] text-[#9A3A23] hover:bg-[#FCE3DC] bg-white px-3 py-1 text-[0.6875rem] font-semibold disabled:opacity-50"
                   data-testid={`secure-doc-cancel-${d.doc_id}`}>
                   {busy === d.doc_id ? <Loader2 size={10} className="animate-spin" /> : <Ban size={11} />} Cancel
                 </button>

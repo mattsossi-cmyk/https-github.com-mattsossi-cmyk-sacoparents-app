@@ -141,7 +141,7 @@ export default function JointAlignmentRequests() {
     >
       <div className="flex flex-wrap items-start justify-between gap-3 mb-4">
         <div>
-          <div className="text-[11px] uppercase tracking-[0.16em] font-bold text-[#3D1A78] flex items-center gap-2">
+          <div className="text-[0.6875rem] uppercase tracking-[0.16em] font-bold text-[#3D1A78] flex items-center gap-2">
             <ClipboardList size={13} />
             Joint Alignment Requests
           </div>
@@ -152,7 +152,7 @@ export default function JointAlignmentRequests() {
         <button
           type="button"
           onClick={() => navigate("/join")}
-          className="text-[13px] text-[#3D1A78] underline hover:text-[#2A0F5F]"
+          className="text-[0.8125rem] text-[#3D1A78] underline hover:text-[#2A0F5F]"
           data-testid="joint-alignment-manual-code-link"
         >
           Have an Alignment Code?
@@ -167,7 +167,7 @@ export default function JointAlignmentRequests() {
       )}
 
       {error && (
-        <div className="text-[13px] text-[#8F1D24]" data-testid="joint-alignment-error">
+        <div className="text-[0.8125rem] text-[#8F1D24]" data-testid="joint-alignment-error">
           {error}
         </div>
       )}
@@ -185,7 +185,7 @@ export default function JointAlignmentRequests() {
 
       {cases && liveCases.length === 0 && handedOffCases.length > 0 && !error && (
         <div
-          className="text-[13px] text-[#4B4567] py-2"
+          className="text-[0.8125rem] text-[#4B4567] py-2"
           data-testid="joint-alignment-no-live"
         >
           No live cases right now. All past cases sit under
@@ -202,7 +202,7 @@ export default function JointAlignmentRequests() {
             aria-expanded={handedOffOpen}
             data-testid="handed-off-toggle"
           >
-            <span className="inline-flex items-center gap-2 text-[12px] uppercase tracking-[0.14em] font-bold text-[#186142]">
+            <span className="inline-flex items-center gap-2 text-[0.75rem] uppercase tracking-[0.14em] font-bold text-[#186142]">
               <ShieldCheck size={13} />
               Handed off ({handedOffCases.length})
             </span>
@@ -261,14 +261,14 @@ function CaseRow({ caseData, navigate, handedOff = false }) {
       }
     >
       <div className="flex-1 min-w-0">
-        <div className="flex flex-wrap items-center gap-2 text-[13px]">
+        <div className="flex flex-wrap items-center gap-2 text-[0.8125rem]">
           <span
-            className={`inline-flex items-center gap-1.5 rounded-full border px-2.5 py-0.5 text-[11px] font-semibold ${meta.tone}`}
+            className={`inline-flex items-center gap-1.5 rounded-full border px-2.5 py-0.5 text-[0.6875rem] font-semibold ${meta.tone}`}
           >
             <Icon size={11} />
             {meta.label}
           </span>
-          <span className="text-[11px] text-[#6E6787] font-mono">
+          <span className="text-[0.6875rem] text-[#6E6787] font-mono">
             {caseData.case_id}
           </span>
         </div>
@@ -295,7 +295,7 @@ function CaseRow({ caseData, navigate, handedOff = false }) {
           <button
             type="button"
             onClick={() => navigate(route)}
-            className="inline-flex items-center gap-1.5 rounded-full bg-[#3D1A78] text-white px-4 py-2 text-[13px] font-semibold hover:bg-[#2A0F5F] transition"
+            className="inline-flex items-center gap-1.5 rounded-full bg-[#3D1A78] text-white px-4 py-2 text-[0.8125rem] font-semibold hover:bg-[#2A0F5F] transition"
             data-testid={`joint-alignment-start-${caseData.case_id}`}
           >
             <Sparkles size={13} />
@@ -305,7 +305,7 @@ function CaseRow({ caseData, navigate, handedOff = false }) {
         )}
         {!handedOff && isDone && (
           <span
-            className="inline-flex items-center gap-1.5 text-[13px] font-semibold text-[#186142]"
+            className="inline-flex items-center gap-1.5 text-[0.8125rem] font-semibold text-[#186142]"
             data-testid={`joint-alignment-done-${caseData.case_id}`}
           >
             <CheckCircle2 size={14} />
@@ -318,7 +318,7 @@ function CaseRow({ caseData, navigate, handedOff = false }) {
             onClick={() => navigate(
               `/joint-alignment/cases/${caseData.case_id}/preview`,
             )}
-            className="inline-flex items-center gap-1.5 rounded-full bg-white border border-[#3D1A78] text-[#3D1A78] px-4 py-2 text-[13px] font-semibold hover:bg-[#F5F1FB] transition"
+            className="inline-flex items-center gap-1.5 rounded-full bg-white border border-[#3D1A78] text-[#3D1A78] px-4 py-2 text-[0.8125rem] font-semibold hover:bg-[#F5F1FB] transition"
             data-testid={`joint-alignment-preview-${caseData.case_id}`}
           >
             Preview joint outcome
@@ -331,7 +331,7 @@ function CaseRow({ caseData, navigate, handedOff = false }) {
             onClick={() => navigate(
               `/joint-alignment/cases/${caseData.case_id}/preview`,
             )}
-            className="inline-flex items-center gap-1.5 text-[12px] font-semibold text-[#3D1A78] hover:underline"
+            className="inline-flex items-center gap-1.5 text-[0.75rem] font-semibold text-[#3D1A78] hover:underline"
             data-testid={`handed-off-view-${caseData.case_id}`}
           >
             View receipt

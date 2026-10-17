@@ -118,7 +118,7 @@ export default function OnboardingIntake() {
     >
       <div className="max-w-3xl mx-auto">
         <div className="text-center mb-8 sm:mb-10">
-          <div className="text-[10px] uppercase tracking-[0.28em] font-bold text-[#3D1A78] mb-3">
+          <div className="text-[0.625rem] uppercase tracking-[0.28em] font-bold text-[#3D1A78] mb-3">
             Welcome to SA CoParents
           </div>
           <h1

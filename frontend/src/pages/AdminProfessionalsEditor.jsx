@@ -182,7 +182,7 @@ export default function AdminProfessionalsEditor() {
 
         <div className="flex flex-wrap items-end justify-between gap-4">
           <div>
-            <div className="text-[11px] uppercase tracking-[0.18em] font-bold text-[#3D1A78]">
+            <div className="text-[0.6875rem] uppercase tracking-[0.18em] font-bold text-[#3D1A78]">
               Admin · Professionals directory
             </div>
             <h1
@@ -203,7 +203,7 @@ export default function AdminProfessionalsEditor() {
           </button>
         </div>
 
-        <div className="mt-4 rounded-2xl bg-[#F8F7FC] border border-[#E5E0EE] p-3 flex gap-2 items-start text-[13px] text-[#4B4567] leading-relaxed">
+        <div className="mt-4 rounded-2xl bg-[#F8F7FC] border border-[#E5E0EE] p-3 flex gap-2 items-start text-[0.8125rem] text-[#4B4567] leading-relaxed">
           <ShieldCheck size={16} className="text-[#3D1A78] flex-shrink-0 mt-0.5" />
           <p className="!m-0">
             Professionals cannot self-sign-up. Every entry is added
@@ -282,7 +282,7 @@ export default function AdminProfessionalsEditor() {
                 testid="admin-form-state"
               />
               <label className="block sm:col-span-2">
-                <span className="text-[11px] uppercase tracking-[0.14em] font-bold text-[#6E6787]">
+                <span className="text-[0.6875rem] uppercase tracking-[0.14em] font-bold text-[#6E6787]">
                   Address (one line per row)
                 </span>
                 <textarea
@@ -297,7 +297,7 @@ export default function AdminProfessionalsEditor() {
                 />
               </label>
               <label className="block sm:col-span-2">
-                <span className="text-[11px] uppercase tracking-[0.14em] font-bold text-[#6E6787]">
+                <span className="text-[0.6875rem] uppercase tracking-[0.14em] font-bold text-[#6E6787]">
                   Bio
                 </span>
                 <textarea
@@ -369,22 +369,22 @@ export default function AdminProfessionalsEditor() {
                   <div className="font-serif text-lg text-[#1A1330] flex items-center gap-2">
                     {p.name}
                     {!p.active && (
-                      <span className="text-[10px] uppercase tracking-[0.1em] font-bold text-[#8F1D24] border border-[#8F1D24]/30 rounded-full px-2 py-0.5">
+                      <span className="text-[0.625rem] uppercase tracking-[0.1em] font-bold text-[#8F1D24] border border-[#8F1D24]/30 rounded-full px-2 py-0.5">
                         Hidden
                       </span>
                     )}
                   </div>
-                  <div className="text-[13px] text-[#4B4567] leading-snug mt-0.5">
+                  <div className="text-[0.8125rem] text-[#4B4567] leading-snug mt-0.5">
                     {p.credentials}
                   </div>
-                  <div className="text-[12px] text-[#6E6787] mt-1">
+                  <div className="text-[0.75rem] text-[#6E6787] mt-1">
                     {p.email} · sort #{p.sort_order}
                   </div>
                 </div>
                 <button
                   type="button"
                   onClick={() => toggleActive(p)}
-                  className="inline-flex items-center gap-1.5 rounded-full border border-[#E5E0EE] text-[#3D1A78] px-3 py-1.5 text-[13px] font-semibold hover:border-[#3D1A78] transition"
+                  className="inline-flex items-center gap-1.5 rounded-full border border-[#E5E0EE] text-[#3D1A78] px-3 py-1.5 text-[0.8125rem] font-semibold hover:border-[#3D1A78] transition"
                   data-testid={`admin-toggle-${p.professional_id}`}
                 >
                   {p.active ? <EyeOff size={13} /> : <Eye size={13} />}
@@ -411,7 +411,7 @@ function FormField({
 }) {
   return (
     <label className={`block ${className || ""}`}>
-      <span className="text-[11px] uppercase tracking-[0.14em] font-bold text-[#6E6787]">
+      <span className="text-[0.6875rem] uppercase tracking-[0.14em] font-bold text-[#6E6787]">
         {label}
         {required && " *"}
       </span>

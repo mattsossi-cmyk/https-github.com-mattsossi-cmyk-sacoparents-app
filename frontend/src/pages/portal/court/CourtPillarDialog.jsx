@@ -10,9 +10,9 @@ function Results({ items }) {
         <li key={`${it.source}-${it.text}`} data-testid={`court-pillar-item-${i}`} className="flex items-center justify-between gap-3 px-4 py-2.5">
           <span className="min-w-0">
             <span className="block text-sm font-semibold text-[#202124]">{it.text}</span>
-            <span className="block text-[11px] text-[#5f6368]">From your {it.source}</span>
+            <span className="block text-[0.6875rem] text-[#5f6368]">From your {it.source}</span>
           </span>
-          <span className="shrink-0 text-[11px] font-bold text-[#3b1566] bg-[#f2ebfc] rounded-full px-2.5 py-1">{it.meta}</span>
+          <span className="shrink-0 text-[0.6875rem] font-bold text-[#3b1566] bg-[#f2ebfc] rounded-full px-2.5 py-1">{it.meta}</span>
         </li>
       ))}
     </ul>
@@ -33,7 +33,7 @@ function Resources({ resources }) {
           <i className={`fa-solid ${r.icon} w-5 text-center text-[#5c2c8e]`}></i>
           <span className="min-w-0">
             <span className="block text-sm font-semibold text-[#202124]">{r.title}</span>
-            <span className="block text-[11px] text-[#5f6368]">{r.sub}</span>
+            <span className="block text-[0.6875rem] text-[#5f6368]">{r.sub}</span>
           </span>
         </button>
       ))}

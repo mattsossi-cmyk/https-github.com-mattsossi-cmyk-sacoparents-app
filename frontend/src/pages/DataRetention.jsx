@@ -53,7 +53,7 @@ export default function DataRetention() {
           <div tabIndex={0} role="region" aria-label="Scrollable table" className="overflow-x-auto not-prose my-4">
             <table className="w-full text-left text-sm border-collapse" data-testid="retention-table">
               <thead>
-                <tr className="text-[11px] uppercase tracking-[0.12em] text-[#6E6787]">
+                <tr className="text-[0.6875rem] uppercase tracking-[0.12em] text-[#6E6787]">
                   <Th>Data type</Th>
                   <Th>How long we keep it</Th>
                   <Th>Why</Th>
@@ -212,7 +212,7 @@ function StatCard({ icon, label, value }) {
     <div className="rounded-2xl border border-[#E5E0EE] bg-white p-4">
       <div className="flex items-center gap-2 text-[#3D1A78]">
         {icon}
-        <div className="text-[11px] uppercase tracking-[0.12em] text-[#6E6787]">{label}</div>
+        <div className="text-[0.6875rem] uppercase tracking-[0.12em] text-[#6E6787]">{label}</div>
       </div>
       <div className="text-lg font-serif text-[#1A1330] mt-2">{value}</div>
     </div>

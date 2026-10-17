@@ -66,7 +66,7 @@ export default function VerifySignature() {
           ← SA CoParents
         </Link>
         <div className="rounded-3xl border border-[#E5E0EE] bg-white p-6 sm:p-8 shadow-sm">
-          <div className="text-[10px] uppercase tracking-[0.22em] font-bold text-[#3D1A78]">
+          <div className="text-[0.625rem] uppercase tracking-[0.22em] font-bold text-[#3D1A78]">
             Signature Verification
           </div>
           <h1 className="mt-1 font-serif text-2xl text-[#1A1330]">
@@ -95,18 +95,18 @@ export default function VerifySignature() {
                 </div>
               </div>
               <dl className="mt-4 grid grid-cols-[max-content_1fr] gap-x-3 gap-y-1 text-xs text-[#1A1330]">
-                <dt className="text-[#6A5799] uppercase tracking-widest text-[10px] font-semibold">Signed by</dt>
+                <dt className="text-[#6A5799] uppercase tracking-widest text-[0.625rem] font-semibold">Signed by</dt>
                 <dd className="font-semibold" data-testid="verify-signature-name">{state.data.signed_by}</dd>
-                <dt className="text-[#6A5799] uppercase tracking-widest text-[10px] font-semibold">Signed at</dt>
+                <dt className="text-[#6A5799] uppercase tracking-widest text-[0.625rem] font-semibold">Signed at</dt>
                 <dd data-testid="verify-signature-time">{formattedTime}</dd>
                 {state.data.signed_note && (
                   <>
-                    <dt className="text-[#6A5799] uppercase tracking-widest text-[10px] font-semibold">Note</dt>
+                    <dt className="text-[#6A5799] uppercase tracking-widest text-[0.625rem] font-semibold">Note</dt>
                     <dd className="italic">"{state.data.signed_note}"</dd>
                   </>
                 )}
-                <dt className="text-[#6A5799] uppercase tracking-widest text-[10px] font-semibold">Signature ID</dt>
-                <dd className="font-mono text-[11px] text-[#4B4567]">{state.data.signature_id}</dd>
+                <dt className="text-[#6A5799] uppercase tracking-widest text-[0.625rem] font-semibold">Signature ID</dt>
+                <dd className="font-mono text-[0.6875rem] text-[#4B4567]">{state.data.signature_id}</dd>
               </dl>
             </div>
           )}
@@ -126,7 +126,7 @@ export default function VerifySignature() {
                   </p>
                 </div>
               </div>
-              <div className="mt-3 text-[10px] text-[#4B4567]">
+              <div className="mt-3 text-[0.625rem] text-[#4B4567]">
                 Signature ID: <span className="font-mono">{state.data.signature_id}</span>
               </div>
             </div>
@@ -138,7 +138,7 @@ export default function VerifySignature() {
             </div>
           )}
 
-          <p className="mt-6 text-[11px] text-[#4B4567] italic">
+          <p className="mt-6 text-[0.6875rem] text-[#4B4567] italic">
             This verification only proves the signature block matches; it
             does not attest to the truth of any content in the report.
             SA CoParents reports are informational and not legal advice.

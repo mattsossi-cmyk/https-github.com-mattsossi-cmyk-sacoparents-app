@@ -154,7 +154,7 @@ export default function MediatorBadge() {
         <div className="card-soft p-8 sm:p-10 relative overflow-hidden mb-8">
           <div className="absolute -top-20 -right-20 w-64 h-64 rounded-full bg-[#D4C5F0]/40" />
           <div className="relative max-w-2xl">
-            <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-[#3D1A78]/10 text-[#3D1A78] text-[11px] uppercase tracking-[0.2em] mb-4">
+            <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-[#3D1A78]/10 text-[#3D1A78] text-[0.6875rem] uppercase tracking-[0.2em] mb-4">
               <Award size={12} />
               For mediators
             </div>
@@ -168,7 +168,7 @@ export default function MediatorBadge() {
               your name shows up on their screen as the mediator who pointed them
               here.
             </p>
-            <div className="mt-5 flex items-center gap-5 text-[12px] text-[#4B4567] flex-wrap">
+            <div className="mt-5 flex items-center gap-5 text-[0.75rem] text-[#4B4567] flex-wrap">
               <span className="inline-flex items-center gap-1.5">
                 <Heart size={12} className="text-[#3D1A78]" /> Free for mediators
               </span>
@@ -249,7 +249,7 @@ export default function MediatorBadge() {
                     }`}
                     data-testid={`variant-${v.id}`}
                   >
-                    <div className="text-[11px] uppercase tracking-[0.15em] text-[#6E6787] mb-1">
+                    <div className="text-[0.6875rem] uppercase tracking-[0.15em] text-[#6E6787] mb-1">
                       Style
                     </div>
                     <div className="text-sm font-semibold text-[#1A1330]">
@@ -336,12 +336,12 @@ export default function MediatorBadge() {
               <pre
                 tabIndex={0}
                 aria-label="Embed code"
-                className="bg-[#1A1330] text-[#E5E0EE] text-[12px] leading-relaxed p-4 rounded-xl overflow-x-auto whitespace-pre"
+                className="bg-[#1A1330] text-[#E5E0EE] text-[0.75rem] leading-relaxed p-4 rounded-xl overflow-x-auto whitespace-pre"
                 data-testid="embed-code-block"
               >
                 <code>{embedHtml}</code>
               </pre>
-              <div className="mt-4 text-[12px] text-[#4B4567] leading-relaxed">
+              <div className="mt-4 text-[0.75rem] text-[#4B4567] leading-relaxed">
                 Paste this snippet anywhere on your website — your "About"
                 page, footer, or a "Resources" sidebar. It's a single{" "}
                 <code className="bg-[#EFE9F9] text-[#3D1A78] px-1 rounded">

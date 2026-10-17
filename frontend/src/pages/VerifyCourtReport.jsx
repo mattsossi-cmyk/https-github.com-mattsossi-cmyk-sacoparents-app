@@ -94,7 +94,7 @@ export default function VerifyCourtReport() {
     <div className="min-h-screen bg-[#FAF9FD] text-[#1A1330] px-4 sm:px-6 py-10">
       <Toaster />
       <div className="max-w-2xl mx-auto">
-        <div className="flex items-center gap-2 text-[10px] uppercase tracking-[0.24em] text-[#3D1A78] font-bold mb-2">
+        <div className="flex items-center gap-2 text-[0.625rem] uppercase tracking-[0.24em] text-[#3D1A78] font-bold mb-2">
           <ShieldCheck size={14} />
           Family Safety and Functioning Reflection · Court Report
         </div>
@@ -102,7 +102,7 @@ export default function VerifyCourtReport() {
           Reviewer Co-Sign Portal
         </h1>
         <div className="rounded-2xl border border-[#3D1A78]/25 bg-[#F5F1FB] p-4 mb-6 text-sm leading-relaxed">
-          <div className="text-[10px] uppercase tracking-[0.2em] font-bold text-[#3D1A78] mb-1">
+          <div className="text-[0.625rem] uppercase tracking-[0.2em] font-bold text-[#3D1A78] mb-1">
             Read this first
           </div>
           This report is a guided self-reflection resource — <strong>not a clinical, forensic, legal, or professional evaluation</strong>. Co-signing acknowledges you have <em>discussed the findings with the parent</em>, not that you endorse them as an evaluation.
@@ -118,15 +118,15 @@ export default function VerifyCourtReport() {
         <div className="rounded-3xl bg-white border border-[#E5E0EE] shadow-sm p-6 sm:p-8 mb-6">
           <div className="grid grid-cols-2 gap-4 mb-4 text-sm">
             <div>
-              <div className="text-[10px] uppercase tracking-[0.18em] text-[#6E6787] font-bold mb-1">Parent</div>
+              <div className="text-[0.625rem] uppercase tracking-[0.18em] text-[#6E6787] font-bold mb-1">Parent</div>
               <div className="font-semibold" data-testid="cosign-parent-name">{meta.parent_name || "-"}</div>
             </div>
             <div>
-              <div className="text-[10px] uppercase tracking-[0.18em] text-[#6E6787] font-bold mb-1">Issued</div>
+              <div className="text-[0.625rem] uppercase tracking-[0.18em] text-[#6E6787] font-bold mb-1">Issued</div>
               <div className="font-semibold" data-testid="cosign-issued-on">{meta.issued_on || "-"}</div>
             </div>
           </div>
-          <div className="text-[10px] uppercase tracking-[0.18em] text-[#6E6787] font-bold mb-2">Findings at a glance</div>
+          <div className="text-[0.625rem] uppercase tracking-[0.18em] text-[#6E6787] font-bold mb-2">Findings at a glance</div>
           <div className="space-y-2 mb-4">
             {Object.entries(meta.findings_headlines || {}).map(([k, v]) => (
               <div key={k} className="text-sm text-[#1A1330]" data-testid={`cosign-headline-${k.replace(/_/g, "-")}`}>
@@ -144,7 +144,7 @@ export default function VerifyCourtReport() {
           >
             <div className="flex items-center gap-2 text-[#1F7A3A] mb-2">
               <CheckCircle2 size={16} />
-              <div className="text-[10px] uppercase tracking-[0.2em] font-bold">Co-signed</div>
+              <div className="text-[0.625rem] uppercase tracking-[0.2em] font-bold">Co-signed</div>
             </div>
             <div className="text-sm mb-1"><strong>{meta.cosigner?.name}</strong> — {meta.cosigner?.role}</div>
             {meta.cosigner?.notes && (
@@ -154,7 +154,7 @@ export default function VerifyCourtReport() {
           </div>
         ) : (
           <div className="rounded-3xl bg-white border border-[#E5E0EE] p-6 sm:p-8 mb-6" data-testid="cosign-form-panel">
-            <div className="text-[10px] uppercase tracking-[0.2em] font-bold text-[#3D1A78] mb-3">Add your co-signature</div>
+            <div className="text-[0.625rem] uppercase tracking-[0.2em] font-bold text-[#3D1A78] mb-3">Add your co-signature</div>
             <label className="block text-xs text-[#4B4567] mb-1">Printed name</label>
             <input
               type="text"

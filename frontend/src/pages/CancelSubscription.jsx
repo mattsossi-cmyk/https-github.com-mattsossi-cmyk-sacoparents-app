@@ -46,22 +46,22 @@ export default function CancelSubscription() {
           <div className="mt-7 grid sm:grid-cols-3 gap-3">
             <div className="rounded-2xl bg-[#EFE9F9] border border-[#E5E0EE] px-4 py-4 flex flex-col items-start gap-1.5">
               <Check size={16} className="text-[#3D1A78]" />
-              <div className="text-[13px] font-bold text-[#1A1330]">Free forever</div>
-              <p className="text-[12px] text-[#4B4567] leading-snug">
+              <div className="text-[0.8125rem] font-bold text-[#1A1330]">Free forever</div>
+              <p className="text-[0.75rem] text-[#4B4567] leading-snug">
                 Every feature, no paywall.
               </p>
             </div>
             <div className="rounded-2xl bg-[#EFE9F9] border border-[#E5E0EE] px-4 py-4 flex flex-col items-start gap-1.5">
               <Check size={16} className="text-[#3D1A78]" />
-              <div className="text-[13px] font-bold text-[#1A1330]">No payments</div>
-              <p className="text-[12px] text-[#4B4567] leading-snug">
+              <div className="text-[0.8125rem] font-bold text-[#1A1330]">No payments</div>
+              <p className="text-[0.75rem] text-[#4B4567] leading-snug">
                 We never ask for a card.
               </p>
             </div>
             <div className="rounded-2xl bg-[#EFE9F9] border border-[#E5E0EE] px-4 py-4 flex flex-col items-start gap-1.5">
               <Check size={16} className="text-[#3D1A78]" />
-              <div className="text-[13px] font-bold text-[#1A1330]">No ads</div>
-              <p className="text-[12px] text-[#4B4567] leading-snug">
+              <div className="text-[0.8125rem] font-bold text-[#1A1330]">No ads</div>
+              <p className="text-[0.75rem] text-[#4B4567] leading-snug">
                 Privacy by default.
               </p>
             </div>
@@ -89,13 +89,13 @@ export default function CancelSubscription() {
             </div>
           </div>
 
-          <p className="text-[12px] text-[#6E6787] mt-8 leading-relaxed">
+          <p className="text-[0.75rem] text-[#6E6787] mt-8 leading-relaxed">
             If a future paid tier is ever added, the cancel option will appear here.
             Until then, you'll never see a charge from us.
           </p>
         </div>
 
-        <div className="text-center mt-8 text-[12px] text-[#6E6787]">
+        <div className="text-center mt-8 text-[0.75rem] text-[#6E6787]">
           Questions?{" "}
           <a
             href="mailto:mattsossi@bsossi.com"

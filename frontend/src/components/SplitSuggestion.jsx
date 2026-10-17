@@ -185,7 +185,7 @@ export default function SplitSuggestion({
           <h3 className="font-serif text-lg text-[#1A1330] leading-tight">
             Suggested split
           </h3>
-          <p className="text-[12px] text-[#4B4567] mt-0.5 leading-snug">
+          <p className="text-[0.75rem] text-[#4B4567] mt-0.5 leading-snug">
             A neutral starting point. This is a suggestion, not an order — take it to your mediator.
           </p>
         </div>
@@ -230,7 +230,7 @@ export default function SplitSuggestion({
       {mode === "income" && (
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-3">
           <label className="text-sm">
-            <span className="text-[10px] uppercase tracking-[0.16em] font-bold text-[#3D1A78] block mb-1">
+            <span className="text-[0.625rem] uppercase tracking-[0.16em] font-bold text-[#3D1A78] block mb-1">
               Your monthly income
             </span>
             <input
@@ -246,7 +246,7 @@ export default function SplitSuggestion({
             />
           </label>
           <label className="text-sm">
-            <span className="text-[10px] uppercase tracking-[0.16em] font-bold text-[#3D1A78] block mb-1">
+            <span className="text-[0.625rem] uppercase tracking-[0.16em] font-bold text-[#3D1A78] block mb-1">
               {coparentName ? `${coparentName}'s` : "Co-parent's"} monthly income
             </span>
             <input
@@ -267,7 +267,7 @@ export default function SplitSuggestion({
       {mode === "custom" && (
         <div className="mb-3">
           <label className="text-sm">
-            <span className="text-[10px] uppercase tracking-[0.16em] font-bold text-[#3D1A78] block mb-1">
+            <span className="text-[0.625rem] uppercase tracking-[0.16em] font-bold text-[#3D1A78] block mb-1">
               Your share ({customSelfPct}% · co-parent {100 - customSelfPct}%)
             </span>
             <input
@@ -294,23 +294,23 @@ export default function SplitSuggestion({
         <div className="font-serif text-lg leading-tight">
           {balanceLabel.headline}
         </div>
-        <p className="text-[12px] mt-1 leading-snug opacity-90">
+        <p className="text-[0.75rem] mt-1 leading-snug opacity-90">
           {balanceLabel.subline}
         </p>
         {hasCompare && combinedCents > 0 && (
-          <div className="mt-3 grid grid-cols-2 gap-2 text-[11px]">
+          <div className="mt-3 grid grid-cols-2 gap-2 text-[0.6875rem]">
             <div className="rounded-lg bg-white/60 px-2 py-1.5">
-              <div className="uppercase tracking-[0.14em] text-[9px] font-bold">You</div>
+              <div className="uppercase tracking-[0.14em] text-[0.5625rem] font-bold">You</div>
               <div className="font-serif text-sm">
-                {formatUSD(selfShareCents)} <span className="text-[10px] opacity-70">({selfSharePct}%)</span>
+                {formatUSD(selfShareCents)} <span className="text-[0.625rem] opacity-70">({selfSharePct}%)</span>
               </div>
             </div>
             <div className="rounded-lg bg-white/60 px-2 py-1.5">
-              <div className="uppercase tracking-[0.14em] text-[9px] font-bold">
+              <div className="uppercase tracking-[0.14em] text-[0.5625rem] font-bold">
                 {coparentName || "Co-parent"}
               </div>
               <div className="font-serif text-sm">
-                {formatUSD(coparentShareCents)} <span className="text-[10px] opacity-70">({coparentSharePct}%)</span>
+                {formatUSD(coparentShareCents)} <span className="text-[0.625rem] opacity-70">({coparentSharePct}%)</span>
               </div>
             </div>
           </div>
@@ -319,7 +319,7 @@ export default function SplitSuggestion({
 
       {(mode === "income" || mode === "custom") && (
         <div className="mt-3 flex flex-wrap items-center gap-3 justify-between">
-          <p className="text-[11px] text-[#4B4567] inline-flex items-start gap-1.5 max-w-md leading-snug">
+          <p className="text-[0.6875rem] text-[#4B4567] inline-flex items-start gap-1.5 max-w-md leading-snug">
             <Info size={12} className="mt-0.5 shrink-0" />
             Values stay in your browser only — we never send them to
             the server or your co-parent.

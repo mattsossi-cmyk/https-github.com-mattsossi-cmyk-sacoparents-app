@@ -37,7 +37,7 @@ function PromptField({ prompt, value, onChange, testidBase }) {
       data-testid={`${testidBase}-field`}
     >
       <div>
-        <div className="text-[10px] uppercase tracking-[0.22em] font-bold text-[#3D1A78]">
+        <div className="text-[0.625rem] uppercase tracking-[0.22em] font-bold text-[#3D1A78]">
           {prompt.label}
         </div>
         <h3 className="font-serif text-lg sm:text-xl text-[#1A1330] mt-1 leading-snug">
@@ -61,7 +61,7 @@ function PromptField({ prompt, value, onChange, testidBase }) {
         className="w-full rounded-2xl border border-[#D6CFE8] bg-[#FAF8FE] px-4 py-3 text-sm text-[#1A1330] leading-relaxed focus:outline-none focus:ring-2 focus:ring-[#3D1A78]/25"
         data-testid={`${testidBase}-textarea`}
       />
-      <div className="flex items-center justify-between text-[10px] uppercase tracking-[0.14em] font-bold">
+      <div className="flex items-center justify-between text-[0.625rem] uppercase tracking-[0.14em] font-bold">
         <span
           className="text-[#6E6787]"
           data-testid={`${testidBase}-hint`}
@@ -195,7 +195,7 @@ export default function AlignmentReflection() {
         <div className="card-soft p-6 sm:p-7 relative overflow-hidden">
           <div className="absolute -top-24 -right-24 w-72 h-72 rounded-full bg-[#D4C5F0]/40 pointer-events-none" />
           <div className="relative">
-            <div className="text-[10px] uppercase tracking-[0.22em] font-bold text-[#3D1A78] flex items-center gap-2">
+            <div className="text-[0.625rem] uppercase tracking-[0.22em] font-bold text-[#3D1A78] flex items-center gap-2">
               <MessagesSquare size={12} />
               Alignment reflection · {schema.label}
             </div>
@@ -209,7 +209,7 @@ export default function AlignmentReflection() {
               where you differ, and what your child needs next.
             </p>
             <div
-              className="mt-4 inline-flex items-center gap-2 rounded-full bg-white/70 backdrop-blur px-3 py-1.5 text-[11px] font-semibold text-[#3D1A78]"
+              className="mt-4 inline-flex items-center gap-2 rounded-full bg-white/70 backdrop-blur px-3 py-1.5 text-[0.6875rem] font-semibold text-[#3D1A78]"
               data-testid="alignment-reflection-progress"
             >
               <CheckCircle2 size={12} />
@@ -241,7 +241,7 @@ export default function AlignmentReflection() {
           <div className="flex items-center gap-2">
             {savedAt && (
               <span
-                className="text-[10px] uppercase tracking-[0.14em] font-bold text-[#6E6787]"
+                className="text-[0.625rem] uppercase tracking-[0.14em] font-bold text-[#6E6787]"
                 data-testid="alignment-reflection-saved-at"
               >
                 Saved {new Date(savedAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}

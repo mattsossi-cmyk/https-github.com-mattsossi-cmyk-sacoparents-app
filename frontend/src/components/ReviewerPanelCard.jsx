@@ -26,7 +26,7 @@ function StatusPill({ status }) {
   if (status === "reviewed") {
     return (
       <span
-        className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-[#E6F4EC] text-[#1F5C3B] ring-1 ring-[#1F5C3B]/25"
+        className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[0.625rem] font-bold bg-[#E6F4EC] text-[#1F5C3B] ring-1 ring-[#1F5C3B]/25"
         data-testid="reviewer-panel-status-reviewed"
       >
         <ShieldCheck size={10} /> Reviewed
@@ -35,7 +35,7 @@ function StatusPill({ status }) {
   }
   return (
     <span
-      className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-[#F0EAFB] text-[#3D1A78] ring-1 ring-[#3D1A78]/25"
+      className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[0.625rem] font-bold bg-[#F0EAFB] text-[#3D1A78] ring-1 ring-[#3D1A78]/25"
       data-testid="reviewer-panel-status-pending"
     >
       <Clock size={10} /> Review pending
@@ -120,7 +120,7 @@ export default function ReviewerPanelCard() {
     >
       <div className="flex items-start justify-between gap-3 flex-wrap mb-3">
         <div>
-          <div className="text-[10px] uppercase tracking-[0.22em] font-bold text-[#3D1A78] mb-1">
+          <div className="text-[0.625rem] uppercase tracking-[0.22em] font-bold text-[#3D1A78] mb-1">
             Independent expert review
           </div>
           <h3
@@ -173,7 +173,7 @@ export default function ReviewerPanelCard() {
               <div className="flex items-start justify-between gap-3 flex-wrap">
                 <div>
                   <div className="font-bold text-[#1A1330]">{r.name}</div>
-                  <div className="text-[11px] uppercase tracking-[0.15em] text-[#3D1A78] font-bold mt-0.5">
+                  <div className="text-[0.6875rem] uppercase tracking-[0.15em] text-[#3D1A78] font-bold mt-0.5">
                     {ROLE_LABEL[r.role] || r.role}
                     {r.org ? ` · ${r.org}` : ""}
                   </div>
@@ -183,7 +183,7 @@ export default function ReviewerPanelCard() {
                 </div>
               </div>
               {r.review_scope && (
-                <div className="mt-2 text-[12px] text-[#4B4567]">
+                <div className="mt-2 text-[0.75rem] text-[#4B4567]">
                   <strong>Scope:</strong> {r.review_scope}
                 </div>
               )}
@@ -198,7 +198,7 @@ export default function ReviewerPanelCard() {
       )}
 
       <div className="mt-4 pt-3 border-t border-[#EFECF6] flex items-center justify-between gap-3 flex-wrap">
-        <div className="text-[11px] text-[#6A5799]">
+        <div className="text-[0.6875rem] text-[#6A5799]">
           Screen version: <strong>{data?.review_scope_version || "v1.0"}</strong>
         </div>
         <div className="flex items-center gap-3 flex-wrap">
@@ -236,10 +236,10 @@ export default function ReviewerPanelCard() {
           className="mt-4 rounded-2xl border border-[#E5E0EE] bg-[#FAF8FE] p-3"
           data-testid="reviewer-panel-sends-log"
         >
-          <div className="text-[10px] uppercase tracking-[0.2em] font-bold text-[#3D1A78] mb-2">
+          <div className="text-[0.625rem] uppercase tracking-[0.2em] font-bold text-[#3D1A78] mb-2">
             Operator only · Recently sent to
           </div>
-          <ul className="space-y-1.5 text-[12px]">
+          <ul className="space-y-1.5 text-[0.75rem]">
             {sends.slice(0, 5).map((s, i) => (
               <li
                 key={`${s.recipient_email}-${s.sent_at}-${i}`}

@@ -261,7 +261,7 @@ export default function ForgotPassword() {
 
               <div className="mt-4 pt-4 border-t border-[#EFECF6] text-center">
                 <MailCheck size={12} className="inline text-[#0E7A7A] mr-1" />
-                <span className="text-[11px] text-[#6E6787]">
+                <span className="text-[0.6875rem] text-[#6E6787]">
                   Didn't get the email? Check spam, then resend.
                 </span>
               </div>

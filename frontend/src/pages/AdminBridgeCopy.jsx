@@ -128,7 +128,7 @@ export default function AdminBridgeCopy() {
           <ArrowLeft size={14} />
           Back to admin dashboard
         </Link>
-        <div className="text-[11px] uppercase tracking-[0.22em] font-bold text-[#3D1A78]">
+        <div className="text-[0.6875rem] uppercase tracking-[0.22em] font-bold text-[#3D1A78]">
           Configurable copy · Individual → Joint bridge
         </div>
         <h1 className="font-serif text-3xl sm:text-4xl text-[#1A1330] leading-tight mt-2">
@@ -142,7 +142,7 @@ export default function AdminBridgeCopy() {
         </p>
         {isDefault && (
           <div
-            className="mt-4 rounded-2xl border border-[#F1D9B7] bg-[#FFF6EA] px-4 py-3 text-[13px] text-[#5A3C10] flex items-start gap-2"
+            className="mt-4 rounded-2xl border border-[#F1D9B7] bg-[#FFF6EA] px-4 py-3 text-[0.8125rem] text-[#5A3C10] flex items-start gap-2"
             data-testid="admin-bridge-copy-default-banner"
           >
             <ShieldCheck size={14} className="text-[#904B0E] mt-0.5" />
@@ -160,7 +160,7 @@ export default function AdminBridgeCopy() {
         >
           <div className="flex items-center gap-2 mb-3">
             <TrendingUp size={14} className="text-[#3D1A78]" />
-            <div className="text-[11px] uppercase tracking-[0.22em] font-bold text-[#3D1A78]">
+            <div className="text-[0.6875rem] uppercase tracking-[0.22em] font-bold text-[#3D1A78]">
               CTR analytics · Per variant
             </div>
           </div>
@@ -187,7 +187,7 @@ export default function AdminBridgeCopy() {
                     data-testid={`admin-bridge-copy-analytics-${v.key}`}
                   >
                     <div
-                      className={`text-[10px] uppercase tracking-[0.16em] font-bold ${
+                      className={`text-[0.625rem] uppercase tracking-[0.16em] font-bold ${
                         v.tone === "purple"
                           ? "text-[#3D1A78]"
                           : "text-[#904B0E]"
@@ -270,7 +270,7 @@ export default function AdminBridgeCopy() {
 function Metric({ icon: Icon, label, value, testid }) {
   return (
     <div className="rounded-xl bg-white border border-[#E5E0EE] p-2">
-      <div className="text-[9px] uppercase tracking-[0.14em] font-bold text-[#6E6787] flex items-center justify-center gap-1">
+      <div className="text-[0.5625rem] uppercase tracking-[0.14em] font-bold text-[#6E6787] flex items-center justify-center gap-1">
         <Icon size={10} />
         {label}
       </div>
@@ -291,7 +291,7 @@ function VariantEditor({ tone, variantKey, label, values, onChange }) {
       className="rounded-3xl border border-[#E5E0EE] bg-white p-6"
       data-testid={`admin-bridge-copy-editor-${variantKey}`}
     >
-      <div className={`inline-flex items-center gap-2 rounded-full px-3 py-1 text-[10px] uppercase tracking-[0.22em] font-bold ${chip}`}>
+      <div className={`inline-flex items-center gap-2 rounded-full px-3 py-1 text-[0.625rem] uppercase tracking-[0.22em] font-bold ${chip}`}>
         {label}
       </div>
       <div className="mt-4 grid gap-3">
@@ -342,7 +342,7 @@ function TextField({ label, value, onChange, testid, maxLength, textarea = false
   const Tag = textarea ? "textarea" : "input";
   return (
     <label className="block">
-      <span className="text-[10px] uppercase tracking-[0.15em] font-bold text-[#3D1A78]">
+      <span className="text-[0.625rem] uppercase tracking-[0.15em] font-bold text-[#3D1A78]">
         {label}
       </span>
       <Tag
@@ -353,7 +353,7 @@ function TextField({ label, value, onChange, testid, maxLength, textarea = false
         data-testid={testid}
         className="mt-1 block w-full rounded-xl border border-[#E5E0EE] bg-white text-[#1A1330] text-sm px-3 py-2 focus:outline-none focus:border-[#3D1A78]"
       />
-      <span className="text-[10px] text-[#6E6787] mt-0.5 block">
+      <span className="text-[0.625rem] text-[#6E6787] mt-0.5 block">
         {(value || "").length}/{maxLength}
       </span>
     </label>

@@ -22,7 +22,7 @@ export const ArchiveLink = ({ caseRef, archived, onChanged, testid }) => {
   const Icon = busy ? Loader2 : archived ? ArchiveRestore : Archive;
   return (
     <button type="button" onClick={flip} disabled={busy} data-testid={testid}
-      className="inline-flex items-center gap-1 text-[11px] font-semibold text-[#4B4567] hover:text-[#3D1A78] hover:underline disabled:opacity-60">
+      className="inline-flex items-center gap-1 text-[0.6875rem] font-semibold text-[#4B4567] hover:text-[#3D1A78] hover:underline disabled:opacity-60">
       <Icon size={11} className={busy ? "animate-spin" : ""} /> {archived ? "Restore" : "Archive"}
     </button>
   );

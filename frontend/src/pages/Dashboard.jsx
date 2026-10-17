@@ -621,13 +621,13 @@ export default function Dashboard() {
         >
           <div className="flex items-start justify-between gap-4 flex-wrap">
             <div className="min-w-0 flex-1">
-              <div className="text-[10px] uppercase tracking-[0.22em] font-bold text-[#3D1A78]">
+              <div className="text-[0.625rem] uppercase tracking-[0.22em] font-bold text-[#3D1A78]">
                 One report. Ten sections. Every reflection.
               </div>
               <h3 className="font-serif text-xl sm:text-2xl text-[#1A1330] mt-1 leading-snug">
                 Complete Alignment Report
               </h3>
-              <p className="text-[13px] text-[#4B4567] mt-2 leading-relaxed max-w-xl">
+              <p className="text-[0.8125rem] text-[#4B4567] mt-2 leading-relaxed max-w-xl">
                 Every reflection you complete on SA CoParents — Foundation
                 Statement, Communication, Activities, Schedule, Child Needs,
                 Safety, Co-Parenting — stitched into one ten-section report
@@ -652,7 +652,7 @@ export default function Dashboard() {
                   See sample reports
                 </a>
               </div>
-              <p className="text-[11px] text-[#6E6787] mt-3 italic">
+              <p className="text-[0.6875rem] text-[#6E6787] mt-3 italic">
                 For a joint (two-parent) Complete Alignment Report, your
                 mediator, attorney, or therapist creates the case on{" "}
                 sacoparentsalign.com and invites both parents.
@@ -668,13 +668,13 @@ export default function Dashboard() {
         >
           <div className="flex items-start justify-between gap-4 flex-wrap">
             <div className="min-w-0 flex-1">
-              <div className="text-[10px] uppercase tracking-[0.22em] font-bold text-[#3D1A78]">
+              <div className="text-[0.625rem] uppercase tracking-[0.22em] font-bold text-[#3D1A78]">
                 Share with purpose. Stay in control.
               </div>
               <h3 className="font-serif text-xl sm:text-2xl text-[#1A1330] mt-1 leading-snug">
                 Invite a professional
               </h3>
-              <p className="text-[13px] text-[#4B4567] mt-2 leading-relaxed max-w-xl">
+              <p className="text-[0.8125rem] text-[#4B4567] mt-2 leading-relaxed max-w-xl">
                 Securely share selected SA CoParents reports with your
                 mediator, attorney, therapist, or parenting facilitator.
                 <strong> You decide which reports are shared.</strong> Your
@@ -790,7 +790,7 @@ export default function Dashboard() {
             >
               <div className="flex items-baseline justify-between flex-wrap gap-2">
                 <div>
-                  <div className="text-[11px] uppercase tracking-[0.16em] font-bold text-[#3D1A78]">
+                  <div className="text-[0.6875rem] uppercase tracking-[0.16em] font-bold text-[#3D1A78]">
                     Preparation modules
                   </div>
                   <div className="font-serif text-lg text-[#1A1330] mt-1">
@@ -816,11 +816,11 @@ export default function Dashboard() {
                           {cat.label}
                         </div>
                         {cat.formal && (
-                          <div className="text-[10px] uppercase tracking-[0.22em] font-bold text-[#3D1A78]">
+                          <div className="text-[0.625rem] uppercase tracking-[0.22em] font-bold text-[#3D1A78]">
                             {cat.formal}
                           </div>
                         )}
-                        <div className="text-[11px] text-[#6A5799] italic">
+                        <div className="text-[0.6875rem] text-[#6A5799] italic">
                           {cat.hint}
                         </div>
                       </div>
@@ -855,7 +855,7 @@ export default function Dashboard() {
                                   </div>
                                   {isRec && (
                                     <span
-                                      className="text-[9px] uppercase tracking-[0.16em] font-bold text-white bg-[#3D1A78] rounded-full px-2 py-0.5"
+                                      className="text-[0.5625rem] uppercase tracking-[0.16em] font-bold text-white bg-[#3D1A78] rounded-full px-2 py-0.5"
                                       data-testid={`dashboard-prep-module-${m.key}-recommended`}
                                     >
                                       Recommended for you
@@ -923,13 +923,13 @@ export default function Dashboard() {
               <div className="flex items-center gap-2 mb-3 flex-wrap">
                 <span className="eyebrow">Your space</span>
                 <span
-                  className="text-[10px] uppercase tracking-[0.15em] px-2 py-0.5 rounded-full bg-[#3D1A78]/10 text-[#3D1A78]"
+                  className="text-[0.625rem] uppercase tracking-[0.15em] px-2 py-0.5 rounded-full bg-[#3D1A78]/10 text-[#3D1A78]"
                   data-testid="dashboard-day-of-prep"
                 >
                   Day {dayOfPrep} of prep
                 </span>
                 {lastTouchedLabel && (
-                  <span className="text-[10px] uppercase tracking-[0.15em] text-[#6E6787]" data-testid="dashboard-last-touched">
+                  <span className="text-[0.625rem] uppercase tracking-[0.15em] text-[#6E6787]" data-testid="dashboard-last-touched">
                     · {lastTouchedLabel}
                   </span>
                 )}
@@ -947,21 +947,21 @@ export default function Dashboard() {
               <div className="flex items-center gap-4 mt-4 flex-wrap">
                 <Link
                   to="/orientation"
-                  className="inline-flex items-center gap-1.5 text-[12px] text-[#3D1A78] hover:text-[#2a0f5f] underline-offset-2 hover:underline"
+                  className="inline-flex items-center gap-1.5 text-[0.75rem] text-[#3D1A78] hover:text-[#2a0f5f] underline-offset-2 hover:underline"
                   data-testid="dashboard-revisit-orientation"
                 >
                   <Compass size={12} /> Revisit the orientation walkthrough
                 </Link>
                 <Link
                   to="/progress"
-                  className="inline-flex items-center gap-1.5 text-[12px] text-[#3D1A78] hover:text-[#2a0f5f] underline-offset-2 hover:underline"
+                  className="inline-flex items-center gap-1.5 text-[0.75rem] text-[#3D1A78] hover:text-[#2a0f5f] underline-offset-2 hover:underline"
                   data-testid="dashboard-view-progress"
                 >
                   View my progress →
                 </Link>
                 <Link
                   to="/reflection"
-                  className="inline-flex items-center gap-1.5 text-[12px] text-[#3D1A78] hover:text-[#2a0f5f] underline-offset-2 hover:underline"
+                  className="inline-flex items-center gap-1.5 text-[0.75rem] text-[#3D1A78] hover:text-[#2a0f5f] underline-offset-2 hover:underline"
                   data-testid="dashboard-open-journal"
                 >
                   <Heart size={12} /> Open my journal
@@ -988,7 +988,7 @@ export default function Dashboard() {
                 </div>
                 {!allDone && (
                   <div
-                    className="mt-3 text-[11px] uppercase tracking-[0.2em] text-[#6E6787] flex items-center gap-1.5"
+                    className="mt-3 text-[0.6875rem] uppercase tracking-[0.2em] text-[#6E6787] flex items-center gap-1.5"
                     data-testid="dashboard-estimated-completion"
                   >
                     <Compass size={12} className="text-[#3D1A78]" />
@@ -1084,7 +1084,7 @@ export default function Dashboard() {
             </div>
 
             {!allDone && (
-              <p className="text-[11px] text-[#6E6787] mt-3 text-center leading-relaxed">
+              <p className="text-[0.6875rem] text-[#6E6787] mt-3 text-center leading-relaxed">
                 Tip: even 10 minutes of prep moves the needle.
               </p>
             )}
@@ -1257,7 +1257,7 @@ export default function Dashboard() {
                   >
                     <Icon size={18} />
                   </div>
-                  <div className="text-[10px] uppercase tracking-[0.2em] text-[#6E6787]">
+                  <div className="text-[0.625rem] uppercase tracking-[0.2em] text-[#6E6787]">
                     {isDone ? "Today's accomplishment" : "To do"}
                   </div>
                 </div>
@@ -1274,7 +1274,7 @@ export default function Dashboard() {
                       <Sprout size={12} />
                     </div>
                     <div>
-                      <div className="text-[10px] uppercase tracking-[0.2em] font-bold text-[#1F5C3B] mb-1">
+                      <div className="text-[0.625rem] uppercase tracking-[0.2em] font-bold text-[#1F5C3B] mb-1">
                         Tip you unlocked
                       </div>
                       <p className="text-xs text-[#4B4567] leading-relaxed">{tip}</p>
@@ -1294,7 +1294,7 @@ export default function Dashboard() {
               <div className="w-11 h-11 rounded-full grid place-items-center bg-[#C28771]/15 text-[#9A5D47]">
                 <FileText size={18} />
               </div>
-              <div className="text-[10px] uppercase tracking-[0.2em] text-[#6E6787]">
+              <div className="text-[0.625rem] uppercase tracking-[0.2em] text-[#6E6787]">
                 Final
               </div>
             </div>
@@ -1313,7 +1313,7 @@ export default function Dashboard() {
               <div className="w-11 h-11 rounded-full grid place-items-center bg-[#C28771]/15 text-[#9A5D47]">
                 <Heart size={18} />
               </div>
-              <div className="text-[10px] uppercase tracking-[0.2em] text-[#6E6787]">
+              <div className="text-[0.625rem] uppercase tracking-[0.2em] text-[#6E6787]">
                 Optional
               </div>
             </div>
@@ -1343,7 +1343,7 @@ export default function Dashboard() {
               <Sparkles size={22} />
             </div>
             <div className="flex-1 min-w-0">
-              <div className="text-[10px] uppercase tracking-[0.22em] font-bold text-[#CFC1EA] mb-0.5">
+              <div className="text-[0.625rem] uppercase tracking-[0.22em] font-bold text-[#CFC1EA] mb-0.5">
                 Special Needs Co-Parenting · new
               </div>
               <div className="font-serif text-xl leading-tight mb-1">
@@ -1358,7 +1358,7 @@ export default function Dashboard() {
               </p>
               {sncStatus?.has_report && (
                 <div
-                  className="mt-2 inline-flex items-center gap-2 text-[11px] text-[#CFC1EA]"
+                  className="mt-2 inline-flex items-center gap-2 text-[0.6875rem] text-[#CFC1EA]"
                   data-testid="dashboard-snc-report-status"
                 >
                   <span>
@@ -1389,7 +1389,7 @@ export default function Dashboard() {
               >
                 <div className="flex items-center gap-2 text-[#1F5C3B]">
                   <Sparkles size={16} />
-                  <span className="text-[10px] uppercase tracking-[0.22em] font-bold">Where you already agree</span>
+                  <span className="text-[0.625rem] uppercase tracking-[0.22em] font-bold">Where you already agree</span>
                 </div>
                 <div className="mt-1 font-serif text-lg text-[#1A1330]">
                   {sncHighlights.aligned_pct}% aligned with {sncHighlights.partner_name || "your co-parent"}
@@ -1404,7 +1404,7 @@ export default function Dashboard() {
                       className="flex items-start gap-3"
                       data-testid={`dashboard-highlight-${i}`}
                     >
-                      <div className="shrink-0 mt-0.5 w-6 h-6 rounded-full bg-[#1F5C3B] text-white text-[11px] font-bold flex items-center justify-center">{i + 1}</div>
+                      <div className="shrink-0 mt-0.5 w-6 h-6 rounded-full bg-[#1F5C3B] text-white text-[0.6875rem] font-bold flex items-center justify-center">{i + 1}</div>
                       <div className="min-w-0 flex-1">
                         <div className="text-sm text-[#1A1330] font-semibold leading-snug truncate">{h.prompt}</div>
                         <div className="text-xs text-[#1F5C3B]">{h.summary}</div>
@@ -1416,13 +1416,13 @@ export default function Dashboard() {
               <div className="mt-3 flex items-center justify-between gap-3 flex-wrap">
                 <Link
                   to={`/special-needs-v2/compare/${sncHighlights.share_id}`}
-                  className="text-[11px] font-semibold text-[#1F5C3B] inline-flex items-center gap-1 hover:underline"
+                  className="text-[0.6875rem] font-semibold text-[#1F5C3B] inline-flex items-center gap-1 hover:underline"
                 >
                   See the full comparison <ChevronRight size={12} />
                 </Link>
                 <Link
                   to={`/joint-professional-report?share=${encodeURIComponent(sncHighlights.share_id)}`}
-                  className="text-[11px] font-semibold text-[#3D1A78] underline underline-offset-2 hover:text-[#2a0f5f]"
+                  className="text-[0.6875rem] font-semibold text-[#3D1A78] underline underline-offset-2 hover:text-[#2a0f5f]"
                   data-testid="dashboard-joint-professional-report-link"
                   title="Open the Co-Parenting Agreement — side-by-side, for attorneys and mediators."
                 >
@@ -1430,7 +1430,7 @@ export default function Dashboard() {
                 </Link>
                 <Link
                   to={`/joint-agreement?share=${encodeURIComponent(sncHighlights.share_id)}`}
-                  className="text-[11px] font-semibold text-[#0F7676] underline underline-offset-2 hover:text-[#1F8F8F]"
+                  className="text-[0.6875rem] font-semibold text-[#0F7676] underline underline-offset-2 hover:text-[#1F8F8F]"
                   data-testid="dashboard-joint-agreement-link"
                   title="Open the Joint Alignment Agreement — merged from both parents' individual drafts."
                 >
@@ -1461,7 +1461,7 @@ export default function Dashboard() {
             <div className="rounded-3xl border border-[#E5E0EE] bg-white p-5 sm:p-6 shadow-sm">
               <div className="flex items-center justify-between gap-2 flex-wrap">
                 <div>
-                  <div className="text-[10px] uppercase tracking-[0.22em] font-bold text-[#3D1A78] flex items-center gap-2">
+                  <div className="text-[0.625rem] uppercase tracking-[0.22em] font-bold text-[#3D1A78] flex items-center gap-2">
                     <Sparkles size={12} /> Optional deep dives
                   </div>
                   <div className="mt-1 font-serif text-lg text-[#1A1330]">
@@ -1492,7 +1492,7 @@ export default function Dashboard() {
                         className="flex items-center justify-between gap-3 rounded-2xl border border-[#E5E0EE] p-3 hover:border-[#3D1A78] hover:bg-[#FCFBFE] transition-all">
                         <div className="min-w-0">
                           <div className="text-sm font-semibold text-[#1A1330] truncate">{d.name}</div>
-                          <div className="text-[11px] text-[#4B4567] mt-0.5">
+                          <div className="text-[0.6875rem] text-[#4B4567] mt-0.5">
                             {d.has_report ? (
                               <>Report ready {d.report_stale ? "(refresh recommended)" : ""}</>
                             ) : d.has_assessment ? (
@@ -1502,7 +1502,7 @@ export default function Dashboard() {
                             )}
                           </div>
                         </div>
-                        <span className={`shrink-0 px-2.5 py-1 rounded-full text-[10px] font-semibold border ${statusColor}`}
+                        <span className={`shrink-0 px-2.5 py-1 rounded-full text-[0.625rem] font-semibold border ${statusColor}`}
                           data-testid={`dashboard-deep-dive-${d.id}-status`}>
                           {statusLabel}
                         </span>
@@ -1521,7 +1521,7 @@ export default function Dashboard() {
             <div className="rounded-3xl border border-[#B5DFC5] bg-[#F1F9F4] p-5 sm:p-6 shadow-sm">
               <div className="flex items-start justify-between gap-3 flex-wrap">
                 <div>
-                  <div className="text-[10px] uppercase tracking-[0.22em] font-bold text-[#1F5C3B] flex items-center gap-2">
+                  <div className="text-[0.625rem] uppercase tracking-[0.22em] font-bold text-[#1F5C3B] flex items-center gap-2">
                     <Users size={12} /> Co-parent comparisons
                   </div>
                   <div className="mt-1 font-serif text-lg text-[#1A1330]" data-testid="dashboard-compare-headline">
@@ -1569,12 +1569,12 @@ export default function Dashboard() {
                         <div className="flex items-center justify-between gap-2">
                           <div className="min-w-0">
                             <div className="text-sm font-semibold text-[#1A1330] truncate">{p.name}</div>
-                            <div className="text-[11px] text-[#4B4567] mt-0.5 group-hover:text-[#1F5C3B] inline-flex items-center gap-1">
+                            <div className="text-[0.6875rem] text-[#4B4567] mt-0.5 group-hover:text-[#1F5C3B] inline-flex items-center gap-1">
                               {isReady ? <><Eye size={11} /> View comparison</> : <>Open hub <ChevronRight size={11} /></>}
                             </div>
                           </div>
                           <span
-                            className={`shrink-0 px-2.5 py-1 rounded-full text-[10px] font-semibold border ${statePillCls}`}
+                            className={`shrink-0 px-2.5 py-1 rounded-full text-[0.625rem] font-semibold border ${statePillCls}`}
                             data-testid={`dashboard-compare-pathway-${p.id}-status`}
                           >
                             {stateLabel}
@@ -1602,7 +1602,7 @@ export default function Dashboard() {
                                 <span
                                   key={m}
                                   title={title}
-                                  className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold border ${styleCls}`}
+                                  className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[0.625rem] font-semibold border ${styleCls}`}
                                   data-testid={`dashboard-compare-pathway-${p.id}-trophy-${m}`}
                                 >
                                   <Trophy size={10} /> {m}%
@@ -1630,7 +1630,7 @@ export default function Dashboard() {
               <Shield size={22} />
             </div>
             <div className="flex-1 min-w-0">
-              <div className="text-[10px] uppercase tracking-[0.22em] font-bold text-[#9A5D47] mb-0.5">
+              <div className="text-[0.625rem] uppercase tracking-[0.22em] font-bold text-[#9A5D47] mb-0.5">
                 Safety Screen
               </div>
               <div className="font-serif text-xl text-[#1A1330] leading-tight mb-1">
@@ -1661,7 +1661,7 @@ export default function Dashboard() {
                 <Sprout size={22} />
               </div>
               <div className="flex-1 min-w-0">
-                <div className="text-[10px] uppercase tracking-[0.22em] font-bold opacity-90 mb-0.5">
+                <div className="text-[0.625rem] uppercase tracking-[0.22em] font-bold opacity-90 mb-0.5">
                   Support for children of divorce
                 </div>
                 <div className="font-serif text-xl leading-tight mb-1">
@@ -1685,7 +1685,7 @@ export default function Dashboard() {
                 f
               </div>
               <div className="flex-1 min-w-0">
-                <div className="text-[10px] uppercase tracking-[0.22em] font-bold text-[#3D1A78] mb-0.5">
+                <div className="text-[0.625rem] uppercase tracking-[0.22em] font-bold text-[#3D1A78] mb-0.5">
                   Follow the community
                 </div>
                 <div className="font-serif text-xl leading-tight mb-1">

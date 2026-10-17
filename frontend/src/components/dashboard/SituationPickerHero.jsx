@@ -76,7 +76,7 @@ export default function SituationPickerHero({
       className="mt-4 rounded-3xl border border-[#E5E0EE] bg-white p-6 sm:p-8 shadow-sm"
       data-testid="dashboard-step1-hero"
     >
-      <div className="text-[11px] uppercase tracking-[0.16em] font-bold text-[#3D1A78] mb-2">
+      <div className="text-[0.6875rem] uppercase tracking-[0.16em] font-bold text-[#3D1A78] mb-2">
         Step 1
       </div>
       <h1

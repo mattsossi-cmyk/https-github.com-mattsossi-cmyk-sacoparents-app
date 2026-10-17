@@ -97,7 +97,7 @@ export default function AppShell({ children }) {
               <div className="font-sans font-extrabold text-base sm:text-lg whitespace-nowrap text-[#1A1330]">
                 <span className="text-brand-gradient">SA</span> CoParents
               </div>
-              <div className="hidden xl:block text-[10px] uppercase tracking-[0.2em] text-[#6E6787]">
+              <div className="hidden xl:block text-[0.625rem] uppercase tracking-[0.2em] text-[#6E6787]">
                 Mediation Prep
               </div>
             </div>
@@ -233,7 +233,7 @@ export default function AppShell({ children }) {
             <div className="border-t border-[#E5E0EE] px-4 py-3">
               <Link
                 to="/delete-account"
-                className="block px-4 py-2.5 rounded-xl text-[13px] text-[#9A5D47] hover:bg-[#C97B63]/10"
+                className="block px-4 py-2.5 rounded-xl text-[0.8125rem] text-[#9A5D47] hover:bg-[#C97B63]/10"
                 data-testid="mobile-nav-delete-account"
               >
                 Delete my account

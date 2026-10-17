@@ -30,7 +30,7 @@ export default function SignDownloadToggle({
   return (
     <div className="flex flex-col items-end gap-2">
       <label
-        className={`inline-flex items-center gap-2 select-none text-[11px] font-semibold text-[#4B4567] cursor-pointer ${
+        className={`inline-flex items-center gap-2 select-none text-[0.6875rem] font-semibold text-[#4B4567] cursor-pointer ${
           disabled ? "opacity-60 cursor-not-allowed" : ""
         }`}
         title="Adds your name and a UTC timestamp under the watermark on every page."
@@ -59,11 +59,11 @@ export default function SignDownloadToggle({
             maxLength={NOTE_MAX}
             onChange={(e) => onNoteChange(e.target.value.slice(0, NOTE_MAX))}
             placeholder='Optional note e.g. "Prepared for our 12 Feb mediation"'
-            className="w-full text-[12px] font-normal text-[#1A1330] bg-white border border-[#E5E0EE] focus:border-[#3D1A78] focus:ring-2 focus:ring-[#E9E1F7] rounded-lg px-3 py-1.5 outline-none transition"
+            className="w-full text-[0.75rem] font-normal text-[#1A1330] bg-white border border-[#E5E0EE] focus:border-[#3D1A78] focus:ring-2 focus:ring-[#E9E1F7] rounded-lg px-3 py-1.5 outline-none transition"
             data-testid={`${testid}-note-input`}
           />
           <div
-            className="text-[10px] text-[#6E6787]"
+            className="text-[0.625rem] text-[#6E6787]"
             data-testid={`${testid}-note-counter`}
           >
             {remaining} chars left · appears above your signature on every page

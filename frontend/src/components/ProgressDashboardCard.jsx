@@ -60,7 +60,7 @@ export default function ProgressDashboardCard() {
     >
       <div className="flex items-center justify-between gap-3 flex-wrap">
         <div>
-          <div className="text-[10px] uppercase tracking-[0.22em] text-[#3D1A78] font-bold flex items-center gap-1.5">
+          <div className="text-[0.625rem] uppercase tracking-[0.22em] text-[#3D1A78] font-bold flex items-center gap-1.5">
             <Sparkles size={12} />
             Your progress
           </div>
@@ -78,7 +78,7 @@ export default function ProgressDashboardCard() {
           <ProgressSparkline history={data.history} />
           {typeof data.streak_days === "number" && data.streak_days > 0 && (
             <span
-              className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-bold bg-[#FBEDDA] text-[#8C5A2C] border border-[#EDD5B0]"
+              className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[0.6875rem] font-bold bg-[#FBEDDA] text-[#8C5A2C] border border-[#EDD5B0]"
               data-testid="dashboard-progress-streak"
               title={`${data.streak_days}-day dashboard streak`}
             >

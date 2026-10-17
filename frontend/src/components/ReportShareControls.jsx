@@ -221,13 +221,13 @@ export default function ReportShareControls({
             Some readers only need the highlights. Hide any section before you
             download the PDF or generate a share link.
           </p>
-          <ProSeeLink testid={`${testIdPrefix}-pros-see-link`} className="text-[13px] mt-1.5" />
+          <ProSeeLink testid={`${testIdPrefix}-pros-see-link`} className="text-[0.8125rem] mt-1.5" />
         </div>
         <div className="text-right">
           <div className="text-2xl font-serif text-[#3D1A78]" data-testid={`${testIdPrefix}-visible-count`}>
             {totalVisible.visible}<span className="text-[#6E6787] text-base">/{totalVisible.total}</span>
           </div>
-          <div className="text-[11px] uppercase tracking-[0.12em] text-[#6E6787]">sections included</div>
+          <div className="text-[0.6875rem] uppercase tracking-[0.12em] text-[#6E6787]">sections included</div>
         </div>
       </div>
 
@@ -314,7 +314,7 @@ export default function ReportShareControls({
       </div>
 
       <div className="mt-3">
-        <label htmlFor={`${testIdPrefix}-nickname`} className="block text-[10px] uppercase tracking-[0.14em] font-bold text-[#3D1A78] mb-1">
+        <label htmlFor={`${testIdPrefix}-nickname`} className="block text-[0.625rem] uppercase tracking-[0.14em] font-bold text-[#3D1A78] mb-1">
           Nickname (optional)
         </label>
         <input
@@ -327,7 +327,7 @@ export default function ReportShareControls({
           data-testid={`${testIdPrefix}-nickname-input`}
           className="w-full max-w-md px-3 py-1.5 rounded-full border border-[#D6CFE8] bg-white text-sm text-[#1A1330] placeholder:text-[#B0A9C7] focus:outline-none focus:border-[#3D1A78]"
         />
-        <p className="text-[10px] text-[#6E6787] mt-1">Shown only to you — helps you find the right link months later.</p>
+        <p className="text-[0.625rem] text-[#6E6787] mt-1">Shown only to you — helps you find the right link months later.</p>
       </div>
 
       <div className="mt-5 flex flex-wrap items-center gap-2">
@@ -394,8 +394,8 @@ export default function ReportShareControls({
                       <div className="font-semibold text-[#1A1330]" data-testid={`${testIdPrefix}-row-label-${row.jti}`}>
                         {row.label || <span className="italic text-[#6E6787]">Untitled link</span>}
                       </div>
-                      <div className="text-[11px] text-[#6E6787]">Created {created}</div>
-                      <div className="text-[11px] text-[#6E6787]">Expires: {expires}</div>
+                      <div className="text-[0.6875rem] text-[#6E6787]">Created {created}</div>
+                      <div className="text-[0.6875rem] text-[#6E6787]">Expires: {expires}</div>
                     </div>
                     <button
                       type="button"

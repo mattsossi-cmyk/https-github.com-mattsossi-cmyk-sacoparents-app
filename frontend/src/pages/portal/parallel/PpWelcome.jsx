@@ -16,7 +16,7 @@ function Feature({ testid, icon, title, short, badge, onOpen }) {
           <i className={`fa-solid ${icon}`}></i>
         </div>
         {badge && (
-          <span data-testid={`${testid}-done`} className="text-[10px] font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-full whitespace-nowrap">
+          <span data-testid={`${testid}-done`} className="text-[0.625rem] font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-full whitespace-nowrap">
             <i className="fa-solid fa-check mr-1"></i>
             {badge}
           </span>
@@ -28,7 +28,7 @@ function Feature({ testid, icon, title, short, badge, onOpen }) {
   );
 }
 
-const heading = "text-[11px] font-bold uppercase tracking-wider text-[#8251b8] mb-3";
+const heading = "text-[0.6875rem] font-bold uppercase tracking-wider text-[#8251b8] mb-3";
 
 export function PpWelcome({ content, plan, onStart, onOpenStep, onOpenCheck, onSummary }) {
   const answered = Object.keys(plan.answers).length;
@@ -89,7 +89,7 @@ export function PpWelcome({ content, plan, onStart, onOpenStep, onOpenCheck, onS
           </button>
         )}
       </div>
-      <p className="text-[11px] text-gray-500">Private to you · Saved to your account · About 10 minutes</p>
+      <p className="text-[0.6875rem] text-gray-500">Private to you · Saved to your account · About 10 minutes</p>
     </div>
   );
 }

@@ -90,7 +90,7 @@ export default function NDRiskAssessment() {
         </Link>
 
         <header>
-          <div className="text-[10px] uppercase tracking-[0.22em] font-bold text-[#3D1A78]">
+          <div className="text-[0.625rem] uppercase tracking-[0.22em] font-bold text-[#3D1A78]">
             Family Violence · Assessment
           </div>
           <h1 className="font-serif text-3xl sm:text-4xl text-[#1A1330] mt-1 leading-tight">
@@ -114,7 +114,7 @@ export default function NDRiskAssessment() {
         </div>
 
         <section className="mt-8 space-y-3">
-          <label className="block text-[10px] uppercase tracking-[0.18em] font-bold text-[#3D1A78]">
+          <label className="block text-[0.625rem] uppercase tracking-[0.18em] font-bold text-[#3D1A78]">
             Named coparent (for the report header)
           </label>
           <input
@@ -165,7 +165,7 @@ export default function NDRiskAssessment() {
         ))}
 
         <section className="mt-8">
-          <label className="block text-[10px] uppercase tracking-[0.18em] font-bold text-[#3D1A78] mb-2">
+          <label className="block text-[0.625rem] uppercase tracking-[0.18em] font-bold text-[#3D1A78] mb-2">
             Notes for the court report (optional)
           </label>
           <textarea
@@ -177,7 +177,7 @@ export default function NDRiskAssessment() {
             placeholder="Specific recent examples that support these ratings…"
             data-testid="nd-risk-notes"
           />
-          <div className="text-[10px] text-[#6A5799] mt-1">{notes.length} / 1000</div>
+          <div className="text-[0.625rem] text-[#6A5799] mt-1">{notes.length} / 1000</div>
         </section>
 
         <div className="mt-8 rounded-2xl border border-[#E5E0EE] bg-[#FCFBFE] p-4 flex items-center justify-between gap-3 flex-wrap">

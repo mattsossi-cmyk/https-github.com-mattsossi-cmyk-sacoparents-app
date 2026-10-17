@@ -112,7 +112,7 @@ export default function AccountSetup() {
           <Link to="/login" replace className="btn-sage w-full" data-testid="setup-back-to-login">
             Back to sign in
           </Link>
-          <div className="text-[11px] uppercase tracking-[0.2em] text-[#A7B3AD] mt-6">
+          <div className="text-[0.6875rem] uppercase tracking-[0.2em] text-[#A7B3AD] mt-6">
             Code: {error.code}
           </div>
         </div>
@@ -177,7 +177,7 @@ export default function AccountSetup() {
                 password={password}
                 testid="setup-password-strength"
               />
-              <span className="text-[11px] text-[#6E6787] mt-1 block">
+              <span className="text-[0.6875rem] text-[#6E6787] mt-1 block">
                 At least 8 characters. You'll use this to sign in next time.
               </span>
             </label>

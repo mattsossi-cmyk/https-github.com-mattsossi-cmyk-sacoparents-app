@@ -332,7 +332,7 @@ def test_daily_counts_admin_only_counts_only():
     assert _send(_body(case_id, 1, mode="structured")).status_code == 200
     httpx.get(f"{API}/admin/safety-audit-log/export", headers=admin, timeout=30)
     resp = httpx.get(url, headers=admin, timeout=20)
-    assert resp.headers.get("cache-control") == "no-store"
+    assert "no-store" in resp.headers.get("cache-control", "")
     days, after = resp.json()["days"], today(resp)
     assert len(days) == 30 and set(after) == {"date", "applied", "ignored", "downloads"}
     assert (after["applied"], after["ignored"], after["downloads"]) == (before["applied"] + 1, before["ignored"] + 1, before["downloads"] + 1)

@@ -123,7 +123,7 @@ export default function RecentlySharedWith({
     >
       <div className="flex items-center gap-2 mb-3">
         <Mail size={13} className="text-[#3D1A78]" />
-        <span className="text-[10px] uppercase tracking-[0.18em] font-bold text-[#3D1A78]">
+        <span className="text-[0.625rem] uppercase tracking-[0.18em] font-bold text-[#3D1A78]">
           Recently shared with
         </span>
         <span className="text-xs text-[#4B4567]">
@@ -149,7 +149,7 @@ export default function RecentlySharedWith({
                 className="group inline-flex items-center gap-2 rounded-full pl-1 pr-3 py-1 bg-white border border-[#E5E0EE] hover:border-[#3D1A78] hover:bg-[#F5F1FB] transition-colors disabled:opacity-60"
               >
                 <span
-                  className="inline-flex items-center justify-center w-7 h-7 rounded-full bg-[#EFE9F9] text-[#3D1A78] text-[11px] font-bold shrink-0"
+                  className="inline-flex items-center justify-center w-7 h-7 rounded-full bg-[#EFE9F9] text-[#3D1A78] text-[0.6875rem] font-bold shrink-0"
                   aria-hidden
                 >
                   {initials}
@@ -158,12 +158,12 @@ export default function RecentlySharedWith({
                   <span className="text-xs font-semibold text-[#1A1330] truncate">
                     {r.recipient_name || r.to_email}
                   </span>
-                  <span className="text-[10px] text-[#4B4567] truncate">
+                  <span className="text-[0.625rem] text-[#4B4567] truncate">
                     {roleLabel}{since ? ` · ${since}` : ""}
                   </span>
                 </span>
                 <span
-                  className="ml-1 inline-flex items-center gap-1 text-[10px] font-bold text-[#3D1A78] uppercase tracking-[0.14em]"
+                  className="ml-1 inline-flex items-center gap-1 text-[0.625rem] font-bold text-[#3D1A78] uppercase tracking-[0.14em]"
                   aria-hidden
                 >
                   {busy ? (

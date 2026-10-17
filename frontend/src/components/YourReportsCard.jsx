@@ -57,7 +57,7 @@ function ReportRow({ testid, title, subtitle, state, to, Icon }) {
         <div className="text-xs text-[#4B4567] truncate">{subtitle}</div>
       </div>
       <span
-        className={`shrink-0 text-[10px] uppercase tracking-[0.14em] font-bold px-2 py-1 rounded-full border ${s.pill}`}
+        className={`shrink-0 text-[0.625rem] uppercase tracking-[0.14em] font-bold px-2 py-1 rounded-full border ${s.pill}`}
       >
         {state === "ready" ? "Ready" : state === "in_progress" ? "In progress" : "Not started"}
       </span>
@@ -191,7 +191,7 @@ export default function YourReportsCard({
     >
       <div className="flex items-center justify-between flex-wrap gap-2 mb-4">
         <div>
-          <div className="text-[10px] uppercase tracking-[0.22em] text-[#3D1A78] font-bold">
+          <div className="text-[0.625rem] uppercase tracking-[0.22em] text-[#3D1A78] font-bold">
             Your reports
           </div>
           <div className="font-serif text-xl text-[#1A1330] leading-snug mt-0.5">
@@ -270,7 +270,7 @@ function BundleDownloadButton({ readyCount }) {
           : <Download size={14} />}
         {downloading ? "Preparing your bundle…" : label}
       </button>
-      <p className="mt-2 text-[11px] text-[#6E6787] leading-relaxed text-center">
+      <p className="mt-2 text-[0.6875rem] text-[#6E6787] leading-relaxed text-center">
         One ZIP with every PDF you've completed and a plain-text manifest —
         nothing is added for assessments you haven't finished yet.
       </p>

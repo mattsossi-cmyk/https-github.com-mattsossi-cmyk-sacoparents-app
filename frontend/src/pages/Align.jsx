@@ -31,7 +31,7 @@ export default function Align() {
             <i className="fa-solid fa-scale-balanced text-xl"></i>
           </div>
           <div>
-            <div className="text-[10px] uppercase tracking-widest text-emerald-400 font-bold">
+            <div className="text-[0.625rem] uppercase tracking-widest text-emerald-400 font-bold">
               Professional Workspace
             </div>
             <h1 className="text-xl font-bold tracking-tight">
@@ -53,7 +53,7 @@ export default function Align() {
           className="bg-white rounded-xl border border-slate-200 p-5"
           data-testid="align-role-explainer"
         >
-          <div className="text-[10px] uppercase tracking-widest text-slate-500 font-bold">
+          <div className="text-[0.625rem] uppercase tracking-widest text-slate-500 font-bold">
             Looking for the parent portal?
           </div>
           <p className="text-sm text-slate-700 leading-snug mt-1">
@@ -89,7 +89,7 @@ export default function Align() {
               Analytics overview, recent users, daily signups, and
               consent-adoption digest.
             </p>
-            <div className="mt-3 text-[11px] font-bold text-emerald-700 group-hover:underline">
+            <div className="mt-3 text-[0.6875rem] font-bold text-emerald-700 group-hover:underline">
               Open dashboard →
             </div>
           </Link>
@@ -109,7 +109,7 @@ export default function Align() {
               Review a case's Co-Parenting Agreement, Joint
               Agreement, or Professional Intro PDF.
             </p>
-            <div className="mt-3 text-[11px] font-bold text-emerald-700 group-hover:underline">
+            <div className="mt-3 text-[0.6875rem] font-bold text-emerald-700 group-hover:underline">
               Open joint reports →
             </div>
           </Link>
@@ -129,7 +129,7 @@ export default function Align() {
               Signature verification, pathway briefings, and
               court-report attestations.
             </p>
-            <div className="mt-3 text-[11px] font-bold text-emerald-700 group-hover:underline">
+            <div className="mt-3 text-[0.6875rem] font-bold text-emerald-700 group-hover:underline">
               Open workbench →
             </div>
           </Link>
@@ -150,7 +150,7 @@ export default function Align() {
               Psychological report formats before referring a
               family in.
             </p>
-            <div className="mt-3 text-[11px] font-bold text-emerald-700 group-hover:underline">
+            <div className="mt-3 text-[0.6875rem] font-bold text-emerald-700 group-hover:underline">
               Browse samples →
             </div>
           </Link>
@@ -160,7 +160,7 @@ export default function Align() {
             here because professionals need to see it. Parent-side
             copy would never surface this. */}
         <footer
-          className="pt-6 border-t border-slate-200 text-[11px] text-slate-500 leading-snug space-y-1"
+          className="pt-6 border-t border-slate-200 text-[0.6875rem] text-slate-500 leading-snug space-y-1"
           data-testid="align-compliance-footer"
         >
           <p>

@@ -158,7 +158,7 @@ export default function LegalAcknowledgment() {
             <ScrollText size={18} />
           </div>
           <div>
-            <div className="text-[10px] uppercase tracking-[0.2em] opacity-80">
+            <div className="text-[0.625rem] uppercase tracking-[0.2em] opacity-80">
               A quick note before we start
             </div>
             <h2
@@ -176,13 +176,13 @@ export default function LegalAcknowledgment() {
             mediation-preparation tools. It does not provide legal advice,
             therapy, or create an attorney-client relationship.
           </p>
-          <p className="text-[13px] text-[#4B4567] leading-relaxed">
+          <p className="text-[0.8125rem] text-[#4B4567] leading-relaxed">
             Full details are in our{" "}
             <Link to="/terms" className="text-[#3D1A78] underline" data-testid="legal-ack-link-terms">Terms of Use</Link>.
           </p>
           <div data-testid="legal-ack-privacy" className="rounded-2xl border border-[#E5E0EE] bg-[#F8F7FC] p-4 space-y-2">
-            <p className="text-[13px] font-bold text-[#1A1330]">Your privacy</p>
-            <p className="text-[13px] text-[#4B4567] leading-relaxed">
+            <p className="text-[0.8125rem] font-bold text-[#1A1330]">Your privacy</p>
+            <p className="text-[0.8125rem] text-[#4B4567] leading-relaxed">
               What you enter is private to your account. Nothing is shared with your co-parent, a professional or anyone
               else unless you choose a person and tap Send. One exception: if you accept a professional&rsquo;s case
               invitation or court code, they see whether each step they asked for is done, with dates, never your answers.

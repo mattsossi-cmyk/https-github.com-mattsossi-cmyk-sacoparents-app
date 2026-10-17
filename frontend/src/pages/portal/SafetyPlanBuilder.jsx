@@ -183,10 +183,10 @@ export function SafetyPlanBuilder({ plan, onSave }) {
         className="w-full p-3 text-left flex justify-between items-center hover:bg-purple-50 transition"
       >
         <div>
-          <div className="font-bold text-purple-900 text-[11px] uppercase tracking-wider">
+          <div className="font-bold text-purple-900 text-[0.6875rem] uppercase tracking-wider">
             Optional — Build a private Safety Plan
           </div>
-          <div className="text-[10px] text-slate-500 leading-snug mt-0.5">
+          <div className="text-[0.625rem] text-slate-500 leading-snug mt-0.5">
             Five short prompts. Saved on this device (or your account
             if signed in). <strong>Never shared with your co-parent.</strong>
           </div>
@@ -203,10 +203,10 @@ export function SafetyPlanBuilder({ plan, onSave }) {
         <div className="p-3 space-y-3 border-t border-purple-100 bg-purple-50/40">
           {FIELDS.map((f) => (
             <div key={f.key} data-testid={`safety-plan-field-${f.key}`}>
-              <label className="font-semibold text-slate-700 text-[11px] block">
+              <label className="font-semibold text-slate-700 text-[0.6875rem] block">
                 {f.label}
               </label>
-              <p className="text-[10px] text-slate-500 leading-snug mt-0.5 mb-1">
+              <p className="text-[0.625rem] text-slate-500 leading-snug mt-0.5 mb-1">
                 {f.hint}
               </p>
               <textarea
@@ -227,7 +227,7 @@ export function SafetyPlanBuilder({ plan, onSave }) {
               data-testid="safety-plan-save-btn"
               onClick={persist}
               disabled={!hasAnything}
-              className="flex-1 min-w-[100px] px-3 py-2 bg-purple-800 hover:bg-purple-900 disabled:opacity-40 text-white rounded-lg font-bold text-[11px]"
+              className="flex-1 min-w-[100px] px-3 py-2 bg-purple-800 hover:bg-purple-900 disabled:opacity-40 text-white rounded-lg font-bold text-[0.6875rem]"
             >
               <i className="fa-solid fa-floppy-disk mr-1"></i>
               {savedAt ? "Save changes" : "Save my Safety Plan"}
@@ -237,7 +237,7 @@ export function SafetyPlanBuilder({ plan, onSave }) {
               data-testid="safety-plan-summary-btn"
               onClick={() => setShowSummary((v) => !v)}
               disabled={!hasAnything}
-              className="px-3 py-2 border border-purple-300 text-purple-800 rounded-lg font-bold text-[11px] disabled:opacity-40"
+              className="px-3 py-2 border border-purple-300 text-purple-800 rounded-lg font-bold text-[0.6875rem] disabled:opacity-40"
             >
               {showSummary ? "Hide summary" : "Show private summary"}
             </button>
@@ -249,7 +249,7 @@ export function SafetyPlanBuilder({ plan, onSave }) {
             >
               <p
                 data-testid="safety-plan-saved-at"
-                className="text-[10px] text-emerald-700 font-semibold"
+                className="text-[0.625rem] text-emerald-700 font-semibold"
               >
                 <i className="fa-solid fa-check-circle mr-1"></i>
                 Saved · {new Date(savedAt).toLocaleString()}
@@ -259,7 +259,7 @@ export function SafetyPlanBuilder({ plan, onSave }) {
                 data-testid="safety-plan-delete-btn"
                 onClick={wipe}
                 title="Delete your Safety Plan from this device and from your account"
-                className="text-[10px] font-bold text-rose-700 hover:text-rose-900 underline decoration-rose-300"
+                className="text-[0.625rem] font-bold text-rose-700 hover:text-rose-900 underline decoration-rose-300"
               >
                 <i className="fa-solid fa-trash-can mr-1"></i>Delete my Safety Plan
               </button>
@@ -269,7 +269,7 @@ export function SafetyPlanBuilder({ plan, onSave }) {
           {undo && (
             <div
               data-testid="safety-plan-undo-toast"
-              className="flex items-center justify-between gap-2 p-2 bg-slate-900 text-white rounded-lg text-[11px] animate-pulse-once"
+              className="flex items-center justify-between gap-2 p-2 bg-slate-900 text-white rounded-lg text-[0.6875rem] animate-pulse-once"
             >
               <span>
                 <i className="fa-solid fa-trash-can mr-1.5"></i>
@@ -279,7 +279,7 @@ export function SafetyPlanBuilder({ plan, onSave }) {
                 type="button"
                 data-testid="safety-plan-undo-btn"
                 onClick={undoWipe}
-                className="px-2.5 py-1 bg-amber-400 text-slate-900 rounded font-bold uppercase tracking-wider text-[10px]"
+                className="px-2.5 py-1 bg-amber-400 text-slate-900 rounded font-bold uppercase tracking-wider text-[0.625rem]"
               >
                 Undo
               </button>
@@ -289,17 +289,17 @@ export function SafetyPlanBuilder({ plan, onSave }) {
           {showSummary && hasAnything && (
             <div
               data-testid="safety-plan-summary"
-              className="p-3 bg-white border border-slate-200 rounded-lg text-[11px] text-slate-800 space-y-1"
+              className="p-3 bg-white border border-slate-200 rounded-lg text-[0.6875rem] text-slate-800 space-y-1"
             >
               <div className="flex justify-between items-center border-b border-slate-100 pb-1">
-                <span className="font-bold text-purple-900 text-[11px] uppercase tracking-wider">
+                <span className="font-bold text-purple-900 text-[0.6875rem] uppercase tracking-wider">
                   My Safety Plan
                 </span>
                 <button
                   type="button"
                   data-testid="safety-plan-copy-btn"
                   onClick={copySummary}
-                  className="text-[10px] px-2 py-0.5 bg-emerald-700 text-white rounded font-bold"
+                  className="text-[0.625rem] px-2 py-0.5 bg-emerald-700 text-white rounded font-bold"
                 >
                   {copyState === "copied" ? "Copied!" : "Copy to clipboard"}
                 </button>
@@ -316,7 +316,7 @@ export function SafetyPlanBuilder({ plan, onSave }) {
                   </div>
                 );
               })}
-              <div className="pt-1 border-t border-slate-100 text-[10px] text-slate-500">
+              <div className="pt-1 border-t border-slate-100 text-[0.625rem] text-slate-500">
                 DV Hotline: 1-800-799-7233 · Text START to 88788 · Emergency: 911 · Crisis: 988
               </div>
             </div>

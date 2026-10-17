@@ -26,7 +26,7 @@ export function FocusModeToggle({ focusMode, onToggle, testid = "deepdive-toggle
       aria-pressed={!focusMode}
       title={focusMode ? "Show every question in this section" : "Focus on one question at a time"}
       data-testid={testid}
-      className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[11px] font-semibold border border-[#D6CFE8] text-[#3D1A78] hover:border-[#3D1A78] shrink-0"
+      className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[0.6875rem] font-semibold border border-[#D6CFE8] text-[#3D1A78] hover:border-[#3D1A78] shrink-0"
     >
       <LayoutList size={12} />
       {focusMode ? "Show all" : "One at a time"}
@@ -38,7 +38,7 @@ export function FocusItemProgress({ qIdx, total, sectionIdx, sectionTotal, testi
   const pct = total > 0 ? Math.round(((qIdx + 1) / total) * 100) : 0;
   return (
     <div className="mt-3">
-      <div className="flex items-center justify-between text-[11px] text-[#4B4567] mb-1">
+      <div className="flex items-center justify-between text-[0.6875rem] text-[#4B4567] mb-1">
         <span data-testid={testid}>
           Question {Math.min(qIdx + 1, total)} of {total} · Section {sectionIdx + 1} of {sectionTotal}
         </span>

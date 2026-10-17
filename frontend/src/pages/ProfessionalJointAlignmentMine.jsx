@@ -312,7 +312,7 @@ export default function ProfessionalJointAlignmentMine() {
 
         <div className="flex items-baseline justify-between flex-wrap gap-3 mb-6">
           <div>
-            <div className="text-[11px] uppercase tracking-[0.22em] font-bold text-[#3D1A78] mb-1 inline-flex items-center gap-2">
+            <div className="text-[0.6875rem] uppercase tracking-[0.22em] font-bold text-[#3D1A78] mb-1 inline-flex items-center gap-2">
               <Users size={12} /> Cases you&rsquo;ve created
             </div>
             <h1 className="font-serif text-3xl sm:text-4xl text-[#1A1330] leading-tight" data-testid="pj-mine-headline">
@@ -434,7 +434,7 @@ export default function ProfessionalJointAlignmentMine() {
 
         {error && (
           <div
-            className="mb-4 flex items-start gap-2 rounded-2xl bg-[#FEE4E2] border border-[#F1B0A9] px-4 py-3 text-[13px] text-[#8A2C1E]"
+            className="mb-4 flex items-start gap-2 rounded-2xl bg-[#FEE4E2] border border-[#F1B0A9] px-4 py-3 text-[0.8125rem] text-[#8A2C1E]"
             role="alert"
             aria-live="polite"
             data-testid="pj-mine-error"
@@ -491,7 +491,7 @@ export default function ProfessionalJointAlignmentMine() {
                         {c.case_id}
                       </span>
                       <span
-                        className={`text-[10px] uppercase tracking-[0.15em] font-bold rounded-full px-2 py-0.5 border ${STATUS_PILL[c.status] || STATUS_PILL.expired}`}
+                        className={`text-[0.625rem] uppercase tracking-[0.15em] font-bold rounded-full px-2 py-0.5 border ${STATUS_PILL[c.status] || STATUS_PILL.expired}`}
                         data-testid={`pj-mine-status-${c.case_id}`}
                       >
                         {c.status.replaceAll("_", " ")}
@@ -547,13 +547,13 @@ export default function ProfessionalJointAlignmentMine() {
                     >
                       <div className="flex items-baseline justify-between gap-2">
                         <div className="min-w-0">
-                          <div className="text-[10px] uppercase tracking-[0.15em] font-bold text-[#3D1A78]">
+                          <div className="text-[0.625rem] uppercase tracking-[0.15em] font-bold text-[#3D1A78]">
                             Parent {pi + 1}
                           </div>
                           <div className="text-sm text-[#1A1330] truncate">
                             {p.name || p.email}
                           </div>
-                          <div className="text-[11px] text-[#4B4567]">
+                          <div className="text-[0.6875rem] text-[#4B4567]">
                             {p.status?.replace("_", " ") || "invited"}
                             {p.assessment_completed_at ? " · completed" : ""}
                           </div>
@@ -562,7 +562,7 @@ export default function ProfessionalJointAlignmentMine() {
                           <button
                             type="button"
                             onClick={() => copyToClipboard(p.invitation_url, `${c.case_id} · P${pi + 1}`)}
-                            className="text-[11px] font-semibold text-[#3D1A78] hover:underline inline-flex items-center gap-1 shrink-0"
+                            className="text-[0.6875rem] font-semibold text-[#3D1A78] hover:underline inline-flex items-center gap-1 shrink-0"
                             data-testid={`pj-mine-copy-${c.case_id}-${pi}`}
                           >
                             <Copy size={10} /> Copy link
@@ -581,7 +581,7 @@ export default function ProfessionalJointAlignmentMine() {
                   <div className="mt-3" data-testid={`pj-mine-note-${c.case_id}`}>
                     {noteEditingId === c.case_id ? (
                       <div className="rounded-xl border border-[#D6CFE8] bg-[#F5F1FB] p-3">
-                        <div className="text-[10px] uppercase tracking-[0.15em] font-bold text-[#3D1A78] mb-1 inline-flex items-center gap-1">
+                        <div className="text-[0.625rem] uppercase tracking-[0.15em] font-bold text-[#3D1A78] mb-1 inline-flex items-center gap-1">
                           <MessageSquare size={10} /> Reminder note
                         </div>
                         <textarea
@@ -600,7 +600,7 @@ export default function ProfessionalJointAlignmentMine() {
                           compact
                         />
                         <div className="mt-2 flex items-center justify-between gap-2 flex-wrap">
-                          <span className="text-[11px] text-[#6E6787]">
+                          <span className="text-[0.6875rem] text-[#6E6787]">
                             {noteDraft.length}/240 · shown to the parent in the 5-day gentle nudge.
                           </span>
                           <div className="flex items-center gap-2">
@@ -633,9 +633,9 @@ export default function ProfessionalJointAlignmentMine() {
                           className="flex-1 text-left rounded-xl border border-[#D6CFE8] bg-[#F5F1FB] hover:bg-[#EFE7FA] p-3 transition-colors group"
                           data-testid={`pj-mine-note-preview-${c.case_id}`}
                         >
-                          <div className="text-[10px] uppercase tracking-[0.15em] font-bold text-[#3D1A78] mb-1 inline-flex items-center gap-1">
+                          <div className="text-[0.625rem] uppercase tracking-[0.15em] font-bold text-[#3D1A78] mb-1 inline-flex items-center gap-1">
                             <MessageSquare size={10} /> Reminder note
-                            <span className="ml-2 text-[10px] text-[#6E6787] normal-case tracking-normal font-normal group-hover:text-[#3D1A78]">
+                            <span className="ml-2 text-[0.625rem] text-[#6E6787] normal-case tracking-normal font-normal group-hover:text-[#3D1A78]">
                               (tap to edit)
                             </span>
                           </div>
@@ -680,7 +680,7 @@ export default function ProfessionalJointAlignmentMine() {
                         reminder_note above. */}
                     {caseNotesEditingId === c.case_id ? (
                       <div className="mt-3 rounded-2xl border border-[#D6CFE8] bg-[#FBF9FE] p-3 space-y-2">
-                        <div className="text-[10px] uppercase tracking-[0.15em] font-bold text-[#3D1A78] inline-flex items-center gap-1">
+                        <div className="text-[0.625rem] uppercase tracking-[0.15em] font-bold text-[#3D1A78] inline-flex items-center gap-1">
                           <Lock size={10} /> Private notes · never shared with parents
                         </div>
                         <textarea
@@ -692,7 +692,7 @@ export default function ProfessionalJointAlignmentMine() {
                           className="w-full rounded-xl border border-[#E5E0EE] bg-white text-[#1A1330] text-sm px-3 py-2 focus:outline-none focus:border-[#3D1A78] resize-none"
                           data-testid={`pj-mine-case-notes-textarea-${c.case_id}`}
                         />
-                        <div className="flex items-center justify-between text-[11px]">
+                        <div className="flex items-center justify-between text-[0.6875rem]">
                           <span className="text-[#6E6787]">
                             {caseNotesDraft.length}/2000
                           </span>
@@ -701,7 +701,7 @@ export default function ProfessionalJointAlignmentMine() {
                               type="button"
                               onClick={cancelCaseNotesEdit}
                               disabled={caseNotesSaving}
-                              className="rounded-full border border-[#E5E0EE] text-[#4B4567] hover:bg-white px-3 py-1 text-[11px] font-semibold disabled:opacity-50"
+                              className="rounded-full border border-[#E5E0EE] text-[#4B4567] hover:bg-white px-3 py-1 text-[0.6875rem] font-semibold disabled:opacity-50"
                               data-testid={`pj-mine-case-notes-cancel-${c.case_id}`}
                             >
                               Cancel
@@ -710,7 +710,7 @@ export default function ProfessionalJointAlignmentMine() {
                               type="button"
                               onClick={saveCaseNotes}
                               disabled={caseNotesSaving}
-                              className="inline-flex items-center gap-1 rounded-full bg-[#3D1A78] hover:bg-[#2a0f5f] text-white px-3 py-1 text-[11px] font-semibold disabled:bg-[#C9C0DC]"
+                              className="inline-flex items-center gap-1 rounded-full bg-[#3D1A78] hover:bg-[#2a0f5f] text-white px-3 py-1 text-[0.6875rem] font-semibold disabled:bg-[#C9C0DC]"
                               data-testid={`pj-mine-case-notes-save-${c.case_id}`}
                             >
                               {caseNotesSaving ? (
@@ -730,9 +730,9 @@ export default function ProfessionalJointAlignmentMine() {
                         className="mt-3 group text-left w-full rounded-2xl border border-[#D6CFE8] bg-[#FBF9FE] p-3 hover:border-[#3D1A78] transition-colors"
                         data-testid={`pj-mine-case-notes-preview-${c.case_id}`}
                       >
-                        <div className="text-[10px] uppercase tracking-[0.15em] font-bold text-[#3D1A78] mb-1 inline-flex items-center gap-1">
+                        <div className="text-[0.625rem] uppercase tracking-[0.15em] font-bold text-[#3D1A78] mb-1 inline-flex items-center gap-1">
                           <Lock size={10} /> Private notes · never shared
-                          <span className="ml-2 text-[10px] text-[#6E6787] normal-case tracking-normal font-normal group-hover:text-[#3D1A78]">
+                          <span className="ml-2 text-[0.625rem] text-[#6E6787] normal-case tracking-normal font-normal group-hover:text-[#3D1A78]">
                             (tap to edit)
                           </span>
                         </div>
@@ -788,7 +788,7 @@ export default function ProfessionalJointAlignmentMine() {
                   <FileDown size={18} />
                 </div>
                 <div className="min-w-0 flex-1">
-                  <div className="text-[11px] uppercase tracking-[0.15em] font-bold text-[#3D1A78]">
+                  <div className="text-[0.6875rem] uppercase tracking-[0.15em] font-bold text-[#3D1A78]">
                     Case {downloadFor.caseId}
                   </div>
                   <h3
@@ -807,7 +807,7 @@ export default function ProfessionalJointAlignmentMine() {
 
               <label
                 htmlFor="pj-firm-name-input"
-                className="block mt-5 text-[11px] uppercase tracking-[0.15em] font-bold text-[#3D1A78]"
+                className="block mt-5 text-[0.6875rem] uppercase tracking-[0.15em] font-bold text-[#3D1A78]"
               >
                 Firm name for watermark
               </label>
@@ -821,7 +821,7 @@ export default function ProfessionalJointAlignmentMine() {
                 className="mt-1 block w-full rounded-xl border border-[#E5E0EE] bg-white text-[#1A1330] text-sm px-3 py-2 focus:outline-none focus:border-[#3D1A78]"
                 data-testid="pj-download-firm-input"
               />
-              <div className="text-[11px] text-[#6E6787] mt-1">
+              <div className="text-[0.6875rem] text-[#6E6787] mt-1">
                 Saved locally for next time.
               </div>
 

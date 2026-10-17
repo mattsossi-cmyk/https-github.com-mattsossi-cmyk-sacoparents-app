@@ -135,7 +135,7 @@ function BadgeChip({ badge, earned, onShare }) {
         )}
       </div>
       <div
-        className={`mt-3 text-[11px] leading-tight font-bold ${
+        className={`mt-3 text-[0.6875rem] leading-tight font-bold ${
           earned ? "text-[#1A1330]" : "text-[#6E6787]"
         } ${capstone ? "sm:text-xs" : ""}`}
       >
@@ -146,7 +146,7 @@ function BadgeChip({ badge, earned, onShare }) {
           type="button"
           onClick={() => onShare(badge)}
           data-testid={`badge-share-${badge.id}`}
-          className="mt-2 inline-flex items-center gap-1 rounded-full bg-[#EFE9F9] hover:bg-[#3D1A78] hover:text-white text-[#3D1A78] px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider transition-colors"
+          className="mt-2 inline-flex items-center gap-1 rounded-full bg-[#EFE9F9] hover:bg-[#3D1A78] hover:text-white text-[#3D1A78] px-2.5 py-1 text-[0.625rem] font-bold uppercase tracking-wider transition-colors"
         >
           <Share2 size={10} />
           Share

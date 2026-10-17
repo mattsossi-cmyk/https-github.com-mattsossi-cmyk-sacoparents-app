@@ -56,7 +56,7 @@ export default function PreferredProfessionalsStrip() {
       <div className="max-w-6xl mx-auto">
         <div className="flex items-center justify-between flex-wrap gap-2 mb-5">
           <div>
-            <div className="text-[10px] uppercase tracking-[0.22em] font-bold text-[#3D1A78]">
+            <div className="text-[0.625rem] uppercase tracking-[0.22em] font-bold text-[#3D1A78]">
               Practitioners already using SA CoParents
             </div>
             <h2 className="font-serif text-xl sm:text-2xl text-[#1A1330] leading-snug mt-1">
@@ -86,11 +86,11 @@ export default function PreferredProfessionalsStrip() {
                 {p.name}
               </div>
               {p.credentials && (
-                <div className="text-[11px] text-[#4B4567] mt-1 leading-relaxed">
+                <div className="text-[0.6875rem] text-[#4B4567] mt-1 leading-relaxed">
                   {p.credentials}
                 </div>
               )}
-              <div className="mt-2 flex items-center gap-1 text-[11px] text-[#6E6787]">
+              <div className="mt-2 flex items-center gap-1 text-[0.6875rem] text-[#6E6787]">
                 <MapPin size={11} />
                 {(p.city && p.state)
                   ? `${p.city}, ${p.state}`
@@ -99,7 +99,7 @@ export default function PreferredProfessionalsStrip() {
               {p.email && (
                 <a
                   href={`mailto:${p.email}?subject=SA%20CoParents%20-%20Professional%20enquiry`}
-                  className="mt-3 inline-flex items-center gap-1.5 text-[12px] font-semibold text-[#3D1A78] hover:underline"
+                  className="mt-3 inline-flex items-center gap-1.5 text-[0.75rem] font-semibold text-[#3D1A78] hover:underline"
                   data-testid={`for-pros-preferred-card-${p.professional_id}-email`}
                 >
                   <Mail size={12} /> {p.email}
@@ -110,7 +110,7 @@ export default function PreferredProfessionalsStrip() {
         </ul>
 
         <p
-          className="mt-4 text-[11px] text-[#6E6787] leading-relaxed"
+          className="mt-4 text-[0.6875rem] text-[#6E6787] leading-relaxed"
           data-testid="for-pros-preferred-strip-fineprint"
         >
           Practitioners listed above have opted into the SA CoParents

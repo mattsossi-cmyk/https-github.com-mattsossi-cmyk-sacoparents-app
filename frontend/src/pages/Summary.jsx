@@ -58,7 +58,7 @@ function GuestSaveNudge() {
         <div className="font-serif text-base sm:text-lg text-[#1A1330] leading-snug">
           Want this saved beyond this browser?
         </div>
-        <p className="text-[13px] text-[#4B4567] mt-1 leading-relaxed">
+        <p className="text-[0.8125rem] text-[#4B4567] mt-1 leading-relaxed">
           Set up an account in 30 seconds and your summary, journal, and prep
           stay with you on any device.
         </p>
@@ -910,7 +910,7 @@ function TipBlock({ eyebrow, accent, tips }) {
   return (
     <div>
       <div
-        className="text-[10px] uppercase tracking-[0.2em] mb-2"
+        className="text-[0.625rem] uppercase tracking-[0.2em] mb-2"
         style={{ color: accent }}
       >
         {eyebrow}
@@ -1127,7 +1127,7 @@ function EmailMediatorDialog({ open, onClose, summaryId, agreementId, defaultDoc
               We'll email your mediator a private link to your selected PDF(s).
               They open it with a one-time code. Replies go straight to your inbox.
             </p>
-            <ProSeeLink testid="email-mediator-pros-see-link" className="text-[13px] mt-2" />
+            <ProSeeLink testid="email-mediator-pros-see-link" className="text-[0.8125rem] mt-2" />
           </div>
           <button
             type="button"
