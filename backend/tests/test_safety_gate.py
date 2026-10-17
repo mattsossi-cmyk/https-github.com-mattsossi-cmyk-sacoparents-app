@@ -7,6 +7,7 @@ import json
 import os
 import sys
 import time
+from datetime import datetime, timezone
 import uuid
 from pathlib import Path
 
@@ -339,6 +340,15 @@ def test_daily_counts_admin_only_counts_only():
     assert case_id not in resp.text
 
 
+def test_align_silence_status_rule():
+    now = datetime(2026, 10, 17, 12, 0, tzinfo=timezone.utc)
+    assert cs.silence_status(None, now) == {"threshold_days": 7, "days_since": None, "warn": True}
+    almost = cs.silence_status("2026-10-10T12:00:01+00:00", now)
+    assert almost["days_since"] == 6 and almost["warn"] is False
+    seven = cs.silence_status("2026-10-10T12:00:00+00:00", now)
+    assert seven == {"threshold_days": 7, "days_since": 7, "warn": True}
+
+
 def _admin():
     r = httpx.post(f"{API}/auth/login", json={"email": "mattsossi@bsossi.com", "password": "AdminPass123!"}, timeout=20)
     if r.status_code != 200:
@@ -365,6 +375,7 @@ def test_align_status_last_update_and_refusals():
     assert body["rejected_30d"]["bad_signature"] == before["bad_signature"] + 1
     assert body["rejected_30d"]["old_timestamp"] == before["old_timestamp"] + 1
     assert body["last_rejected"]["reason"] == "old_timestamp"
+    assert body["silence"] == {"threshold_days": 7, "days_since": 0, "warn": False}
     assert case_id not in s.text
     assert _send(_body(case_id, 1, mode="structured")).status_code == 200
     assert httpx.get(status_url, headers=admin, timeout=20).json()["last_update"]["result"] == "ignored"

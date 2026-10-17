@@ -187,5 +187,6 @@ async def align_status(current: UserPublic = Depends(require_admin), db=Depends(
         "last_applied_at": last_applied["at"] if last_applied else None,
         "last_rejected": last_reject,
         "rejected_30d": totals,
+        "silence": cs.silence_status(last["at"] if last else None, datetime.now(timezone.utc)),
     }, headers=NO_STORE)
 

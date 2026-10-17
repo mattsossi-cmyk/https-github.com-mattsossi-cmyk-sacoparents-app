@@ -112,6 +112,15 @@ async def ensure_indexes(db) -> None:
 
 
 REJECTS_PER_MINUTE = 60
+SILENCE_DAYS = 7
+
+
+def silence_status(last_at: Optional[str], now: datetime) -> Dict[str, Any]:
+    """Warn admins when no signed Align update (applied or ignored) has arrived for SILENCE_DAYS."""
+    if not last_at:
+        return {"threshold_days": SILENCE_DAYS, "days_since": None, "warn": True}
+    days = (now - datetime.fromisoformat(last_at)).days
+    return {"threshold_days": SILENCE_DAYS, "days_since": days, "warn": days >= SILENCE_DAYS}
 
 
 async def record_reject(db, reason: str) -> None:

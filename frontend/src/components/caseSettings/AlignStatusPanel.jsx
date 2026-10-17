@@ -34,10 +34,18 @@ export function AlignStatusPanel({ onForbidden }) {
   if (!s) return <p className="text-sm text-[#4B4567]" data-testid="align-status-loading">Loading Align status…</p>;
 
   const refused = Object.values(s.rejected_30d).reduce((a, b) => a + b, 0);
+  const quiet = s.silence?.warn;
   const result = s.last_update?.result;
   return (
     <section data-testid="align-status-panel" className="rounded-2xl border border-[#E5E0EE] bg-white px-4 py-3">
       <h2 className="text-base md:text-lg font-semibold text-[#1A1330]">Updates from Align</h2>
+      {quiet && (
+        <p role="status" data-testid="align-status-silence" className="mt-2 rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-[#7A4A00]">
+          {s.silence.days_since == null
+            ? "No updates from Align yet. Check that Align has the webhook address and secret."
+            : `No updates from Align in ${s.silence.days_since} days. If cases have changed in Align since then, check that Align has the webhook address and secret.`}
+        </p>
+      )}
       <dl className="mt-2">
         <Row label="Last update" testid="align-status-last-update">
           {s.last_update ? (

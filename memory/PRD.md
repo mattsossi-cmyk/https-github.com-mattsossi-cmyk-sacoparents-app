@@ -9173,3 +9173,10 @@ dashboard for sharing SELECTED completed reports with any professional.
 - Quick exit calendar: `lib/sampleCalendar.js` made-up weekly events, day buttons + agenda, Today + Close (→ "/"), tab title
   "Calendar" + plain calendar favicon (restored on leave), system font, GlobalCopyright hidden on /calendar.
 - Global wrap rule changed to `overflow-wrap: break-word` (anywhere caused mid-word nav breaks on desktop); 200%/320px reflow re-verified.
+
+### 2026-10-17 — Align silence warning (PREVIEW ONLY)
+- `case_safety.silence_status()` (SILENCE_DAYS = 7): warns when no signed Align update (applied or ignored; refusals don't
+  count) for 7+ days, or when none has ever arrived. Returned as `silence {threshold_days, days_since, warn}` in
+  `GET /api/admin/safety-audit-log/align-status`. Panel shows gentle amber note `align-status-silence` (admin only, no email).
+- Tests: test_align_silence_status_rule + align-status test assert silence (23/23 pass); UI checked at 390px for both the
+  "N days" and "never" wording (mocked responses in screenshot).
