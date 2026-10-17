@@ -1,0 +1,33 @@
+{
+  "summary": "Tested the 3 new features end-to-end on the public URL. (1) Align Status Check: added tests/test_align_status_external.py, 9/9 pass. It covers 401 when signed out, 403 for a parent, 200 + no-store for admin, the exact JSON shape, no case IDs in the response, and each refusal reason (wrong signature, missing signature, old timestamp, invalid body 422, replay 409). Each refusal raises only its own rejected_30d counter, sets last_rejected, and adds 1 to today's 'rejected' column in daily-counts. Stored reject docs have only _id/at/reason/created; TTL index on created is 35d. Sending a new version gives result 'applied' with last_applied_at equal to its time; sending the same version again gives 'ignored' and last_applied_at stays the same. Regression: test_safety_gate.py + test_safety_gate_external.py = 35 passed. The admin /admin/audit-log UI shows every align-status-* element, the reason chips, the secret hint, and the Refused column with its total. Export CSV downloads the file and reloads both panels. No horizontal overflow at 390. (2) /help in Spanish: the toggle switches every string, and the lang attribute on main changes between en and es. The choice survives a reload (sac_lang). Locales es-ES and es-MX open in Spanish and en-US opens in English; a saved 'en' wins over an es-ES browser. tel:/sms: hrefs are unchanged. The Wyoming empty text is in Spanish, and the TX services show exactly as typed with the 'Sitio web' label. Checked both signed out and signed in. (3) /calendar: Quick exit replaces the history entry, so Back goes to the page before /help, not to /help. Title is 'Calendar' and the favicons switch to the SVG; both come back after calendar-close (which goes to /). No footer, no app name/Get help/911 text, and only calendar test IDs on the page. Every day of the month passes the event rules (pickup Mon/Wed/Fri, soccer Tue/Thu, grocery Sun, water bill on the 15th). The aria-label count matches the agenda rows and the dot count matches too. aria-pressed works. Prev/next/Today work. Tab+Enter selects a day. No overflow at 390 or 1920.",
+  "backend_issues": {
+    "critical": [],
+    "minor": [
+      {"endpoint": "POST /api/internal/safety-status", "issue": "Anyone can POST to this endpoint without auth, and every refused request writes one Mongo doc (safety_webhook_rejects). There is no rate limit, so a flood of junk requests can grow the collection without limit (TTL is 35d) and inflate the admin counters. Consider an IP rate limit, or capping writes per reason per minute."}
+    ]
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": [
+      {"screen": "/calendar", "issues": ["The 'Calendar' h1 and the agenda date h2 use the app's global heading font, not the system font set on <main>, because the global h1/h2 font rule wins. It is a small visual hint of the app. Optional: set font-family inherit on those headings."]},
+      {"screen": "/admin/audit-log (1920 desktop, pre-existing)", "issues": ["Top nav labels wrap mid-word ('Dashb oard', 'Commun ication', 'Ad min'). This is not part of these features, but it is visible."]}
+    ]
+  },
+  "test_report_links": ["/app/backend/tests/test_align_status_external.py", "/app/backend/tests/test_safety_gate.py", "/app/backend/tests/test_safety_gate_external.py", "/app/test_reports/pytest/pytest_iter143.xml"],
+  "action_items": [
+    "Optional: rate-limit or cap record_reject writes on /api/internal/safety-status",
+    "Optional: make the calendar headings use the system font (inherit) to match the rest of the page"
+  ],
+  "critical_code_review_comments": [
+    "receive_safety_status checks the body before the timestamp. So a request that is both malformed and old is counted as invalid_body; that is acceptable.",
+    "In dev, React StrictMode runs the panel effects twice, so the align-status and daily-counts views are fetched twice and each writes 2 audit rows (view_align_status / view_daily_counts). Production builds are not affected.",
+    "align_status and daily-counts use the same 30-UTC-day window, so the totals match (both showed 28 in the UI)."
+  ],
+  "updated_files": ["/app/backend/tests/test_align_status_external.py"],
+  "success_rate": {"backend": "100% (9/9 new + 35/35 regression)", "frontend": "100%"},
+  "seed_data_creation": "Test cases SA-X****** were created through the webhook and cleaned from case_safety/safety_audit_log. Reject docs from the tests stay in safety_webhook_rejects (TTL 35d), so the admin refused counters now include test traffic.",
+  "retest_needed": false,
+  "should_main_agent_self_test": false,
+  "context_for_next_testing_agent": "Login form: click login-show-email-toggle, then fill login-email-input / login-password-input. Locale tests: page.context.browser.new_context(locale='es-ES'). The calendar rules were checked for October 2026."
+}

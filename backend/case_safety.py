@@ -5,7 +5,7 @@ Every read and write is logged to safety_audit_log, which only platform admins c
 """
 import json
 import os
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from typing import Any, Dict, List, Optional
 
 from cryptography.fernet import Fernet
@@ -111,9 +111,15 @@ async def ensure_indexes(db) -> None:
     await db[REJECTS].create_index("created", expireAfterSeconds=35 * 24 * 3600)
 
 
+REJECTS_PER_MINUTE = 60
+
+
 async def record_reject(db, reason: str) -> None:
-    """Only the time and the reason are kept for a refused Align request."""
-    await db[REJECTS].insert_one({"at": now_iso(), "reason": reason, "created": datetime.now(timezone.utc)})
+    """Only the time and the reason are kept for a refused Align request; a flood is capped per minute."""
+    now = datetime.now(timezone.utc)
+    if await db[REJECTS].count_documents({"created": {"$gte": now - timedelta(minutes=1)}}, limit=REJECTS_PER_MINUTE) >= REJECTS_PER_MINUTE:
+        return
+    await db[REJECTS].insert_one({"at": now_iso(), "reason": reason, "created": now})
 
 
 async def audit(db, actor_type: str, actor_id: Optional[str], action: str, case_id: Optional[str]) -> None:

@@ -47,7 +47,7 @@ function Agenda({ view, day }) {
   const label = new Date(view.y, view.m, day).toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric" });
   return (
     <section className="mt-6" data-testid="calendar-agenda" aria-live="polite">
-      <h2 className="text-sm font-semibold text-slate-900">{label}</h2>
+      <h2 className="text-sm font-semibold text-slate-900 font-[inherit]">{label}</h2>
       {ev.length ? (
         <ul className="mt-2 space-y-2">
           {ev.map((e) => (
@@ -87,7 +87,7 @@ export default function CalendarPage() {
     <main data-testid="calendar-page" className="min-h-screen bg-white px-4 py-6" style={{ fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" }}>
       <div className="max-w-lg mx-auto">
         <header className="flex items-center justify-between gap-2 mb-5">
-          <h1 className="text-2xl font-bold text-slate-900">Calendar</h1>
+          <h1 className="text-2xl font-bold text-slate-900 font-[inherit]">Calendar</h1>
           <div className="flex items-center gap-1">
             <button type="button" onClick={goToday} data-testid="calendar-today" className="rounded-full border border-slate-300 px-3 py-1.5 text-sm font-semibold text-slate-800 transition-colors hover:bg-slate-100">Today</button>
             <button type="button" onClick={() => navigate("/")} aria-label="Close calendar" data-testid="calendar-close" className="rounded-full p-2 text-slate-600 transition-colors hover:bg-slate-100">

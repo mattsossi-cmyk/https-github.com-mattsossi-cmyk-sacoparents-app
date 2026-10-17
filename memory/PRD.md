@@ -9161,3 +9161,15 @@ dashboard for sharing SELECTED completed reports with any professional.
   body overflow-wrap:anywhere, sonner toaster kept on screen). Footer "Get help" link (not on /calendar).
   - iteration_142: 16/20 passed; the 4 remaining (portal home/CB at 390@200%, header brand, AiInsightPanel pill) fixed after and
     self-verified (scrollWidth 390 at 390@200%, 320 at 320px). Not possible here: real VoiceOver/TalkBack on a device.
+
+### 2026-10-17 — Align Status Check + Spanish Get help + Quick exit calendar polish (PREVIEW ONLY; iteration_143: backend 9/9 new + 35/35 regression, frontend 100%)
+- Align status: refused webhook calls (bad_signature / old_timestamp / invalid_body / replay) stored in `safety_webhook_rejects`
+  with only at + reason (+ TTL `created`, 35 days; max 60 stored per minute so a flood can't grow it). `GET /api/admin/safety-audit-log/align-status`
+  (admin, no-store, logged as view_align_status): last_update {at, applied|ignored}, last_applied_at, last_rejected, rejected_30d.
+  Daily counts gained a `rejected` column. UI: `AlignStatusPanel.jsx` + "Refused" column on /admin/audit-log. Preview counters
+  include test traffic.
+- Get help in Spanish: `lib/helpCopy.js` (EN/ES strings), toggle `help-lang-toggle`, `<main lang>`, choice saved in localStorage
+  `sac_lang` (user chose remember), auto-Spanish when browser language is es-*. Admin-typed local services shown as typed.
+- Quick exit calendar: `lib/sampleCalendar.js` made-up weekly events, day buttons + agenda, Today + Close (→ "/"), tab title
+  "Calendar" + plain calendar favicon (restored on leave), system font, GlobalCopyright hidden on /calendar.
+- Global wrap rule changed to `overflow-wrap: break-word` (anywhere caused mid-word nav breaks on desktop); 200%/320px reflow re-verified.
