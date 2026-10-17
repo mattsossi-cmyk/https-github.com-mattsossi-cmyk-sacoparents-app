@@ -302,6 +302,9 @@ h1, h2, h3, h4, .font-serif {
     border-color: var(--brand-sage);
     box-shadow: 0 0 0 4px rgba(61, 26, 120, 0.15);
 }
+/* Long words wrap instead of pushing the page sideways when text is enlarged. */
+body { overflow-wrap: anywhere; }
+table, pre, code { overflow-wrap: normal; }
 /* Keep the toast area inside the screen on phones (it otherwise adds sideways scroll). */
 @media (max-width: 600px) {
     [data-sonner-toaster] { width: auto !important; }
@@ -456,6 +459,10 @@ input[type="date"].input-soft:focus-within {
 /* Court page: lift bottom toasts above the floating Emergent AI button so they never cover it. */
 body:has(#court-page:not(.hidden)) [data-sonner-toaster][data-y-position="bottom"] {
     bottom: 96px !important;
+}
+/* Portal home: keep bottom toasts above the crisis strip and bottom nav. */
+body:has([data-testid="bottom-nav"]) [data-sonner-toaster][data-y-position="bottom"] {
+    bottom: 7rem !important;
 }
 /* Full-screen Self Journey pages: ring on the picture spot for the option currently open. */
 .court-spot.journey-art-active {

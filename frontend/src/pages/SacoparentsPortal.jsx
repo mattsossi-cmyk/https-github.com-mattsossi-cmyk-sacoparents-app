@@ -1563,22 +1563,22 @@ export default function SacoparentsPortal() {
         className="bg-purple-950 text-white shadow-md sticky top-0 z-50 no-print"
         data-testid="portal-header"
       >
-        <div className="max-w-md mx-auto px-4 py-3 flex justify-between items-center gap-2">
-          <div className="flex items-center space-x-2.5 min-w-0">
+        <div className="max-w-md mx-auto px-4 py-3 flex flex-wrap justify-between items-center gap-2">
+          <div className="flex items-center space-x-2.5 min-w-[10rem] flex-1">
             <div className="bg-purple-800/50 p-2 rounded-xl backdrop-blur-md border border-purple-400/30 shrink-0">
               <i className="fa-solid fa-hands-holding-child text-purple-300 text-lg"></i>
             </div>
             <div className="min-w-0">
-              <p className="text-base font-bold tracking-tight truncate">
+              <p className="text-base font-bold tracking-tight">
                 sacoparentsapp.online
               </p>
-              <p className="text-[0.625rem] text-purple-200 truncate">
+              <p className="text-[0.625rem] text-purple-200">
                 SA CoParents Assessment & Alignment Portal
               </p>
             </div>
           </div>
 
-          <div className="flex items-center space-x-2 shrink-0">
+          <div className="flex items-center space-x-2 shrink-0 ml-auto">
             {showBackBtn && (
               <button
                 data-testid="header-back-btn"

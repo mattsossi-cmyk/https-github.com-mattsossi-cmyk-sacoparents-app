@@ -105,8 +105,8 @@ export function AiInsightPanel({ tip, loading, safetyFlag, onOpenBiffCoach, onUs
   const [library, setLibrary] = useState(null);
   return (
     <div data-testid="sa-ai-panel" className={`glass-ai-panel rounded-2xl p-6 shadow-lg ${chat ? "" : "lg:sticky lg:top-6"}`}>
-      <div className="flex items-center justify-between pb-4 border-b border-purple-100 mb-4">
-        <div className="flex items-center gap-2.5">
+      <div className="flex flex-wrap items-center justify-between gap-2 pb-4 border-b border-purple-100 mb-4">
+        <div className="flex items-center gap-2.5 min-w-0">
           <div className="w-8 h-8 rounded-lg bg-purple-600 text-white flex items-center justify-center text-sm shadow">
             <i className="fa-solid fa-compass"></i>
           </div>

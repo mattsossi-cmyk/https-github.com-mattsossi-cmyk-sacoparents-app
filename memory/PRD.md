@@ -9130,3 +9130,34 @@ dashboard for sharing SELECTED completed reports with any professional.
 - Tests: iteration_138 (HIGH court-chat pop-up + MEDIUM /legacy consent bugs), iteration_139 (both fixed; BIFF-drawer Escape
   regression → fixed with onEscapeKeyDown stopPropagation, self-verified). Backend 68 tests pass.
 - Left as is (user choice): signed-out first-visit pop-up POST /legal/acknowledge → 401 (harmless).
+
+
+### 2026-10-17 — Safety Gate + admin daily counts + whole-app mobile accessibility (PREVIEW ONLY; a deploy was started by the user, not by the agent)
+- Safety Gate (case-level config from Align; screening happens in Align "Step 0" only):
+  - Backend: `case_safety.py` (encrypted record per SA-XXXXXX case, SAFETY_ENC_KEY; resolved flags identical for both
+    parents; audit log `safety_audit_log` for every read/write), `case_safety_routes.py` (`POST /api/internal/safety-status`
+    HMAC-SHA256 `X-Align-Signature` with ALIGN_WEBHOOK_SECRET, 5-min timestamp window, version must increase, 401 + no change
+    otherwise, 200 with no details, hidden from docs; `GET /api/case-settings`; support view mode only; admin CSV export
+    (logged); `GET /api/admin/safety-audit-log/daily-counts` = last 30 UTC days applied/ignored/downloads, counts only, logged),
+    `plan_options_routes.py` (parallel_parenting referral → protective options only), `help_routes.py` (admin-editable state
+    services), `media_scrub.py` (EXIF/metadata removal helper only — app does NOT share photos, per user).
+  - Frontend: CaseHomeNotices (banner + "View options" card on portal home), CaseSettingsBanner in Communication Builder and
+    BIFF drawer, /case-settings, /plan-options, /help (no offline cache in SW sac-v3; native screenshot block via
+    @capacitor/privacy-screen on next app build — browsers can't block), /calendar quick-exit (replace nav, Back can't return),
+    /admin/audit-log (export + DailyCountsTable), /admin/help-services.
+  - Old parent safety check-in OFF: no questions asked/saved/used, invite gate off, old answers kept but unused; old links → /help;
+    Grey-rock = plain manual tone toggle (no reason, no advocate mode, milestones always normal). AI guardrail rule 7: tone checks
+    flag only the sender's own aggressive/threatening words; never tell a parent to apologise/soften/reply.
+  - User decisions: no Step 0 link in sacoparentsapp (Step 0 stays in Align). Answers on Align's Step 0 + notices given to user
+    to paste to their other assistant (open items for Align: send screening_offered only when both parents completed/declined;
+    "required step" vs skippable wording; reminders handled by Align).
+  - Tests: backend tests/test_safety_gate.py (21) + test_safety_gate_external.py → 34 pass. iteration_140/141 frontend Safety Gate
+    regression passed for two linked parents.
+- Mobile accessibility (whole app, ~100 routes at 390px guest/parent/admin; scripts in /app/memory/a11y_scan.py + a11y_report.py,
+  results /app/memory/a11y/scan5.json): axe WCAG 2.2 AA = 0 violations. Fixes: tertiary text #857E9C→#6E6787 + other low-contrast
+  accents darkened, labels/ids on forms, login/register inline errors (role=alert, aria-invalid), <main>, single h1, 24px targets,
+  focusable scroll regions, px→rem text (scales with text size), lib/useDialogFocus.js (dialog role, focus in/trap/Esc/return) on
+  DrawerShell, GuidedJourneyModal, Communication Builder; reflow at 320px and 200% text (header/door cards/bottom nav wrap,
+  body overflow-wrap:anywhere, sonner toaster kept on screen). Footer "Get help" link (not on /calendar).
+  - iteration_142: 16/20 passed; the 4 remaining (portal home/CB at 390@200%, header brand, AiInsightPanel pill) fixed after and
+    self-verified (scrollWidth 390 at 390@200%, 320 at 320px). Not possible here: real VoiceOver/TalkBack on a device.

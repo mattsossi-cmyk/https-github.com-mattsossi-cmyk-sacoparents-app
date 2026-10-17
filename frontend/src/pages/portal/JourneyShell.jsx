@@ -1045,12 +1045,12 @@ export function JourneyShell({
               type="button"
               data-testid="door-court"
               onClick={() => openDoor("court")}
-              className="w-full text-left bg-white hover:bg-indigo-50 border-2 border-indigo-300 rounded-2xl p-4 transition flex items-center gap-3"
+              className="w-full text-left bg-white hover:bg-indigo-50 border-2 border-indigo-300 rounded-2xl p-4 transition-colors flex flex-wrap items-center gap-3"
             >
               <div className="shrink-0 w-12 h-12 rounded-xl bg-indigo-100 text-indigo-700 flex items-center justify-center">
                 <i className="fa-solid fa-gavel text-xl"></i>
               </div>
-              <div className="min-w-0 flex-1">
+              <div className="min-w-[8rem] flex-1">
                 <div className="text-sm font-bold text-slate-900">
                   Court Ordered
                 </div>
@@ -1058,18 +1058,18 @@ export function JourneyShell({
                   Referred by a court, mediator, or attorney.
                 </p>
               </div>
-              <i className="fa-solid fa-chevron-right text-indigo-400"></i>
+              <i aria-hidden="true" className="ml-auto fa-solid fa-chevron-right text-indigo-400"></i>
             </button>
             <button
               type="button"
               data-testid="door-self"
               onClick={() => openDoor("self")}
-              className="w-full text-left bg-white hover:bg-purple-50 border-2 border-purple-300 rounded-2xl p-4 transition flex items-center gap-3"
+              className="w-full text-left bg-white hover:bg-purple-50 border-2 border-purple-300 rounded-2xl p-4 transition-colors flex flex-wrap items-center gap-3"
             >
               <div className="shrink-0 w-12 h-12 rounded-xl bg-purple-100 text-purple-700 flex items-center justify-center">
                 <i className="fa-solid fa-door-open text-xl"></i>
               </div>
-              <div className="min-w-0 flex-1">
+              <div className="min-w-[8rem] flex-1">
                 <div className="text-sm font-bold text-slate-900">
                   Self Journey
                 </div>
@@ -1077,18 +1077,18 @@ export function JourneyShell({
                   Starting on my own.
                 </p>
               </div>
-              <i className="fa-solid fa-chevron-right text-purple-400"></i>
+              <i aria-hidden="true" className="ml-auto fa-solid fa-chevron-right text-purple-400"></i>
             </button>
             <button
               type="button"
               data-testid="door-comm"
               onClick={() => onOpenCommBuilder()}
-              className="w-full text-left bg-white hover:bg-sky-50 border border-dashed border-sky-300 rounded-2xl px-4 py-3 transition flex items-center gap-3"
+              className="w-full text-left bg-white hover:bg-sky-50 border border-dashed border-sky-300 rounded-2xl px-4 py-3 transition-colors flex flex-wrap items-center gap-3"
             >
               <div className="shrink-0 w-10 h-10 rounded-xl bg-sky-100 text-sky-700 flex items-center justify-center">
                 <i className="fa-solid fa-comments text-lg"></i>
               </div>
-              <div className="min-w-0 flex-1">
+              <div className="min-w-[8rem] flex-1">
                 <div className="text-sm font-bold text-slate-900">
                   Communication Builder
                 </div>
@@ -1096,7 +1096,7 @@ export function JourneyShell({
                   Not a separate path. A message-writing tool you can open any time, from either path.
                 </p>
               </div>
-              <i className="fa-solid fa-chevron-right text-sky-400"></i>
+              <i aria-hidden="true" className="ml-auto fa-solid fa-chevron-right text-sky-400"></i>
             </button>
           </div>
         </section>
