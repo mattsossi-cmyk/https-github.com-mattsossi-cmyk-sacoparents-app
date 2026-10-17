@@ -8,6 +8,7 @@ export function AuthProvider({ children }) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    if (window.location.hash?.includes("session_id=")) { setLoading(false); return; }
     api.get("/auth/me")
       .then((r) => setUser(r.data))
       .catch(() => setUser(null))

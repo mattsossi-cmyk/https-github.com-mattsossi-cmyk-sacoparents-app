@@ -349,6 +349,7 @@ export default function JointReport() {
         {detail.joint_blocked && <div className="mb-6 rounded-lg border border-border bg-secondary/40 p-4 text-sm" role="status" data-testid="joint-blocked-notice">{detail.joint_blocked_message}</div>}
         {detail.is_creator && <JointPauseControl rid={id} paused={detail.joint_paused} onChange={(p) => setDetail((d) => ({ ...d, joint_paused: p }))} />}
         {report?.redaction_notice && <p className="mb-4 text-xs text-muted-foreground" data-testid="jr-redaction-notice">{report.redaction_notice}</p>}
+        {report?.ai_disclosure && <p className="mb-4 text-xs text-muted-foreground" data-testid="jr-ai-disclosure">{report.ai_disclosure}</p>}
         {detail.is_creator && <ProWorkspace rid={id} steps={ready && report && !NO_REPORT.has(detail.kind) ? [...(report.next_steps || []), ...(report.options || [])] : null} outcome={detail.session_outcome} onOutcomeSaved={(o) => setDetail((d) => ({ ...d, session_outcome: o }))} courtReady={!!(ready && report && !NO_REPORT.has(detail.kind))} />}
       </main>
     </div>

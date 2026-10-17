@@ -117,7 +117,7 @@ export default function LegalLensReport() {
   const apply = (data) => { setV(data); setRep(data.report); };
   const needsReview = (k) => { const d = rep.ai_drafts?.[k]; return Boolean(d && !d.accepted_at && (rep[k] || "").trim() === (d.text || "").trim()); };
   const acceptDraft = (k) => api.post("/assistant/accept-draft", { case_id: id, field: k }).then((r) => { setRep((x) => ({ ...x, ai_drafts: r.data.ai_drafts })); toast.success("Draft accepted as your text"); }).catch((e) => toast.error(formatApiError(e)));
-  const Field = (props) => <FieldBase {...props} badge={needsReview(props.id) ? <DraftBadge id={props.id} onAccept={() => acceptDraft(props.id)} /> : null} />;
+  const Field = (props) => <FieldBase {...props} badge={needsReview(props.id) ? <DraftBadge id={props.id} onAccept={() => acceptDraft(props.id)} /> : null} hint={rep.ai_drafts?.[props.id] ? `${props.hint ? props.hint + " · " : ""}Drafted with ${rep.ai_drafts[props.id].model}${rep.ai_drafts[props.id].accepted_at ? " · accepted by you" : ""}` : props.hint} />;
   const [assistantOpen, setAssistantOpen] = useState(false);
   const reload = () => api.get(`/cases/${id}/professional-report`).then((r) => apply(r.data)).catch(() => {});
   useEffect(() => { api.get(`/cases/${id}/professional-report`).then((r) => apply(r.data)).catch((e) => toast.error(formatApiError(e))); }, [id]);

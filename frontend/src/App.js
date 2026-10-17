@@ -1,5 +1,5 @@
 import "@/App.css";
-import { BrowserRouter, Routes, Route, Navigate, useParams } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate, useParams, useLocation } from "react-router-dom";
 import { Toaster } from "@/components/ui/sonner";
 import { AuthProvider, useAuth } from "@/context/AuthContext";
 import Landing from "@/pages/Landing";
@@ -20,6 +20,7 @@ import CommunicationReadiness from "@/pages/CommunicationReadiness";
 import SafetyResponses from "@/pages/SafetyResponses";
 import SafetyReview from "@/pages/SafetyReview";
 import ProfessionalTraining from "@/pages/ProfessionalTraining";
+import { AuthCallback } from "@/components/GoogleAuth";
 import JointReport from "@/pages/JointReport";
 import Hub from "@/pages/Hub";
 import CompleteReport from "@/pages/CompleteReport";
@@ -74,11 +75,10 @@ function Protected({ children }) {
   return children;
 }
 
-function App() {
+function AppRoutes() {
+  const location = useLocation();
+  if (location.hash?.includes("session_id=")) return <AuthCallback />;
   return (
-    <div className="App">
-      <AuthProvider>
-        <BrowserRouter>
           <Routes>
             <Route path="/" element={<Landing />} />
             <Route path="/auth" element={<Auth />} />
@@ -129,6 +129,15 @@ function App() {
             <Route path="/find-a-professional/:proId" element={<FindProfessional />} />
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
+  );
+}
+
+function App() {
+  return (
+    <div className="App">
+      <AuthProvider>
+        <BrowserRouter>
+          <AppRoutes />
           <footer className="py-4 text-center text-xs text-muted-foreground" data-testid="copyright-footer">
             Copyright 2026 SA CoParents. All Rights Reserved. · sacoparentsalign.com
           </footer>

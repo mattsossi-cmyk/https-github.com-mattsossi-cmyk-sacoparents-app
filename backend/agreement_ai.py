@@ -1,6 +1,8 @@
 """AI drafting of concrete agreement clauses from both parents' follow-up answers (gpt-5.4-mini via Emergent key)."""
 import hashlib
 import json
+
+MODEL_NAME = "gpt-5.4-mini"
 import logging
 import os
 import re
@@ -45,7 +47,7 @@ async def draft_agreement_clauses(sections_payload: list[dict], session_id: str)
         return None
     try:
         from emergentintegrations.llm.chat import LlmChat, UserMessage
-        chat = LlmChat(api_key=key, session_id=f"agreement-{session_id}", system_message=SYSTEM).with_model("openai", "gpt-5.4-mini")
+        chat = LlmChat(api_key=key, session_id=f"agreement-{session_id}", system_message=SYSTEM).with_model("openai", MODEL_NAME)
         text = await chat.send_message(UserMessage(text=json.dumps({"sections": sections_payload}, ensure_ascii=False)))
         data = _extract_json(text or "")
         sections = (data or {}).get("sections")

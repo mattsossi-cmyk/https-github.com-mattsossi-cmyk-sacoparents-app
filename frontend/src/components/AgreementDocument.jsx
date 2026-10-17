@@ -41,7 +41,7 @@ export function AgreementDocument({ report }) {
       </div>
 
       <p className="text-muted-foreground leading-relaxed mb-4" data-testid="agreement-purpose">{report.purpose}</p>
-      <div className="bg-secondary/50 border border-border rounded-lg p-4 mb-8 text-xs text-muted-foreground" data-testid="agreement-confidentiality">{report.confidentiality_note}</div>
+      <div className="bg-secondary/50 border border-border rounded-lg p-4 mb-8 text-xs text-muted-foreground" data-testid="agreement-confidentiality">{report.confidentiality_note}{report.ai_disclosure && <p className="mt-2" data-testid="agreement-ai-disclosure">{report.ai_disclosure}</p>}</div>
 
       <div className="grid gap-4 md:grid-cols-3 mb-10" data-testid="agreement-summary">
         <Group title="Areas of Alignment" items={sm.alignment} tone="text-align-green" border="border-align-green/40" testId="agreement-summary-alignment" />

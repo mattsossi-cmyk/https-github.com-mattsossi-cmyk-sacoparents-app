@@ -14,6 +14,7 @@ from joint_helpers import case_status
 from lens_data import PATHWAYS, recommended_pathway
 
 MODEL = ("openai", "gpt-5.5")
+MODELS = {"gpt": ("openai", "gpt-5.5", "GPT-5.5"), "claude": ("anthropic", "claude-sonnet-5-5", "Claude Sonnet 5.5")}
 HISTORY_LIMIT = 24
 SYSTEM = (
     "You are Align Assistant, a decision-support aide for family-law professionals using SA CoParents Align. Three competencies: (1) Case intake & routing — say which parent has "
@@ -47,12 +48,14 @@ class ChatIn(BaseModel):
     session_id: str
     message: str
     case_id: str | None = None
+    model: str = "gpt"
 
 
 class DraftInsertIn(BaseModel):
     case_id: str
     field: str
     text: str
+    model: str = "gpt"
 
 
 class DraftAcceptIn(BaseModel):
@@ -168,7 +171,7 @@ def build_router(get_current_user) -> APIRouter:
         doc = await store.own_case(body.case_id, user)
         rep = await store.get_or_create(doc, user)
         now = datetime.now(timezone.utc).isoformat()
-        drafts = {**(rep.get("ai_drafts") or {}), body.field: {"text": text, "model": f"Align Assistant ({MODEL[1]})", "at": now}}
+        drafts = {**(rep.get("ai_drafts") or {}), body.field: {"text": text, "model": f"Align Assistant ({MODELS.get(body.model, MODELS['gpt'])[1]})", "at": now}}
         await db.professional_reports.update_one({"case_id": body.case_id}, {"$set": {body.field: text, "ai_drafts": drafts, "updated_at": now}})
         await _log_lifecycle(body.case_id, f"LEGAL_LENS_AI_DRAFT (Align Assistant, {DRAFT_SECTIONS[body.field]})", user)
         return {"ok": True, "field": body.field, "label": DRAFT_SECTIONS[body.field], "editor_url": f"/cases/{body.case_id}/professional-report#{body.field}"}
@@ -210,7 +213,8 @@ def build_router(get_current_user) -> APIRouter:
             system += "\n\nCONVERSATION SO FAR:\n" + transcript
         now = datetime.now(timezone.utc).isoformat()
         await db.assistant_messages.insert_one({"id": str(uuid.uuid4()), "session_id": body.session_id, "user_id": user["_id"], "case_id": body.case_id, "role": "user", "content": text, "at": now})
-        llm = LlmChat(api_key=os.environ["EMERGENT_LLM_KEY"], session_id=body.session_id, system_message=system).with_model(*MODEL)
+        provider, model_name, model_label = MODELS.get(body.model, MODELS["gpt"])
+        llm = LlmChat(api_key=os.environ["EMERGENT_LLM_KEY"], session_id=f"{body.session_id}-{body.model}", system_message=system).with_model(provider, model_name)
 
         async def gen():
             out = []
@@ -225,7 +229,7 @@ def build_router(get_current_user) -> APIRouter:
                 yield f"data: {json.dumps({'error': f'Assistant unavailable: {type(e).__name__}'})}\n\n"
             reply = "".join(out).strip()
             if reply:
-                await db.assistant_messages.insert_one({"id": str(uuid.uuid4()), "session_id": body.session_id, "user_id": user["_id"], "case_id": body.case_id, "role": "assistant", "content": reply, "model": MODEL[1], "at": datetime.now(timezone.utc).isoformat()})
+                await db.assistant_messages.insert_one({"id": str(uuid.uuid4()), "session_id": body.session_id, "user_id": user["_id"], "case_id": body.case_id, "role": "assistant", "content": reply, "model": model_name, "at": datetime.now(timezone.utc).isoformat()})
             yield "data: {\"done\": true}\n\n"
 
         return StreamingResponse(gen(), media_type="text/event-stream", headers={"Cache-Control": "no-cache", "X-Accel-Buffering": "no"})

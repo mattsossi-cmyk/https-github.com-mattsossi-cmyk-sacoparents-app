@@ -327,6 +327,8 @@ def _legacy_build_agreement_pdf(r: dict) -> bytes:
     _body(pdf, r["confidentiality_note"], italic=True)
     pdf.ln(1)
     _body(pdf, r.get("method_note", ""), italic=True)
+    if r.get("ai_disclosure"):
+        _body(pdf, r["ai_disclosure"], italic=True)
     pdf.ln(4)
 
     if r.get("sections"):

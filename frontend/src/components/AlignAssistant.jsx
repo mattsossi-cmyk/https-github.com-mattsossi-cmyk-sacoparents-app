@@ -44,6 +44,7 @@ export const AlignAssistant = ({ userId, caseId, caseLabel, trigger, open, onOpe
   const [busy, setBusy] = useState(false);
   const [chips, setChips] = useState({});
   const [sections, setSections] = useState({});
+  const [model, setModel] = useState("gpt");
   const [chip, setChip] = useState(null);
   const session = getSession(userId);
   const endRef = useRef(null);
@@ -58,7 +59,7 @@ export const AlignAssistant = ({ userId, caseId, caseLabel, trigger, open, onOpe
     setInput(""); setChip(null); setBusy(true);
     setMsgs((m) => [...m, { role: "user", content: t }, { role: "assistant", content: "" }]);
     try {
-      const res = await fetch(`${process.env.REACT_APP_BACKEND_URL}/api/assistant/chat`, { method: "POST", credentials: "include", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ session_id: session, message: t, case_id: caseId || null }) });
+      const res = await fetch(`${process.env.REACT_APP_BACKEND_URL}/api/assistant/chat`, { method: "POST", credentials: "include", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ session_id: session, message: t, case_id: caseId || null, model }) });
       if (!res.ok) throw new Error((await res.json().catch(() => ({}))).detail || `HTTP ${res.status}`);
       const reader = res.body.getReader(); const dec = new TextDecoder(); let buf = "";
       for (;;) {
@@ -87,7 +88,12 @@ export const AlignAssistant = ({ userId, caseId, caseLabel, trigger, open, onOpe
         <aside className="fixed bottom-0 right-0 z-40 flex h-[min(80vh,640px)] w-full flex-col rounded-t-2xl border border-border bg-white shadow-2xl sm:bottom-5 sm:right-5 sm:w-[400px] sm:rounded-2xl" data-testid="assistant-panel">
           <header className="flex items-center justify-between gap-2 rounded-t-2xl bg-brand-purple px-4 py-3 text-white">
             <div className="flex items-center gap-2 min-w-0"><Bot className="h-5 w-5 shrink-0" /><div className="min-w-0"><p className="text-sm font-bold leading-tight">Align Assistant</p><p className="truncate text-[11px] opacity-80" data-testid="assistant-case-label">{caseLabel ? `Case ${caseLabel}` : "No case selected"} · advisory only</p></div></div>
-            <button type="button" onClick={() => onOpenChange(false)} className="rounded-md p-1 hover:bg-white/15" aria-label="Close assistant" data-testid="assistant-close-btn"><X className="h-4 w-4" /></button>
+            <div className="flex items-center gap-1">
+              <div className="flex rounded-md bg-white/15 p-0.5 text-[11px]" role="group" aria-label="AI model" data-testid="assistant-model-toggle">
+                {[["gpt", "GPT"], ["claude", "Claude"]].map(([k, l]) => <button key={k} type="button" onClick={() => setModel(k)} title={k === "gpt" ? "GPT-5.5" : "Claude Sonnet 5.5"} className={`whitespace-nowrap rounded px-2 py-0.5 ${model === k ? "bg-white text-brand-purple font-semibold" : "text-white/85 hover:bg-white/10"}`} data-testid={`assistant-model-${k}`}>{l}</button>)}
+              </div>
+              <button type="button" onClick={() => onOpenChange(false)} className="rounded-md p-1 hover:bg-white/15" aria-label="Close assistant" data-testid="assistant-close-btn"><X className="h-4 w-4" /></button>
+            </div>
           </header>
           <div className="flex-1 space-y-3 overflow-y-auto px-4 py-3 text-sm" data-testid="assistant-messages">
             {msgs.length === 0 && <p className="rounded-lg bg-secondary/60 p-3 text-xs text-muted-foreground" data-testid="assistant-empty">Ask about intake status, the alignment delta (Agreed / Minor Gap / High Discrepancy), pathway options or memo drafts for the selected case. Everything here is a suggestion for your review — nothing is filed or decided by the assistant.</p>}

@@ -675,7 +675,7 @@ async def ensure_agreement_ai(doc: dict) -> dict:
     sections = await draft_agreement_clauses(payload, doc["id"])
     if sections is None:
         return doc
-    ai = {"signature": sig, "sections": sections, "model": "gpt-5.4-mini", "at": datetime.now(timezone.utc).isoformat()}
+    ai = {"signature": sig, "sections": sections, "model": __import__("agreement_ai").MODEL_NAME, "at": datetime.now(timezone.utc).isoformat()}
     await db.joint_reports.update_one({"id": doc["id"]}, {"$set": {"agreement_ai": ai}})
     return {**doc, "agreement_ai": ai}
 
@@ -1904,6 +1904,9 @@ from safety_invites import build_router as _build_invites_router  # noqa: E402
 from safety_status_webhook import build_router as _build_webhook_router  # noqa: E402
 from safety_review import build_router as _build_review_router  # noqa: E402
 from pro_training import build_router as _build_training_router  # noqa: E402
+from google_auth import build_router as _build_google_router  # noqa: E402
+from auth import set_auth_cookies as _set_auth_cookies, public_user as _public_user  # noqa: E402
+app.include_router(_build_google_router(_set_auth_cookies, _public_user), prefix="/api")
 app.include_router(_build_training_router(db, get_current_user), prefix="/api")
 from safety_screening import _status as _screening_status  # noqa: E402
 _is_case_pro = lambda doc, user: user.get("role") == "admin" or user["_id"] in (doc.get("professional_id"), doc.get("created_by"))  # noqa: E731

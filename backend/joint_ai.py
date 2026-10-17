@@ -87,6 +87,7 @@ def effective_joint_report(doc: dict) -> dict:
         rep["ai_assisted"] = True
         rep["ai_model"] = draft.get("model", MODEL[2])
         rep["ai_reviewed_by"] = draft.get("reviewed_by_name", "")
+        rep["ai_disclosure"] = f"AI drafting assistance: {rep['ai_model']} — reviewed and approved by {rep['ai_reviewed_by'] or 'the professional'}."
     return rep
 
 

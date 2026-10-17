@@ -277,6 +277,8 @@ def generate_agreement(doc: dict) -> dict:
         "date": datetime.now(timezone.utc).strftime("%B %d, %Y"),
         "purpose": AGREEMENT_PURPOSE, "confidentiality_note": AGREEMENT_CONFIDENTIALITY,
         "ai_drafted": bool(ai),
+        "ai_model": (doc.get("agreement_ai") or {}).get("model") if ai else None,
+        "ai_disclosure": (f"AI drafting assistance: {(doc.get('agreement_ai') or {}).get('model')} — every section reviewed and approved by the professional." if ai else None),
         "sections": sections,
         "summary": _agreement_summary(sections),
         "terms": [_agreement_term(key, label, ra, rb) for key, label, _q in AGREEMENT_AREAS],
