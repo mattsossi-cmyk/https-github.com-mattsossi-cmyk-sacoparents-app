@@ -349,6 +349,17 @@ def test_align_silence_status_rule():
     assert seven == {"threshold_days": 7, "days_since": 7, "warn": True}
 
 
+def test_timestamp_formats_seconds_ms_and_quoted():
+    now = int(time.time())
+    for i, ts in enumerate([now, now * 1000, str(now), str(now * 1000), f"{now}.5", datetime.now(timezone.utc).isoformat()]):
+        case_id, _, _ = _case()
+        assert _send(_body(case_id, 1, ts=ts)).status_code == 200, (i, ts)
+    for ts in [(now - 3600) * 1000, str(now - 3600), "2026-01-01T00:00:00", "soon", True]:
+        case_id, _, _ = _case()
+        assert _send(_body(case_id, 1, ts=ts)).status_code in (401, 422), ts
+        assert db[cs.COLL].count_documents({"case_id": case_id}) == 0
+
+
 def _admin():
     r = httpx.post(f"{API}/auth/login", json={"email": "mattsossi@bsossi.com", "password": "AdminPass123!"}, timeout=20)
     if r.status_code != 200:

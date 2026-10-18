@@ -9190,3 +9190,7 @@ dashboard for sharing SELECTED completed reports with any professional.
 - UI: `AlignTestButtons.jsx` in the Align panel ("Check this side", "Ask Align for a test", 30 s wait) + "Last link test" row.
 - Spec for the Align builder: /app/memory/ALIGN_TEST_PING_SPEC.md. New env key `ALIGN_PING_URL` (empty until Align is ready).
 - Tests: 48/48 (test_safety_gate.py incl. simulated-Align round trip, + external files). UI checked at 390px.
+
+### 2026-10-18 — Webhook timestamp tolerance (PREVIEW ONLY)
+- `_fresh()` now accepts Unix seconds or milliseconds (number or quoted digits) and ISO dates with timezone; 5-min window unchanged.
+  Header (`X-Align-Signature`, optional `sha256=`), raw-body hashing and hex digests unchanged. Test added (27/27 pass).

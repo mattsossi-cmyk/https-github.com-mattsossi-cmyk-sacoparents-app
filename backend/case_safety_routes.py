@@ -14,6 +14,7 @@ import hmac
 import io
 import json
 import logging
+import re
 import os
 from datetime import datetime, timedelta, timezone
 from typing import Literal, Optional, Union
@@ -81,11 +82,16 @@ def _signature_ok(raw: bytes, provided: str) -> bool:
 
 
 def _fresh(ts: Union[int, float, str]) -> bool:
+    """Unix seconds or milliseconds (number or digits in quotes), or an ISO date with a timezone; within 5 minutes."""
+    if isinstance(ts, bool):
+        return False
     try:
-        if isinstance(ts, (int, float)) and not isinstance(ts, bool):
-            at = datetime.fromtimestamp(ts, tz=timezone.utc)
+        if isinstance(ts, str) and re.fullmatch(r"\d+(\.\d+)?", ts.strip()):
+            ts = float(ts)
+        if isinstance(ts, (int, float)):
+            at = datetime.fromtimestamp(ts / 1000 if ts > 1e11 else ts, tz=timezone.utc)
         else:
-            at = datetime.fromisoformat(str(ts).replace("Z", "+00:00"))
+            at = datetime.fromisoformat(ts.replace("Z", "+00:00"))
             if at.tzinfo is None:
                 return False
     except (ValueError, OverflowError, OSError):
