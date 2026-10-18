@@ -27,6 +27,7 @@ from ai_notice_routes import router as ai_notice_router  # noqa: E402
 from safety_assessment_routes import router as safety_assessment_router  # noqa: E402
 from case_safety import ensure_indexes as ensure_case_safety_indexes  # noqa: E402
 from case_safety_routes import router as case_settings_router, internal_router as case_safety_internal_router  # noqa: E402
+from align_ping import router as align_ping_router  # noqa: E402
 from plan_options_routes import router as plan_options_router  # noqa: E402
 from help_routes import router as help_router, seed_help_services  # noqa: E402
 from gmail_routes import router as gmail_router  # noqa: E402
@@ -278,6 +279,7 @@ api_router.include_router(release_check_router)
 api_router.include_router(self_journey_weekly_router)
 api_router.include_router(self_journey_weekly_admin_router)
 api_router.include_router(case_settings_router)
+api_router.include_router(align_ping_router)
 api_router.include_router(case_safety_internal_router)
 api_router.include_router(plan_options_router)
 api_router.include_router(help_router)

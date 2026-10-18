@@ -15,6 +15,7 @@ COLL = "case_safety"
 AUDIT = "safety_audit_log"
 SEEN = "safety_webhook_seen"
 REJECTS = "safety_webhook_rejects"
+TESTS = "safety_webhook_tests"
 CASES = "joint_alignment_cases"
 
 MODES = ("standard", "structured", "restricted")
@@ -109,9 +110,26 @@ async def ensure_indexes(db) -> None:
     await db[AUDIT].create_index("at")
     await db[SEEN].create_index("seen_at", expireAfterSeconds=24 * 3600)
     await db[REJECTS].create_index("created", expireAfterSeconds=35 * 24 * 3600)
+    await db[TESTS].create_index("created", expireAfterSeconds=35 * 24 * 3600)
 
 
 REJECTS_PER_MINUTE = 60
+
+
+async def record_test(db, test_id: str) -> None:
+    """A signed test message: proves the link works, never touches a case."""
+    now = datetime.now(timezone.utc)
+    prior = await db[TESTS].find_one({"_id": test_id}, {"requested_at": 1})
+    took = None
+    if prior and prior.get("requested_at"):
+        took = round((now - datetime.fromisoformat(prior["requested_at"])).total_seconds() * 1000)
+    source = "self" if test_id.startswith("self-") else "align"
+    await db[TESTS].update_one(
+        {"_id": test_id},
+        {"$set": {"received_at": now.isoformat(), "round_trip_ms": took, "source": source}, "$setOnInsert": {"created": now}},
+        upsert=True,
+    )
+    await audit(db, "system", "align", "test_received", None)
 SILENCE_DAYS = 7
 
 

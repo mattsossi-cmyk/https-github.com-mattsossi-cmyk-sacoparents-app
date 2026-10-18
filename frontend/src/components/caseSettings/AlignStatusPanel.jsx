@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 
 import { api } from "../../lib/api";
+import { AlignTestButtons } from "./AlignTestButtons";
 
 const REASONS = {
   bad_signature: "Wrong signature",
@@ -23,12 +24,13 @@ function Row({ label, children, testid }) {
 export function AlignStatusPanel({ onForbidden }) {
   const [s, setS] = useState(null);
   const [failed, setFailed] = useState(false);
+  const [tick, setTick] = useState(0);
 
   useEffect(() => {
     api.get("/admin/safety-audit-log/align-status")
       .then((r) => setS(r.data))
       .catch((e) => (e?.response?.status === 403 ? onForbidden() : setFailed(true)));
-  }, [onForbidden]);
+  }, [onForbidden, tick]);
 
   if (failed) return <p className="text-sm text-[#A93636]" data-testid="align-status-error">Couldn&apos;t load the Align status.</p>;
   if (!s) return <p className="text-sm text-[#4B4567]" data-testid="align-status-loading">Loading Align status…</p>;
@@ -59,6 +61,9 @@ export function AlignStatusPanel({ onForbidden }) {
         </Row>
         <Row label="Last applied" testid="align-status-last-applied">{when(s.last_applied_at)}</Row>
         <Row label="Refused, last 30 days" testid="align-status-refused-total">{refused}</Row>
+        <Row label="Last link test" testid="align-status-last-test">
+          {s.last_test ? `${when(s.last_test.received_at)} (${s.last_test.source === "self" ? "this side" : "from Align"})` : "None yet"}
+        </Row>
       </dl>
       {refused > 0 && (
         <ul className="mt-1 flex flex-wrap gap-2" data-testid="align-status-reasons">
@@ -79,6 +84,7 @@ export function AlignStatusPanel({ onForbidden }) {
           Wrong-signature refusals usually mean Align and this app are using different webhook secrets.
         </p>
       )}
+      <AlignTestButtons onDone={() => setTick((n) => n + 1)} />
     </section>
   );
 }

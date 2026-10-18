@@ -80,7 +80,7 @@ def test_admin_shape_and_no_store(admin):
     r = _status(admin)
     assert "no-store" in r.headers.get("cache-control", "")
     b = r.json()
-    assert set(b) == {"last_update", "last_applied_at", "last_rejected", "rejected_30d"}
+    assert set(b) == {"last_update", "last_applied_at", "last_rejected", "rejected_30d", "silence", "last_test"}
     assert set(b["rejected_30d"]) == {"bad_signature", "old_timestamp", "invalid_body", "replay"}
     if b["last_update"]:
         assert set(b["last_update"]) == {"at", "result"} and b["last_update"]["result"] in ("applied", "ignored")

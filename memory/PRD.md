@@ -9180,3 +9180,13 @@ dashboard for sharing SELECTED completed reports with any professional.
   `GET /api/admin/safety-audit-log/align-status`. Panel shows gentle amber note `align-status-silence` (admin only, no email).
 - Tests: test_align_silence_status_rule + align-status test assert silence (23/23 pass); UI checked at 390px for both the
   "N days" and "never" wording (mocked responses in screenshot).
+
+### 2026-10-18 — Align test ping + "Check this side" (PREVIEW ONLY)
+- Webhook accepts signed `{"test": true, "test_id", "timestamp"}` bodies: same signature/5-min/replay checks, recorded in
+  `safety_webhook_tests` (TTL 35 d), audit action `test_received`, never touches a case or the update counts.
+- `align_ping.py`: `POST /api/admin/safety-audit-log/self-test` (signs a test and posts it to PUBLIC_BACKEND_URL webhook),
+  `POST .../align-ping` (POSTs `{test_id, timestamp, callback_url}` signed `X-SACO-Signature` to `ALIGN_PING_URL`, https only,
+  15 s cooldown; `{"configured": false}` while unset), `GET .../test-status/{test_id}` (poll). align-status adds `last_test`.
+- UI: `AlignTestButtons.jsx` in the Align panel ("Check this side", "Ask Align for a test", 30 s wait) + "Last link test" row.
+- Spec for the Align builder: /app/memory/ALIGN_TEST_PING_SPEC.md. New env key `ALIGN_PING_URL` (empty until Align is ready).
+- Tests: 48/48 (test_safety_gate.py incl. simulated-Align round trip, + external files). UI checked at 390px.

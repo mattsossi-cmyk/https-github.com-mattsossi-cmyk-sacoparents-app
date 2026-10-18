@@ -6,11 +6,13 @@ GET  /api/support/case-settings/{id} support staff: current mode only
 GET  /api/admin/safety-audit-log/export  admins only; every export is logged
 GET  /api/admin/safety-audit-log/daily-counts  admins only; counts per day, no case details
 GET  /api/admin/safety-audit-log/align-status  admins only; last Align update and refused attempts, no case details
+Signed bodies with "test": true are link tests only (see align_ping.py) and never change a case.
 """
 import csv
 import hashlib
 import hmac
 import io
+import json
 import logging
 import os
 from datetime import datetime, timedelta, timezone
@@ -48,6 +50,20 @@ class SafetyStatusIn(BaseModel):
     note_review: bool = False
 
 
+class TestPingIn(BaseModel):
+    test: Literal[True]
+    test_id: str = Field(min_length=1, max_length=80, pattern=r"^[A-Za-z0-9_-]+$")
+    timestamp: Union[int, float, str]
+
+
+def _is_test(raw: bytes) -> bool:
+    try:
+        parsed = json.loads(raw)
+    except ValueError:
+        return False
+    return isinstance(parsed, dict) and parsed.get("test") is True
+
+
 def _unauthorized() -> HTTPException:
     return HTTPException(status_code=401, detail="Unauthorized.")
 
@@ -83,8 +99,9 @@ async def receive_safety_status(request: Request, db=Depends(get_db)):
     if not _signature_ok(raw, request.headers.get(SIGNATURE_HEADER, "")):
         await cs.record_reject(db, "bad_signature")
         raise _unauthorized()
+    is_test = _is_test(raw)
     try:
-        body = SafetyStatusIn.model_validate_json(raw)
+        body = (TestPingIn if is_test else SafetyStatusIn).model_validate_json(raw)
     except ValidationError:
         await cs.record_reject(db, "invalid_body")
         raise HTTPException(status_code=422, detail="Invalid body.")
@@ -96,6 +113,9 @@ async def receive_safety_status(request: Request, db=Depends(get_db)):
     except DuplicateKeyError:
         await cs.record_reject(db, "replay")
         raise HTTPException(status_code=409, detail="Replayed request.")
+    if is_test:
+        await cs.record_test(db, body.test_id)
+        return {"ok": True}
     await cs.apply_update(db, body.model_dump())
     return {"ok": True}
 
@@ -178,6 +198,9 @@ async def align_status(current: UserPublic = Depends(require_admin), db=Depends(
     last = await db[cs.AUDIT].find_one({"action": {"$in": APPLIED_ACTIONS}}, {"_id": 0, "at": 1, "action": 1}, sort=[("at", -1)])
     last_applied = await db[cs.AUDIT].find_one({"action": "write"}, {"_id": 0, "at": 1}, sort=[("at", -1)])
     last_reject = await db[cs.REJECTS].find_one({}, {"_id": 0, "at": 1, "reason": 1}, sort=[("at", -1)])
+    last_test = await db[cs.TESTS].find_one(
+        {"received_at": {"$exists": True}}, {"_id": 0, "received_at": 1, "source": 1, "round_trip_ms": 1}, sort=[("received_at", -1)]
+    )
     totals = {r: 0 for r in REJECT_REASONS}
     async for g in db[cs.REJECTS].aggregate([{"$match": {"at": {"$gte": since}}}, {"$group": {"_id": "$reason", "n": {"$sum": 1}}}]):
         if g["_id"] in totals:
@@ -188,5 +211,6 @@ async def align_status(current: UserPublic = Depends(require_admin), db=Depends(
         "last_rejected": last_reject,
         "rejected_30d": totals,
         "silence": cs.silence_status(last["at"] if last else None, datetime.now(timezone.utc)),
+        "last_test": last_test,
     }, headers=NO_STORE)
 

@@ -385,6 +385,85 @@ def test_align_status_last_update_and_refusals():
 
 
 
+def test_signed_test_message_never_changes_a_case():
+    case_id, ha, _ = _case()
+    assert _send(_body(case_id, 1, mode="restricted", set_by="professional")).status_code == 200
+    before_cases = db[cs.COLL].count_documents({})
+    before_writes = db[cs.AUDIT].count_documents({"action": {"$in": ["write", "write_ignored_stale_version", "write_ignored_until_professional"]}})
+    flags = httpx.get(f"{API}/case-settings", headers=ha, timeout=20).content
+    tid = f"t-{uuid.uuid4().hex}"
+    raw = json.dumps({"test": True, "test_id": tid, "timestamp": int(time.time())}).encode()
+    assert _send(raw, sig="deadbeef").status_code == 401
+    assert _send(json.dumps({"test": True, "test_id": tid, "timestamp": int(time.time()) - 3600}).encode()).status_code == 401
+    assert db[cs.TESTS].find_one({"_id": tid}) is None
+    assert _send(raw).status_code == 200
+    assert _send(raw).status_code == 409
+    doc = db[cs.TESTS].find_one({"_id": tid})
+    assert doc["source"] == "align" and doc["received_at"] and set(doc) <= {"_id", "received_at", "round_trip_ms", "source", "created"}
+    assert db[cs.COLL].count_documents({}) == before_cases
+    assert db[cs.AUDIT].count_documents({"action": {"$in": ["write", "write_ignored_stale_version", "write_ignored_until_professional"]}}) == before_writes
+    assert httpx.get(f"{API}/case-settings", headers=ha, timeout=20).content == flags
+    bad = json.dumps({"test": True, "test_id": "has spaces!", "timestamp": int(time.time())}).encode()
+    assert _send(bad).status_code == 422
+
+
+def test_self_test_and_align_ping_admin_only():
+    _, h = _user()
+    base = f"{API}/admin/safety-audit-log"
+    assert httpx.post(f"{base}/self-test", headers=h, timeout=20).status_code == 403
+    assert httpx.post(f"{base}/align-ping", headers=h, timeout=20).status_code == 403
+    admin = _admin()
+    r = httpx.post(f"{base}/self-test", headers=admin, timeout=30)
+    assert "no-store" in r.headers.get("cache-control", "")
+    body = r.json()
+    assert body["ok"] is True and body["status_code"] == 200 and body["webhook_url"].endswith("/api/internal/safety-status"), body
+    status = httpx.get(f"{base}/align-status", headers=admin, timeout=20).json()
+    assert status["last_test"]["source"] == "self" and status["last_test"]["round_trip_ms"] is not None
+    if not os.environ.get("ALIGN_PING_URL"):
+        assert httpx.post(f"{base}/align-ping", headers=admin, timeout=20).json() == {"configured": False}
+    assert httpx.get(f"{base}/test-status/self-{'0' * 32}", headers=admin, timeout=20).status_code == 404
+    assert httpx.get(f"{base}/test-status/../etc", headers=admin, timeout=20).status_code in (404, 422)
+    assert httpx.get(f"{base}/test-status/self-{'0' * 32}", headers=h, timeout=20).status_code == 403
+
+
+def test_align_ping_round_trip_with_simulated_align(monkeypatch):
+    """Align is simulated: it checks our signature, then sends a signed test message to the real webhook."""
+    from types import SimpleNamespace
+
+    from motor.motor_asyncio import AsyncIOMotorClient
+
+    import align_ping
+
+    monkeypatch.setenv("ALIGN_PING_URL", "https://align.example/api/internal/parents-test-ping")
+    calls, real_post = [], httpx.AsyncClient.post
+
+    async def fake_post(self, url, content=None, headers=None, **kw):
+        if not url.startswith("https://align.example"):
+            return await real_post(self, url, content=content, headers=headers, **kw)
+        calls.append((url, content, headers))
+        if headers.get("X-SACO-Signature") != _sign(content):
+            return httpx.Response(401)
+        back = json.dumps({"test": True, "test_id": json.loads(content)["test_id"], "timestamp": int(time.time())}).encode()
+        await real_post(self, f"{API}/internal/safety-status", content=back, headers={"Content-Type": "application/json", "X-Align-Signature": _sign(back)})
+        return httpx.Response(202)
+
+    monkeypatch.setattr(httpx.AsyncClient, "post", fake_post)
+
+    async def run():
+        adb = AsyncIOMotorClient(os.environ["MONGO_URL"])[os.environ["DB_NAME"]]
+        await adb[cs.TESTS].delete_many({"_id": {"$regex": "^align-"}, "received_at": {"$exists": False}})
+        await adb[cs.TESTS].update_many({"_id": {"$regex": "^align-"}}, {"$set": {"created": datetime(2000, 1, 1, tzinfo=timezone.utc)}})
+        return json.loads((await align_ping.align_ping(current=SimpleNamespace(user_id="pytest-admin"), db=adb)).body)
+
+    res = asyncio.run(run())
+    assert res["configured"] is True and res["accepted"] is True and res["status_code"] == 202, res
+    url, content, _ = calls[0]
+    sent = json.loads(content)
+    assert set(sent) == {"test_id", "timestamp", "callback_url"} and sent["callback_url"].endswith("/api/internal/safety-status")
+    doc = db[cs.TESTS].find_one({"_id": res["test_id"]})
+    assert doc["source"] == "align" and doc["received_at"] and doc["round_trip_ms"] is not None
+
+
 def test_support_sees_mode_only_and_parents_cannot():
     case_id, ha, _ = _case()
     _send(_body(case_id, 1, mode="restricted", set_by="auto_red", referral="parallel_parenting"))
