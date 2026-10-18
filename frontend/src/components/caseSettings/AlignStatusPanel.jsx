@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 
 import { api } from "../../lib/api";
 import { AlignTestButtons } from "./AlignTestButtons";
+import { SignatureHelp } from "./SignatureHelp";
 
 const REASONS = {
   bad_signature: "Wrong signature",
@@ -79,11 +80,7 @@ export function AlignStatusPanel({ onForbidden }) {
           Last refused: {when(s.last_rejected.at)} ({REASONS[s.last_rejected.reason] || s.last_rejected.reason})
         </p>
       )}
-      {s.rejected_30d.bad_signature > 0 && (
-        <p className="mt-2 text-xs text-[#8A5500]" data-testid="align-status-secret-hint">
-          Wrong-signature refusals usually mean Align and this app are using different webhook secrets.
-        </p>
-      )}
+      <SignatureHelp badSignature={s.rejected_30d.bad_signature} oldTimestamp={s.rejected_30d.old_timestamp} />
       <AlignTestButtons onDone={() => setTick((n) => n + 1)} />
     </section>
   );

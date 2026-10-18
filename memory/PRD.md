@@ -9194,3 +9194,9 @@ dashboard for sharing SELECTED completed reports with any professional.
 ### 2026-10-18 — Webhook timestamp tolerance (PREVIEW ONLY)
 - `_fresh()` now accepts Unix seconds or milliseconds (number or quoted digits) and ISO dates with timezone; 5-min window unchanged.
   Header (`X-Align-Signature`, optional `sha256=`), raw-body hashing and hex digests unchanged. Test added (27/27 pass).
+
+### 2026-10-18 — Signature help on Align panel (PREVIEW ONLY)
+- `SignatureHelp.jsx` (admin panel only): folded "How Align must sign updates" box (address, X-Align-Signature, hex HMAC-SHA256
+  of raw body with optional sha256=, key name ALIGN_WEBHOOK_SECRET — never its value, timestamp rules) + "Copy for Align's
+  builder"; opens automatically when wrong-signature refusals exist. "Too old" hint shown when old_timestamp refusals exist.
+  Daily table made compact on phones. Verified by screenshot at 390px (copy text checked, no secret value).

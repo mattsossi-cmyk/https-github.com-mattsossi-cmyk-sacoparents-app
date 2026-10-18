@@ -26,31 +26,31 @@ export function DailyCountsTable({ onForbidden }) {
         <p className="text-xs text-[#6E6787]">Counts only (UTC days). Updates from Align that were applied or ignored, refused attempts, and audit log downloads.</p>
       </header>
       <div tabIndex={0} role="region" aria-label="Daily changes table" className="max-h-96 overflow-auto">
-        <table className="w-full text-sm" data-testid="admin-daily-counts-table">
-          <thead className="sticky top-0 bg-[#F8F7FC] text-left text-[0.625rem] sm:text-xs uppercase tracking-wider text-[#4B4567]">
+        <table className="w-full text-xs sm:text-sm" data-testid="admin-daily-counts-table">
+          <thead className="sticky top-0 bg-[#F8F7FC] text-left text-[0.625rem] sm:text-xs uppercase sm:tracking-wider text-[#4B4567]">
             <tr>
-              <th className="px-2.5 sm:px-4 py-2">Day</th>
-              <th className="px-2.5 sm:px-4 py-2 text-right">Applied</th>
-              <th className="px-2.5 sm:px-4 py-2 text-right">Ignored</th>
-              <th className="px-2.5 sm:px-4 py-2 text-right">Refused</th>
-              <th className="px-2.5 sm:px-4 py-2 text-right">Downloads</th>
+              <th className="px-2 sm:px-4 py-2">Day</th>
+              <th className="px-2 sm:px-4 py-2 text-right">Applied</th>
+              <th className="px-2 sm:px-4 py-2 text-right">Ignored</th>
+              <th className="px-2 sm:px-4 py-2 text-right">Refused</th>
+              <th className="px-2 sm:px-4 py-2 text-right">Downloads</th>
             </tr>
           </thead>
           <tbody>
             <tr className="font-semibold bg-[#FBFAFE]" data-testid="admin-daily-counts-total">
-              <td className="px-2.5 sm:px-4 py-2">Total</td>
-              <td className="px-2.5 sm:px-4 py-2 text-right" data-testid="admin-daily-total-applied">{total("applied")}</td>
-              <td className="px-2.5 sm:px-4 py-2 text-right" data-testid="admin-daily-total-ignored">{total("ignored")}</td>
-              <td className="px-2.5 sm:px-4 py-2 text-right" data-testid="admin-daily-total-rejected">{total("rejected")}</td>
-              <td className="px-2.5 sm:px-4 py-2 text-right" data-testid="admin-daily-total-downloads">{total("downloads")}</td>
+              <td className="px-2 sm:px-4 py-2">Total</td>
+              <td className="px-2 sm:px-4 py-2 text-right" data-testid="admin-daily-total-applied">{total("applied")}</td>
+              <td className="px-2 sm:px-4 py-2 text-right" data-testid="admin-daily-total-ignored">{total("ignored")}</td>
+              <td className="px-2 sm:px-4 py-2 text-right" data-testid="admin-daily-total-rejected">{total("rejected")}</td>
+              <td className="px-2 sm:px-4 py-2 text-right" data-testid="admin-daily-total-downloads">{total("downloads")}</td>
             </tr>
             {days.map((d) => (
               <tr key={d.date} className="border-t border-[#F0EDF6]" data-testid={`admin-daily-row-${d.date}`}>
-                <td className="px-2.5 sm:px-4 py-2 whitespace-nowrap text-[#4B4567]">{fmt(d.date)}</td>
-                <td className="px-2.5 sm:px-4 py-2 text-right tabular-nums">{d.applied}</td>
-                <td className="px-2.5 sm:px-4 py-2 text-right tabular-nums">{d.ignored}</td>
-                <td className="px-2.5 sm:px-4 py-2 text-right tabular-nums">{d.rejected}</td>
-                <td className="px-2.5 sm:px-4 py-2 text-right tabular-nums">{d.downloads}</td>
+                <td className="px-2 sm:px-4 py-2 whitespace-nowrap text-[#4B4567]">{fmt(d.date)}</td>
+                <td className="px-2 sm:px-4 py-2 text-right tabular-nums">{d.applied}</td>
+                <td className="px-2 sm:px-4 py-2 text-right tabular-nums">{d.ignored}</td>
+                <td className="px-2 sm:px-4 py-2 text-right tabular-nums">{d.rejected}</td>
+                <td className="px-2 sm:px-4 py-2 text-right tabular-nums">{d.downloads}</td>
               </tr>
             ))}
           </tbody>
