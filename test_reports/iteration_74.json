@@ -1,0 +1,41 @@
+{
+  "summary": "Read-only pre-deploy sanity pass of the preview UI (frontend only, no code changes). Professional approval.test.pro1: logs in with password, dashboard loads, training banner is not shown because training is current (v2026-10-16.1). require_training() is a no-op, so nothing is blocked. Case page, safety hub, safety review and screening-responses pages all open with no 428/training_required (the responses page returns a correct 404 'No safety screening on file' because the DB has 0 safety_screenings). Reminder email preview and the POST /joint/invitations/preview template both say 'expires in 14 days'. The listed parent e2e.align.test1@gmail.com does NOT exist in the Align DB, so login gives 'Invalid email or password'. I used an existing seeded parent instead (t_pa_4ad1cd@example.com / testpass123, case SA-26-EDU-JJ3D3X). For that parent the page shows title 'Family check-in', the gate question, 'Yes, continue', 'Not now (remind me in the app later)' and 'Quick exit', and the 8 domains plus 'Before you start' and 'Optional' (21 items). There is no A/B/C choice screen for that parent. Judge judge.ui.preview: privacy notice consent comes first, then the court dashboard loads. There is no 'Urgent text alerts'/SMS card, and no SMS-related text or testids. Court case list (4), case switching, report cards, the message thread and the communication summary all load. The login page shows the Google button, but its label is 'Continue with Google'. No real console errors; the only noise is the expected 401 on /auth/me before login, a Cloudflare beacon CSP block and a visual-editor hydration warning.",
+  "backend_issues": {"critical": [], "minor": []},
+  "frontend_issues": {
+    "ui_bugs": [
+      {"component": "JointReport safety screening version select", "issue": "Professional can still assign 'Version A (women)', 'Version B (men)' and 'Version C (LGBTQ+ relationship)' per parent. The backend /safety-screening/assign still accepts A/B/C.", "selector": "[data-testid='safety-screening-a-version']", "priority": "HIGH"},
+      {"component": "Legacy-case parent screening", "issue": "25 parent slots in the DB have safety_version A/B, are unconfirmed and have no screening. Example: SA-26-COM-6VGPSV parent A = 'B', in pro1's own case. _status() returns choice_needed=True for these, so those parents will still get the 'Which questions fit your situation best?' A/B/C (women/men/LGBTQ+) choice screen. I checked this through the pro's API view, not through the parent UI, because no legacy parent password is known.", "selector": "[data-testid='screening-choice']", "priority": "HIGH"},
+      {"component": "SampleTour JUDGE_TOUR (last step)", "issue": "The judge tour step 'Court directory & urgent alerts' still says 'enable urgent-safety SMS alerts'. This is stale Twilio copy.", "selector": "[data-testid='judge-tour-card']", "priority": "MEDIUM"},
+      {"component": "InviteReminderPanel", "issue": "Dashboard 'Unopened invitations' text says 'a fresh link resets the 7-day window', but the expiry is now 14 days.", "selector": "[data-testid='invite-reminder-panel']", "priority": "MEDIUM"}
+    ],
+    "integration_issues": [
+      {"flow": "Resend Invitation on an expired invitation", "issue": "status-resend-btn opens 'Preview reminder email' for invite 71c3fe62 (expired 2026-09-11) and offers 'Send Reminder', which resends the same token. The parent may get a dead link; 'Send fresh link' (reissue) is the right action for expired invites. The modal is titled 'reminder' but renders the initial-invitation template. Not sent during testing.", "affected_selectors": ["[data-testid='status-resend-btn']", "[data-testid^='reminder-preview-send-']"]}
+    ],
+    "design_issues": [
+      {"screen": "Login", "issues": ["Google button label is 'Continue with Google', not 'Sign in with Google'. Fine if intentional."]},
+      {"screen": "Judge login", "issues": ["Judge is sent to /privacy-notice, whose banner says 'Use a device your co-parent cannot see', which is parent-oriented copy.", "The judge tour overlay auto-opens on the first dashboard load and blocks clicks until skipped."]},
+      {"screen": "Court case overview", "issues": ["A past hearing (2026-09-17, today is 2026-10-18) still shows 'Within 7 days — nothing submitted'. It should read 'overdue/past'."]},
+      {"screen": "Safety screening (mobile 390px)", "issues": ["Header 'Back to safety hub' wraps onto 4 lines next to Crisis Resources and the logo; cramped."]},
+      {"screen": "Safety screening responses (pro)", "issues": ["The error toast overlaps the Crisis Resources button in the header."]}
+    ]
+  },
+  "test_report_links": [],
+  "action_items": [
+    "Decide whether legacy A/B/C versions should still be assignable. If not, remove A/B/C from the pro version select and the /safety-screening/assign VERSIONS, and migrate the 25 unconfirmed legacy safety_version A/B slots to FV (or force FV in _status) so no parent sees the A/B/C choice screen.",
+    "Remove the 'urgent-safety SMS alerts' wording from JUDGE_TOUR in SampleTour.jsx.",
+    "Change InviteReminderPanel copy from 'resets the 7-day window' to 14 days.",
+    "Optionally hide or relabel 'Resend Invitation' for expired invites (point to 'Send fresh link'), and fix the 'Within 7 days' label for past hearings.",
+    "Update /app/memory/test_credentials.md: e2e.align.test1@gmail.com does not exist in this Align DB (sibling-app account only)."
+  ],
+  "critical_code_review_comments": [
+    "safety_screening.py _status(): choice_needed = (not confirmed and not scr) and ver != 'FV'. Any stored legacy A/B/C version re-enables the choice screen, so the FV-only rollout is incomplete for existing cases.",
+    "pro_training.require_training() returns None (prompt only), as requested. I could not see the banner because the test pro's training is current."
+  ],
+  "updated_files": [],
+  "success_rate": {"backend": "not tested (frontend only)", "frontend": "~85% (all requested flows load; 2 high-priority FV/choice leftovers, 2 stale-copy items)"},
+  "test_credentials": "approval.test.pro1@gmail.com / TestPass2026! OK; judge.ui.preview@sacoparentsalign.com / testpass123 OK; e2e.align.test1@gmail.com / E2ETest2026! FAILS (no such user in Align DB); substitute parent t_pa_4ad1cd@example.com / testpass123 (case 8865322f-38da-4ffe-89bc-0f3e169d0de4, version FV)",
+  "seed_data_creation": "None. Side effects: the judge account accepted the privacy notice (needed to reach the dashboard), and the court message thread was toggled open. No emails were sent; I only opened the reminder preview and cancelled.",
+  "retest_needed": true,
+  "should_main_agent_self_test": true,
+  "context_for_next_testing_agent": "FV parent screening: log in as t_pa_4ad1cd@example.com/testpass123 and go to /joint/8865322f-38da-4ffe-89bc-0f3e169d0de4/safety-screening. A legacy choice case is SA-26-COM-6VGPSV (id 766b9cfd-8235-4ad1-945a-bd674cab7489), parent A version B, choice_needed=True. The expired-invite reminder preview is on /joint/dda358d8-874e-424d-bb4b-ff70df50dbbd via status-resend-btn. On the judge dashboard, click judge-tour-skip before interacting."
+}
