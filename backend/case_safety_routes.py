@@ -25,6 +25,7 @@ from pydantic import BaseModel, Field, ValidationError
 from pymongo.errors import DuplicateKeyError
 
 import case_safety as cs
+from align_ref import new_align_ref
 from analytics_routes import ADMIN_EMAILS, require_admin
 from auth import get_current_user, get_db
 from models import UserPublic
@@ -149,6 +150,9 @@ async def checkin_link(current: UserPublic = Depends(get_current_user), db=Depen
     ref = None
     if await cs.case_ids_for(db, current.user_id):
         ref = ((await db.users.find_one({"user_id": current.user_id}, {"_id": 0, "align_ref": 1})) or {}).get("align_ref")
+        if not ref:  # account made by a path that skipped it: generate once, never overwrite
+            await db.users.update_one({"user_id": current.user_id, "align_ref": {"$exists": False}}, {"$set": {"align_ref": new_align_ref()}})
+            ref = (await db.users.find_one({"user_id": current.user_id}, {"_id": 0, "align_ref": 1}) or {}).get("align_ref")
     return JSONResponse({"align_ref": ref}, headers=NO_STORE)
 
 

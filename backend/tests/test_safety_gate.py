@@ -405,8 +405,9 @@ def test_align_status_last_update_and_refusals():
 def test_signed_test_message_never_changes_a_case():
     case_id, ha, _ = _case()
     assert _send(_body(case_id, 1, mode="restricted", set_by="professional")).status_code == 200
-    before_cases = db[cs.COLL].count_documents({})
-    before_writes = db[cs.AUDIT].count_documents({"action": {"$in": ["write", "write_ignored_stale_version", "write_ignored_until_professional"]}})
+    started = cs.now_iso()
+    writes = {"action": {"$in": ["write", "write_ignored_stale_version", "write_ignored_until_professional"]}}
+    before_writes = db[cs.AUDIT].count_documents({**writes, "case_id": case_id})
     flags = httpx.get(f"{API}/case-settings", headers=ha, timeout=20).content
     tid = f"t-{uuid.uuid4().hex}"
     raw = json.dumps({"test": True, "test_id": tid, "timestamp": int(time.time())}).encode()
@@ -417,8 +418,10 @@ def test_signed_test_message_never_changes_a_case():
     assert _send(raw).status_code == 409
     doc = db[cs.TESTS].find_one({"_id": tid})
     assert doc["source"] == "align" and doc["received_at"] and set(doc) <= {"_id", "received_at", "round_trip_ms", "source", "created"}
-    assert db[cs.COLL].count_documents({}) == before_cases
-    assert db[cs.AUDIT].count_documents({"action": {"$in": ["write", "write_ignored_stale_version", "write_ignored_until_professional"]}}) == before_writes
+    # Scoped to this run so other suites writing at the same time can't make it flaky.
+    assert db[cs.COLL].count_documents({"case_id": {"$in": [tid, None, ""]}}) == 0
+    assert db[cs.AUDIT].count_documents({**writes, "case_id": case_id}) == before_writes
+    assert db[cs.AUDIT].count_documents({**writes, "case_id": {"$in": [tid, None]}, "at": {"$gte": started}}) == 0
     assert httpx.get(f"{API}/case-settings", headers=ha, timeout=20).content == flags
     bad = json.dumps({"test": True, "test_id": "has spaces!", "timestamp": int(time.time())}).encode()
     assert _send(bad).status_code == 422
@@ -625,3 +628,14 @@ def test_align_ref_created_once_and_private():
     ps = db.joint_alignment_cases.find_one({"case_id": case_id})["parents"]
     assert len(ps[0]["align_ref"]) == 36 and ps[1]["align_ref"] == "keep-me"
     assert db.users.find_one({"user_id": uid})["align_ref"] == ref
+
+
+# An account that somehow has no align_ref gets one generated once on first link lookup, then it never changes.
+def test_link_generates_missing_align_ref_once():
+    case_id, ha, _ = _case()
+    uid = db.joint_alignment_cases.find_one({"case_id": case_id})["parents"][0]["user_id"]
+    db.users.update_one({"user_id": uid}, {"$unset": {"align_ref": ""}})
+    url = f"{API}/family-checkin/link"
+    first = httpx.get(url, headers=ha, timeout=20).json()["align_ref"]
+    assert first and db.users.find_one({"user_id": uid})["align_ref"] == first
+    assert httpx.get(url, headers=ha, timeout=20).json()["align_ref"] == first

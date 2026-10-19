@@ -1,0 +1,34 @@
+{
+  "summary": "Tested the per-parent align_ref feature end to end. New suite backend/tests/test_align_ref_iter148.py: 10/10 passed against the public URL. Creation paths tested: register, guest (plus guest claim keeps the value), magic-link signup-from-token, co-parent invite acceptance. Also tested: value unchanged after login and profile update; backfill state (0 users missing, all distinct, unique sparse index, 0 case parent entries missing) and running backfill twice (fills legacy rows, keeps 'keep-me', second run returns 0/0). Both case-creation paths were run in-process with the invite email patched out: professional _create_and_invite_case and integration_create_case. Each parent entry gets a distinct uuid4 and the response has no align_ref. Invitation accept keeps the entry's align_ref, and after that the link returns the ACCOUNT align_ref. /family-checkin/link: linked A and B get their own different values, a parent in 2 cases keeps their value, unlinked gets null, 401 without auth, no-store. No leaks in auth/me, login, register, profile, case-settings, /me/export, joint-alignment/mine, joint-alignment/case/{id}, family-checkin status and reminder, invitation-accept response, analytics/admin/users list and detail. Regression run (iter145/146/147 + test_safety_gate): 64/64 passed on the 2nd run. The 1st run had 2 failures that both pass on their own and on rerun (flaky). UI on desktop 1920 and mobile 390: the Open check-in href in self-family-checkin and court-family-checkin is correct for A and B (different) and is the main Align site for an unlinked C. align_ref is never in visible text, appears in the HTML only once (the href), no horizontal overflow, target=_blank rel=noopener noreferrer. No Align endpoint was called, and no secrets were changed.",
+  "backend_issues": {
+    "critical": [],
+    "minor": [
+      {"endpoint": "startup backfill (server.py startup_log)", "issue": "Backfill only runs at startup as a background task that nothing waits on. A user doc added later by a path without align_ref (direct DB insert, future code path, older test fixtures) stays without one until the next restart, and gets the main-site link until then. If create_index fails, the task error is only logged as 'Task exception was never retrieved'. Consider a done-callback that logs errors."}
+    ]
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": [
+      {"screen": "Family check-in card", "issues": ["useCheckinLink starts with ref=null, so the button points to the main Align site until /family-checkin/link returns. A very fast click goes to the main site. Very minor; you could disable the button or show a skeleton until the ref has loaded."]}
+    ]
+  },
+  "test_report_links": ["/app/backend/tests/test_align_ref_iter148.py", "/app/test_reports/pytest/pytest_align_ref_iter148.xml", "/app/test_reports/pytest/pytest_regression_iter148.xml"],
+  "action_items": [
+    "Optional: add a done-callback or error logging to the align_ref backfill task",
+    "Optional: look into the flaky ordering in test_safety_gate.py::test_align_status_last_update_and_refusals and ::test_signed_test_message_never_changes_a_case. Both failed once in the combined 4-file run (110s run), then passed alone and in a rerun of the combined run. Likely shared global align-status state or timing."
+  ],
+  "critical_code_review_comments": [
+    "Every users.insert_one site (auth.py register/google/guest/magic-link, invite_routes accept, seed_joint_sample_case) includes align_ref=new_align_ref(). Guest claim uses $set with no align_ref, so the value is kept.",
+    "Both joint case creation paths (_create_and_invite_case and integration_create_case) set align_ref on each parent entry. Bulk CSV goes through _create_and_invite_case. accept_invitation uses parents.$ partial $set, so the entry's align_ref is kept.",
+    "The admin _public_user whitelist, _serialize_user/UserPublic, _parent_public_shape and the export (_PHI_COLLECTIONS has no 'users') all leave align_ref out.",
+    "Google OAuth was checked by code review only (auth.py ~360 includes align_ref)."
+  ],
+  "updated_files": ["/app/backend/tests/test_align_ref_iter148.py"],
+  "success_rate": {"backend": "100% (74/74 on final runs; 2 flaky regressions on first combined run)", "frontend": "100%"},
+  "flaky_tests": ["test_safety_gate.py::test_align_status_last_update_and_refusals (1/2 combined runs failed)", "test_safety_gate.py::test_signed_test_message_never_changes_a_case (1/2 combined runs failed)"],
+  "seed_data_creation": "Test users test_aref_*@example.com and SA-T* cases were created and then cleaned up (0 leftovers).",
+  "retest_needed": false,
+  "should_main_agent_self_test": false,
+  "context_for_next_testing_agent": "Admin user routes are under /api/analytics/admin/users. UI: '/' remembers the last door in localStorage, so clear it before clicking door-self or door-court. Log in with page.request.post('/api/auth/login') (cookie auth). Case-creation tests run in-process with email_service.send_joint_alignment_invitation monkeypatched so no real emails go out."
+}

@@ -50,12 +50,13 @@ export function FamilyCheckinCard({ alignUrl, testid = "family-checkin", stacked
           </div>
         </div>
         <a
-          href={href}
+          href={href || undefined}
+          aria-disabled={!href}
           target="_blank"
           rel="noopener noreferrer"
           data-testid={`${testid}-open`}
           aria-label="Open Family check-in (opens in a new tab)"
-          className={`shrink-0 self-start ${stacked ? "" : "sm:self-auto"} inline-flex items-center justify-center gap-2 min-h-[44px] rounded-full bg-[#4a2574] px-5 py-2.5 text-sm font-bold text-white transition-colors hover:bg-[#3a1d5c] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#4a2574]`}
+          className={`shrink-0 self-start ${stacked ? "" : "sm:self-auto"} ${href ? "" : "opacity-60 pointer-events-none"} inline-flex items-center justify-center gap-2 min-h-[44px] rounded-full bg-[#4a2574] px-5 py-2.5 text-sm font-bold text-white transition-colors hover:bg-[#3a1d5c] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#4a2574]`}
         >
           Open check-in <ExternalLink size={14} aria-hidden="true" />
         </a>

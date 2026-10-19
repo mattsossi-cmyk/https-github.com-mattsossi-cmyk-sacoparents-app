@@ -9277,3 +9277,21 @@ dashboard for sharing SELECTED completed reports with any professional.
   as of 2026-10-19) and an optional neutral check-in page. Both are a one-setting change (ALIGN_PING_URL /
   REACT_APP_ALIGN_CHECKIN_URL).
 - Tests: iteration_147 backend 10/10 + UI 100%; test_safety_gate.py incl. week-rule test; 72 passed across check-in/Safety Gate suites.
+
+### 2026-10-19 — "Finished on" date + per-parent align_ref check-in link (PREVIEW ONLY, no deploy, webhook/secrets untouched)
+- Finished-on date: case_safety doc gets plain `setup_completed_at` (set when an applied update turns screening_offered true,
+  kept while true, cleared when reopened, newer date on re-complete; legacy done cases have none → just "Done").
+  /api/case-settings adds `setup_completed_on` (UTC YYYY-MM-DD, case-level, identical for both parents). Card shows
+  "Finished on October 19, 2026" under Done. User has NOT yet confirmed keep/remove (asked 2026-10-19).
+- align_ref (user instruction): str(uuid.uuid4()) generated once, never changed. Stored on users docs (all 5 creation paths +
+  seed; unique sparse index) AND on each joint_alignment_cases.parents[] entry (both creation paths + seed keeps per-slot value).
+  backend/align_ref.py backfill_align_refs runs at startup (background task + error-logging callback): 6,429 accounts and 2,036
+  case parent entries filled. GET /api/family-checkin/link → {align_ref} (account value) when linked to ≥1 case, else null;
+  generates once if an account somehow lacks it. Never exposed elsewhere (auth/me, case-settings, admin, export all allow-lists).
+- REACT_APP_ALIGN_CHECKIN_URL=https://sacoparentsalign.com/joint/{align_ref}/safety-screening; useCheckinLink validates uuid4 and
+  keeps the button disabled until the lookup finishes.
+- IMPORTANT: Align must know each parent's align_ref for the link to resolve; this app does not send it anywhere (webhook paused
+  per user, no push). Case-entry align_refs are stored but unused.
+- Open question to user: preview ALIGN_WEBHOOK_SECRET is still set (from "generate it"); user said the webhook "stays paused" —
+  awaiting their decision whether to remove it from preview. Not changed.
+- Tests: iteration_148 backend 10/10 (tests/test_align_ref_iter148.py) + UI 100%; 75 passed across Safety Gate / check-in suites.

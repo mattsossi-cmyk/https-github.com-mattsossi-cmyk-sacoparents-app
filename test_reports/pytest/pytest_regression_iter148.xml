@@ -1,0 +1,127 @@
+<?xml version="1.0" encoding="utf-8"?><testsuites name="pytest tests"><testsuite name="pytest" errors="0" failures="2" skipped="0" tests="64" time="110.057" timestamp="2026-10-19T11:26:33.976894+00:00" hostname="agent-env-780dad87-85de-49b1-ae14-87b6580a22a1"><testcase classname="tests.test_family_checkin_iter145.TestCaseSettings" name="test_unlinked_parent_false" time="6.600" /><testcase classname="tests.test_family_checkin_iter145.TestCaseSettings" name="test_linked_no_update_false_and_identical" time="0.153" /><testcase classname="tests.test_family_checkin_iter145.TestCaseSettings" name="test_fields_and_no_banned_words" time="0.069" /><testcase classname="tests.test_family_checkin_iter145.TestCaseSettings" name="test_update_true_then_false" time="0.574" /><testcase classname="tests.test_family_checkin_iter145.TestChecklist" name="test_items_todo" time="0.189" /><testcase classname="tests.test_family_checkin_iter145.TestChecklist" name="test_items_done_both" time="0.266" /><testcase classname="tests.test_family_checkin_iter145.TestChecklist" name="test_extra_modules_ignored" time="0.072" /><testcase classname="tests.test_family_checkin_iter145.TestChecklist" name="test_unlinked_todo" time="0.085" /><testcase classname="tests.test_family_checkin_iter145.TestPdf" name="test_pdf_full" time="0.085" /><testcase classname="tests.test_family_checkin_iter145.TestPdf" name="test_pdf_requested_only" time="0.159" /><testcase classname="tests.test_family_checkin_iter145.TestCourtAiChat" name="test_chat_without_modules" time="6.041" /><testcase classname="tests.test_family_checkin_link_thanks_iter146.TestLink" name="test_unauth_401" time="3.788" /><testcase classname="tests.test_family_checkin_link_thanks_iter146.TestLink" name="test_unlinked_null" time="0.072" /><testcase classname="tests.test_family_checkin_link_thanks_iter146.TestLink" name="test_single_case_each_parent_own_ref" time="0.136" /><testcase classname="tests.test_family_checkin_link_thanks_iter146.TestLink" name="test_multi_case_still_gets_ref" time="0.089" /><testcase classname="tests.test_family_checkin_link_thanks_iter146.TestThanks" name="test_unauth_401" time="0.228" /><testcase classname="tests.test_family_checkin_link_thanks_iter146.TestThanks" name="test_not_done_false" time="0.221" /><testcase classname="tests.test_family_checkin_link_thanks_iter146.TestThanks" name="test_done_shows_then_seen_once" time="0.553" /><testcase classname="tests.test_family_checkin_link_thanks_iter146.TestThanks" name="test_seen_idempotent_single_doc" time="0.067" /><testcase classname="tests.test_family_checkin_link_thanks_iter146.TestThanks" name="test_stays_hidden_after_flip" time="0.331" /><testcase classname="tests.test_family_checkin_link_thanks_iter146.TestThanks" name="test_multi_case_partial_not_shown" time="0.438" /><testcase classname="tests.test_family_checkin_reminder_iter147.TestReminder" name="test_unauth_401" time="4.013" /><testcase classname="tests.test_family_checkin_reminder_iter147.TestReminder" name="test_unlinked_false_no_store" time="0.115" /><testcase classname="tests.test_family_checkin_reminder_iter147.TestReminder" name="test_fresh_case_false" time="0.128" /><testcase classname="tests.test_family_checkin_reminder_iter147.TestReminder" name="test_six_days_false_eight_days_true" time="0.225" /><testcase classname="tests.test_family_checkin_reminder_iter147.TestReminder" name="test_string_dates_parsed" time="0.069" /><testcase classname="tests.test_family_checkin_reminder_iter147.TestReminder" name="test_dismiss_per_account" time="0.197" /><testcase classname="tests.test_family_checkin_reminder_iter147.TestReminder" name="test_dismiss_idempotent" time="0.065" /><testcase classname="tests.test_family_checkin_reminder_iter147.TestReminder" name="test_dismiss_expires_after_week" time="0.147" /><testcase classname="tests.test_family_checkin_reminder_iter147.TestReminder" name="test_done_hides_for_both" time="0.508" /><testcase classname="tests.test_family_checkin_reminder_iter147.TestReminder" name="test_multi_case_needs_all_done" time="0.502" /><testcase classname="tests.test_safety_gate" name="test_auto_red_limits_both_parents_on_next_load" time="1.106" /><testcase classname="tests.test_safety_gate" name="test_flag_responses_are_byte_identical" time="1.155" /><testcase classname="tests.test_safety_gate" name="test_no_notifications_on_mode_or_referral_change" time="3.760" /><testcase classname="tests.test_safety_gate" name="test_uploaded_photo_has_no_exif_or_gps[structured]" time="0.005" /><testcase classname="tests.test_safety_gate" name="test_uploaded_photo_has_no_exif_or_gps[restricted]" time="0.001" /><testcase classname="tests.test_safety_gate" name="test_restricted_strips_png_text_and_pdf_info" time="0.015" /><testcase classname="tests.test_safety_gate" name="test_bad_signature_rejected[None]" time="0.756" /><testcase classname="tests.test_safety_gate" name="test_bad_signature_rejected[]" time="0.759" /><testcase classname="tests.test_safety_gate" name="test_bad_signature_rejected[deadbeef]" time="0.766" /><testcase classname="tests.test_safety_gate" name="test_bad_signature_rejected[__wrong_secret__]" time="0.762" /><testcase classname="tests.test_safety_gate" name="test_stale_timestamp_replay_and_old_version_change_nothing" time="0.896" /><testcase classname="tests.test_safety_gate" name="test_referral_hides_cooperative_options_for_both" time="0.919" /><testcase classname="tests.test_safety_gate" name="test_templates_always_allowed" time="0.866" /><testcase classname="tests.test_safety_gate" name="test_no_parent_visible_trace" time="0.876" /><testcase classname="tests.test_safety_gate" name="test_new_case_structured_until_screening_offered" time="1.248" /><testcase classname="tests.test_safety_gate" name="test_record_encrypted_and_audited" time="0.927" /><testcase classname="tests.test_safety_gate" name="test_audit_export_admin_only_and_logged" time="0.655" /><testcase classname="tests.test_safety_gate" name="test_daily_counts_admin_only_counts_only" time="1.499" /><testcase classname="tests.test_safety_gate" name="test_align_silence_status_rule" time="0.000" /><testcase classname="tests.test_safety_gate" name="test_timestamp_formats_seconds_ms_and_quoted" time="8.062" /><testcase classname="tests.test_safety_gate" name="test_align_status_last_update_and_refusals" time="20.720"><failure message="httpx.ReadTimeout: timed out">/root/.venv/lib/python3.11/site-packages/httpx/_transports/default.py:101: in map_httpcore_exceptions
+    yield
+/root/.venv/lib/python3.11/site-packages/httpx/_transports/default.py:250: in handle_request
+    resp = self._pool.handle_request(req)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/httpcore/_sync/connection_pool.py:256: in handle_request
+    raise exc from None
+/root/.venv/lib/python3.11/site-packages/httpcore/_sync/connection_pool.py:236: in handle_request
+    response = connection.handle_request(
+/root/.venv/lib/python3.11/site-packages/httpcore/_sync/connection.py:103: in handle_request
+    return self._connection.handle_request(request)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/httpcore/_sync/http11.py:136: in handle_request
+    raise exc
+/root/.venv/lib/python3.11/site-packages/httpcore/_sync/http11.py:106: in handle_request
+    ) = self._receive_response_headers(**kwargs)
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/httpcore/_sync/http11.py:177: in _receive_response_headers
+    event = self._receive_event(timeout=timeout)
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/httpcore/_sync/http11.py:217: in _receive_event
+    data = self._network_stream.read(
+/root/.venv/lib/python3.11/site-packages/httpcore/_backends/sync.py:126: in read
+    with map_exceptions(exc_map):
+/usr/local/lib/python3.11/contextlib.py:158: in __exit__
+    self.gen.throw(typ, value, traceback)
+/root/.venv/lib/python3.11/site-packages/httpcore/_exceptions.py:14: in map_exceptions
+    raise to_exc(exc) from exc
+E   httpcore.ReadTimeout: timed out
+
+The above exception was the direct cause of the following exception:
+tests/test_safety_gate.py:384: in test_align_status_last_update_and_refusals
+    case_id, _, _ = _case()
+                    ^^^^^^^
+tests/test_safety_gate.py:66: in _case
+    (ua, ha), (ub, hb) = _user(), _user()
+                         ^^^^^^^
+tests/test_safety_gate.py:56: in _user
+    r = httpx.post(f"{API}/auth/register", json={"email": email, "password": PASSWORD, "name": "Gate Test", **CONSENT}, timeout=20)
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/httpx/_api.py:304: in post
+    return request(
+/root/.venv/lib/python3.11/site-packages/httpx/_api.py:109: in request
+    return client.request(
+/root/.venv/lib/python3.11/site-packages/httpx/_client.py:825: in request
+    return self.send(request, auth=auth, follow_redirects=follow_redirects)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/httpx/_client.py:914: in send
+    response = self._send_handling_auth(
+/root/.venv/lib/python3.11/site-packages/httpx/_client.py:942: in _send_handling_auth
+    response = self._send_handling_redirects(
+/root/.venv/lib/python3.11/site-packages/httpx/_client.py:979: in _send_handling_redirects
+    response = self._send_single_request(request)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/httpx/_client.py:1014: in _send_single_request
+    response = transport.handle_request(request)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/httpx/_transports/default.py:249: in handle_request
+    with map_httpcore_exceptions():
+/usr/local/lib/python3.11/contextlib.py:158: in __exit__
+    self.gen.throw(typ, value, traceback)
+/root/.venv/lib/python3.11/site-packages/httpx/_transports/default.py:118: in map_httpcore_exceptions
+    raise mapped_exc(message) from exc
+E   httpx.ReadTimeout: timed out</failure></testcase><testcase classname="tests.test_safety_gate" name="test_signed_test_message_never_changes_a_case" time="20.041"><failure message="httpx.ReadTimeout: timed out">/root/.venv/lib/python3.11/site-packages/httpx/_transports/default.py:101: in map_httpcore_exceptions
+    yield
+/root/.venv/lib/python3.11/site-packages/httpx/_transports/default.py:250: in handle_request
+    resp = self._pool.handle_request(req)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/httpcore/_sync/connection_pool.py:256: in handle_request
+    raise exc from None
+/root/.venv/lib/python3.11/site-packages/httpcore/_sync/connection_pool.py:236: in handle_request
+    response = connection.handle_request(
+/root/.venv/lib/python3.11/site-packages/httpcore/_sync/connection.py:103: in handle_request
+    return self._connection.handle_request(request)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/httpcore/_sync/http11.py:136: in handle_request
+    raise exc
+/root/.venv/lib/python3.11/site-packages/httpcore/_sync/http11.py:106: in handle_request
+    ) = self._receive_response_headers(**kwargs)
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/httpcore/_sync/http11.py:177: in _receive_response_headers
+    event = self._receive_event(timeout=timeout)
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/httpcore/_sync/http11.py:217: in _receive_event
+    data = self._network_stream.read(
+/root/.venv/lib/python3.11/site-packages/httpcore/_backends/sync.py:126: in read
+    with map_exceptions(exc_map):
+/usr/local/lib/python3.11/contextlib.py:158: in __exit__
+    self.gen.throw(typ, value, traceback)
+/root/.venv/lib/python3.11/site-packages/httpcore/_exceptions.py:14: in map_exceptions
+    raise to_exc(exc) from exc
+E   httpcore.ReadTimeout: timed out
+
+The above exception was the direct cause of the following exception:
+tests/test_safety_gate.py:406: in test_signed_test_message_never_changes_a_case
+    case_id, ha, _ = _case()
+                     ^^^^^^^
+tests/test_safety_gate.py:66: in _case
+    (ua, ha), (ub, hb) = _user(), _user()
+                         ^^^^^^^
+tests/test_safety_gate.py:56: in _user
+    r = httpx.post(f"{API}/auth/register", json={"email": email, "password": PASSWORD, "name": "Gate Test", **CONSENT}, timeout=20)
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/httpx/_api.py:304: in post
+    return request(
+/root/.venv/lib/python3.11/site-packages/httpx/_api.py:109: in request
+    return client.request(
+/root/.venv/lib/python3.11/site-packages/httpx/_client.py:825: in request
+    return self.send(request, auth=auth, follow_redirects=follow_redirects)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/httpx/_client.py:914: in send
+    response = self._send_handling_auth(
+/root/.venv/lib/python3.11/site-packages/httpx/_client.py:942: in _send_handling_auth
+    response = self._send_handling_redirects(
+/root/.venv/lib/python3.11/site-packages/httpx/_client.py:979: in _send_handling_redirects
+    response = self._send_single_request(request)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/httpx/_client.py:1014: in _send_single_request
+    response = transport.handle_request(request)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/httpx/_transports/default.py:249: in handle_request
+    with map_httpcore_exceptions():
+/usr/local/lib/python3.11/contextlib.py:158: in __exit__
+    self.gen.throw(typ, value, traceback)
+/root/.venv/lib/python3.11/site-packages/httpx/_transports/default.py:118: in map_httpcore_exceptions
+    raise mapped_exc(message) from exc
+E   httpx.ReadTimeout: timed out</failure></testcase><testcase classname="tests.test_safety_gate" name="test_self_test_and_align_ping_admin_only" time="3.621" /><testcase classname="tests.test_safety_gate" name="test_align_ping_round_trip_with_simulated_align" time="0.041" /><testcase classname="tests.test_safety_gate" name="test_support_sees_mode_only_and_parents_cannot" time="2.051" /><testcase classname="tests.test_safety_gate" name="test_other_case_not_readable" time="1.088" /><testcase classname="tests.test_safety_gate" name="test_internal_endpoint_hidden_from_docs" time="0.303" /><testcase classname="tests.test_safety_gate" name="test_family_checkin_status_same_for_both_parents" time="1.034" /><testcase classname="tests.test_safety_gate" name="test_checkin_thanks_once_per_account" time="5.117" /><testcase classname="tests.test_safety_gate" name="test_checkin_link_uses_each_parents_align_ref" time="1.314" /><testcase classname="tests.test_safety_gate" name="test_checkin_reminder_week_rule" time="1.107" /><testcase classname="tests.test_safety_gate" name="test_setup_completed_on_date" time="1.098" /><testcase classname="tests.test_safety_gate" name="test_align_ref_created_once_and_private" time="0.698" /></testsuite></testsuites>

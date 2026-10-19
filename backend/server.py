@@ -326,6 +326,8 @@ async def startup_log():
     from align_ref import backfill_align_refs
     import asyncio as _asyncio
     app.state.align_ref_backfill = _asyncio.create_task(backfill_align_refs(app.state.db))
+    app.state.align_ref_backfill.add_done_callback(
+        lambda t: t.cancelled() or not t.exception() or logger.error("align_ref backfill failed: %r", t.exception()))
     # Contract sanity: every duration advertised by the joint-artefact
     # share-link dialogs MUST be in `auth.SHARE_TOKEN_WINDOWS`. If not,
     # `create_share_token` silently downgrades to the 7-day default and
