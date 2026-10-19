@@ -78,7 +78,7 @@
         "Email delivery (Resend): recipient address, subject, and links. Never screening answers.",
         "Hosting and database (Emergent): the application and its database run on Emergent's infrastructure.",
         "Research summaries (Perplexity): only category labels, a joint rating, and a professional's ZIP code. Never names, case numbers, or answers.",
-        "Report drafting assistant (Claude Sonnet 5.5 via Emergent): case code, child's first initial, and the professional's draft text. Never safety check-in answers, free text, or safe-contact details. Legal Lens research (Gemini 3.1 Pro or GPT-5.5) receives the professional's research question only. Align Assistant (GPT-5.5 via Emergent), used by professionals for help with the platform: the professional's question and a neutral case summary (case code, child's name, step status, alignment counts). Never a parent's answers."
+        "Report drafting assistant (Claude Sonnet 5.5 via Emergent): case code, child's first initial, and the professional's draft text. Never safety check-in answers, free text, or safe-contact details. Legal Lens research (Gemini 3.1 Pro or GPT-5.5) receives the professional's research question only. Align Assistant (GPT-5.5 via Emergent), used by professionals for help with the platform: the professional's question and a neutral case summary (case code, child's first initial, step status, alignment counts). Never a parent's answers."
       ] },
       { "heading": "Your controls", "bullets": [
         "You can delete your account from your dashboard. Your answers and screening are removed from the case immediately.",

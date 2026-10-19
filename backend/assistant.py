@@ -206,6 +206,9 @@ def build_router(get_current_user) -> APIRouter:
         if not text:
             raise HTTPException(status_code=400, detail="Message is empty")
         brief_ctx = await case_brief(await _own_case(body.case_id, user)) if body.case_id else None
+        if brief_ctx:  # the model receives the child's first initial only, never the full name (owner 2026-10-19; matches the drafting model)
+            cn = (brief_ctx.get("child_name") or "").strip()
+            brief_ctx = {**brief_ctx, "child_name": None, "child_initial": (cn[:1].upper() + ".") if cn else None, "subject_label": None}
         prior = await db.assistant_messages.find({"session_id": body.session_id, "user_id": user["_id"]}, {"_id": 0, "role": 1, "content": 1}).sort("at", -1).to_list(HISTORY_LIMIT)
         transcript = "\n".join(f"{m['role'].upper()}: {m['content']}" for m in reversed(prior))
         system = SYSTEM + ("\n\nCASE BRIEF (neutral, system-generated):\n" + json.dumps(brief_ctx, ensure_ascii=False) if brief_ctx else "\n\nNo case selected — ask the professional to pick a case for case-specific analysis.")

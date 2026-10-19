@@ -81,3 +81,21 @@ def test_model_disclosure_fields_present_in_views():
     for f, needle in (("/app/frontend/src/pages/JointReport.jsx", "jr-ai-disclosure"), ("/app/frontend/src/components/AgreementDocument.jsx", "agreement-ai-disclosure"), ("/app/frontend/src/pages/LegalLensReport.jsx", "Drafted with ${rep.ai_drafts[props.id].model}")):
         assert needle in open(f).read(), f
 
+
+
+def test_assistant_brief_sends_child_initial_only(monkeypatch):
+    # owner 2026-10-19: the Assistant model gets the child's first initial, never the full name
+    import asyncio
+    import assistant as a
+    captured = {}
+    async def fake_brief(doc):
+        return {"case_id": "x", "case_code": "SA-1", "subject_label": "Jordan Smith — Child", "child_name": "Jordan", "steps": []}
+    monkeypatch.setattr(a, "case_brief", fake_brief)
+    async def run():
+        b = await a.case_brief({})
+        cn = (b.get("child_name") or "").strip()
+        captured.update({**b, "child_name": None, "child_initial": (cn[:1].upper() + ".") if cn else None, "subject_label": None})
+    asyncio.run(run())
+    src = open(a.__file__, encoding="utf-8").read()
+    assert '"child_initial": (cn[:1].upper() + ".")' in src and '"child_name": None' in src and '"subject_label": None' in src
+    assert captured["child_initial"] == "J." and captured["child_name"] is None and captured["subject_label"] is None
