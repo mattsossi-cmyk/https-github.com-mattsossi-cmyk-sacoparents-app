@@ -10,6 +10,7 @@ import JointNew from "@/pages/JointNew";
 import Join from "@/pages/Join";
 import JointAssessment from "@/pages/JointAssessment";
 import SafetyScreening from "@/pages/SafetyScreening";
+import CheckInAlias from "@/pages/CheckInAlias";
 import SafetyHub from "@/pages/SafetyHub";
 import PrivacyNotice from "@/pages/PrivacyNotice";
 import ProfessionalNotice from "@/pages/ProfessionalNotice";
@@ -94,6 +95,7 @@ function AppRoutes() {
             <Route path="/privacy-notice" element={<Protected><PrivacyNotice /></Protected>} />
             <Route path="/professional-notice" element={<Protected><ProfessionalNotice /></Protected>} />
             <Route path="/start-with-safety" element={<Protected><StartWithSafety /></Protected>} />
+            <Route path="/check-in" element={<Protected><CheckInAlias /></Protected>} />
             <Route path="/joint/:id/communication-readiness" element={<Protected><CommunicationReadiness /></Protected>} />
             <Route path="/joint/:id/safety-screening" element={<Protected><SafetyScreening /></Protected>} />
             <Route path="/joint/:id/safety-screening/:role" element={<Protected><SafetyResponses /></Protected>} />

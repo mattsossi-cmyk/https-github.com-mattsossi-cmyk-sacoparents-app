@@ -166,3 +166,14 @@ def test_review_fixes_no_tier_in_receipt_scan_or_parent_overview():
         assert k not in mine["roles"]["a"]
     assert "followed / showed up" not in blob and "tier 3" not in blob and "\"red\"" not in blob
     assert "tier" in pro.get(f"{API}/joint/reports/{rid}/safety-screening").json()["roles"]["a"]
+
+
+def test_check_in_alias_resolves_by_session_and_shared_code():
+    pro, pa, pb, rid = _case()
+    code = pro.get(f"{API}/joint/reports/{rid}").json().get("case_code")
+    r = pa.get(f"{API}/me/check-in"); assert r.status_code == 200 and r.json()["report_id"] == rid and r.json()["path"] == f"/joint/{rid}/safety-screening"
+    r = pa.get(f"{API}/me/check-in", params={"case": code.lower()}); assert r.status_code == 200 and r.json()["report_id"] == rid
+    assert pb.get(f"{API}/me/check-in", params={"case": code}).json()["report_id"] == rid
+    assert pa.get(f"{API}/me/check-in", params={"case": "SA-000000"}).status_code == 404
+    assert pro.get(f"{API}/me/check-in").status_code == 403
+    body = pa.get(f"{API}/me/check-in").json(); assert not any(k in body for k in ("tier", "app_tier", "triggered_rules"))

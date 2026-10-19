@@ -460,6 +460,22 @@ def build_router(db, get_current_user, get_joint_report_doc, report_role, log_ac
         rid, status = pending or statuses[0]
         return {"applies": True, "has_case": True, "status": status, "report_id": rid, "text": SAFETY_BANNER_TEXT, **notice}
 
+    @r.get("/me/check-in")
+    async def my_check_in(case: str | None = None, user=Depends(get_current_user)):
+        """Stable alias for the parent app: resolves the signed-in parent's case (optionally by shared SA code) to the check-in route id. Status only."""
+        if user.get("role") != "parent":
+            raise HTTPException(status_code=403, detail="Parents only")
+        q = {"$or": [{"participants.a.user_id": user["_id"]}, {"participants.b.user_id": user["_id"]}], "archived": {"$ne": True}}
+        if case:
+            q["case_code"] = case.strip().upper()
+        docs = await db.joint_reports.find(q, {"id": 1, "case_code": 1, "participants": 1, "safety_screenings": 1, "safety_declined": 1, "created_at": 1}).sort("created_at", -1).to_list(50)
+        if not docs:
+            raise HTTPException(status_code=404, detail="No case found for this account" + (" and code" if case else ""))
+        role_of = lambda d: "a" if (d["participants"].get("a") or {}).get("user_id") == user["_id"] else "b"  # noqa: E731
+        doc = next((d for d in docs if entry_status(d, role_of(d)) == "not_started"), docs[0])
+        return {"report_id": doc["id"], "case_code": doc.get("case_code"), "path": f"/joint/{doc['id']}/safety-screening"}
+
+
     @r.post("/me/safety-entry/ack-notice")
     async def ack_step_notice(user=Depends(get_current_user)):
         """Parent has seen the step screen with the current Professional Access Notice. Status only; nothing else changes."""

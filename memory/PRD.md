@@ -1177,3 +1177,7 @@ Owner rulings: 1 replace A/B/C with 8-domain set; 2 professional-decides (no aut
 - 1a: receipt() no longer prints a tier in court/co-parent output; export scan now blocks 'Tier 1/2/3 —' and 'Tier not available'.
 - 2: parent branch of screening_overview strips app_tier/app_tier_label/triggered_rules/tier/tier_label; public FV spec strips per-question weight/tier3.
 - Tests: new test_review_fixes_no_tier_in_receipt_scan_or_parent_overview (iter111); iter87 (2 asserts) and iter88 (PDF needle) flipped from 'Tier 3 present' to 'Tier absent'. Safety suites green.
+
+## 2026-10-19 — Stable check-in alias (PREVIEW ONLY; owner asked). A deployment was initiated from the platform UI by the owner (system notif), not by the agent.
+- GET /api/me/check-in[?case=SA-…] (parents only; resolves signed-in parent's case, optional shared code, to {report_id, case_code, path}); frontend /check-in → redirects to /joint/<id>/safety-screening; friendly 404 message otherwise.
+- Test: test_iter111::test_check_in_alias_resolves_by_session_and_shared_code. Browser-verified both forms + bad code.
