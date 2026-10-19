@@ -1171,3 +1171,4 @@ Owner rulings: 1 replace A/B/C with 8-domain set; 2 professional-decides (no aut
 - Full crisis box on check-in = FV_RESOURCES (7 entries, hours labelled, FJC after 24-hour lines, 911 last). Hotline component shows hours.
 - Mandatory-reporting sentence removed from intro → fv_screening.MANDATORY_REPORTING_NOTE (restore by appending to PRIVACY_NOTE).
 - Tests edited: test_iter110 (red/amber params, new test_removed_parts_never_served_and_never_score), test_iter111 (stalk instead of strangle; 'Followed' signal), test_iter112 (stalk). Safety suites 62 passed / 7 skipped.
+- 20:1x CDT: owner 'restore' → mandatory-reporting sentence back in PRIVACY_NOTE; owner 'deploy' → deployment dispatched.

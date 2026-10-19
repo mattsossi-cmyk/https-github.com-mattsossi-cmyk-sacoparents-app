@@ -43,7 +43,7 @@ def test_removed_parts_never_served_and_never_score():
     assert [p for p in dict.fromkeys(i["part"] for i in fv.ITEMS)] == ["Before you start", "1 · Immediate safety", "2 · Physical violence", "3 · Coercive control and monitoring",
                                                                         "4 · Sexual violence", "5 · Children", "6 · Context", "Optional"]
     assert _t({"strangle": "In the last month", "threat_kill": "In the last month", "weapon_used": "In the last month", "weapon_access": "Yes"})["app_tier"] == "green"
-    assert "By law" not in fv.SPEC["intro"] and fv.SPEC["source"] is None and "By law" in fv.MANDATORY_REPORTING_NOTE
+    assert fv.MANDATORY_REPORTING_NOTE in fv.SPEC["intro"] and fv.SPEC["source"] is None  # owner restored the reporting sentence 2026-10-18
 
 
 @pytest.mark.parametrize("over,rule", [
