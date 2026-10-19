@@ -9219,3 +9219,16 @@ dashboard for sharing SELECTED completed reports with any professional.
   "Updates from Align →" link on /admin. Tests: tests/test_webhook_off.py 3/3. Screens checked desktop + 390px.
 - New secret: waiting for the user to add it (Keeper → both Secrets tabs, preview via backend/.env in the code editor) and say
   "secret set"; then check presence by length only, confirm webhook_on, re-run Safety Gate suites.
+
+### 2026-10-19 — Fresh ALIGN_WEBHOOK_SECRET generated, webhook back ON, full Safety Gate re-run (PREVIEW ONLY, no deploy)
+- At the user's request ("generate it"): a 64-hex random value was written into preview backend/.env only, never printed.
+  Scan: 0 copies outside backend/.env (/app, /var/log, /tmp), 0 git commits. backend/.env is untracked by git.
+  The user must copy it from the code editor into Keeper and Align's Secrets tab (and this app's Secrets tab before any future deploy).
+- Bug fixed: case_safety.apply_update auto_red lock. From restricted/auto_red, only set_by=professional or an auto_red re-send that
+  stays restricted can write. auto_red + standard/structured is now ignored ("locked"); before this fix it lifted the restriction.
+- Outdated assertions updated in tests/test_align_status_external.py (webhook_on field, webhook_off reason).
+- Tests: existing suites 60 passed / 1 expected skip (test_webhook_off). Testing agent iteration_144: 20/20 new live tests
+  (tests/test_safety_gate_iter144_full.py) with two parents linked through the real professional-case + manual-code flow,
+  plus frontend 100% (identical neutral banner for both parents, admin panel ON, Check this side OK, paste guard, 390px no overflow).
+- Still pending: ALIGN_PING_URL (Align side not ready), a real cross-app test once Align has the secret, and native privacy-screen checks.
+- Optional ideas from testing: return applied/ignored in the webhook response; drop the legacy safety_assessment router include.
