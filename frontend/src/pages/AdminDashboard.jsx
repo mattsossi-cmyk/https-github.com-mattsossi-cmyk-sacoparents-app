@@ -23,6 +23,8 @@ import {
 import { logError } from "../lib/logger";
 import { toast } from "sonner";
 import ReleaseCheckTile from "../components/ReleaseCheckTile";
+import { LinkHealthDot } from "../components/caseSettings/LinkHealthDot";
+import { useAlignLinkHealth } from "../lib/useAlignLinkHealth";
 import WeeklyNoteStatsTile from "../components/WeeklyNoteStatsTile";
 
 const FUNNEL_STEPS = [
@@ -409,6 +411,7 @@ function ReminderAnalyticsTile({ data }) {
 
 export default function AdminDashboard() {
   const { user, loading } = useAuth();
+  const alignOk = useAlignLinkHealth(!!user);
   const [overview, setOverview] = useState(null);
   const [recentUsers, setRecentUsers] = useState([]);
   const [signups, setSignups] = useState([]);
@@ -510,6 +513,14 @@ export default function AdminDashboard() {
             </div>
             <CheckinPreviewButton />
           </div>
+          <Link
+            to="/admin/audit-log"
+            data-testid="admin-align-updates-link"
+            className="mt-4 inline-flex min-h-6 items-center gap-2 rounded-full border border-[#3D1A78]/25 bg-white px-3 py-1.5 text-xs font-semibold text-[#3D1A78] transition-colors hover:bg-[#F5EFFB]"
+          >
+            <LinkHealthDot ok={alignOk} testid="admin-align-updates-dot" />
+            Updates from Align →
+          </Link>
         </div>
 
         {/* Top stats */}

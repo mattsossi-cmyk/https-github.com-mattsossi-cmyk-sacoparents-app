@@ -225,3 +225,18 @@ async def align_status(current: UserPublic = Depends(require_admin), db=Depends(
         "webhook_on": bool(os.environ.get("ALIGN_WEBHOOK_SECRET")),
     }, headers=NO_STORE)
 
+
+@router.get("/admin/safety-audit-log/link-health")
+async def link_health(current: UserPublic = Depends(require_admin), db=Depends(get_db)):
+    """Green/amber for the admin menu dot. A yes/no only; not logged because it loads with every admin page."""
+    now = datetime.now(timezone.utc)
+    week = (now - timedelta(days=cs.SILENCE_DAYS)).isoformat()
+    day = (now - timedelta(days=1)).isoformat()
+    webhook_on = bool(os.environ.get("ALIGN_WEBHOOK_SECRET"))
+    heard = bool(
+        await db[cs.AUDIT].find_one({"action": {"$in": APPLIED_ACTIONS}, "at": {"$gte": week}}, {"_id": 1})
+        or await db[cs.TESTS].find_one({"received_at": {"$gte": week}}, {"_id": 1})
+    )
+    refused = bool(await db[cs.REJECTS].find_one({"at": {"$gte": day}}, {"_id": 1}))
+    return JSONResponse({"ok": webhook_on and heard and not refused}, headers=NO_STORE)
+

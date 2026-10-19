@@ -7,6 +7,7 @@ import AppShell from "../components/AppShell";
 import { AdminGate } from "../components/AdminGate";
 import { AlignStatusPanel } from "../components/caseSettings/AlignStatusPanel";
 import { DailyCountsTable } from "../components/caseSettings/DailyCountsTable";
+import { SecretPasteGuard } from "../components/caseSettings/SecretPasteGuard";
 import { api } from "../lib/api";
 
 // Admin-only CSV download of the case-settings audit log. The server logs every export.
@@ -39,6 +40,7 @@ export default function AdminAuditLog() {
           <div className="text-[0.6875rem] uppercase tracking-[0.22em] font-bold text-[#3D1A78] inline-flex items-center gap-2">
             <FileLock2 size={12} /> Admin only
           </div>
+          <SecretPasteGuard testid="secret-paste-guard-top" />
           <h1 className="font-serif text-4xl text-[#1A1330]">Case settings audit log</h1>
           <p className="text-sm text-[#4B4567]">
             Every read and change of a case&apos;s settings (who, when, what). Parents never see this log. Each export is itself recorded.

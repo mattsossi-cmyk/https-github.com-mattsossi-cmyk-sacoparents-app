@@ -5,6 +5,8 @@ import { LogOut, Facebook, ShieldAlert, Menu, X, Settings, LogIn } from "lucide-
 
 import GuestBanner from "./GuestBanner";
 import AppFooter from "./AppFooter";
+import { LinkHealthDot } from "./caseSettings/LinkHealthDot";
+import { useAlignLinkHealth } from "../lib/useAlignLinkHealth";
 
 const FB_URL = process.env.REACT_APP_FACEBOOK_URL;
 
@@ -80,6 +82,7 @@ export default function AppShell({ children }) {
   const linksForUser = isAdmin
     ? [...navLinks, { to: "/admin", label: "Admin" }]
     : navLinks;
+  const alignOk = useAlignLinkHealth(!!isAdmin);
 
   return (
     <div className="min-h-screen gentle-bg">
@@ -118,7 +121,10 @@ export default function AppShell({ children }) {
                       : "text-[#4B4567] hover:text-[#1A1330] hover:bg-[#EFE9F9]"
                   }`}
                 >
-                  {l.label}
+                  <span className="inline-flex items-center gap-1.5">
+                    {l.label}
+                    {l.to === "/admin" && <LinkHealthDot ok={alignOk} testid="nav-admin-align-dot" />}
+                  </span>
                 </Link>
               );
             })}
@@ -225,7 +231,10 @@ export default function AppShell({ children }) {
                         : "text-[#1A1330] hover:bg-[#EFE9F9]"
                     }`}
                   >
-                    {l.label}
+                    <span className="inline-flex items-center gap-2">
+                      {l.label}
+                      {l.to === "/admin" && <LinkHealthDot ok={alignOk} testid="mobile-nav-admin-align-dot" />}
+                    </span>
                   </Link>
                 );
               })}

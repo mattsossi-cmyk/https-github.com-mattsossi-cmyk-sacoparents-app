@@ -2,6 +2,8 @@ import React from "react";
 import { Copy } from "lucide-react";
 import { toast } from "sonner";
 
+import { PASTE_GUARD_TEXT, SecretPasteGuard } from "./SecretPasteGuard";
+
 const WEBHOOK = `${process.env.REACT_APP_BACKEND_URL}/api/internal/safety-status`;
 
 const RULES = [
@@ -12,7 +14,7 @@ const RULES = [
   ["Timestamp", "\"timestamp\" in the JSON body: Unix seconds or milliseconds, or an ISO date with a timezone, within 5 minutes"],
 ];
 
-const COPY_TEXT = `How Align must sign updates to sacoparentsapp\n${RULES.map(([k, v]) => `- ${k}: ${v}`).join("\n")}\n- Enter the secret in each app's Secrets tab; never paste it into chat.`;
+const COPY_TEXT = `How Align must sign updates to sacoparentsapp\n${RULES.map(([k, v]) => `- ${k}: ${v}`).join("\n")}\n- ${PASTE_GUARD_TEXT}`;
 
 // Admin-only setup help for Align's builder. Shows names and formats, never the secret's value.
 export function SignatureHelp({ badSignature, oldTimestamp }) {
@@ -46,6 +48,7 @@ export function SignatureHelp({ badSignature, oldTimestamp }) {
             </div>
           ))}
         </dl>
+        <SecretPasteGuard className="mt-3" testid="secret-paste-guard-signing" />
         <button type="button" onClick={copy} data-testid="align-signature-copy" className="mt-3 inline-flex min-h-6 items-center gap-1.5 rounded-full border border-[#D9D3EA] bg-white px-3 py-1.5 text-xs font-bold text-[#3D1A78] transition-colors hover:bg-[#F8F7FC]">
           <Copy size={13} aria-hidden="true" /> Copy for Align&apos;s builder
         </button>

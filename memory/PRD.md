@@ -9210,3 +9210,12 @@ dashboard for sharing SELECTED completed reports with any professional.
   align-ping → configured:false.
 - Tests: signing suites skip when the secret is unset; new tests/test_webhook_off.py (2/2 pass).
 - User must remove it from the Emergent Secrets tab themselves if it was ever added there (agent can't edit Secrets).
+
+### 2026-10-19 — Secret paste guard + Align link health dot (PREVIEW ONLY; webhook still OFF, secret unset)
+- `SecretPasteGuard.jsx` (PASTE_GUARD_TEXT) at top of /admin/audit-log and inside "How Align must sign updates" + its copied text.
+- `GET /api/admin/safety-audit-log/link-health` (admin, no-store, not audit-logged): ok = webhook on AND signed update/test in
+  last 7 days AND no refusals in last 24 h. `lib/useAlignLinkHealth.js` (60 s shared cache) + `LinkHealthDot.jsx` (green/amber,
+  sr-only + title "Align link OK" / "Align link needs attention") on the AppShell "Admin" nav item (desktop + mobile) and a new
+  "Updates from Align →" link on /admin. Tests: tests/test_webhook_off.py 3/3. Screens checked desktop + 390px.
+- New secret: waiting for the user to add it (Keeper → both Secrets tabs, preview via backend/.env in the code editor) and say
+  "secret set"; then check presence by length only, confirm webhook_on, re-run Safety Gate suites.
