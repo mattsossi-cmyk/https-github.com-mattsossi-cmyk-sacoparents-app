@@ -1,37 +1,18 @@
 import React from "react";
-import { Check, ClipboardCheck, ExternalLink, X } from "lucide-react";
+import { ClipboardCheck, ExternalLink } from "lucide-react";
 
 import { useCaseSettings } from "../../lib/useCaseSettings";
 import { useCheckinLink } from "../../lib/useCheckinLink";
+import { useCheckinReminder } from "../../lib/useCheckinReminder";
 import { useCheckinThanks } from "../../lib/useCheckinThanks";
-
-function ThanksNote({ testid, onClose }) {
-  return (
-    <div
-      role="status"
-      data-testid={`${testid}-thanks`}
-      className="mt-4 flex items-center gap-2.5 rounded-xl border border-emerald-200 bg-emerald-50 pl-3.5 pr-1 py-1 text-sm text-emerald-900 animate-in fade-in duration-500"
-    >
-      <Check size={16} className="shrink-0" aria-hidden="true" />
-      <p className="flex-1 py-2">Thanks, your check-in is done. There&apos;s nothing else you need to do for it.</p>
-      <button
-        type="button"
-        onClick={onClose}
-        data-testid={`${testid}-thanks-close`}
-        aria-label="Close message"
-        className="shrink-0 w-11 h-11 grid place-items-center rounded-full text-emerald-800 transition-colors hover:bg-emerald-100 focus-visible:outline focus-visible:outline-2 focus-visible:outline-emerald-700"
-      >
-        <X size={16} aria-hidden="true" />
-      </button>
-    </div>
-  );
-}
+import { ReminderNote, ThanksNote } from "./FamilyCheckinNotes";
 
 // Same words for both parents. The check-in itself happens on the Align site; this app never asks or saves anything.
 export function FamilyCheckinCard({ alignUrl, testid = "family-checkin", stacked = false }) {
   const settings = useCaseSettings();
   const done = settings?.setup_complete === true;
   const [thanks, closeThanks] = useCheckinThanks(done);
+  const [reminder, closeReminder] = useCheckinReminder(!!settings && !done);
   const href = useCheckinLink(alignUrl);
   return (
     <section data-testid={testid} className="rounded-2xl border border-[#e0d5ed] bg-white p-4 sm:p-5 shadow-sm">
@@ -68,6 +49,7 @@ export function FamilyCheckinCard({ alignUrl, testid = "family-checkin", stacked
         </a>
       </div>
       {thanks && <ThanksNote testid={testid} onClose={closeThanks} />}
+      {reminder && <ReminderNote testid={testid} onClose={closeReminder} />}
     </section>
   );
 }

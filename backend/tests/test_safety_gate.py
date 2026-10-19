@@ -540,3 +540,29 @@ def test_checkin_link_case_number():
     assert a.json() == b.json() == {"case_id": case_id}
     assert "no-store" in a.headers.get("cache-control", "")
     assert httpx.get(url, timeout=20).status_code == 401
+
+
+# Reminder: a week after the case was linked, still not done; closing hides it for a week; never once done.
+def test_checkin_reminder_week_rule():
+    from datetime import datetime as _dt, timedelta as _td, timezone as _tz
+    case_id, ha, hb = _case()
+    url = f"{API}/family-checkin/reminder"
+    show = lambda h: httpx.get(url, headers=h, timeout=20).json()["show"]  # noqa: E731
+
+    def age_case(days):
+        when = _dt.now(_tz.utc) - _td(days=days)
+        db.joint_alignment_cases.update_one({"case_id": case_id}, {"$set": {"created_at": when, "parents.$[].accepted_at": when}})
+
+    age_case(3)
+    assert show(ha) is False and show(hb) is False
+    age_case(8)
+    assert show(ha) is True and show(hb) is True
+    assert httpx.post(f"{url}/dismiss", headers=ha, timeout=20).json() == {"ok": True}
+    assert show(ha) is False and show(hb) is True
+    uid = httpx.get(f"{API}/auth/me", headers=ha, timeout=20).json()["user_id"]
+    db.family_checkin_reminder.update_one({"user_id": uid}, {"$set": {"dismissed_at": (_dt.now(_tz.utc) - _td(days=8)).isoformat()}})
+    assert show(ha) is True
+    assert _send(_body(case_id, 1, set_by="default", offered=True)).status_code == 200
+    assert show(ha) is False and show(hb) is False
+    assert "no-store" in httpx.get(url, headers=ha, timeout=20).headers.get("cache-control", "")
+    assert httpx.get(url, timeout=20).status_code == 401

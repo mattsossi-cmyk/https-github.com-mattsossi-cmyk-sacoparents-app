@@ -37,6 +37,8 @@ MAX_AGE_SECONDS = 300
 SIGNATURE_HEADER = "X-Align-Signature"
 NO_STORE = {"Cache-Control": "no-store"}
 THANKS = "family_checkin_thanks"
+REMINDER = "family_checkin_reminder"
+WEEK = timedelta(days=7)
 SUPPORT_EMAILS = {e.strip().lower() for e in os.environ["SUPPORT_EMAILS"].split(",") if e.strip()}
 
 
@@ -146,6 +148,27 @@ async def case_settings(case_id: Optional[str] = None, current: UserPublic = Dep
 async def checkin_link(current: UserPublic = Depends(get_current_user), db=Depends(get_db)):
     ids = await cs.case_ids_for(db, current.user_id)
     return JSONResponse({"case_id": ids[0] if len(ids) == 1 else None}, headers=NO_STORE)
+
+
+# Gentle in-card reminder: a week after the case was linked and still not done; a close hides it for another week.
+@router.get("/family-checkin/reminder")
+async def checkin_reminder(current: UserPublic = Depends(get_current_user), db=Depends(get_db)):
+    now = datetime.now(timezone.utc)
+    linked = await cs.linked_at_for(db, current.user_id)
+    show = linked is not None and now - linked >= WEEK
+    if show:
+        hid = await db[REMINDER].find_one({"user_id": current.user_id}, {"_id": 0, "dismissed_at": 1})
+        show = not hid or now - cs._aware(hid["dismissed_at"]) >= WEEK
+    if show:
+        show = not await cs.setup_complete_for(db, current.user_id)
+    return JSONResponse({"show": show}, headers=NO_STORE)
+
+
+@router.post("/family-checkin/reminder/dismiss")
+async def checkin_reminder_dismiss(current: UserPublic = Depends(get_current_user), db=Depends(get_db)):
+    await db[REMINDER].update_one({"user_id": current.user_id},
+                                  {"$set": {"user_id": current.user_id, "dismissed_at": cs.now_iso()}}, upsert=True)
+    return {"ok": True}
 
 
 # One-time "Thanks, your check-in is done" note, per parent account. Only a seen time is stored.

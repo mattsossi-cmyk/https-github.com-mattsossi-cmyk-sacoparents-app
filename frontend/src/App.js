@@ -592,11 +592,9 @@ function AppRoutes() {
         <Route
           path="/admin"
           element={
-            <DomainGuard side="align">
-              <ProtectedRoute>
-                <AdminDashboard />
-              </ProtectedRoute>
-            </DomainGuard>
+            <ProtectedRoute>
+              <AdminDashboard />
+            </ProtectedRoute>
           }
         />
         <Route
