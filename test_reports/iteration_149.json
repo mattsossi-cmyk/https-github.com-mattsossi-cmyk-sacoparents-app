@@ -1,0 +1,47 @@
+{
+  "summary": "Tested the Safety Gate correction (auto_red removed, only a named professional sets limits, admin auto-restricted count), the restored legacy Safety Assessment, the hidden Safety Gate UI, and the case_id Family check-in link. Backend: the main agent's 5 in-process suites pass (38 passed). A new public-URL suite also passes (11/11). Frontend: everything requested works except one item. A new parent who taps Self Journey or Court Ordered on the portal landing is NOT shown the legacy SafetyScreen modal. They go straight in.",
+  "backend_issues": {
+    "critical": [],
+    "minor": [
+      {"endpoint": "tests/test_iter144_safety_gate_on_invites.py", "issue": "Creates iter144_*@example.com users and never deletes them. About 98 had piled up; I deleted them along with my own test_iter149 users."}
+    ]
+  },
+  "frontend_issues": {
+    "ui_bugs": [
+      {"component": "JourneyShell door landing (door-self / door-court)", "issue": "A brand-new parent with no safetyAck taps Self Journey or Court Ordered and enters directly. modal-safety-screen never opens. JourneyShell.openDoor() just calls setView and skips SacoparentsPortal.requestDoorEntry. git history shows openDoor was the same before 2026-10-16. Back then the only SafetyScreen entry inside Self Journey was the 'Conflict Readiness' module (moduleCta -> onOpenSafety -> setSafetyOpen). That module was removed with A/B/C in commit 14e6a00 and not restored. Today the modal only opens from IntroChatBot, GuideFollowupModal and onStartAssessment('court').", "selector": "[data-testid=door-self], [data-testid=door-court], [data-testid=modal-safety-screen]", "priority": "HIGH"}
+    ],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  "passed_checks": [
+    "GET /api/admin/safety-audit-log/auto-restricted: admin gets exactly {count:1} with no-store; a parent gets 403; no login gets 401/403",
+    "POST /api/internal/safety-status returns 503 {detail:'Unavailable.'} for empty, bad-JSON and auto_red bodies (secret confirmed unset; I did not print or set it)",
+    "New linked case (2 fresh parents): /api/case-settings gives free_form_messaging true and banner null for both; /api/family-checkin/link gives the same SA- case_id to both, with no align_ref and no-store; unlinked parent gets {case_id:null}; no login gets 401",
+    "Legacy assessment: questions 200 (28+8), incomplete submit 400, submit 200 with result.level int, /me returns it, PDF starts with %PDF, one-pager and court-report 200 application/pdf, another user's PDF 403/404",
+    "Invite gate: no screen -> safety_screen_required; level 1/2 -> blocked; level 3/4 -> clear; POST /invites/coparent 403 with no screen",
+    "UI: linkdemo A and B, Self and Court check-in href = https://sacoparentsalign.com/check-in?case=SA-TLINKDEF0, target=_blank, status 'Not finished yet'; fresh unlinked parent href = https://sacoparentsalign.com; no safety-screening or align_ref hrefs",
+    "UI: /case-settings and /plan-options redirect to '/'; no case-settings banner and no 'View options' card on the portal",
+    "UI: /safety shows safety-take-assessment-cta; /safety-assessment intro -> 28 + 8 questions -> results 'Assisted Problem-Solving' (Level 3) -> PDF download works",
+    "UI admin /admin/audit-log: 'Cases restricted automatically: 1'; Align status panel (webhook off, auto_red_refused and no_professional_name reasons) and daily counts table render",
+    "Regression: nav-get-help goes to /help; /situation has 'Get Help' and no 'safety' wording; A/B/C chats are not visible; no horizontal overflow at 390px on /, Self Journey, /safety-assessment and /admin/audit-log"
+  ],
+  "test_report_links": ["/app/backend/tests/test_iter149_safety_gate_correction_public.py", "/app/test_reports/pytest/iter149.xml"],
+  "action_items": [
+    "HIGH: Restore the SafetyScreen gate before entering a path. Either route JourneyShell door-self/door-court (and door-switch) through requestDoorEntry when !safetyAck (pass an onRequestDoor prop that opens SafetyScreen and then calls openDoor on clear/continue), or restore the pre-14e6a00 'Conflict Readiness' entry (onOpenSafety). Confirm with the user which one matches 'exactly as before'.",
+    "Minor: make test_iter144_safety_gate_on_invites.py delete the users it creates"
+  ],
+  "critical_code_review_comments": [
+    "case_safety.count_auto_restricted counts only safety_mode=='restricted' with set_by=='auto_red'. Any old auto_red record with mode 'structured' is limited but not counted. Check that this is intended.",
+    "count_auto_restricted decrypts every case_safety doc on each admin page load. Fine at today's size, but O(n) Fernet work.",
+    "handle_signed refuses auto_red and unnamed-professional updates before the replay record is stored. Align retrying the same body is logged as a refusal again rather than as a 'replay'. Acceptable.",
+    "useCheckinLink CODE_RE only accepts ^SA-[A-Z0-9]{4,32}$. Cases with other codes (e.g. PAIR-DEMO-01) silently fall back to the main Align site.",
+    "Portal safetyAck lives in localStorage (SAFETY_ACK_KEY) and is synced from the server. Clearing storage or switching device may re-prompt or drop the flag, depending on the server sync."
+  ],
+  "updated_files": ["/app/backend/tests/test_iter149_safety_gate_correction_public.py"],
+  "success_rate": {"backend": "100% (38 in-process + 11 public)", "frontend": "~92% (SafetyScreen gate on the door buttons missing)"},
+  "test_credentials": "Admin mattsossi@bsossi.com / AdminPass123!; test_linkdemo_a and test_linkdemo_b @example.com / Str0ng!Pass99 (case SA-TLINKDEF0)",
+  "seed_data_creation": "Created test_iter149* users and SA-T149* cases; all deleted. Also deleted leftover iter144_* users and their safety_assessments.",
+  "retest_needed": true,
+  "should_main_agent_self_test": true,
+  "context_for_next_testing_agent": "Webhook secret is unset in preview (503 expected); do not set it. Run tests/test_iter149_safety_gate_correction_public.py for public regression. Legacy assessment has 28 section-1 and 8 section-2 questions; YNU button testids are '{qid}-no'; use s2-skip-depth-button to jump to results. Portal landing door buttons are door-self / door-court in JourneyShell. The SafetyScreen modal is wired via SacoparentsPortal.requestDoorEntry, which the landing buttons do not call."
+}

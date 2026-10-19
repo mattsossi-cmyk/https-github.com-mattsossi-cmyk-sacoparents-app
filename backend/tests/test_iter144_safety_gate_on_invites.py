@@ -38,6 +38,12 @@ def client():
     app.state.db = AsyncIOMotorClient(MONGO_URL)[DB_NAME]
     with TestClient(app) as c:
         yield c
+    sync = SyncClient(MONGO_URL)
+    users = sync[DB_NAME]["users"]
+    ids = [u["user_id"] for u in users.find({"email": {"$regex": "^iter144_"}}, {"user_id": 1})]
+    sync[DB_NAME]["safety_assessments"].delete_many({"user_id": {"$in": ids}})
+    users.delete_many({"user_id": {"$in": ids}})
+    sync.close()
 
 
 def _register(client: TestClient) -> tuple[str, str, str]:

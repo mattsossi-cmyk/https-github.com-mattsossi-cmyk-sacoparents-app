@@ -9334,3 +9334,19 @@ dashboard for sharing SELECTED completed reports with any professional.
   (never printed; 0 copies elsewhere, 0 git commits). Webhook ON in preview, self-test OK (201 ms), unsigned POST 401.
   96 tests passed across Safety Gate / check-in / align_ref suites. User must copy it into Passwords + Align's Secrets tab
   (replaces the earlier value). Two-app test still NOT run (needs Align's test address + user "go").
+
+## 2026-10-19 — Safety Gate correction + check-in link (PREVIEW ONLY, nothing deployed, no secrets touched)
+- auto_red removed: Align `set_by=auto_red` refused + logged (`auto_red_refused`); unnamed professional refused (`no_professional_name`).
+  Only a signed update with `set_by=professional` + name sets/lifts a limit; audit `write` row = actor_type `professional`, actor_id = name.
+  Non-professional updates keep existing limits and change only the check-in status. New cases default `standard`.
+  Older auto_red restrictions stay until a professional changes them. Webhook still OFF (ALIGN_WEBHOOK_SECRET unset).
+- Admin-only `GET /api/admin/safety-audit-log/auto-restricted` -> `{count}`; card on /admin/audit-log "Cases restricted automatically: N". Preview: 1.
+- Legacy Safety Assessment restored to its pre-10-16 behavior (routes, /safety-assessment, /safety CTA, portal SafetyScreen, grey-rock from flag,
+  advocate review log, invite gating, comparison blocking, PDFs), keeping later a11y fixes.
+  Kept on purpose: neutral picker/comparison wording, Get help page/nav, A/B/C hidden (so Module C "Conflict Readiness" entry stays hidden).
+- Safety Gate hidden from families: /case-settings + /plan-options -> '/', no CaseHomeNotices / View options / CaseSettingsBanner. Enforcement unchanged.
+- Family check-in link: `https://sacoparentsalign.com/check-in?case={case_id}` (shared SA- code, same for both parents; first unfinished case if several).
+  Unlinked -> https://sacoparentsalign.com. align_ref no longer used in the link (data kept). `.online` Align comments fixed in code.
+  Align confirmed: `.online` is not Align. Bridge field for the SA code is `case_id` (UUID is `report_id`).
+- Tests: tests/test_safety_gate_correction.py (in-process, no secret), iter149 public suite; test_safety_gate.py updated (skips while webhook off).
+- Next (user): step 4 — Professional Access Notice and "I'd rather not answer" option.
