@@ -1,4 +1,4 @@
-# Iter146: Family check-in align_ref link (/api/family-checkin/link) + one-time thanks note (/api/family-checkin/thanks[/seen]).
+# Iter146: Family check-in case-code link (/api/family-checkin/link) + one-time thanks note (/api/family-checkin/thanks[/seen]).
 import json
 import time
 
@@ -56,15 +56,15 @@ class TestLink:
 
     def test_unlinked_null(self):
         r = ST["lone"].get(f"{BASE_URL}/api/family-checkin/link")
-        assert r.status_code == 200 and r.json() == {"align_ref": None}
+        assert r.status_code == 200 and r.json() == {"case_id": None}
         assert "no-store" in r.headers.get("cache-control", "")
 
-    def test_single_case_each_parent_own_ref(self):
-        refs = [s.get(f"{BASE_URL}/api/family-checkin/link").json()["align_ref"] for s in (ST["a"], ST["b"])]
-        assert all(refs) and refs[0] != refs[1]
+    def test_single_case_both_parents_same_code(self):
+        codes = [s.get(f"{BASE_URL}/api/family-checkin/link").json()["case_id"] for s in (ST["a"], ST["b"])]
+        assert codes == [ST["c1"], ST["c1"]]
 
-    def test_multi_case_still_gets_ref(self):
-        assert ST["m"].get(f"{BASE_URL}/api/family-checkin/link").json()["align_ref"]
+    def test_multi_case_gets_one_of_its_codes(self):
+        assert ST["m"].get(f"{BASE_URL}/api/family-checkin/link").json()["case_id"] in (ST["c2"], ST["c3"])
 
 
 class TestThanks:

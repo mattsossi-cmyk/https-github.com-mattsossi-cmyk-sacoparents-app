@@ -8,8 +8,6 @@ Covers:
 - POST /api/safety-assessment/{id}/email rejects guest sessions with 400
 - POST /api/safety-assessment/problem-solving + GET /problem-solving/me
 """
-import pytest
-pytest.skip("In-app safety screen turned off (2026-10); screening now happens on SACOparentsAlign.", allow_module_level=True)
 import os
 import sys
 import uuid
@@ -298,7 +296,3 @@ class TestProblemSolvingWorksheet:
         rows = listing.json()
         assert any(r_["worksheet_id"] == doc["worksheet_id"] for r_ in rows)
         assert len(rows) <= 20
-
-
-import pytest as _pytest  # noqa: E402
-pytestmark = _pytest.mark.skip(reason="In-app safety assessment routes are removed (404). Stored answers kept, hidden.")

@@ -202,7 +202,3 @@ def test_no_child_experience_no_finding_4():
     )
     lens = r.json()["result"]["lens"]
     assert "child_experience" not in lens["findings"]
-
-
-import pytest as _pytest  # noqa: E402
-pytestmark = _pytest.mark.skip(reason="In-app safety assessment routes are removed (404). Stored answers kept, hidden.")

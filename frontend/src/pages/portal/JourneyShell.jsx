@@ -49,7 +49,7 @@ import {
  *
  *   Landing: Court Ordered | Self Journey
  *   Court Ordered: Safety First → A/B/C → Professional report invite
- *                  (opens sacoparentsalign.online in a new tab)
+ *                  (opens sacoparentsalign.com in a new tab)
  *   Self Journey:  Safety First → A/B/C → Co-parenting journey →
  *                  Self assessment → Alignment reports → Foundation
  *                  statements → Communication Builder

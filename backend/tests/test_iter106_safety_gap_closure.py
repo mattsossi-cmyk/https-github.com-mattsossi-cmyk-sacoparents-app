@@ -15,8 +15,7 @@ Locks the contract:
       — they DO NOT by themselves shift the level, so declining to
       pursue an order isn't punished by the score.
 """
-import pytest
-pytest.skip("In-app safety screen turned off (2026-10); screening now happens on SACOparentsAlign.", allow_module_level=True)
+from __future__ import annotations
 
 import os
 import sys
@@ -142,7 +141,3 @@ def test_protective_order_items_are_informational_only():
     )
     assert r.status_code == 200, r.text
     assert r.json()["result"]["level"] == 4
-
-
-import pytest as _pytest  # noqa: E402
-pytestmark = _pytest.mark.skip(reason="In-app safety assessment routes are removed (404). Stored answers kept, hidden.")

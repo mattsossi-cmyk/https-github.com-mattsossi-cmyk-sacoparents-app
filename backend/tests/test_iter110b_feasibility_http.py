@@ -124,7 +124,3 @@ def test_violent_resistance_typology_defaults_to_parallel():
     assert t["tier"] == "parallel_parenting"
     joined = " ".join(t.get("caveats") or []).lower()
     assert "violent-resistance" in joined or "self-protective" in joined
-
-
-import pytest as _pytest  # noqa: E402
-pytestmark = _pytest.mark.skip(reason="In-app safety assessment routes are removed (404). Stored answers kept, hidden.")

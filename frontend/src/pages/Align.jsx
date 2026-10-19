@@ -7,7 +7,7 @@ import { Link } from "react-router-dom";
  *
  * NORTH_STAR.md commits to a rigid two-site split: the parent-
  * facing app (sacoparentsapp.online) and the professional-facing
- * view (sacoparentsalign.online). This page scaffolds the Align
+ * view (sacoparentsalign.com). This page scaffolds the Align
  * entry at `/align` so routing is enforced NOW, even though prod
  * still ships both sites from one domain. DNS/domain split comes
  * in Phase E (DevOps).

@@ -102,25 +102,26 @@ def _stored(case_id):
     return db[cs.COLL].find_one({"case_id": case_id}, {"_id": 0})
 
 
-# 1. restricted / auto_red -> both parents lose free-form messaging, calls, address view and GPS on the next load.
-def test_auto_red_limits_both_parents_on_next_load():
+# 1. A professional restriction limits both parents on the next load; auto_red is refused and changes nothing.
+def test_professional_restriction_limits_both_parents_and_auto_red_is_refused():
     case_id, ha, hb = _case()
     assert _send(_body(case_id, 1)).status_code == 200
     for h in (ha, hb):
         f = _flags(h).json()["features"]
         assert all(f[k] for k in LIMITED)
-    r = _send(_body(case_id, 2, mode="restricted", set_by="auto_red"))
+    assert _send(_body(case_id, 2, mode="restricted", set_by="auto_red")).status_code == 422
+    assert _flags(ha).json()["features"]["free_form_messaging"]
+    r = _send(_body(case_id, 3, mode="restricted"))
     assert r.status_code == 200 and r.json() == {"ok": True}
     for h in (ha, hb):
         body = _flags(h).json()
         assert not any(body["features"][k] for k in LIMITED)
         assert body["banner"] == "Some features are set by your professional for this case."
     # Stays restricted until a professional changes it.
-    assert _send(_body(case_id, 3, mode="standard", set_by="default")).status_code == 200
+    assert _send(_body(case_id, 4, mode="standard", set_by="default")).status_code == 200
     assert not _flags(ha).json()["features"]["free_form_messaging"]
-    assert _send(_body(case_id, 4, mode="structured", set_by="auto_red")).status_code == 200
+    assert _send(_body(case_id, 5, mode="standard", set_by="auto_red")).status_code == 422
     assert not _flags(ha).json()["features"]["free_form_messaging"]
-    assert _send(_body(case_id, 5, mode="restricted", set_by="auto_red", referral="parallel_parenting")).status_code == 200
     assert _send(_body(case_id, 6, mode="standard", set_by="professional")).status_code == 200
     assert _flags(ha).json()["features"]["free_form_messaging"]
 
@@ -152,7 +153,7 @@ def test_no_notifications_on_mode_or_referral_change(monkeypatch):
     async def run():
         async with httpx.AsyncClient(transport=httpx.ASGITransport(app=server.app), base_url="http://t") as c:
             for v, mode, ref in ((1, "structured", "none"), (2, "restricted", "parallel_parenting"), (3, "standard", "none")):
-                raw = _body(case_id, v, mode=mode, referral=ref, set_by="auto_red" if mode == "restricted" else "professional")
+                raw = _body(case_id, v, mode=mode, referral=ref, set_by="professional")
                 r = await c.post("/api/internal/safety-status", content=raw, headers={"X-Align-Signature": _sign(raw)})
                 assert r.status_code == 200
                 for h in (ha, hb):
@@ -234,7 +235,7 @@ def test_stale_timestamp_replay_and_old_version_change_nothing():
     assert _send(raw).status_code == 409
     before = _stored(case_id)
     for v in (3, 2):
-        assert _send(_body(case_id, v, mode="restricted", set_by="auto_red")).status_code == 200
+        assert _send(_body(case_id, v, mode="restricted")).status_code == 200
     assert _stored(case_id) == before
     assert _flags(ha).json()["features"]["free_form_messaging"]
 
@@ -260,7 +261,7 @@ def test_referral_hides_cooperative_options_for_both():
 def test_templates_always_allowed():
     case_id, ha, _ = _case()
     for v, mode in ((1, "standard"), (2, "structured"), (3, "restricted")):
-        _send(_body(case_id, v, mode=mode, set_by="auto_red" if mode == "restricted" else "professional"))
+        _send(_body(case_id, v, mode=mode, set_by="professional"))
         body = _flags(ha).json()
         assert body["features"]["template_messages"] is True
         assert body["template_categories"] == ["schedule", "health", "school", "expenses"]
@@ -273,7 +274,7 @@ def test_templates_always_allowed():
 # 10. Nothing parent-visible records a mode change, referral change or Get help visit.
 def test_no_parent_visible_trace():
     case_id, ha, _ = _case()
-    _send(_body(case_id, 1, mode="restricted", set_by="auto_red", referral="parallel_parenting"))
+    _send(_body(case_id, 1, mode="restricted", referral="parallel_parenting"))
     assert httpx.get(f"{API}/help/local-services", timeout=20).status_code == 200
     for path in ("/me/export", "/me/access-log", "/portal/state", "/plan-options/picks"):
         r = httpx.get(f"{API}{path}", headers=ha, timeout=30)
@@ -283,17 +284,14 @@ def test_no_parent_visible_trace():
         assert "parallel_parenting" not in text and "safety_mode" not in text and "safety_audit" not in text
 
 
-# 11. A new case is structured until screening_offered is true.
-def test_new_case_structured_until_screening_offered():
+# 11. A new case starts standard; a non-professional update cannot limit it.
+def test_new_case_starts_standard():
     case_id, ha, hb = _case()
     body = _flags(ha).json()
-    assert body["features"] == cs.FEATURES["structured"]
-    assert body["banner"] == "Some features are limited until your case setup is complete."
+    assert body["features"] == cs.FEATURES["standard"] and body["banner"] is None
     _, lone = _user()
-    assert _flags(lone).json()["features"] == cs.FEATURES["structured"]
-    _send(_body(case_id, 1, mode="standard", offered=False))
-    assert _flags(ha).json()["features"]["free_form_messaging"] is False
-    _send(_body(case_id, 2, mode="structured", set_by="default", offered=True))
+    assert _flags(lone).json()["features"] == cs.FEATURES["standard"]
+    _send(_body(case_id, 1, mode="restricted", set_by="default", offered=False))
     for h in (ha, hb):
         b = _flags(h).json()
         assert b["features"]["free_form_messaging"] is True and b["banner"] is None
@@ -486,7 +484,7 @@ def test_align_ping_round_trip_with_simulated_align(monkeypatch):
 
 def test_support_sees_mode_only_and_parents_cannot():
     case_id, ha, _ = _case()
-    _send(_body(case_id, 1, mode="restricted", set_by="auto_red", referral="parallel_parenting"))
+    _send(_body(case_id, 1, mode="restricted", referral="parallel_parenting"))
     assert httpx.get(f"{API}/support/case-settings/{case_id}", headers=ha, timeout=20).status_code == 403
     r = httpx.post(f"{API}/auth/login", json={"email": "mattsossi@bsossi.com", "password": "AdminPass123!"}, timeout=20)
     if r.status_code != 200:

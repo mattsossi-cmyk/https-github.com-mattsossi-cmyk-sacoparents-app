@@ -13,8 +13,7 @@ Tests hit the live backend via HTTP (same pattern as iter99). Skipped
 gracefully when the backend URL / credentials aren't reachable so this
 file doesn't red-line unrelated CI runs.
 """
-import pytest
-pytest.skip("In-app safety screen turned off (2026-10); screening now happens on SACOparentsAlign.", allow_module_level=True)
+from __future__ import annotations
 
 import os
 import sys
@@ -186,7 +185,3 @@ def test_admin_bypasses_cooldown_on_other_parents_assessment():
     body = admin_call.json()
     # forced_by_admin=True when the admin's own user_id != the assessment owner's.
     assert body.get("forced_by_admin") is True
-
-
-import pytest as _pytest  # noqa: E402
-pytestmark = _pytest.mark.skip(reason="In-app safety assessment routes are removed (404). Stored answers kept, hidden.")

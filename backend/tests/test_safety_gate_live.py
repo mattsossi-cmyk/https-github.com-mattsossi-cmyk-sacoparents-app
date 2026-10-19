@@ -7,6 +7,7 @@ import time
 import uuid
 
 import pytest
+pytestmark = pytest.mark.skip(reason="Built for the removed auto_red rule (2026-10-19); covered by test_safety_gate.py and test_safety_gate_correction.py.")
 import requests
 from dotenv import dotenv_values
 from pymongo import MongoClient

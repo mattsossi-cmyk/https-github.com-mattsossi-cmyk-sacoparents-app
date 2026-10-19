@@ -1,7 +1,5 @@
 """Tests for the new POST /api/safety-assessment/{assessment_id}/email-mediator endpoint
 and the new-rule coercive-threshold scoring (single yes -> Level 2)."""
-import pytest
-pytest.skip("In-app safety screen turned off (2026-10); screening now happens on SACOparentsAlign.", allow_module_level=True)
 import os
 import sys
 import uuid
@@ -266,7 +264,3 @@ class TestSelfEmailNoRegression:
             timeout=45,
         )
         assert r.status_code in (200, 502, 503), r.text
-
-
-import pytest as _pytest  # noqa: E402
-pytestmark = _pytest.mark.skip(reason="In-app safety assessment routes are removed (404). Stored answers kept, hidden.")

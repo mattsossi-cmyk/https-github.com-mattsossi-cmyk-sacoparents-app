@@ -193,7 +193,7 @@ def test_case_creation_paths_give_each_parent_entry_align_ref(monkeypatch):
     assert entry_ref not in acc.text and ua["align_ref"] not in acc.text
     after = db.joint_alignment_cases.find_one({"case_id": res.case_id})["parents"][0]["align_ref"]
     assert after == entry_ref
-    assert _link(ha).json()["align_ref"] == ua["align_ref"]
+    assert _link(ha).json() == {"case_id": res.case_id}
     mine = httpx.get(f"{API}/joint-alignment/mine", headers=ha, timeout=30)
     assert entry_ref not in mine.text and ua["align_ref"] not in mine.text
 
@@ -204,15 +204,15 @@ def test_link_endpoint_linked_unlinked_two_cases_and_auth():
     ub, hb, _ = _register()
     uc, hc, _ = _register()
     unl = _link(hc)
-    assert unl.status_code == 200 and unl.json() == {"align_ref": None}
-    _insert_case(ua["user_id"], ub["user_id"])
+    assert unl.status_code == 200 and unl.json() == {"case_id": None}
+    c1 = _insert_case(ua["user_id"], ub["user_id"])
     a, b = _link(ha), _link(hb)
-    assert a.json()["align_ref"] == ua["align_ref"] and b.json()["align_ref"] == ub["align_ref"]
-    assert ua["align_ref"] != ub["align_ref"]
+    assert a.json() == b.json() == {"case_id": c1}
+    assert ua["align_ref"] not in a.text and ub["align_ref"] not in b.text
     assert "no-store" in a.headers.get("cache-control", "")
-    _insert_case(ua["user_id"], uc["user_id"])
-    assert _link(ha).json()["align_ref"] == ua["align_ref"]
-    assert _link(hc).json()["align_ref"] == uc["align_ref"]
+    c2 = _insert_case(ua["user_id"], uc["user_id"])
+    assert _link(ha).json()["case_id"] in (c1, c2)
+    assert _link(hc).json() == {"case_id": c2}
     assert httpx.get(f"{API}/family-checkin/link", timeout=30).status_code == 401
 
 

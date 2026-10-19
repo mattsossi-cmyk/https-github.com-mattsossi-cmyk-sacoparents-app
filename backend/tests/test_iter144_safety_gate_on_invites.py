@@ -13,8 +13,7 @@ Endpoints locked here:
 Non-gated paths verified to STILL work:
   * POST /api/professionals/{id}/send-alignment-code (professional-directed)
 """
-import pytest
-pytest.skip("In-app safety screen turned off (2026-10); screening now happens on SACOparentsAlign.", allow_module_level=True)
+from __future__ import annotations
 
 import os
 import sys
@@ -45,7 +44,8 @@ def _register(client: TestClient) -> tuple[str, str, str]:
     email = f"iter144_{uuid.uuid4().hex[:8]}@example.com"
     r = client.post(
         "/api/auth/register",
-        json={"email": email, "password": "TestPass123!", "name": "Iter144 Parent"},
+        json={"email": email, "password": "TestPass123!", "name": "Iter144 Parent",
+              "ack_privacy_notice": True, "consent_sensitive_info": True},
     )
     assert r.status_code in (200, 201), r.text
     body = r.json()

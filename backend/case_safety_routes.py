@@ -155,13 +155,13 @@ async def case_settings(case_id: Optional[str] = None, current: UserPublic = Dep
     resolved = [await cs.resolved_for_case(db, c, "user", current.user_id) for c in ids]
     return JSONResponse(cs.payload(cs.combine(resolved)), headers=NO_STORE)
 
-# This parent's own align_ref for the Align check-in link; only once they are linked to at least one case.
+# The shared case code for the Align check-in link (same for both parents); the first unfinished case if there are several.
 @router.get("/family-checkin/link")
 async def checkin_link(current: UserPublic = Depends(get_current_user), db=Depends(get_db)):
-    ref = None
-    if await cs.case_ids_for(db, current.user_id):
-        ref = ((await db.users.find_one({"user_id": current.user_id}, {"_id": 0, "align_ref": 1})) or {}).get("align_ref")
-    return JSONResponse({"align_ref": ref}, headers=NO_STORE)
+    ids = await cs.case_ids_for(db, current.user_id)
+    done = {c: (await cs.resolved_for_case(db, c, "user", current.user_id))["setup_complete"] for c in ids}
+    pick = next((c for c in ids if not done[c]), ids[0] if ids else None)
+    return JSONResponse({"case_id": pick}, headers=NO_STORE)
 
 
 # Gentle in-card reminder: a week after the case was linked and still not done; a close hides it for another week.

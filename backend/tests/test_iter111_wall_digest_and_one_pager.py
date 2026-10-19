@@ -262,7 +262,3 @@ def test_compliance_email_has_only_a_count():
     body = m.call_args.kwargs["html"] + m.call_args.kwargs["text"]
     assert "Secret intervention" not in body and "Badge X" not in body and "40%" not in body
     assert "1 item still to tick" in body
-
-
-import pytest as _pytest  # noqa: E402
-pytestmark = _pytest.mark.skip(reason="In-app safety assessment routes are removed (404). Stored answers kept, hidden.")

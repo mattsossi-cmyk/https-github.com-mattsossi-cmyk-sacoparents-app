@@ -9,6 +9,7 @@ from pathlib import Path
 
 import requests
 import pytest
+pytestmark = pytest.mark.skip(reason="Built for the removed auto_red rule (2026-10-19); covered by test_safety_gate.py and test_safety_gate_correction.py.")
 from dotenv import load_dotenv
 from pymongo import MongoClient
 

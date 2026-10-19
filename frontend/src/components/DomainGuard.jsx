@@ -6,7 +6,7 @@ import { useLocation } from "react-router-dom";
  *
  * NORTH_STAR.md commits to a rigid two-site split:
  *   • sacoparentsapp.online    → parent journey only
- *   • sacoparentsalign.online  → professional (Align + admin) only
+ *   • sacoparentsalign.com     → professional (Align + admin) only
  *
  * This component enforces that split at the ROUTE level, so that
  * even if DNS misconfiguration or a sticky bookmark sends a parent
@@ -21,9 +21,9 @@ import { useLocation } from "react-router-dom";
  *
  * Env config (frontend/.env):
  *   REACT_APP_PARENT_HOSTNAME   e.g. sacoparentsapp.online
- *   REACT_APP_ALIGN_HOSTNAME    e.g. sacoparentsalign.online
+ *   REACT_APP_ALIGN_HOSTNAME    e.g. sacoparentsalign.com
  *   REACT_APP_PARENT_URL        e.g. https://sacoparentsapp.online
- *   REACT_APP_ALIGN_URL         e.g. https://sacoparentsalign.online
+ *   REACT_APP_ALIGN_URL         e.g. https://sacoparentsalign.com
  *
  * Usage in App.js:
  *   <Route path="/" element={<DomainGuard side="parent"><SacoparentsPortal/></DomainGuard>}/>
