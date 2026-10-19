@@ -63,7 +63,7 @@ export const JUDGE_TOUR = [
   { id: "refer-case-toggle-btn", title: "Refer a case", tip: "Enter the parties, cause number, hearing date and the parties' ZIP, then pick a nearby verified professional. The professional receives the referral by email and confirms acceptance." },
   { id: "court-case-search", title: "Your referred cases", tip: "Every case you referred lists here with its stage: invited, assessments in progress, Joint Report ready, Professional Report filed. Select one to see parent status, hearing date and available reports." },
   { id: "court-packets-heading", title: "Court Packets addressed to you", tip: "Professionals submit court packets here: a signed cover letter plus the reports they chose to file. Opening a packet is logged for the sending professional; a Reader Guide sits beside each Professional Report." },
-  { id: "court-directory", title: "Court directory & urgent alerts", tip: "Find verified professionals by area, and enable urgent-safety SMS alerts if a professional flags a safety concern on one of your cases." },
+  { id: "court-directory", title: "Court directory & urgent alerts", tip: "Find verified professionals by area, and receive an urgent-safety email alert if a professional flags a safety concern on one of your cases." },
 ];
 
 export const FOUNDATION_TOUR = [
