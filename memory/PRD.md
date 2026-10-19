@@ -1153,3 +1153,8 @@ Owner rulings: 1 replace A/B/C with 8-domain set; 2 professional-decides (no aut
 - Prod secrets (names): 17/19 required present; RETENTION_ENGINE_ENABLED and GOOGLE_SIGNIN absent (defaults off/on); ALIGN_WEBHOOK_SECRET absent; INTEGRATION_PROXY_URL platform-managed (ignore). Owner to add the two missing keys at next deploy.
 - CORRECTION: seeded pro accounts joy@bsossi.com / dralsmith@gmail.com existed in prod since an earlier release (Sept activity), not created today. Joy already set own password (must_change_password cleared). Dr Smith: temp password never used to log in; owner chose option (iii): forgot-password email sent once from prod (15-min code); temp password NOT invalidated. Deployer agent is read-only for prod data; DB Manager one-liner documented in chat if owner wants hard invalidation later.
 - Owner decision (a): Family check-in stays live; A/B/C removed. Webhook paused; no replacement secret.
+
+## 2026-10-18 19:45 CDT — Dr Smith password: owner chose 3 (leave as-is)
+- Deployer agent is READ-ONLY for prod data; main agent has no prod DB access. Sentinel '!disabled…' is WRONG (bcrypt raises ValueError → 500); correct invalidation = valid bcrypt hash of a discarded random value. Owner declined; temp password for dralsmith@gmail.com remains valid (must_change_password=true forces new password on first login). Joy untouched (password_reset_by_user=true).
+- BACKLOG P1 (owner-approved for a future release, not now): admin 'Disable password & send reset link' endpoint + button.
+- Prod flags: RETENTION_ENGINE_ENABLED absent→OFF; GOOGLE_SIGNIN absent→ON; SAFETY_STATUS_WEBHOOK present, value unreadable by agent (owner to eyeball = false); ALIGN_WEBHOOK_SECRET absent.
