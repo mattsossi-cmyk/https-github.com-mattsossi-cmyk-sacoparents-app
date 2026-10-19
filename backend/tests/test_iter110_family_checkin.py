@@ -27,10 +27,8 @@ def test_green_when_no_red_or_amber():
 
 @pytest.mark.parametrize("over,rule", [
     ({"danger": "Yes"}, "danger_now"), ({"safe_home": "No"}, "not_safe_home"), ({"pv": "In the last month", "pv_worse": "Yes"}, "pv_worse"),
-    ({"pv": "In the last 12 months", "pv_medical": "Yes"}, "pv_medical"), ({"strangle": "More than 12 months ago"}, "strangulation"),
-    ({"threat_kill": "In the last month"}, "threat_kill"), ({"weapon_used": "More than 12 months ago"}, "weapon_used"), ({"stalk": "In the last 12 months"}, "stalking"),
+    ({"pv": "In the last 12 months", "pv_medical": "Yes"}, "pv_medical"), ({"stalk": "In the last 12 months"}, "stalking"),
     ({"sexual": "More than 12 months ago"}, "sexual"), ({"kids_hurt": "In the last month"}, "kids_hurt"),
-    ({"pv": "In the last month", "control": "In the last 12 months", "monitor": "In the last month", "weapon_access": "Yes"}, "amber_cluster"),
     ({"pv": "In the last month", "control": "In the last 12 months", "kids_saw": "In the last month", "separated": "In the last 12 months"}, "amber_cluster"),
 ])
 def test_each_red_rule_independently(over, rule):
@@ -38,10 +36,20 @@ def test_each_red_rule_independently(over, rule):
     assert r["app_tier"] == "red" and r["tier"] == 3 and rule in r["triggered_rules"]
 
 
+def test_removed_parts_never_served_and_never_score():
+    # Owner 2026-10-18: parts "Strangulation and threats" and "Weapons" removed (no lethality section 2026-10-06; no firearms 2026-10-14)
+    live_ids = {i["id"] for i in fv.ITEMS}
+    assert {"strangle", "threat_kill", "weapon_access", "weapon_used"}.isdisjoint(live_ids) and {i["id"] for i in fv.LEGACY_ITEMS} == {"strangle", "threat_kill", "weapon_access", "weapon_used"}
+    assert [p for p in dict.fromkeys(i["part"] for i in fv.ITEMS)] == ["Before you start", "1 · Immediate safety", "2 · Physical violence", "3 · Coercive control and monitoring",
+                                                                        "4 · Sexual violence", "5 · Children", "6 · Context", "Optional"]
+    assert _t({"strangle": "In the last month", "threat_kill": "In the last month", "weapon_used": "In the last month", "weapon_access": "Yes"})["app_tier"] == "green"
+    assert "By law" not in fv.SPEC["intro"] and fv.SPEC["source"] is None and "By law" in fv.MANDATORY_REPORTING_NOTE
+
+
 @pytest.mark.parametrize("over,rule", [
     ({"pv": "In the last 12 months"}, "amber_recent"), ({"control": "In the last month"}, "amber_recent"), ({"kids_saw": "In the last 12 months"}, "amber_recent"),
     ({"kids_used": "In the last month"}, "amber_recent"), ({"kids_worry": "Yes"}, "amber_recent"), ({"substance": "Yes"}, "amber_recent"),
-    ({"weapon_access": "Yes"}, "weapon_access"), ({"afraid": "Yes"}, "afraid"), ({"strangle": "Prefer not to answer"}, "red_skipped"), ({"sexual": ""}, "red_skipped"),
+    ({"afraid": "Yes"}, "afraid"), ({"stalk": "Prefer not to answer"}, "red_skipped"), ({"sexual": ""}, "red_skipped"),
 ])
 def test_each_amber_rule_independently(over, rule):
     r = _t(over)
@@ -50,7 +58,7 @@ def test_each_amber_rule_independently(over, rule):
 
 def test_old_amber_only_is_not_amber_and_two_recent_ambers_no_cluster():
     assert _t({"pv": "More than 12 months ago"})["app_tier"] == "green"
-    assert _t({"pv": "In the last month", "control": "In the last month", "weapon_access": "Yes"})["app_tier"] == "amber"
+    assert _t({"pv": "In the last month", "control": "In the last month", "separated": "In the last month"})["app_tier"] == "amber"
 
 
 def test_parent_flow_identical_set_no_choice_no_tier_shown_pro_sees_red_amber_green():

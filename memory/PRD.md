@@ -1164,3 +1164,10 @@ Owner rulings: 1 replace A/B/C with 8-domain set; 2 professional-decides (no aut
 - SMS leftovers removed: SampleTour tooltip now says email alert; CourtThread '+ texted' suffix dropped.
 - Owner 'say so': Family check-in intro card now shows the Professional Access Notice (from content/safetyEntry.js, same text as Step 0) + 'Read the privacy notification' link → /privacy-notice (data-testid screening-access-notice / screening-privacy-notice-link). Verified in browser.
 - Owner 'echo here too': Family check-in page now also has the "I'd rather not answer these right now" button (SAFETY_HUB_DECLINE, shared source) next to Submit privately → POST …/safety-screening/decline (status+date only, no notification) → dashboard. Verified in browser (390px, no overflow).
+
+## 2026-10-18 20:04 CDT — Family check-in amendments (PREVIEW ONLY, not deployed)
+- Parts 'Strangulation and threats' and 'Weapons' removed from live set → fv_screening.LEGACY_ITEMS (legacy reads only); parts renumbered 1–6; compute() drops strangulation/threat_kill/weapon_* rules; amber_cluster now requires recent separation only.
+- Footer 'owner specification' label removed (SPEC.source=None; frontend shows scale_note only for legacy versions).
+- Full crisis box on check-in = FV_RESOURCES (7 entries, hours labelled, FJC after 24-hour lines, 911 last). Hotline component shows hours.
+- Mandatory-reporting sentence removed from intro → fv_screening.MANDATORY_REPORTING_NOTE (restore by appending to PRIVACY_NOTE).
+- Tests edited: test_iter110 (red/amber params, new test_removed_parts_never_served_and_never_score), test_iter111 (stalk instead of strangle; 'Followed' signal), test_iter112 (stalk). Safety suites 62 passed / 7 skipped.

@@ -29,7 +29,7 @@ def _untrain(s):
 
 def test_training_prompt_never_blocks_and_ack_is_recorded():
     pro, pa, pb, rid = _case()
-    pa.put(f"{API}/joint/reports/{rid}/safety-screening", json={"responses": {**ALL_NO, "strangle": "In the last 12 months", "weapon_access": "Yes"}, "safe_contact": None})
+    pa.put(f"{API}/joint/reports/{rid}/safety-screening", json={"responses": {**ALL_NO, "stalk": "In the last 12 months"}, "safe_contact": None})
     _untrain(pro)
     t = pro.get(f"{API}/professional-training").json()
     assert t["current"] is False and len(t["training"]["modules"]) == 6 and t["training"]["version"] == pt.TRAINING_VERSION
@@ -111,7 +111,7 @@ def test_export_scan_wired_into_legal_lens_individual_and_court_packet():
     # a clean export passes; a Legal Lens export with screening wording is blocked
     pro, pa, pb, rid = _case()
     _ack(pro)
-    pa.put(f"{API}/joint/reports/{rid}/safety-screening", json={"responses": {**ALL_NO, "strangle": "In the last month"}, "safe_contact": None})
+    pa.put(f"{API}/joint/reports/{rid}/safety-screening", json={"responses": {**ALL_NO, "stalk": "In the last month"}, "safe_contact": None})
     r = pro.get(f"{API}/cases/{rid}/professional-report/pdf")
     assert r.status_code in (200, 400, 404), r.text  # 400/404 = report prerequisites, not a scan block
     assert r.status_code != 409

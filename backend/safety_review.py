@@ -6,7 +6,7 @@ from fastapi import APIRouter, Depends, HTTPException, Response
 from pydantic import BaseModel, Field
 
 from core import db
-from fv_screening import ITEMS, RULE_LABEL, TF
+from fv_screening import ITEMS, LEGACY_ITEMS, RULE_LABEL, TF
 from pdf_common import _new_pdf, _s
 from pro_training import is_supervisor, require_training
 
@@ -34,7 +34,7 @@ PROVISIONS = [
     {"id": "nc2", "group": "No-contact", "text": "Neither parent shall track, monitor or access the other parent's devices, accounts or location."},
 ]
 PROVISIONS_FOOTER = "These provisions are the professional's recommendations prepared for the parties and their counsel. They are not an order; only the court decides. This document contains no screening answers."
-_PART_OF = {it["id"]: it["part"] for it in ITEMS}
+_PART_OF = {it["id"]: it["part"] for it in ITEMS + LEGACY_ITEMS}
 RULE_DOMAIN = {"danger_now": "danger", "not_safe_home": "safe_home", "pv_worse": "pv", "pv_medical": "pv", "strangulation": "strangle", "threat_kill": "threat_kill",
                "weapon_used": "weapon_used", "stalking": "stalk", "sexual": "sexual", "kids_hurt": "kids_hurt", "amber_cluster": "separated", "amber_recent": "pv",
                "weapon_access": "weapon_access", "afraid": "afraid", "red_skipped": "danger", "kids_worry": "kids_worry", "substance": "substance"}
@@ -51,7 +51,7 @@ def pattern_panel(triggered: list[str]) -> list[dict]:
 
 
 def _forbidden_terms() -> list[str]:
-    terms = [it["text"] for it in ITEMS if it.get("text")]
+    terms = [it["text"] for it in ITEMS + LEGACY_ITEMS if it.get("text")]
     terms += [o for o in TF if o.lower() not in ("never", "prefer not to answer")]
     terms += ["Red — protected", "Amber — structured", "triggered_rules"] + [v for v in RULE_LABEL.values() if len(v) > 12]
     return terms

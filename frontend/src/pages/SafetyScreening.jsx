@@ -20,7 +20,7 @@ const Hotline = ({ resources, externalNote }) => (
         <span>
           {r.external
             ? <><a href={r.url} target="_blank" rel="noopener noreferrer" className="font-semibold text-brand-purple underline underline-offset-2" data-testid="screening-external-link">{r.name}</a> <span className="text-[11px] text-muted-foreground" data-testid="screening-external-note">({externalNote || "Opens in a new tab and leaves SA CoParents."})</span></>
-            : <><strong>{r.name}</strong>{r.contact && <> — {r.contact}</>}{!r.verified && <span className="ml-1 text-[11px] text-muted-foreground">(verification pending)</span>}</>}
+            : <><strong>{r.name}</strong>{r.contact && <> — {r.contact}</>}{r.hours && <span className="ml-1 text-[11px] text-muted-foreground" data-testid="screening-resource-hours">({r.hours})</span>}{!r.verified && <span className="ml-1 text-[11px] text-muted-foreground">(verification pending)</span>}</>}
         </span>
       </p>
     ))}
@@ -145,7 +145,7 @@ export default function SafetyScreening() {
               </section>
             ))}
             <SafeContactStep value={safeContact} onChange={setSafeContact} />
-            <p className="text-[11px] text-muted-foreground" data-testid="screening-source">{spec.source} {spec.scale_note}</p>
+            {spec.scale_note && <p className="text-[11px] text-muted-foreground" data-testid="screening-source">{spec.scale_note}</p>}
             <div className="flex flex-wrap items-center gap-3">
               <Button onClick={submit} disabled={busy} data-testid="screening-submit-btn">Submit privately</Button>
               <button type="button" disabled={busy} onClick={async () => { try { await api.post(`/joint/reports/${id}/safety-screening/decline`); } catch { /* status only; never block the parent */ } navigate("/dashboard", { replace: true }); }} className="rounded-full border border-[#3D1A78]/40 px-5 py-2 text-sm font-semibold text-[#3D1A78] transition-colors hover:bg-[#3D1A78]/5 disabled:opacity-50" data-testid="screening-decline-btn">{SAFETY_HUB_DECLINE}</button>

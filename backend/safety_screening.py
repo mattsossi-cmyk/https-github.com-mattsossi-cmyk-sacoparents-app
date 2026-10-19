@@ -44,6 +44,16 @@ CRISIS_BEXAR = {"name": "Bexar County Family Justice Center (San Antonio)", "con
                 "hours": "Open Monday to Friday, 8:00 AM to 5:00 PM; closed on county holidays. Not a 24-hour line.", "note": "Advocacy and legal help.", "kind": "office"}
 CRISIS_TITLE = "Crisis Resources"
 CRISIS_INTRO = "Help is available any time. Choosing a resource here does not change anything in your account."
+# Full crisis box shown on the Family check-in (owner 2026-10-18): same list as the approved popup, hours labelled, FJC after the 24-hour lines.
+FV_RESOURCES = [
+    {"name": "National Domestic Violence Hotline", "contact": "1-800-799-7233 · text START to 88788", "hours": "24 hours", "verified": True},
+    {"name": "San Antonio Family Violence Prevention Services 24-hour line", "contact": "210-733-8810", "hours": "24 hours", "verified": True},
+    {"name": "Bexar County Family Justice Center", "contact": "210-631-0100 · 126 E. Nueva, 2nd Floor", "hours": "Open Monday to Friday, 8:00 AM to 5:00 PM; closed on county holidays. Not a 24-hour line.", "verified": True},
+    {"name": "VictimConnect", "contact": "1-855-484-2846", "hours": "24/7", "verified": True},
+    {"name": "The Network/La Red", "contact": "1-800-832-1901", "hours": "24 hours", "verified": True},
+    {"name": "The Trevor Project (for young people under 25)", "contact": "1-866-488-7386 · text START to 678-678", "hours": "24/7", "verified": True},
+    {"name": "Immediate danger", "contact": "Call 911", "verified": True},
+]
 
 
 def crisis_resources_for(version: str | None) -> dict:
@@ -165,7 +175,7 @@ def public_spec(version: str) -> dict:
     items = [i for i in v["items"] if i["id"] != "safe"] + EXTRA_ITEMS + [i for i in v["items"] if i["id"] == "safe"]
     if version == "FV":
         import fv_screening as fv
-        return {**v, "label": LABEL, "trigger_warning": TRIGGER_WARNING, "scale_note": None, "scales": {**fv.SCALES, "yn3": YN3}, "resources": RESOURCES, "external_link_note": EXTERNAL_LINK_NOTE,
+        return {**v, "label": LABEL, "trigger_warning": TRIGGER_WARNING, "scale_note": None, "scales": {**fv.SCALES, "yn3": YN3}, "resources": FV_RESOURCES, "external_link_note": EXTERNAL_LINK_NOTE,
                 "safe_device_notice": "Use a device your co-parent cannot see. The Quick Exit button (or pressing Escape twice) leaves this page immediately and clears it from this browser."}
     return {**v, "items": items, "label": v.get("label", LABEL), "trigger_warning": TRIGGER_WARNING, "scale_note": SCALE_NOTE, "scales": {"freq": FREQ, "yn": YN, "safe": SAFE, "yn3": YN3}, "resources": resources_for(version),
             "external_link_note": EXTERNAL_LINK_NOTE,

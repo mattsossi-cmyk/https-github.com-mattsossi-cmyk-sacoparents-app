@@ -96,7 +96,7 @@ def test_webhook_payload_signature_allowlist_and_flag_off():
 
 def test_pathway_confirm_does_not_deliver_while_off_and_admin_status_endpoint():
     pro, pa, pb, rid = _case()
-    pa.put(f"{API}/joint/reports/{rid}/safety-screening", json={"responses": {**ALL_NO, "strangle": "In the last 12 months", "weapon_access": "Yes"}, "safe_contact": None})
+    pa.put(f"{API}/joint/reports/{rid}/safety-screening", json={"responses": {**ALL_NO, "stalk": "In the last 12 months"}, "safe_contact": None})
     before = _db.webhook_deliveries.count_documents({"case_id": rid})
     r = pro.put(f"{API}/joint/reports/{rid}/safety-pathway/a", json={"action": "change", "pathway": "protected_review"})
     assert r.status_code == 200
@@ -106,14 +106,14 @@ def test_pathway_confirm_does_not_deliver_while_off_and_admin_status_endpoint():
 
 def test_safety_review_two_columns_pattern_concern_reasons_provisions_and_logged():
     pro, pa, pb, rid = _case()
-    pa.put(f"{API}/joint/reports/{rid}/safety-screening", json={"responses": {**ALL_NO, "strangle": "In the last 12 months", "weapon_access": "Yes"}, "safe_contact": None})
+    pa.put(f"{API}/joint/reports/{rid}/safety-screening", json={"responses": {**ALL_NO, "stalk": "In the last 12 months"}, "safe_contact": None})
     pb.post(f"{API}/joint/reports/{rid}/safety-screening/decline")
     assert pa.get(f"{API}/joint/reports/{rid}/safety-review").status_code == 403
     d = pro.get(f"{API}/joint/reports/{rid}/safety-review").json()
     a, b = d["columns"]
     assert a["app_tier"] == "red" and a["app_tier_label"] == "Red" and b["received"] is False and b["entry_status"] == "declined"
     doms = {p["domain"]: p["signals"] for p in a["pattern"]}
-    assert any("Strangulation" in s for sig in doms.values() for s in sig) and "In the last" not in json.dumps(a["pattern"])
+    assert any("Followed" in s for sig in doms.values() for s in sig) and "In the last" not in json.dumps(a["pattern"])
     assert d["review"]["concern_level"] == "none" and len(d["provisions"]) >= 12 and {p["group"] for p in d["provisions"]} == {"Exchange", "Communication", "Contact", "Supervision", "Firearms", "No-contact"}
     r = pro.put(f"{API}/joint/reports/{rid}/safety-review", json={"concern_level": "red", "reasons": [], "provisions": []})
     assert r.status_code == 400
@@ -134,7 +134,7 @@ def test_provisions_pdf_has_footer_no_screening_text_and_export_scan_blocks_leak
     import pymupdf
     text = "\n".join(p.get_text() for p in pymupdf.open(stream=r.content, filetype="pdf"))
     assert "only the court decides" in text and "Communication" in text and "No-contact" in text
-    for bad in ("Amber", "Red", "pushed, hit", "last 12 months", "Strangulation"):
+    for bad in ("Amber", "Red", "pushed, hit", "last 12 months", "Followed / showed up"):
         assert bad not in text, bad
     assert pa.get(f"{API}/joint/reports/{rid}/safety-review/provisions.pdf").status_code == 403
     # leak: custom provision quoting a screening question → scan blocks the export (409) and logs the block
