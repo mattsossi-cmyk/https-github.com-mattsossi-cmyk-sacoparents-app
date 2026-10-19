@@ -81,7 +81,10 @@ async def _load_latest_interventions(
     items: List[Dict[str, Any]] = []
 
     # Safety
-    safety = None  # in-app safety screen is off
+    safety = await db.safety_assessments.find_one(
+        {"user_id": user_id}, {"_id": 0},
+        sort=[("created_at", -1)],
+    )
     if safety:
         recs = ((safety.get("result") or {}).get("recommendations") or [])
         level = (safety.get("result") or {}).get("level")

@@ -4,7 +4,7 @@ import { toast } from "sonner";
 
 import { BiffTab } from "./BiffTab";
 import { GreyRockToggleChip } from "./AlignmentHub";
-import { CaseSettingsBanner } from "../../components/caseSettings/CaseSettings";
+import { SafetySoftBanner } from "./SafetyScreen";
 import { RECORDS_ENABLED } from "./portalStorage";
 
 /**
@@ -88,7 +88,8 @@ export function BiffCoachDrawer({
   // inside the drawer so a parent revising a message can clear
   // grey-rock mode without navigating back to Step 2.
   safetyFlagged = false,
-  onSetGreyRock = () => {},
+  onClearGreyRock = () => {},
+  onOpenSafetyRetake = () => {},
   // iter250 Draft-to-Snapshot — one-tap action to file the raw
   // first-draft + BIFF rewrite pair into the Snapshot Library.
   // Returns true on successful save (both texts non-empty).
@@ -103,8 +104,13 @@ export function BiffCoachDrawer({
       title="BIFF Coach"
       testId="biff-coach-drawer"
     >
-      <CaseSettingsBanner />
-      <GreyRockToggleChip on={safetyFlagged} onChange={onSetGreyRock} />
+      {safetyFlagged && <SafetySoftBanner context="biff" />}
+      {safetyFlagged && (
+        <GreyRockToggleChip
+          onClear={onClearGreyRock}
+          onRetake={onOpenSafetyRetake}
+        />
+      )}
       <BiffTab safetyFlagged={safetyFlagged} {...biffProps} />
 
       <BiffSnapshotCard

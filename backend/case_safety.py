@@ -26,7 +26,7 @@ TEMPLATE_CATEGORIES = ["schedule", "health", "school", "expenses"]
 NOTE_MAX = 280
 
 DEFAULT = {
-    "safety_mode": "structured", "set_by": "default", "professional_name": None,
+    "safety_mode": "standard", "set_by": "default", "professional_name": None,
     "referral": "none", "screening_offered": False, "note_review": False,
 }
 
@@ -163,22 +163,26 @@ async def read_record(db, case_id: str, actor_type: str, actor_id: Optional[str]
 
 
 async def apply_update(db, upd: Dict[str, Any]) -> str:
-    """Versioned write. Returns 'applied', 'stale' (version not higher) or 'locked' (auto Red awaiting a professional)."""
+    """Versioned write. Returns 'applied', 'stale' (version not higher) or 'refused'.
+    Only a named professional sets or lifts a limit; any other update can change the check-in status only."""
     case_id, version = upd["case_id"], upd["version"]
-    fields = {k: upd[k] for k in DEFAULT}
+    pro = (upd.get("professional_name") or "").strip() if upd["set_by"] == "professional" else ""
+    if upd["set_by"] == "auto_red" or (upd["set_by"] == "professional" and not pro):
+        await audit(db, "system", "sacoparentsalign", "write_refused", case_id)
+        return "refused"
     cur = await db[COLL].find_one({"case_id": case_id}, {"_id": 0})
     await audit(db, "system", "sacoparentsalign", "read", case_id)
     if cur and version <= cur["version"]:
         await audit(db, "system", "sacoparentsalign", "write_ignored_stale_version", case_id)
         return "stale"
-    if cur:
-        old = decrypt(cur["enc"])
-        keeps_restricted = fields["set_by"] == "auto_red" and fields["safety_mode"] == "restricted"
-        if old["safety_mode"] == "restricted" and old["set_by"] == "auto_red" and fields["set_by"] != "professional" and not keeps_restricted:
-            await audit(db, "system", "sacoparentsalign", "write_ignored_until_professional", case_id)
-            return "locked"
+    old = decrypt(cur["enc"]) if cur else DEFAULT
+    if pro:
+        fields = {**{k: upd[k] for k in DEFAULT}, "professional_name": pro}
+    else:
+        # Existing limits (including older automatic ones) stay exactly as they are.
+        fields = {**{k: old[k] for k in DEFAULT}, "screening_offered": upd["screening_offered"]}
     # Date the case setup was marked complete: set when it turns complete, kept while it stays complete, cleared if reopened.
-    was_complete = bool(cur) and decrypt(cur["enc"])["screening_offered"]
+    was_complete = bool(cur) and old["screening_offered"]
     completed_at = (cur.get("setup_completed_at") if was_complete else now_iso()) if fields["screening_offered"] else None
     doc = {"case_id": case_id, "version": version, "enc": encrypt(fields), "updated_at": now_iso(),
            "setup_completed_at": completed_at}
@@ -191,19 +195,18 @@ async def apply_update(db, upd: Dict[str, Any]) -> str:
             await db[COLL].insert_one(doc)
         except DuplicateKeyError:
             return "stale"
-    await audit(db, "system", "sacoparentsalign", "write", case_id)
+    await audit(db, *(("professional", pro) if pro else ("system", "sacoparentsalign")), "write", case_id)
     return "applied"
 
 
 def resolve(rec: Optional[Dict[str, Any]]) -> Dict[str, Any]:
-    """Effective mode for one case. New cases are structured until the check-in was offered to both parents."""
+    """Effective mode for one case. Only a professional sets limits; the app never limits a case on its own.
+    Older auto_red records keep the limit they had until a professional changes it."""
     r = {**DEFAULT, **(rec or {})}
     if r["set_by"] == "default":
-        mode, source = ("standard" if r["screening_offered"] else "structured"), "case_setup"
+        mode, source = "standard", "case_setup"
     else:
         mode, source = r["safety_mode"], "professional"
-        if not r["screening_offered"] and RANK[mode] < RANK["structured"]:
-            mode, source = "structured", "case_setup"
     return {"mode": mode, "source": source, "referral": r["referral"], "note_review": bool(r["note_review"]) and mode == "restricted",
             "setup_complete": bool(r["screening_offered"]),
             "setup_completed_at": r.get("setup_completed_at") if r["screening_offered"] else None}
@@ -284,3 +287,12 @@ async def linked_at_for(db, user_id: str) -> Optional[datetime]:
         if isinstance(when, datetime):
             dates.append(when)
     return min(dates) if dates else None
+
+
+async def count_auto_restricted(db) -> int:
+    """Cases still restricted by an older automatic (auto_red) update: a professional should review them."""
+    n = 0
+    async for d in db[COLL].find({}, {"_id": 0, "enc": 1}):
+        f = decrypt(d["enc"])
+        n += f["safety_mode"] == "restricted" and f["set_by"] == "auto_red"
+    return n

@@ -4,7 +4,6 @@ import { createPortal } from "react-dom";
 import { toast } from "sonner";
 
 import { BiffHistory, BiffMilestones } from "./BiffTab";
-import { CaseSettingsBanner } from "../../components/caseSettings/CaseSettings";
 import { useAiGuard } from "../../components/aiNotice/AiGuard";
 import { SharingNotice } from "../../components/privacy/SharingNotice";
 import { BiffBookLink, BiffSnapshotCard } from "./JourneyDrawers";
@@ -26,7 +25,7 @@ const tipFor = ({ status, riskLabel, flagList, greyRock }) => {
   if (status !== "ai")
     return { label: "Welcome", text: "Write or paste your message, then tap Get suggested wording. AI will check the tone and suggest calmer, child-focused wording." };
   if (greyRock)
-    return { label: "Grey-rock tip", text: "Keep it to logistics only: no feelings, no apologies. Shorter is better." };
+    return { label: "Grey-rock tip", text: "Keep it to logistics only: no feelings, no apologies. Shorter is safer." };
   if (riskLabel === "Escalation Flag")
     return {
       label: "AI noticed possible friction in your draft. Here's a tip:",
@@ -109,7 +108,6 @@ export function CommunicationBuilderView({ open, focus, onClose, onQuickExit, gr
       <SafetyBanner tp="cb" />
       <div className="max-w-6xl mx-auto px-4 pt-6">
         <PageHeader tp="cb" onBack={onClose} onQuickExit={onQuickExit} backLabel="Back" />
-        <CaseSettingsBanner className="mb-6" />
         <SaArtwork testid="cb-artwork-mobile" name="comm-builder-art" alt={CB_ALT} className="lg:hidden max-w-md mx-auto mb-6" />
         <Hero
           tp="cb"

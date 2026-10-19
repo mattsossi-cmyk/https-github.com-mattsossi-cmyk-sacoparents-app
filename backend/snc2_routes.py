@@ -252,8 +252,16 @@ def _is_stale(
 
 
 async def _latest_safety_level(db: AsyncIOMotorDatabase, user_id: str) -> Optional[int]:
-    # The in-app safety screen is turned off (screening happens on SACOparentsAlign); saved answers are never read.
-    return None
+    """Return the parent's latest Family Violence & Communication Safety
+    Assessment level (1-4), or None if none exists."""
+    doc = await db["safety_assessments"].find_one(
+        {"user_id": user_id}, {"_id": 0, "result": 1},
+        sort=[("created_at", -1)],
+    )
+    if not doc:
+        return None
+    lvl = (doc.get("result") or {}).get("level")
+    return lvl if isinstance(lvl, int) else None
 
 
 async def _build_and_cache(db: AsyncIOMotorDatabase, user: UserPublic,

@@ -60,16 +60,19 @@ const OPTIONS = [
     icon: "fa-solid fa-shield-halved",
     color: "amber",
     number: "3.",
-    heading: "Help and Resources",
-    label: "Get help",
-    ctaLabel: "Open Get help",
+    heading: "Safety or Family Violence Concerns",
+    label: "Communication Safety / Family Violence Assessment",
+    ctaLabel: "Start Safety Assessment",
     why:
-      "Free, confidential help is available any time, whatever you choose to do here.",
+      "Choose this if you have concerns about threats, intimidation, controlling behavior, stalking, physical safety, fear, or whether direct communication with the other parent is appropriate.",
     topics: [
-      "911 and the National Domestic Violence Hotline",
-      "Local services in your state",
-      "Keeping your device and account private",
+      "Safeguards to consider first",
+      "Communication boundaries",
+      "Professional resources",
+      "Whether direct communication is currently appropriate",
     ],
+    footnote:
+      "This assessment focuses on safety first and may identify safeguards, communication boundaries, and professional resources that should be considered before proceeding with other co-parenting activities.",
   },
   {
     key: "educational",
@@ -148,6 +151,11 @@ const OPTIONS = [
 
 const HELP_QUESTIONS = [
   {
+    key: "safety_concern",
+    prompt:
+      "Do you have any concerns about threats, intimidation, controlling behavior, stalking, or physical safety with the other parent?",
+  },
+  {
     key: "child_area",
     prompt:
       "Is there a specific area of your child\u2019s life you\u2019d like help with right now?",
@@ -172,6 +180,7 @@ const YES_NO_OPTIONS = [
 ];
 
 function recommendFromHelp(answers) {
+  if (answers.safety_concern === "yes") return "safety";
   const area = answers.child_area;
   if (area && area !== "none") return area;
   if (answers.communication_focus === "yes") return "communication";

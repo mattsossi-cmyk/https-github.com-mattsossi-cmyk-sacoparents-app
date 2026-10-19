@@ -34,6 +34,7 @@ const AREAS = {
     diagnosis:
       "You surfaced a heavy set of concerns — more than most parents at this stage. Naming them was courageous. The next step is to hold them alongside safety planning and a clear priority agenda.",
     actions: [
+      { text: "Complete the Safety Screen (if you haven't)", to: "/safety-assessment", testid: "reco-safety" },
       { text: "Review your Issues & Concerns list — what belongs in mediation?", to: "/issues", testid: "reco-issues" },
       { text: "Read the Family Violence / IPV guide", to: "/safety", testid: "reco-fv" },
       { text: "Prepare your Foundation Statement", to: "/reflection", testid: "reco-foundation" },

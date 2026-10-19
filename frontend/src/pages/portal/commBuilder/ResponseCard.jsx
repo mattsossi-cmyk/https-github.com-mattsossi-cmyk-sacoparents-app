@@ -69,7 +69,7 @@ export function ResponseCard({ output, status, raw, riskLabel, flagList, greyRoc
       </div>
       {greyRock && (
         <p data-testid="cb-greyrock-note" className="text-[0.6875rem] text-amber-200 mb-2">
-          <i className="fa-solid fa-sliders mr-1" aria-hidden="true"></i>Grey-rock style: short, factual and neutral.
+          <i className="fa-solid fa-shield-halved mr-1" aria-hidden="true"></i>Grey-rock style: short, factual and neutral.
         </p>
       )}
       {showReal && <RiskRow riskLabel={riskLabel} flagList={flagList} />}

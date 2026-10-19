@@ -1168,7 +1168,3 @@ async def list_worksheets(
     )
     return [d async for d in cursor]
 
-
-# The in-app safety screen is turned off (screening happens on SACOparentsAlign). Saved answers stay in the
-# database but no route reads, shows, shares or emails them; only the general problem-solving worksheet remains.
-router.routes[:] = [r for r in router.routes if "/problem-solving" in getattr(r, "path", "")]

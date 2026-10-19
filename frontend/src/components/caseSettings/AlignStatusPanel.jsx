@@ -10,6 +10,8 @@ const REASONS = {
   invalid_body: "Unreadable",
   replay: "Sent twice",
   webhook_off: "Webhook off",
+  auto_red_refused: "Automatic restriction refused",
+  no_professional_name: "No professional named",
 };
 const when = (iso) => (iso ? new Date(iso).toLocaleString(undefined, { dateStyle: "medium", timeStyle: "short" }) : "—");
 

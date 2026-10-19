@@ -87,10 +87,11 @@ export function BiffTab({
             {safetyFlagged && (
               <span
                 data-testid="biff-greyrock-chip"
+                title="Because your Quick Safety Check flagged coercion or safety concerns, the coach is producing shorter, more neutral replies."
                 className="inline-flex items-center gap-1 bg-slate-900 text-amber-300 text-[0.625rem] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider"
               >
-                <i className="fa-solid fa-sliders" aria-hidden="true"></i>
-                <span>Grey-rock tone on</span>
+                <i className="fa-solid fa-shield-halved" aria-hidden="true"></i>
+                <span>Grey-rock coach on</span>
               </span>
             )}
           </div>
@@ -99,7 +100,7 @@ export function BiffTab({
           </h3>
           <p className="text-[0.6875rem] text-slate-500">
             {safetyFlagged
-              ? "Grey-rock BIFF: short, factual and neutral."
+              ? "Grey-rock BIFF: short, factual, neutral. Safer to send to a coercive co-parent."
               : "Brief, Informative, Friendly, and Firm messaging."}
           </p>
         </div>
@@ -265,19 +266,53 @@ export function BiffMilestones({
     <div className="bg-white p-4 rounded-2xl shadow-sm border border-purple-200 space-y-3 card-box">
       <div className="flex justify-between items-center">
         <h3 className="font-bold text-slate-800 text-xs uppercase tracking-wider flex items-center gap-1.5">
-          <i className="fa-solid fa-chart-line text-emerald-600" aria-hidden="true"></i>{" "}
-          History of Successes & Failures
+          {safetyFlagged ? (
+            <>
+              <i className="fa-solid fa-clipboard-list text-purple-800" aria-hidden="true"></i>{" "}
+              Advocate Review Log
+            </>
+          ) : (
+            <>
+              <i className="fa-solid fa-chart-line text-emerald-600" aria-hidden="true"></i>{" "}
+              History of Successes & Failures
+            </>
+          )}
         </h3>
         <button
           data-testid="add-milestone-btn"
           onClick={addMilestoneLog}
-          className="no-print text-[0.625rem] bg-slate-800 text-white px-2 py-1 min-h-6 rounded-lg"
+          className={
+            safetyFlagged
+              ? "no-print text-[0.625rem] bg-purple-800 text-white px-2 py-1 min-h-6 rounded-lg"
+              : "no-print text-[0.625rem] bg-slate-800 text-white px-2 py-1 min-h-6 rounded-lg"
+          }
         >
-          + Log Milestone
+          {safetyFlagged ? "+ Log for advocate" : "+ Log Milestone"}
         </button>
       </div>
 
-      {(
+      {safetyFlagged ? (
+        <div
+          className="p-3 bg-purple-50 border border-purple-200 rounded-xl text-center"
+          data-testid="advocate-review-tile"
+        >
+          <div
+            data-testid="advocate-review-count"
+            className="text-purple-900 font-bold text-lg"
+          >
+            {advocateReviewCount}
+          </div>
+          <div className="text-[0.625rem] text-purple-800 font-semibold">
+            Events logged for advocate / attorney review
+          </div>
+          <p className="text-[0.625rem] text-slate-600 mt-1 leading-snug">
+            The collaborative "Successful Resolution / Friction Point"
+            framing doesn't fit the safety context you flagged. Each
+            entry here goes into your Weekly Progress PDF for your
+            advocate.
+          </p>
+        </div>
+      ) : (
         <div className="grid grid-cols-2 gap-2 text-center text-xs">
           <div className="p-2.5 bg-emerald-50 border border-emerald-200 rounded-xl">
             <div
@@ -319,7 +354,7 @@ export function BiffMilestones({
               : m.type === "friction"
               ? "text-[0.5625rem] font-bold px-2 py-0.5 rounded bg-rose-100 text-rose-800"
               : "text-[0.5625rem] font-bold px-2 py-0.5 rounded bg-slate-100 text-slate-700";
-            const tagLabel = isAdvocate ? "NOTE" : String(m.type || "note").toUpperCase();
+            const tagLabel = isAdvocate ? "ADVOCATE" : String(m.type || "note").toUpperCase();
             return (
               <div
                 key={m.id}

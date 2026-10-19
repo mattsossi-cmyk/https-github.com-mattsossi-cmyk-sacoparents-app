@@ -607,7 +607,7 @@ async def draft_coparent_reply(
         "things they didn't agree to, or soften a legitimate boundary. If the "
         "original message contains threats, coercion, or abuse, you gently "
         "note that direct de-escalated replies may not be appropriate and "
-        "point them to the Get help page and hotlines. Output strict JSON only."
+        "point them to the Safety page and hotlines. Output strict JSON only."
     )
 
     intent_block = f"\n=== PARENT'S INTENT ===\n{intent.strip()}\n" if intent and intent.strip() else ""

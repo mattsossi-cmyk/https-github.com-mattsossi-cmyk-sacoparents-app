@@ -104,7 +104,7 @@ async def _requested_items(db: AsyncIOMotorDatabase, uid: str, keys: List[str]) 
 async def build_checklist(db: AsyncIOMotorDatabase, user: UserPublic, requested: Optional[List[str]] = None) -> Dict[str, Any]:
     uid = user.user_id
     ps = await db.portal_state.find_one(
-        {"user_id": uid}, {"_id": 0, "court_key": 1, "court_legal_name": 1, "biff_logs": 1}
+        {"user_id": uid}, {"_id": 0, "court_key": 1, "court_legal_name": 1, "safety_ack": 1, "biff_logs": 1}
     ) or {}
     sa = await db.self_assessment_history.find({"user_id": uid}, {"_id": 0, "completed_at": 1}).sort("completed_at", -1).to_list(100)
     cp = await db.cp_report_history.find_one({"_id": uid}, {"snapshots.submitted_at": 1}) or {}
@@ -121,6 +121,8 @@ async def build_checklist(db: AsyncIOMotorDatabase, user: UserPublic, requested:
     items = [
         _item("case", "Case code verified", "done" if case else "todo", f"Case {case}" if case else "",
               "Enter the code from your court order on the Court page."),
+        _item("safety", "Safety check", "done" if ps.get("safety_ack") else "todo",
+              "Completed" if ps.get("safety_ack") else "", "Take the short, private safety check."),
     ]
     checkin = await setup_complete_for(db, uid)
     items.append(_item("family_checkin", "Family check-in", "done" if checkin else "todo", "Done" if checkin else "",
@@ -143,7 +145,7 @@ async def build_checklist(db: AsyncIOMotorDatabase, user: UserPublic, requested:
               "Rewrite a message in the Communication Builder and save it."),
     ]
     if requested:
-        items = items[:2] + await _requested_items(db, uid, requested)
+        items = items[:3] + await _requested_items(db, uid, requested)
     return {
         "items": items,
         "requested_only": bool(requested),
@@ -204,7 +206,7 @@ def _header(pdf: FPDF, data: Dict[str, Any]) -> None:
     if data.get("requested_only"):
         pdf.set_font("Helvetica", "I", 8.5)
         pdf.set_text_color(*MUTED)
-        pdf.cell(0, 4.6, "Showing your case, your Family check-in and the assessments your professional asked for.",
+        pdf.cell(0, 4.6, "Showing your case, your safety check, your Family check-in and the assessments your professional asked for.",
                  new_x="LMARGIN", new_y="NEXT")
     pdf.ln(2)
     pdf.set_font("Helvetica", "B", 11)

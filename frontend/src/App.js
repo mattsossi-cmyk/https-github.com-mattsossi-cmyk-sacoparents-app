@@ -116,10 +116,9 @@ import DimensionCompanion from "@/pages/DimensionCompanion";
 import InterventionCompliance from "@/pages/InterventionCompliance";
 import SignUp from "@/pages/SignUp";
 import MediatorBadge from "@/pages/MediatorBadge";
+import SafetyAssessment from "@/pages/SafetyAssessment";
 import GetHelp from "@/pages/GetHelp";
 import CalendarPage from "@/pages/CalendarPage";
-import CaseSettingsPage from "@/pages/CaseSettings";
-import PlanOptionsPage from "@/pages/PlanOptions";
 import AdminHelpServices from "@/pages/AdminHelpServices";
 import AdminAuditLog from "@/pages/AdminAuditLog";
 import ProblemSolvingWorksheet from "@/pages/ProblemSolvingWorksheet";
@@ -280,14 +279,21 @@ function AppRoutes() {
         <Route path="/safety" element={<Safety />} />
         <Route path="/help" element={<GetHelp />} />
         <Route path="/calendar" element={<CalendarPage />} />
-        <Route path="/case-settings" element={<ProtectedRoute><CaseSettingsPage /></ProtectedRoute>} />
-        <Route path="/plan-options" element={<ProtectedRoute><PlanOptionsPage /></ProtectedRoute>} />
+        {/* Case settings are not shown to families yet (any limits a case has still apply). */}
+        <Route path="/case-settings" element={<Navigate to="/" replace />} />
+        <Route path="/plan-options" element={<Navigate to="/" replace />} />
         <Route path="/admin/help-services" element={<ProtectedRoute><AdminHelpServices /></ProtectedRoute>} />
         <Route path="/admin/audit-log" element={<ProtectedRoute><AdminAuditLog /></ProtectedRoute>} />
         <Route path="/watch" element={<Watch />} />
 
-        {/* The in-app safety screen is turned off; screening happens on SACOparentsAlign. */}
-        <Route path="/safety-assessment" element={<Navigate to="/help" replace />} />
+        <Route
+          path="/safety-assessment"
+          element={
+            <ProtectedRoute>
+              <SafetyAssessment />
+            </ProtectedRoute>
+          }
+        />
         <Route
           path="/nd-risk-assessment"
           element={

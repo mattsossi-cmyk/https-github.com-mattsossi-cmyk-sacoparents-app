@@ -140,8 +140,14 @@ async def _load_finding3(
     db: AsyncIOMotorDatabase, user_id: str,
 ) -> Optional[Dict[str, Any]]:
     """Return Finding 3 (Parenting-Plan Implications) only. Never Findings 1/2."""
-    # The in-app safety screen is off; saved answers are never read.
-    return None
+    doc = await db["safety_assessments"].find_one(
+        {"user_id": user_id}, {"_id": 0}, sort=[("created_at", -1)],
+    )
+    if not doc:
+        return None
+    lens = (doc.get("result") or {}).get("lens") or {}
+    redacted = redact_for_compare(lens)
+    return (redacted.get("findings") or {}).get("parenting_plan_implications")
 
 
 async def _load_user_display_name(

@@ -113,6 +113,11 @@ async def receive_safety_status(request: Request, db=Depends(get_db)):
     if not _signature_ok(raw, request.headers.get(SIGNATURE_HEADER, "")):
         await cs.record_reject(db, "bad_signature")
         raise _unauthorized()
+    return await handle_signed(db, raw)
+
+
+async def handle_signed(db, raw: bytes) -> dict:
+    """Everything after the signature check. Automatic restrictions and unnamed professional changes are refused and logged."""
     is_test = _is_test(raw)
     try:
         body = (TestPingIn if is_test else SafetyStatusIn).model_validate_json(raw)
@@ -122,6 +127,12 @@ async def receive_safety_status(request: Request, db=Depends(get_db)):
     if not _fresh(body.timestamp):
         await cs.record_reject(db, "old_timestamp")
         raise _unauthorized()
+    if not is_test and body.set_by == "auto_red":
+        await cs.record_reject(db, "auto_red_refused")
+        raise HTTPException(status_code=422, detail="Automatic restrictions are not accepted.")
+    if not is_test and body.set_by == "professional" and not (body.professional_name or "").strip():
+        await cs.record_reject(db, "no_professional_name")
+        raise HTTPException(status_code=422, detail="A professional's name is required.")
     try:
         await db[cs.SEEN].insert_one({"_id": hashlib.sha256(raw).hexdigest(), "seen_at": datetime.now(timezone.utc)})
     except DuplicateKeyError:
@@ -233,6 +244,7 @@ COUNT_COLUMNS = {
     "write": "applied",
     "write_ignored_stale_version": "ignored",
     "write_ignored_until_professional": "ignored",
+    "write_refused": "ignored",
     "export": "downloads",
 }
 
@@ -260,7 +272,7 @@ async def safety_daily_counts(current: UserPublic = Depends(require_admin), db=D
 
 
 APPLIED_ACTIONS = ["write", "write_ignored_stale_version", "write_ignored_until_professional"]
-REJECT_REASONS = ("bad_signature", "old_timestamp", "invalid_body", "replay", "webhook_off")
+REJECT_REASONS = ("bad_signature", "old_timestamp", "invalid_body", "replay", "webhook_off", "auto_red_refused", "no_professional_name")
 
 
 @router.get("/admin/safety-audit-log/align-status")
@@ -287,6 +299,11 @@ async def align_status(current: UserPublic = Depends(require_admin), db=Depends(
         "last_test": last_test,
         "webhook_on": bool(os.environ.get("ALIGN_WEBHOOK_SECRET")),
     }, headers=NO_STORE)
+
+
+@router.get("/admin/safety-audit-log/auto-restricted")
+async def auto_restricted(current: UserPublic = Depends(require_admin), db=Depends(get_db)):
+    return JSONResponse({"count": await cs.count_auto_restricted(db)}, headers=NO_STORE)
 
 
 @router.get("/admin/safety-audit-log/link-health")

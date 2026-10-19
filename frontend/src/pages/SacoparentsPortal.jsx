@@ -50,11 +50,13 @@ import {
   hasIntroBeenSeen,
 } from "./portal/IntroChatBot";
 import { GuideFollowupModal } from "./portal/GuideFollowupModal";
-import { CaseHomeNotices } from "../components/caseSettings/CaseSettings";
+import {
+  SafetyRetakeChip,
+  SafetyScreen,
+  SafetySoftBanner,
+} from "./portal/SafetyScreen";
 import { SafetyCrisisStrip } from "./portal/SafetyCrisisStrip";
 import { ShareLegalModal } from "./portal/ShareLegalModal";
-
-const GREY_ROCK_KEY = "sacoparents_grey_rock";
 
 /**
  * sacoparentsapp.online — Child-Centered Co-Parenting Portal (SPA).
@@ -102,8 +104,11 @@ export default function SacoparentsPortal() {
   const [healthIndex, setHealthIndex] = useState(DEFAULT_HEALTH_INDEX);
   const [courtKey, setCourtKey] = useState("");
 
-  // Grey-rock tone: the parent's own on/off choice. (The old in-app safety check is off.)
-  const [greyRock, setGreyRock] = useState(false);
+  // Safety Screen state (first-visit gate + persistent flag)
+  const [safetyAck, setSafetyAck] = useState(null); // { date, cleared, flagged? } | null
+  const [safetyPlan, setSafetyPlan] = useState(null); // {safe_place, trusted_contact, ...}
+  const [safetyOpen, setSafetyOpen] = useState(false);
+  const pendingDoorRef = useRef(null); // 'parent' | 'court' — where to go after safety
   const navigate = useNavigate();
 
   // Alignment filter
@@ -296,14 +301,11 @@ export default function SacoparentsPortal() {
     const seededCourtKey = readString(COURT_KEY_KEY, "");
     setCourtKey(seededCourtKey);
 
-    // The old in-app safety check is off: drop any copy kept on this device.
-    try {
-      localStorage.removeItem(SAFETY_ACK_KEY);
-      localStorage.removeItem(SAFETY_PLAN_KEY);
-    } catch {
-      /* ignore */
-    }
-    setGreyRock(readString(GREY_ROCK_KEY, "") === "1");
+    const seededSafety = readJson(SAFETY_ACK_KEY, null);
+    setSafetyAck(seededSafety);
+
+    const seededSafetyPlan = readJson(SAFETY_PLAN_KEY, null);
+    setSafetyPlan(seededSafetyPlan);
 
     const seededSnapshotHistory = readJson(SNAPSHOT_HISTORY_KEY, []);
     if (Array.isArray(seededSnapshotHistory)) {
@@ -404,9 +406,13 @@ export default function SacoparentsPortal() {
           setCourtKey(s.court_key);
           writeString(COURT_KEY_KEY, s.court_key);
         }
-        if (typeof s.grey_rock === "boolean") {
-          setGreyRock(s.grey_rock);
-          writeString(GREY_ROCK_KEY, s.grey_rock ? "1" : "");
+        if (s.safety_ack && typeof s.safety_ack === "object") {
+          setSafetyAck(s.safety_ack);
+          writeJson(SAFETY_ACK_KEY, s.safety_ack);
+        }
+        if (s.safety_plan && typeof s.safety_plan === "object") {
+          setSafetyPlan(s.safety_plan);
+          writeJson(SAFETY_PLAN_KEY, s.safety_plan);
         }
         // iter222 — hydrate guided drafts so a signed-in parent can
         // resume a mid-wizard session on a new device.
@@ -494,7 +500,8 @@ export default function SacoparentsPortal() {
           health_index: healthIndex,
           court_key: courtKey,
           reassessments,
-          grey_rock: greyRock,
+          safety_ack: safetyAck,
+          safety_plan: safetyPlan,
           guided_drafts: guidedDrafts,
           snapshot_history: snapshotHistory,
         });
@@ -518,7 +525,8 @@ export default function SacoparentsPortal() {
     healthIndex,
     courtKey,
     reassessments,
-    greyRock,
+    safetyAck,
+    safetyPlan,
     guidedDraftsRev,
     snapshotHistory,
   ]);
@@ -605,9 +613,8 @@ export default function SacoparentsPortal() {
         return false;
       }
     };
-    // Old safety-check snapshots stay stored but never count or show.
     const hasSnap = (topic) =>
-      snapshotHistory.some((s) => s?.topic === topic && s?.save_key !== "safety_ack");
+      snapshotHistory.some((s) => s?.topic === topic);
     const state = (completed, topic) => {
       if (completed) return "completed";
       if (readDraft(topic)) return "in_progress";
@@ -616,10 +623,11 @@ export default function SacoparentsPortal() {
     const foundationDone =
       !!(foundationText && foundationText.trim() &&
          foundationText.trim() !== (DEFAULT_FOUNDATION || "").trim());
+    const safetyDone = !!(safetyAck && (safetyAck.ack_at || safetyAck.flagged));
     return {
       foundation: state(foundationDone || hasSnap("foundation"), "foundation"),
       coparenting: state(hasSnap("coparenting"), "coparenting"),
-      safety: state(hasSnap("safety"), "safety"),
+      safety: state(safetyDone || hasSnap("safety"), "safety"),
       educational: state(
         hasSnap("educational") || alignmentCounts.Educational > 0,
         "educational"
@@ -636,6 +644,7 @@ export default function SacoparentsPortal() {
   }, [
     snapshotHistory,
     foundationText,
+    safetyAck,
     alignmentCounts,
     guidedDraftsRev,
   ]);
@@ -661,7 +670,7 @@ export default function SacoparentsPortal() {
 
   const kudosStreak = useMemo(() => computeKudosStreak(milestones), [milestones]);
 
-  const safetyFlagged = greyRock;
+  const safetyFlagged = !!(safetyAck && safetyAck.flagged);
 
   // ----------------------------------------------------------------
   // Handlers
@@ -674,12 +683,22 @@ export default function SacoparentsPortal() {
     });
   }, []);
 
+  // Navigation with safety-gate: first-time visitors must complete
+  // the quick safety check before entering EITHER door.
   const openDoorGateway = useCallback(() => setScreen("journey"), []);
 
-  const requestDoorEntry = useCallback((door) => {
-    setScreen("journey");
-    if (door === "court") setCourtRequest((n) => n + 1);
-  }, []);
+  const requestDoorEntry = useCallback(
+    (door) => {
+      if (!safetyAck) {
+        pendingDoorRef.current = door;
+        setSafetyOpen(true);
+        return;
+      }
+      setScreen("journey");
+      if (door === "court") setCourtRequest((n) => n + 1);
+    },
+    [safetyAck]
+  );
 
   const enterParentJourney = useCallback(
     () => {
@@ -705,12 +724,108 @@ export default function SacoparentsPortal() {
     [requestDoorEntry]
   );
 
-  // Grey-rock is a manual toggle; no reason is shown or stored.
-  const setGreyRockMode = useCallback((on) => {
-    setGreyRock(on);
-    writeString(GREY_ROCK_KEY, on ? "1" : "");
-    api.post("/portal/grey-rock/audit", { event: on ? "on" : "off", source: "toggle_chip" }).catch(() => {});
+  const onSafetyCleared = useCallback(() => {
+    const ack = {
+      date: new Date().toISOString(),
+      cleared: true,
+      flagged: false,
+    };
+    writeJson(SAFETY_ACK_KEY, ack);
+    setSafetyAck(ack);
+    setSafetyOpen(false);
+    const pending = pendingDoorRef.current;
+    pendingDoorRef.current = null;
+    if (pending) setScreen("journey");
+    if (pending === "court") setCourtRequest((n) => n + 1);
   }, []);
+
+  const onSafetyContinueFlagged = useCallback(() => {
+    const ack = {
+      date: new Date().toISOString(),
+      cleared: false,
+      flagged: true,
+    };
+    writeJson(SAFETY_ACK_KEY, ack);
+    setSafetyAck(ack);
+    setSafetyOpen(false);
+    // iter245 — grey-rock audit. Fire-and-forget so a network blip
+    // never blocks the Safety-First routing. The server stores
+    // `datetime.now(timezone.utc)`, so client clock drift doesn't
+    // compromise the clinical timeline.
+    api
+      .post("/portal/grey-rock/audit", {
+        event: "on",
+        source: "safety_screen",
+      })
+      .catch(() => {});
+    const pending = pendingDoorRef.current;
+    pendingDoorRef.current = null;
+    if (pending) setScreen("journey");
+    if (pending === "court") setCourtRequest((n) => n + 1);
+  }, []);
+
+  const onOpenSafetyRetake = useCallback(() => {
+    pendingDoorRef.current = null;
+    setSafetyOpen(true);
+  }, []);
+
+  // iter243 — Grey-rock toggle on Alignment & Tools. The SafetyScreen
+  // modal (SafetyScreen.jsx:332) promises "You can turn it off from
+  // the Alignment & Tools page any time." This closes the loop:
+  // clears the flag with no screen navigation (unlike onSafetyCleared
+  // which also honours pendingDoorRef and sets the screen). Rides the
+  // same safety_ack schema + debounced PUT /api/portal/state round
+  // trip, so the clear persists across devices.
+  const onClearGreyRock = useCallback(() => {
+    const ack = {
+      date: new Date().toISOString(),
+      cleared: true,
+      flagged: false,
+    };
+    writeJson(SAFETY_ACK_KEY, ack);
+    setSafetyAck(ack);
+    // iter245 — grey-rock audit (off). Fire-and-forget. Pairs with
+    // the "on" write in onSafetyContinueFlagged so cp_progress_pdf.py
+    // can render a complete safety-mode timeline.
+    api
+      .post("/portal/grey-rock/audit", {
+        event: "off",
+        source: "toggle_chip",
+      })
+      .catch(() => {});
+  }, []);
+
+  const onSaveSafetyPlan = useCallback(
+    (plan) => {
+      if (plan == null) {
+        // Delete: wipe local storage AND state; fire a fire-and-
+        // forget PUT NOW so the server-side copy is gone as soon as
+        // the network round-trip completes — critical for a parent
+        // who taps delete and then closes the tab. Uses the new
+        // PATCH-style semantics on /portal/state so we only send
+        // the field we're clearing, never risking clobbering
+        // alignments / milestones / biff logs.
+        try {
+          localStorage.removeItem(SAFETY_PLAN_KEY);
+        } catch {
+          /* ignore quota */
+        }
+        setSafetyPlan(null);
+        if (user) {
+          api
+            .put("/portal/state", { safety_plan: null })
+            .catch(() => {
+              // The debounced PUT triggered by the state change will
+              // retry on the next tick / online event.
+            });
+        }
+        return;
+      }
+      writeJson(SAFETY_PLAN_KEY, plan);
+      setSafetyPlan(plan);
+    },
+    [user]
+  );
 
   // Court page: verify a case / invite code. Returns { caseId } or { error }.
   const verifyCourtKey = useCallback(async (key) => {
@@ -773,7 +888,7 @@ export default function SacoparentsPortal() {
         resetBiff();
         return;
       }
-      const flagged = greyRock;
+      const flagged = !!(safetyAck && safetyAck.flagged);
       setBiffOutput("");
       setFlagList([]);
       setRiskLabel("Neutral");
@@ -806,7 +921,7 @@ export default function SacoparentsPortal() {
         setBiffLoading(false);
       }, delay);
     },
-    [greyRock, cancelBiff, resetBiff]
+    [safetyAck, cancelBiff, resetBiff]
   );
 
   // Editing the draft clears any earlier suggestion; nothing is sent until the parent asks.
@@ -923,24 +1038,45 @@ export default function SacoparentsPortal() {
   );
 
   const addMilestoneLog = useCallback(() => {
-    const title = window.prompt("Enter Milestone Title (e.g. Smooth Holiday Transition):");
-    if (!title) return;
-    const isSuccess = window.confirm(
-      "Click OK for Successful Resolution, or Cancel for Friction Point."
+    const flagged = !!(safetyAck && safetyAck.flagged);
+    const title = window.prompt(
+      flagged
+        ? "Log this for advocate/attorney review (e.g. Missed pickup, Coercive text):"
+        : "Enter Milestone Title (e.g. Smooth Holiday Transition):"
     );
-    const entry = {
-      id: Date.now(),
-      type: isSuccess ? "success" : "friction",
-      title,
-      date: new Date().toISOString().substring(0, 10),
-      note: isSuccess
-        ? "Logged as positive co-parenting milestone."
-        : "Logged as friction point for mediation review.",
-    };
+    if (!title) return;
+    let entry;
+    if (flagged) {
+      // Skip the success/friction dichotomy entirely — the collaborative
+      // frame doesn't fit the parent's stated situation. Log everything
+      // as friction with an advocate-review source marker so the Weekly
+      // Progress PDF and downstream reviewers can spot the context.
+      entry = {
+        id: Date.now(),
+        type: "friction",
+        title,
+        date: new Date().toISOString().substring(0, 10),
+        note: "Logged for advocate review — flagged safety context.",
+        source: "advocate_review",
+      };
+    } else {
+      const isSuccess = window.confirm(
+        "Click OK for Successful Resolution, or Cancel for Friction Point."
+      );
+      entry = {
+        id: Date.now(),
+        type: isSuccess ? "success" : "friction",
+        title,
+        date: new Date().toISOString().substring(0, 10),
+        note: isSuccess
+          ? "Logged as positive co-parenting milestone."
+          : "Logged as friction point for mediation review.",
+      };
+    }
     const next = [entry, ...milestones];
     setMilestones(next);
     writeJson(MILESTONE_KEY, next);
-  }, [milestones]);
+  }, [milestones, safetyAck]);
 
   const saveReassessment = useCallback(
     (e) => {
@@ -1010,7 +1146,9 @@ export default function SacoparentsPortal() {
         return;
       }
       if (key === "safety") {
-        navigate("/help");
+        // Re-open the Safety Screen so the parent can retake it in a
+        // grounded way — the existing safeguard flow.
+        setSafetyOpen(true);
         return;
       }
       if (key === "communication") {
@@ -1097,6 +1235,10 @@ export default function SacoparentsPortal() {
         setAlignRecords(next);
         writeJson(ALIGN_RECORDS_KEY, next);
         openAssessmentFolder(category);
+      } else if (save_key === "safety_ack") {
+        // Deep-link to the existing SafetyScreen so the parent gets
+        // the real clinical guardrail rather than a paraphrased chat.
+        setSafetyOpen(true);
       } else if (save_key === "cop_assessment_note") {
         // Append the co-parenting reflection to milestones as a
         // "reassessment" so it lands in the weekly PDF too.
@@ -1399,6 +1541,7 @@ export default function SacoparentsPortal() {
   // reader sees what's still to build.
   const buildCompleteReportPayload = useCallback(
     () => ({
+      safety_ack: safetyAck,
       cop_assessment: healthIndex,
       align_records: alignRecords,
       // Joint records aren't held in the portal state today — the
@@ -1410,7 +1553,7 @@ export default function SacoparentsPortal() {
       case_ref: courtKey || null,
       author_name: user?.name || null,
     }),
-    [healthIndex, alignRecords, foundationText, courtKey, user]
+    [safetyAck, healthIndex, alignRecords, foundationText, courtKey, user]
   );
 
   const downloadCompleteReportPdf = useCallback(() => {
@@ -1435,6 +1578,12 @@ export default function SacoparentsPortal() {
   // handler also refuses to proceed if safetyAck?.flagged is true as
   // a belt-and-suspenders check.
   const onEmailFoundationToCoparent = useCallback(async () => {
+    if (safetyAck?.flagged) {
+      alert(
+        "Email to co-parent is blocked because your Safety Check flagged safety concerns."
+      );
+      return;
+    }
     if (!foundationText.trim()) {
       alert(
         "Write your Foundation Statement first — the email links to the PDF."
@@ -1483,7 +1632,7 @@ export default function SacoparentsPortal() {
         "Couldn't prepare the email — please try again in a moment, or use the Share link button."
       );
     }
-  }, [foundationText, courtKey, user]);
+  }, [safetyAck, foundationText, courtKey, user]);
 
   const onShareWeekly = useCallback(() => {
     createShareLink("weekly", {
@@ -1615,10 +1764,10 @@ export default function SacoparentsPortal() {
 
       {/* MAIN CONTAINER */}
       <main className="max-w-md mx-auto px-4 py-4 flex-1 w-full space-y-4">
-        {screen === "journey" && <CaseHomeNotices />}
         {screen === "journey" && (
           <JourneyShell
             user={user}
+            safetyAck={safetyAck}
             pathPickedAt={
               (readJson(PATH_PICKED_KEY, null) || {}).picked_at || null
             }
@@ -1638,6 +1787,7 @@ export default function SacoparentsPortal() {
             onDownloadCourtPdf={downloadLegalPdf}
             courtRequest={courtRequest}
             overlayOpen={
+              safetyOpen ||
               !!guidedTopic ||
               biffDrawerOpen ||
               recordsDrawerOpen ||
@@ -1648,6 +1798,8 @@ export default function SacoparentsPortal() {
               shareLegalOpen ||
               shareCompleteOpen
             }
+            onClearGreyRock={onClearGreyRock}
+            onOpenSafetyRetake={onOpenSafetyRetake}
             onOpenBiffCoach={() => setBiffDrawerOpen(true)}
             biffCoachOpen={biffDrawerOpen}
             onOpenCommBuilder={(focus) => {
@@ -1742,6 +1894,15 @@ export default function SacoparentsPortal() {
         </button>
       </nav>
 
+      {/* Safety Screen modal */}
+      <SafetyScreen
+        open={safetyOpen}
+        onClose={() => setSafetyOpen(false)}
+        onCleared={onSafetyCleared}
+        onContinueFlagged={onSafetyContinueFlagged}
+        safetyPlan={safetyPlan}
+        onSaveSafetyPlan={onSaveSafetyPlan}
+      />
 
       {/* Share Legal modal (passphrase + TTL) */}
       <ShareLegalModal
@@ -1812,7 +1973,8 @@ export default function SacoparentsPortal() {
         open={biffDrawerOpen}
         onClose={() => setBiffDrawerOpen(false)}
         safetyFlagged={safetyFlagged}
-        onSetGreyRock={setGreyRockMode}
+        onClearGreyRock={onClearGreyRock}
+        onOpenSafetyRetake={onOpenSafetyRetake}
         onSaveBiffSnapshot={onSaveBiffSnapshot}
         rawInput={rawInput}
         onRawInputChange={handleRawInputChange}
@@ -1855,6 +2017,7 @@ export default function SacoparentsPortal() {
         downloadFoundationPdf={downloadFoundationPdf}
         onShareFoundation={onShareFoundation}
         shareStatus={shareStatus}
+        safetyFlagged={safetyFlagged}
         onEmailFoundationToCoparent={onEmailFoundationToCoparent}
       />
 

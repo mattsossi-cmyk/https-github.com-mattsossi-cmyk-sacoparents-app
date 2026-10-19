@@ -367,7 +367,13 @@ async def _generate(db, assessment: str, current) -> List[dict]:
         prep = await _load_prep(db, current.user_id)
         return _comm_steps(prep)
     if assessment == "safety":
-        return []
+        prep = await _load_prep(db, current.user_id)
+        sa = await db.safety_assessments.find_one(
+            {"user_id": current.user_id}, {"_id": 0}, sort=[("created_at", -1)]
+        )
+        if sa:
+            prep = {**prep, "safety_assessment": sa}
+        return _safety_steps(prep)
     if assessment == "special_needs":
         return []
     if assessment == "coparenting":

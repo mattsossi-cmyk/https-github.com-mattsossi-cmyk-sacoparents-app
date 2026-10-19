@@ -5,7 +5,7 @@ its criterion is met. Criteria are intentionally low-friction so parents
 see progress early and stay motivated.
 
 Pills:
-  * foundation_completed     — Foundation Statement written + user has a name
+  * foundation_completed     — safety assessment completed + user has a name
   * child_needs_identified   — at least one deep dive completed OR an SNC v2 report exists
   * communication_readiness  — mediation prep `comm_style` section saved
   * mediation_readiness      — 3+ mediation prep sections saved (any of child_goals,
@@ -51,9 +51,10 @@ _HISTORY_COLLECTION = "progress_daily_history"
 _HISTORY_DAYS = 30
 
 
-async def _has_foundation_text(db: AsyncIOMotorDatabase, user_id: str) -> bool:
-    row = await db["portal_state"].find_one({"user_id": user_id}, {"_id": 0, "foundation_text": 1}) or {}
-    return bool((row.get("foundation_text") or "").strip())
+async def _has_completed_safety(db: AsyncIOMotorDatabase, user_id: str) -> bool:
+    """A safety assessment doc exists for the user (any level)."""
+    row = await db["safety_assessments"].find_one({"user_id": user_id}, {"_id": 1})
+    return bool(row)
 
 
 async def _any_child_needs_signal(db: AsyncIOMotorDatabase, user_id: str) -> bool:
@@ -116,9 +117,9 @@ async def compute_progress(db: AsyncIOMotorDatabase, user: UserPublic) -> Dict[s
     Return payload matches the /progress endpoint (minus history)."""
     prep = await db["prep_data"].find_one({"user_id": user.user_id}, {"_id": 0}) or {}
 
-    has_foundation = await _has_foundation_text(db, user.user_id)
+    has_safety = await _has_completed_safety(db, user.user_id)
     has_name = bool((user.name or "").strip())
-    foundation_completed = has_foundation and has_name
+    foundation_completed = has_safety and has_name
 
     child_needs_identified = await _any_child_needs_signal(db, user.user_id)
 
@@ -138,10 +139,10 @@ async def compute_progress(db: AsyncIOMotorDatabase, user: UserPublic) -> Dict[s
             "label": "Foundation completed",
             "done": foundation_completed,
             "detail": (
-                "Foundation Statement saved + profile filled."
+                "Safety assessment saved + profile filled."
                 if foundation_completed
-                else ("Add your name in profile." if has_foundation
-                      else "Write your Foundation Statement.")
+                else ("Add your name in profile." if has_safety
+                      else "Complete the Family Safety Assessment.")
             ),
         },
         {

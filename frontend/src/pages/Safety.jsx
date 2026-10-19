@@ -335,23 +335,23 @@ export default function Safety() {
           <div className="grid md:grid-cols-2 gap-5">
             <div className="rounded-2xl bg-gradient-to-br from-[#3D1A78] to-[#2DB5B5] text-white p-6 flex flex-col">
               <div className="text-[0.6875rem] uppercase tracking-[0.22em] font-bold opacity-90 mb-2">
-                Free and confidential
+                Confidential self-assessment
               </div>
               <h3 className="font-bold text-2xl mb-2 leading-tight">
-                Get help
+                Family Violence and Communication Safety Screen
               </h3>
               <p className="text-sm leading-relaxed opacity-95 mb-5">
-                911, the National Domestic Violence Hotline, local services in
-                your state, and tips for keeping your device and account
-                private. Quick exit takes you straight to a plain calendar.
+                Find out whether direct co-parenting communication is safe right
+                now — or whether structured, assisted, or restricted contact is
+                a better fit. Takes about 5 minutes. Downloadable PDF at the end.
               </p>
               <div className="mt-auto">
                 <Link
-                  to="/help"
-                  data-testid="safety-get-help-cta"
+                  to="/safety-assessment"
+                  data-testid="safety-take-assessment-cta"
                   className="inline-flex items-center gap-2 rounded-full bg-white text-[#3D1A78] px-5 py-2.5 text-sm font-bold hover:bg-[#F8F7FC] transition-colors"
                 >
-                  Open Get help
+                  Take the assessment
                   <Shield size={14} />
                 </Link>
               </div>

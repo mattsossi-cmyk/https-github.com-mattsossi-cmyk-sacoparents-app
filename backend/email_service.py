@@ -1973,6 +1973,7 @@ def send_snc_coparent_invite(
         "parent — the only shared output is a neutral, side-by-side comparison "
         "once both of you complete it.</p>"
         '<p style="font-size:13px;line-height:1.55;color:#857E9C;margin:0 0 22px 0;">'
+        "Safety responses are always kept out of the shared comparison. "
         "This link expires in 60 days.</p>"
     )
     html = _branded_html(
@@ -2043,6 +2044,9 @@ def send_snc_report_ready(
         '<p style="font-size:14px;line-height:1.6;color:#4B4567;margin:0 0 16px 0;">'
         "You can share the attached PDF with a mediator, teacher, treating "
         "professional, or your co-parent — you decide who sees it.</p>"
+        '<p style="font-size:12px;line-height:1.55;color:#857E9C;margin:0;">'
+        "Your Family Violence &amp; Communication Safety answers, if any, are kept "
+        "out of the shared/scored parts of this document.</p>"
     )
     plain = (
         f"{greeting}\n\n"
@@ -2382,6 +2386,7 @@ def send_four_dimension_briefing(
         f'<div style="font-size:11px;letter-spacing:0.22em;text-transform:uppercase;color:#3D1A78;font-weight:700;margin-bottom:6px;">'
         f'What is inside</div>'
         f'<ul style="margin:0;padding-left:18px;color:#1A1330;font-size:14px;line-height:1.55;">'
+        f'<li><strong>Dimension 1 · Safety</strong> — family violence &amp; coercive-control screen.</li>'
         f'<li><strong>Dimension 2 · Communication</strong> — tone, cadence, clarity.</li>'
         f'<li><strong>Dimension 3 · Emotional regulation</strong> — stress &amp; conflict response.</li>'
         f'<li><strong>Dimension 4 · Executive function</strong> — planning &amp; follow-through.</li>'
@@ -2400,6 +2405,7 @@ def send_four_dimension_briefing(
         f"{who} is preparing for their next co-parenting session through SA CoParents "
         f"and asked me to send you their 4-Dimension Co-Parenting Briefing{role_line}.\n\n"
         f"The briefing consolidates:\n"
+        f"  - Dimension 1 · Safety\n"
         f"  - Dimension 2 · Communication\n"
         f"  - Dimension 3 · Emotional regulation\n"
         f"  - Dimension 4 · Executive function\n"

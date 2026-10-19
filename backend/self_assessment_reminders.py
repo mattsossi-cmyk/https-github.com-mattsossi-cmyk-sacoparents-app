@@ -39,8 +39,11 @@ def read_unsubscribe_token(token: str) -> Optional[str]:
 
 
 async def is_safety_flagged(db: AsyncIOMotorDatabase, user_id: str) -> bool:
-    # Saved safety-screen answers are no longer used.
-    return False
+    ps = await db.portal_state.find_one({"user_id": user_id}, {"_id": 0, "safety_ack": 1})
+    if ((ps or {}).get("safety_ack") or {}).get("flagged"):
+        return True
+    level = await _latest_safety_level(db, user_id)
+    return level is not None and level <= BLOCKED_LEVEL_CEILING
 
 
 def _due_kind(completed_at: datetime, sent: Dict[str, datetime], now: datetime) -> Optional[str]:
