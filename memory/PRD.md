@@ -9232,3 +9232,17 @@ dashboard for sharing SELECTED completed reports with any professional.
   plus frontend 100% (identical neutral banner for both parents, admin panel ON, Check this side OK, paste guard, 390px no overflow).
 - Still pending: ALIGN_PING_URL (Align side not ready), a real cross-app test once Align has the secret, and native privacy-screen checks.
 - Optional ideas from testing: return applied/ignored in the webhook response; drop the legacy safety_assessment router include.
+
+### 2026-10-19 — Family check-in replaces A/B/C (option a) (PREVIEW ONLY, no deploy)
+- User picked option (a): one neutral "Family check-in" card replaces the A/B/C reflection modules (Child Needs & Priorities,
+  Co-Parenting Dynamics, Conflict Readiness). Hidden only: saved notes stay stored.
+- `components/caseSettings/FamilyCheckinCard.jsx`: top of Court Ordered (court-family-checkin) and Self Journey
+  (self-family-checkin, `stacked`). Opens REACT_APP_ALIGN_SITE_URL (sacoparentsalign.online) in a new tab. Status "Done" /
+  "Not finished yet" from GET /api/case-settings `setup_complete` (= case screening_offered; identical for both parents in a case;
+  a parent in several cases sees Done only when all are set up). The app never asks or saves check-in answers.
+- Court checklist (JSON + PDF): Module A/B/C rows → one `family_checkin` row; `modules` no longer sent or read
+  (court_checklist.py, court_path_ai.py, useCourtChecklist.js). Court AI prompt mentions the Family check-in, not modules.
+  guided_draft_nudge: no nudges for the hidden foundation/safety guided topics. CourtModulesCard removed.
+- SAFETY_STATUS_WEBHOOK is an Align-app setting (user checks Align Deploy → Secrets); nothing in this app uses it.
+- Tests: iteration_145 backend 11/11 (tests/test_family_checkin_iter145.py) + UI 100%; Safety Gate suites 80 passed; checklist
+  tests updated. 3 framing tests fail with 428 (AI notice), unrelated and already failing before this change.

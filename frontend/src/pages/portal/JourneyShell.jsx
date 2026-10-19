@@ -1238,7 +1238,7 @@ export function JourneyShell({
           title="Self Journey"
           subtitle="Take the next step to build a safer, calmer, and more child-focused future."
         />
-        <FamilyCheckinCard alignUrl={ALIGN_SITE_URL} testid="self-family-checkin" />
+        <FamilyCheckinCard alignUrl={ALIGN_SITE_URL} testid="self-family-checkin" stacked />
 
         <GoalBanner
           testid="door-self-goal"
