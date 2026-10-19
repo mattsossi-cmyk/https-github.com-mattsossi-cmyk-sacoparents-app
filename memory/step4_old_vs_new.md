@@ -37,3 +37,13 @@ Existing results affected: none. 0 of 1,367 preview results contain a skip (the 
 ## 4. Self Journey "Safety Screen" link
 - Old: nothing under the Family check-in card.
 - New: small "Safety Screen" button (or "Safety Screen · retake" once done) that opens the quick Safety Screen.
+
+## Round 2 (same day) — true-sentences-only notice, plain skips, neutral link
+- Full notice: now only "Your co-parent never sees your answers. Nothing you write in the safety questions is ever shown to them." / "Texas law requires anyone who suspects child abuse or neglect to report it." / "Every question can be skipped, and you can stop at any time." / link "Read the full privacy notice" (was "...notification").
+- Dashboard card: now only "Your co-parent never sees your safety answers." (+ link).
+- Privacy Notice section 2: the same three true sentences as one paragraph. Version 2026-10-19-v4.
+- Removed as untrue for this app: professionals-can-see list (5 bullets), administrators sentence, views-recorded sentence, court-documents sentence, "the professional who reads them must report it", "your professional will be asked to check in", and the short card's 3 matching sentences.
+- Self Journey link: "Safety Screen" -> "Quick check-in" ("· retake"), shield icon -> clipboard-check, rose -> neutral purple.
+- Full assessment: Amber floor removed (a skip never changes the level). PDF/AI label "Prefer not to answer" -> "Skipped". Results note -> "You skipped N question(s). That's okay. Skipped questions don't change your result." (+ Get help link if Section 1 skipped).
+- Quick check: a skip no longer flags. Saved ack gets `skipped: N`; Complete Coparenting Report line "Cleared - no risk flag." -> "Completed - no risk flag. Skipped: N question(s)." when N > 0.
+- Footer: global "Who can see my information" line on every page without its own footer link (lib/footerLink.jsx).

@@ -1,0 +1,26 @@
+{
+  "summary": "Step-4 follow-up verified end-to-end on the preview URL. Backend: existing suites test_step4_skip_scoring + test_iter150_skip_answer_public 14/14 pass; new public suite test_iter151_step4_public.py 5/5 pass (Section-1 danger skips s1_q1/q2/q13 -> level 4, no skip_floor_ids, PDF 'Answer: SKIPPED' with no 'Prefer not'; portal safety_ack.skipped=3 persisted; family-checkin link SA-TLINKDEF0 for linkdemo a/b and null for a new parent). Frontend: full notice text exact on /join/:token (join-invitation-visibility, privacy link -> /privacy-notice target=_blank), court accept dialog (court-accept-visibility) and pre-share dialog (preshare-consent-access-notice via results-prepare-cosign). Dashboard card text exact, hide persists after reload. /who-can-see-my-information shows full notice, no Align 'Who has looked' button, zero footer links. /privacy-notice section 2 paragraph exact; sections 1,2,7,12 only. Exactly one 'Who can see my information' footer link on /login, /register, /help, /privacy-notice, /safety, /safety-assessment (global), /progress, /next-steps/safety, /join/:token (footer-who-can-see), /dashboard (portal-who-can-see-footer-link). The card link on /dashboard is a separate in-content link. Mobile 390: the footer link does not overlap the bottom nav. Self Journey link reads 'Quick check-in' (clipboard-check icon) and opens modal-safety-screen. Skipping all 3 questions and submitting closes the modal with no flagged card, and the label then reads 'Quick check-in · retake' (still true after reload). Full assessment UI: Level 4 Pathway, note \"You skipped 3 questions. That's okay. Skipped questions don't change your result.\" plus a Get help link to /help. Re-consent screen shown and completed for both linkdemo parents. Check-in links are correct in the UI: linked -> ?case=SA-TLINKDEF0, unlinked -> https://sacoparentsalign.com. None of the banned sentences found in rendered text or in the src code (except the conditional Align button, which is hidden).",
+  "backend_issues": {"critical": [], "minor": []},
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": [
+      {"screen": "Pre-share 'You control this report' dialog", "issues": ["The checkbox label still says 'I've read the six points above'. The dialog now also contains the Who-can-see notice, so the count may confuse readers. Copy tweak only (optional)."]}
+    ]
+  },
+  "test_report_links": ["/app/backend/tests/test_iter151_step4_public.py", "/app/test_reports/pytest/iter151.xml"],
+  "action_items": [
+    "OPTIONAL (truthfulness review, not in banned list): LoginPrivacyBox.jsx:8 and LegalAcknowledgment.jsx:188 still say 'if you accept a professional's case invitation or court code, they see whether each step they asked for is done, with dates, never your answers.' This text shows in the first-visit disclaimer modal. Confirm with the user that this is still true, given the request to keep only true statements.",
+    "OPTIONAL: the pre-share checkbox copy 'six points above' could be reworded."
+  ],
+  "critical_code_review_comments": [
+    "The ProfessionalAccessCard reads localStorage on every render and waits for auth loading, so the earlier hide bug is fixed. For signed-out visitors on '/' it uses the key 'guest' (harmless).",
+    "The FooterLinkProvider count pattern works. useOwnFooterLink captures ctx from the first render, which is fine because add/drop use functional setState."
+  ],
+  "updated_files": ["/app/backend/tests/test_iter151_step4_public.py"],
+  "success_rate": {"backend": "100%", "frontend": "100%"},
+  "seed_data_creation": "Registered several throwaway parents test_iter151_*@example.com / test_iter151ui_*@example.com (Str0ng!Pass99) and completed one safety assessment. Re-consented test_linkdemo_a/b to v4.",
+  "retest_needed": false,
+  "should_main_agent_self_test": false,
+  "context_for_next_testing_agent": "Auth is cookie based. In Playwright, register via page.request.post('/api/auth/register', {..., ack_privacy_notice:true, consent_sensitive_info:true}) and then dismiss the first-visit disclaimer (checkbox + 'I acknowledge — continue'). The Self Journey screen opens by clicking the text 'Self Journey' on /dashboard. A valid invitation token for /join was 9AP-j7aZGrH4wsMSokgvRr7zDy--H-MA3nFRMZXTpLo (case SA-528408). The court accept dialog opens from court-accept-btn after clicking 'Court Ordered'. The pre-share dialog opens from results-prepare-cosign on the safety-assessment results."
+}

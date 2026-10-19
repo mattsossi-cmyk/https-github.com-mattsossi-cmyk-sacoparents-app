@@ -9358,3 +9358,4 @@ dashboard for sharing SELECTED completed reports with any professional.
 - Self Journey: "Safety Screen" link under the Family check-in card.
 - Old vs new detail: memory/step4_old_vs_new.md. Tests: tests/test_step4_skip_scoring.py, tests/test_iter150_skip_answer_public.py.
 - OPEN: older copy still says professionals never see answers (LegalAcknowledgment.jsx, LoginPrivacyBox.jsx, lib/proVisibility.js); notice promises this app doesn't deliver (view log, professional check-in on skip, reports without level).
+- 2026-10-19 round 2: notice cut to the sentences true for this app (see step4_old_vs_new.md); Amber skip floor removed; skip = "Skipped", never flags (full + quick); Self Journey link "Quick check-in"; global footer link on every page; Privacy Notice v4. Untrue-for-this-app claims (professional access to answers, view log, court docs, professional check-in on skip) NOT built — awaiting user decision.
