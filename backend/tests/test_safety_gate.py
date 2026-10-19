@@ -628,14 +628,3 @@ def test_align_ref_created_once_and_private():
     ps = db.joint_alignment_cases.find_one({"case_id": case_id})["parents"]
     assert len(ps[0]["align_ref"]) == 36 and ps[1]["align_ref"] == "keep-me"
     assert db.users.find_one({"user_id": uid})["align_ref"] == ref
-
-
-# An account that somehow has no align_ref gets one generated once on first link lookup, then it never changes.
-def test_link_generates_missing_align_ref_once():
-    case_id, ha, _ = _case()
-    uid = db.joint_alignment_cases.find_one({"case_id": case_id})["parents"][0]["user_id"]
-    db.users.update_one({"user_id": uid}, {"$unset": {"align_ref": ""}})
-    url = f"{API}/family-checkin/link"
-    first = httpx.get(url, headers=ha, timeout=20).json()["align_ref"]
-    assert first and db.users.find_one({"user_id": uid})["align_ref"] == first
-    assert httpx.get(url, headers=ha, timeout=20).json()["align_ref"] == first

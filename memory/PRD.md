@@ -9304,3 +9304,21 @@ dashboard for sharing SELECTED completed reports with any professional.
 - "Finished on" date kept (user replied "recommended").
 - Still waiting on Align's builder + user approval: test address for the two-app test, and a neutral check-in page.
   Per user, the only Align endpoint we may call is GET https://sacoparentsalign.com/api/health (connectivity only).
+
+### 2026-10-19 — Pre-deploy review answers; align_ref backfill made admin-run (PREVIEW ONLY, no deploy)
+- Confirmed again: ALIGN_WEBHOOK_SECRET absent from preview backend/.env and running backend; webhook 503. Not regenerated.
+- align_ref backfill NO LONGER runs at startup (server.py hook removed) and the link lookup no longer generates a missing one.
+  Admin-only: GET /api/admin/align-refs (missing counts), POST /api/admin/align-refs/backfill (idempotent, never overwrites;
+  creates the unique sparse users.align_ref index). UI: ParentIdsCard on /admin/audit-log with backup instructions
+  (Republish → Database → Go to database → Dump DB), "I've taken a database backup" tick required, then "Add parent IDs".
+  New accounts / new case entries still get align_ref at creation. On deploy, live data is NOT written by this app's startup
+  except: case-safety indexes and the Get Help services seed (only if that collection is empty) — no parent records.
+- CORRECTION: the old safety-assessment routes were ALREADY removed in an earlier session (safety_assessment_routes.py last line
+  keeps only /problem-solving routes → everything else 404). The earlier "still saves" report was wrong; no change was needed.
+  New test tests/test_parent_ids_and_retired_assessment.py (runs with webhook off). Legacy safety-assessment test files skipped.
+- Leftover parent-facing wording found (not changed, awaiting user): /situation card "A private safety screen — …"
+  (pages/Situation.jsx:81); footer note "Safety Screen data is never shared automatically" (DeepDiveCompareHub.jsx:261,
+  SpecialNeedsV2Compare.jsx:272); dead safety-block banners (never trigger: backend _latest_safety_level returns None).
+- Platform (support agent): normal redeploys don't change the DB; automated backups hourly/daily 7 days + 7-day PITR (restore via
+  support); no automatic pre-deploy backup — manual Dump DB.
+- Demo parents for screenshots: demo.checkin.a/b@example.com (case SA-DEMOCK), see test_credentials.md.

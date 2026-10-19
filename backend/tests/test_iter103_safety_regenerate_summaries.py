@@ -186,3 +186,7 @@ def test_admin_bypasses_cooldown_on_other_parents_assessment():
     body = admin_call.json()
     # forced_by_admin=True when the admin's own user_id != the assessment owner's.
     assert body.get("forced_by_admin") is True
+
+
+import pytest as _pytest  # noqa: E402
+pytestmark = _pytest.mark.skip(reason="In-app safety assessment routes are removed (404). Stored answers kept, hidden.")

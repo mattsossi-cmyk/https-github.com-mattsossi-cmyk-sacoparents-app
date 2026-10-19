@@ -25,7 +25,7 @@ from pydantic import BaseModel, Field, ValidationError
 from pymongo.errors import DuplicateKeyError
 
 import case_safety as cs
-from align_ref import new_align_ref
+from align_ref import backfill_align_refs, missing_align_refs
 from analytics_routes import ADMIN_EMAILS, require_admin
 from auth import get_current_user, get_db
 from models import UserPublic
@@ -150,9 +150,6 @@ async def checkin_link(current: UserPublic = Depends(get_current_user), db=Depen
     ref = None
     if await cs.case_ids_for(db, current.user_id):
         ref = ((await db.users.find_one({"user_id": current.user_id}, {"_id": 0, "align_ref": 1})) or {}).get("align_ref")
-        if not ref:  # account made by a path that skipped it: generate once, never overwrite
-            await db.users.update_one({"user_id": current.user_id, "align_ref": {"$exists": False}}, {"$set": {"align_ref": new_align_ref()}})
-            ref = (await db.users.find_one({"user_id": current.user_id}, {"_id": 0, "align_ref": 1}) or {}).get("align_ref")
     return JSONResponse({"align_ref": ref}, headers=NO_STORE)
 
 
@@ -175,6 +172,19 @@ async def checkin_reminder_dismiss(current: UserPublic = Depends(get_current_use
     await db[REMINDER].update_one({"user_id": current.user_id},
                                   {"$set": {"user_id": current.user_id, "dismissed_at": cs.now_iso()}}, upsert=True)
     return {"ok": True}
+
+
+# Admin-only, run by hand after a database backup: fills align_ref where missing (never changes an existing one).
+@router.get("/admin/align-refs")
+async def align_refs_status(_: UserPublic = Depends(require_admin), db=Depends(get_db)):
+    return JSONResponse(await missing_align_refs(db), headers=NO_STORE)
+
+
+@router.post("/admin/align-refs/backfill")
+async def align_refs_backfill(admin: UserPublic = Depends(require_admin), db=Depends(get_db)):
+    done = await backfill_align_refs(db)
+    logger.info("align_ref backfill run by admin %s: %s", admin.user_id, done)
+    return JSONResponse({**done, **await missing_align_refs(db)}, headers=NO_STORE)
 
 
 # One-time "Thanks, your check-in is done" note, per parent account. Only a seen time is stored.

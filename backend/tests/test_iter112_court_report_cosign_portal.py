@@ -218,3 +218,7 @@ def test_verify_rejects_malformed_sig_id():
         # Content-type must be JSON for this endpoint (never HTML fallback).
         assert "application/json" in r.headers.get("content-type", "")
         assert r.json()["issued"] is False
+
+
+import pytest as _pytest  # noqa: E402
+pytestmark = _pytest.mark.skip(reason="In-app safety assessment routes are removed (404). Stored answers kept, hidden.")

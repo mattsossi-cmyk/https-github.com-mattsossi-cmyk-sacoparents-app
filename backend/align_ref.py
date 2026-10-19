@@ -9,8 +9,15 @@ def new_align_ref() -> str:
     return str(uuid.uuid4())
 
 
+async def missing_align_refs(db) -> dict:
+    return {
+        "accounts_missing": await db.users.count_documents({"align_ref": {"$exists": False}}),
+        "case_entries_missing": await db.joint_alignment_cases.count_documents({"parents": {"$elemMatch": {"align_ref": {"$exists": False}}}}),
+    }
+
+
 async def backfill_align_refs(db) -> dict:
-    """Idempotent: only fills accounts / case parent entries that have no align_ref yet."""
+    """Admin-run only (after a backup). Idempotent: only fills accounts / case parent entries that have no align_ref yet."""
     await db.users.create_index("align_ref", unique=True, sparse=True)
     users = 0
     async for u in db.users.find({"align_ref": {"$exists": False}}, {"_id": 1}):
