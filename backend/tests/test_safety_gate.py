@@ -118,7 +118,10 @@ def test_auto_red_limits_both_parents_on_next_load():
     # Stays restricted until a professional changes it.
     assert _send(_body(case_id, 3, mode="standard", set_by="default")).status_code == 200
     assert not _flags(ha).json()["features"]["free_form_messaging"]
-    assert _send(_body(case_id, 4, mode="standard", set_by="professional")).status_code == 200
+    assert _send(_body(case_id, 4, mode="structured", set_by="auto_red")).status_code == 200
+    assert not _flags(ha).json()["features"]["free_form_messaging"]
+    assert _send(_body(case_id, 5, mode="restricted", set_by="auto_red", referral="parallel_parenting")).status_code == 200
+    assert _send(_body(case_id, 6, mode="standard", set_by="professional")).status_code == 200
     assert _flags(ha).json()["features"]["free_form_messaging"]
 
 

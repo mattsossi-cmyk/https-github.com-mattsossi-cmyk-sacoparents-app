@@ -172,7 +172,8 @@ async def apply_update(db, upd: Dict[str, Any]) -> str:
         return "stale"
     if cur:
         old = decrypt(cur["enc"])
-        if old["safety_mode"] == "restricted" and old["set_by"] == "auto_red" and fields["set_by"] not in ("auto_red", "professional"):
+        keeps_restricted = fields["set_by"] == "auto_red" and fields["safety_mode"] == "restricted"
+        if old["safety_mode"] == "restricted" and old["set_by"] == "auto_red" and fields["set_by"] != "professional" and not keeps_restricted:
             await audit(db, "system", "sacoparentsalign", "write_ignored_until_professional", case_id)
             return "locked"
     doc = {"case_id": case_id, "version": version, "enc": encrypt(fields), "updated_at": now_iso()}
