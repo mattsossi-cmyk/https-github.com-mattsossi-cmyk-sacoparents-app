@@ -12,7 +12,7 @@ SAFE_HOME = ["Yes", "No", "Not sure", "Prefer not to answer"]
 
 TITLE = "Family check-in"
 # Owner (attorney) 2026-10-18 20:1x CDT: mandatory-reporting sentence restored to the live intro.
-MANDATORY_REPORTING_NOTE = "If your answers suggest a child has been abused or neglected, the professional who reads them is required by Texas law to report it. In Texas, any person who suspects child abuse or neglect must report it."
+MANDATORY_REPORTING_NOTE = "If your answers suggest a child has been abused or neglected, the professional who reads them must report it. Texas law requires anyone who suspects child abuse or neglect to report it."
 PRIVACY_NOTE = f"Only professionals assigned to your case see your answers. They are not shared with the other parent. {MANDATORY_REPORTING_NOTE}"
 EMERGENCY = {"title": "If you are in danger right now", "lines": ["Call 911.", "National Domestic Violence Hotline: 1-800-799-7233, or text START to 88788."],
              "note": "You can continue the check-in or leave. Quick exit takes you to a neutral page."}
