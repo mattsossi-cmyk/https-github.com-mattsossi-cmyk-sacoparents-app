@@ -1163,3 +1163,4 @@ Owner rulings: 1 replace A/B/C with 8-domain set; 2 professional-decides (no aut
 - Owner (a) confirmed: Family check-in live; A/B/C removed (code only in safety_screening.py for legacy reads).
 - SMS leftovers removed: SampleTour tooltip now says email alert; CourtThread '+ texted' suffix dropped.
 - Owner 'say so': Family check-in intro card now shows the Professional Access Notice (from content/safetyEntry.js, same text as Step 0) + 'Read the privacy notification' link → /privacy-notice (data-testid screening-access-notice / screening-privacy-notice-link). Verified in browser.
+- Owner 'echo here too': Family check-in page now also has the "I'd rather not answer these right now" button (SAFETY_HUB_DECLINE, shared source) next to Submit privately → POST …/safety-screening/decline (status+date only, no notification) → dashboard. Verified in browser (390px, no overflow).

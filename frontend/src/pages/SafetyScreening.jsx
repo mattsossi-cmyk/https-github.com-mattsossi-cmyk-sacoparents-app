@@ -10,7 +10,7 @@ import { SafeContactStep } from "@/components/SafeContactStep";
 import { QuickExitBar, quickExit } from "@/components/QuickExit";
 import { useNavigate } from "react-router-dom";
 import { CrisisResourcesButton } from "@/components/CrisisResources";
-import { PROFESSIONAL_ACCESS_NOTICE } from "@/content/safetyEntry";
+import { PROFESSIONAL_ACCESS_NOTICE, SAFETY_HUB_DECLINE } from "@/content/safetyEntry";
 
 const Hotline = ({ resources, externalNote }) => (
   <div className="rounded-md border border-red-200 bg-red-50 p-3 text-sm" data-testid="screening-hotline">
@@ -146,7 +146,10 @@ export default function SafetyScreening() {
             ))}
             <SafeContactStep value={safeContact} onChange={setSafeContact} />
             <p className="text-[11px] text-muted-foreground" data-testid="screening-source">{spec.source} {spec.scale_note}</p>
-            <Button onClick={submit} disabled={busy} data-testid="screening-submit-btn">Submit privately</Button>
+            <div className="flex flex-wrap items-center gap-3">
+              <Button onClick={submit} disabled={busy} data-testid="screening-submit-btn">Submit privately</Button>
+              <button type="button" disabled={busy} onClick={async () => { try { await api.post(`/joint/reports/${id}/safety-screening/decline`); } catch { /* status only; never block the parent */ } navigate("/dashboard", { replace: true }); }} className="rounded-full border border-[#3D1A78]/40 px-5 py-2 text-sm font-semibold text-[#3D1A78] transition-colors hover:bg-[#3D1A78]/5 disabled:opacity-50" data-testid="screening-decline-btn">{SAFETY_HUB_DECLINE}</button>
+            </div>
           </>
         )}
       </main>
