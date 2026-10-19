@@ -1181,3 +1181,6 @@ Owner rulings: 1 replace A/B/C with 8-domain set; 2 professional-decides (no aut
 ## 2026-10-19 — Stable check-in alias (PREVIEW ONLY; owner asked). A deployment was initiated from the platform UI by the owner (system notif), not by the agent.
 - GET /api/me/check-in[?case=SA-…] (parents only; resolves signed-in parent's case, optional shared code, to {report_id, case_code, path}); frontend /check-in → redirects to /joint/<id>/safety-screening; friendly 404 message otherwise.
 - Test: test_iter111::test_check_in_alias_resolves_by_session_and_shared_code. Browser-verified both forms + bad code.
+
+## 2026-10-19 — STANDING RULE (owner, emphatic): Claude is NEVER an option in Legal Lens, and the Align Assistant has NO second-opinion model switch (GPT-5.5 only). Claude Sonnet 5.5 stays ONLY in the professional drafting tools (ai_tools.py). Do not re-add.
+- Removed: claude from assistant.MODELS, legal_ai.MODELS, lens_data.AI_MODELS; Assistant header toggle replaced by static GPT-5.5 label. Tests updated (iter66, iter115). PREVIEW ONLY until owner says deploy.

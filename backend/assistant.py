@@ -14,7 +14,7 @@ from joint_helpers import case_status
 from lens_data import PATHWAYS, recommended_pathway
 
 MODEL = ("openai", "gpt-5.5")
-MODELS = {"gpt": ("openai", "gpt-5.5", "GPT-5.5"), "claude": ("anthropic", "claude-sonnet-5-5", "Claude Sonnet 5.5")}
+MODELS = {"gpt": ("openai", "gpt-5.5", "GPT-5.5")}  # owner 2026-10-19: Assistant is GPT-5.5 only; no second-opinion switch
 HISTORY_LIMIT = 24
 SYSTEM = (
     "You are Align Assistant, a decision-support aide for family-law professionals using SA CoParents Align. Three competencies: (1) Case intake & routing — say which parent has "

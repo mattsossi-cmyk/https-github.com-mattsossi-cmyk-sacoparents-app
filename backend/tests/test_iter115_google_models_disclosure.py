@@ -53,11 +53,11 @@ def test_google_matches_existing_pro_and_admin_only():
     assert pro.get(f"{API}/auth/me").status_code == 200  # password session unchanged
 
 
-def test_assistant_model_switch_records_model_used():
+def test_assistant_is_gpt_only_and_records_model_used():
     pro, pa, pb, rid = _case()
-    assert set(asst.MODELS) == {"gpt", "claude"} and asst.MODELS["gpt"][1] == "gpt-5.5" and asst.MODELS["claude"][1] == "claude-sonnet-5-5"
+    assert set(asst.MODELS) == {"gpt"} and asst.MODELS["gpt"][1] == "gpt-5.5"  # owner 2026-10-19: no second-opinion switch
     sid = str(uuid.uuid4())
-    for m, name in (("claude", "claude-sonnet-5-5"), ("gpt", "gpt-5.5")):
+    for m, name in (("claude", "gpt-5.5"), ("gpt", "gpt-5.5")):  # a stale "claude" request falls back to GPT-5.5
         r = pro.post(f"{API}/assistant/chat", json={"session_id": sid, "case_id": rid, "message": "Reply with the single word OK.", "model": m}, stream=True, timeout=120)
         assert r.status_code == 200
         body = b"".join(r.iter_content(4096)).decode()

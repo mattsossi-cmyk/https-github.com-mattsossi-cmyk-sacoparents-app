@@ -89,9 +89,7 @@ export const AlignAssistant = ({ userId, caseId, caseLabel, trigger, open, onOpe
           <header className="flex items-center justify-between gap-2 rounded-t-2xl bg-brand-purple px-4 py-3 text-white">
             <div className="flex items-center gap-2 min-w-0"><Bot className="h-5 w-5 shrink-0" /><div className="min-w-0"><p className="text-sm font-bold leading-tight">Align Assistant</p><p className="truncate text-[11px] opacity-80" data-testid="assistant-case-label">{caseLabel ? `Case ${caseLabel}` : "No case selected"} · advisory only</p></div></div>
             <div className="flex items-center gap-1">
-              <div className="flex rounded-md bg-white/15 p-0.5 text-[11px]" role="group" aria-label="AI model" data-testid="assistant-model-toggle">
-                {[["gpt", "GPT"], ["claude", "Claude"]].map(([k, l]) => <button key={k} type="button" onClick={() => setModel(k)} title={k === "gpt" ? "GPT-5.5" : "Claude Sonnet 5.5"} className={`whitespace-nowrap rounded px-2 py-0.5 ${model === k ? "bg-white text-brand-purple font-semibold" : "text-white/85 hover:bg-white/10"}`} data-testid={`assistant-model-${k}`}>{l}</button>)}
-              </div>
+              <span className="rounded-md bg-white/15 px-2 py-0.5 text-[11px]" title="GPT-5.5" data-testid="assistant-model-label">GPT-5.5</span>
               <button type="button" onClick={() => onOpenChange(false)} className="rounded-md p-1 hover:bg-white/15" aria-label="Close assistant" data-testid="assistant-close-btn"><X className="h-4 w-4" /></button>
             </div>
           </header>

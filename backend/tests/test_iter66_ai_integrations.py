@@ -3,7 +3,7 @@ import io
 
 import pytest
 
-from casekit import new_case, new_user
+from casekit import new_case
 from test_legal_report import API
 
 
@@ -13,11 +13,12 @@ def ctx():
     return pro, pa, pb, d["id"]
 
 
-def test_claude_listed_in_ai_models(ctx) -> None:
+def test_claude_not_offered_as_lens_engine(ctx) -> None:
+    # owner 2026-10-19: Legal Lens engines are Gemini 3.1 Pro and GPT-5.5 only; Claude stays in the professional drafting tools
     pro, _, _, rid = ctx
     r = pro.get(f"{API}/cases/{rid}/professional-report")
     assert r.status_code == 200
-    assert {m["key"] for m in r.json()["library"]["ai_models"]} >= {"gemini", "openai", "claude"}
+    assert {m["key"] for m in r.json()["library"]["ai_models"]} == {"gemini", "openai"}
 
 
 def test_neutrality_check_flags_custody_sentence(ctx) -> None:

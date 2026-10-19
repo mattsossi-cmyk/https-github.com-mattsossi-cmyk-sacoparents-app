@@ -41,7 +41,7 @@ def rule_based_lens(draft: dict) -> dict:
     }
 
 
-MODELS = {"gemini": ("gemini", "gemini-3.1-pro-preview", "Gemini 3.1 Pro"), "openai": ("openai", "gpt-5.5", "GPT-5.5"), "claude": ("anthropic", "claude-sonnet-5-5", "Claude Sonnet 5.5")}
+MODELS = {"gemini": ("gemini", "gemini-3.1-pro-preview", "Gemini 3.1 Pro"), "openai": ("openai", "gpt-5.5", "GPT-5.5")}  # owner 2026-10-19: no Claude engine option in Legal Lens
 DEFAULT_MODEL = "gemini"
 LENS_REPORT_KEYS = ("safety_takeaway", "parent_a_growth", "parent_b_growth", "joint_notes", "shared_concerns", "pathway_rationale", "conflict_management_rationale", "short_term_goals", "long_term_goals")
 LENS_REPORT_SYSTEM = SYSTEM.split("Return ONLY JSON")[0] + (

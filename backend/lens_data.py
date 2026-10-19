@@ -127,7 +127,7 @@ def growth_lines(rep: dict, role: str) -> list[dict]:
     status = (rep.get("growth_status") or {}).get(role) or {}
     return [{"text": g.strip(), "met": bool(status.get(g.strip()))} for g in (rep.get(f"parent_{role}_growth") or "").split("\n") if g.strip()]
 
-AI_MODELS = [{"key": "gemini", "label": "Gemini 3.1 Pro"}, {"key": "openai", "label": "GPT-5.5"}, {"key": "claude", "label": "Claude Sonnet 5.5"}]
+AI_MODELS = [{"key": "gemini", "label": "Gemini 3.1 Pro"}, {"key": "openai", "label": "GPT-5.5"}]
 
 def classify_individual(rating) -> dict | None:
     if not rating:
