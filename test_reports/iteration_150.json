@@ -1,0 +1,39 @@
+{
+  "summary": "Tested the post-iter149 work (commit 8c95ede): Step 4 'I'd rather not answer' (prefer_not) on the legacy Safety Assessment and the quick SafetyScreen, the Professional Access Notice (dashboard card, /who-can-see-my-information page, footer links, Privacy Notice v3), and the Self Journey 'Safety Screen' link. NOTE: the review request text arrived truncated, so scope was taken from the bdaef85 'Next Action Items' and the bdaef85..HEAD diff. Check-in Done badge was not in the diff and was not tested. Backend: 36/36 existing in-process + public tests pass (test_step4_skip_scoring, test_privacy_consent, test_iter149 public, lens_extensions_http). A new public suite passes 8/8. Frontend: everything works except one bug. Hiding the Professional Access card does not survive a page reload.",
+  "backend_issues": {
+    "critical": [],
+    "minor": [
+      {"endpoint": "POST /api/safety-assessment", "issue": "The notice promises 'If you skip a question about immediate danger... your professional will be asked to check in with you'. In this app, a floor skip only raises the level to 2 (skip_floor_ids is stored). Nothing notifies or flags a professional. The promise only holds if Align or the professional view acts on skip_floor_ids. Confirm, or wire it up."}
+    ]
+  },
+  "frontend_issues": {
+    "ui_bugs": [
+      {"component": "ProfessionalAccessCard", "issue": "Tapping Hide (X) hides the card, but it comes back after a reload. Root cause: the localStorage key is built from user?.user_id, and useState reads it only once. On first render the user is not loaded yet, so the key is 'sacoparents_pan_hidden:guest' and the read returns not hidden. When the user arrives the key changes, but the state is never re-read. The hide itself was saved under the real user_id key. Fix: re-read the key in a useEffect when it changes, or skip rendering until auth has finished loading.", "selector": "[data-testid='professional-access-card-hide']", "priority": "MEDIUM"}
+    ],
+    "integration_issues": [
+      {"flow": "Who can see my information", "issue": "The card says 'Every view is recorded for you to check', and the notice says 'you can see who looked and when under Who has looked at my information'. But REACT_APP_ALIGN_ACCESS_LOG_URL is not set, so the who-can-see-align-list-link button never renders. Parents currently have no way to check.", "affected_selectors": ["[data-testid='who-can-see-align-list-link']"]}
+    ],
+    "design_issues": [
+      {"screen": "/who-can-see-my-information and /safety-assessment (mobile 390px)", "issues": ["The floating 'Main menu' pill covers body text at the bottom-left while scrolling. This is a pre-existing global issue."]},
+      {"screen": "Quick Safety Check modal", "issues": ["The intro says 'tap \"Full safety screen\" below', but that link only appears on the flagged card. On the unflagged form there is nothing 'below'. This is pre-existing copy."]}
+    ]
+  },
+  "test_report_links": ["/app/backend/tests/test_iter150_skip_answer_public.py", "/app/test_reports/pytest/iter150.xml"],
+  "action_items": [
+    "MEDIUM: Fix the ProfessionalAccessCard hide so it persists. Recompute the hidden state when user_id changes (useEffect on key), or wait for auth loading before rendering.",
+    "Set REACT_APP_ALIGN_ACCESS_LOG_URL once Align supplies the address, or soften the 'recorded for you to check' and 'Who has looked at my information' wording until then.",
+    "Confirm what makes 'your professional will be asked to check in with you' true after a floor skip. Today only level=2 and skip_floor_ids are stored; nothing is sent to a professional."
+  ],
+  "critical_code_review_comments": [
+    "ProfessionalAccessCard: the useState initializer depends on an async-loaded user. This is the same pattern as the hide bug above.",
+    "Privacy Notice bumped to 2026-10-19-v3. All existing users, e.g. parent1@test.com, now see the consent screen again on next sign-in. That is expected, but the user should know.",
+    "_validate_all_answered accepts prefer_not, so co-parent invite gating treats an all-skipped assessment as complete. This looks intentional ('every question can be skipped'), but it is worth stating.",
+    "SafetyScreen: prefer_not on Q1 or Q3 now flags the result, the same as 'Not sure'. Verified in the UI."
+  ],
+  "updated_files": ["/app/backend/tests/test_iter150_skip_answer_public.py"],
+  "success_rate": {"backend": "100% (44/44)", "frontend": "90% (1 bug: card hide does not persist)"},
+  "seed_data_creation": "Disposable test_fe150_*@example.com users were created through the browser and not cleaned up. The pytest fixture deletes its own test_iter150_* user.",
+  "retest_needed": false,
+  "should_main_agent_self_test": true,
+  "context_for_next_testing_agent": "Legacy assessment button testids are {qid}-yes/-no/-unsure/-prefer-not. The quick SafetyScreen has safety-q-{phys|coerce|device}-prefer-not. The Self Journey link is self-safety-screen-link; its text changes to 'Safety Screen · retake' after the screen is done. The Professional Access card (professional-access-card, hide button professional-access-card-hide) shows only on the portal journey screen. The full notice is at /who-can-see-my-information (who-can-see-notice). The results note uses results-declined-note, -count, -effect, -get-help-link. parent1 has to re-consent because of the notice v3 bump. Register users with ack_privacy_notice and consent_sensitive_info set to true to skip the consent screen. The Check-in Done badge was not tested."
+}

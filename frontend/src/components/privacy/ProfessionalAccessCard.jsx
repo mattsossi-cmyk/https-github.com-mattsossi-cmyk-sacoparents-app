@@ -6,13 +6,13 @@ import { useAuth } from "../../context/AuthContext";
 
 // Short Professional Access Notice for the dashboard; the parent can hide it (the footer link stays).
 export function ProfessionalAccessCard() {
-  const { user } = useAuth();
+  const { user, loading } = useAuth();
+  const [, rerender] = useState(0);
   const key = `sacoparents_pan_hidden:${user?.user_id || "guest"}`;
-  const [hidden, setHidden] = useState(() => localStorage.getItem(key) === "1");
-  if (hidden) return null;
+  if (loading || localStorage.getItem(key) === "1") return null;
   const hide = () => {
     localStorage.setItem(key, "1");
-    setHidden(true);
+    rerender((n) => n + 1);
   };
   return (
     <section

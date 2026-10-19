@@ -9350,3 +9350,11 @@ dashboard for sharing SELECTED completed reports with any professional.
   Align confirmed: `.online` is not Align. Bridge field for the SA code is `case_id` (UUID is `report_id`).
 - Tests: tests/test_safety_gate_correction.py (in-process, no secret), iter149 public suite; test_safety_gate.py updated (skips while webhook off).
 - Next (user): step 4 — Professional Access Notice and "I'd rather not answer" option.
+
+## 2026-10-19 — Step 4 (PREVIEW ONLY, not published)
+- Professional Access Notice (Align wording v2026-10-19.1): full version replaces "What this professional will see" on JoinInvitation and CourtAcceptDialog, added to PreShareConsentDialog; hideable dashboard card; footer link → /who-can-see-my-information (Align "Who has looked" button appears when REACT_APP_ALIGN_ACCESS_LOG_URL with {case_id} is set — address pending from Align).
+- Privacy Notice section 2 paragraph replaced; version 2026-10-19-v3 (all parents re-accept at next sign-in). Only sections 1, 2, 7, 12 exist (preview and live).
+- "I'd rather not answer" (prefer_not) on every Safety Assessment question + quick Safety Screen. Full assessment: a skip never raises the level, except the SKIP_FLOOR list (danger / physical / sexual / child harm) → at least Level 2. Quick screen: skip = gentle support card (like "Not sure").
+- Self Journey: "Safety Screen" link under the Family check-in card.
+- Old vs new detail: memory/step4_old_vs_new.md. Tests: tests/test_step4_skip_scoring.py, tests/test_iter150_skip_answer_public.py.
+- OPEN: older copy still says professionals never see answers (LegalAcknowledgment.jsx, LoginPrivacyBox.jsx, lib/proVisibility.js); notice promises this app doesn't deliver (view log, professional check-in on skip, reports without level).
