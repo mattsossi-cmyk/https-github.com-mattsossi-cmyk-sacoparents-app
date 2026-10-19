@@ -158,7 +158,7 @@ async def checkin_reminder(current: UserPublic = Depends(get_current_user), db=D
     show = linked is not None and now - linked >= WEEK
     if show:
         hid = await db[REMINDER].find_one({"user_id": current.user_id}, {"_id": 0, "dismissed_at": 1})
-        show = not hid or now - cs._aware(hid["dismissed_at"]) >= WEEK
+        show = not hid or now - cs.as_utc(hid["dismissed_at"]) >= WEEK
     if show:
         show = not await cs.setup_complete_for(db, current.user_id)
     return JSONResponse({"show": show}, headers=NO_STORE)

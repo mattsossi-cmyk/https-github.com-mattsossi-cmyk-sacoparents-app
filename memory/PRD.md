@@ -9264,3 +9264,16 @@ dashboard for sharing SELECTED completed reports with any professional.
 - Heads-up (pre-existing): DomainGuard sends /admin and /align on the production parent host (sacoparentsapp.online) to
   REACT_APP_ALIGN_URL, so this app's admin pages (Updates from Align, audit log) can't be reached on that host as configured.
 - Tests: iteration_146 backend 10/10 + UI 100% (desktop + 390px); Safety Gate suite incl. 3 new check-in tests passing.
+
+### 2026-10-19 — Check-in reminder + /admin reachable on the parent host (PREVIEW ONLY, no deploy)
+- Reminder in the Family check-in card: "Your Family check-in is still open. It only takes a few minutes, whenever you're ready."
+  Shown when not done and 7+ days since the case was linked (case_safety.linked_at_for: latest parent accepted_at, else case
+  created_at, so the same date for both parents). Closing it hides it for 7 days per account (collection family_checkin_reminder
+  {user_id, dismissed_at}). GET /api/family-checkin/reminder, POST /api/family-checkin/reminder/dismiss (no-store, auth).
+  No email/SMS/push. Notes live in components/caseSettings/FamilyCheckinNotes.jsx; hook lib/useCheckinReminder.js.
+- App.js: /admin no longer wrapped in DomainGuard, so this app's admin pages open on sacoparentsapp.online (still admin-gated by the
+  backend 403). /align still redirects to the real Align site.
+- Still waiting on Align's builder: test-ping endpoint (POST /api/internal/parents-test-ping on sacoparentsalign.com returns 404
+  as of 2026-10-19) and an optional neutral check-in page. Both are a one-setting change (ALIGN_PING_URL /
+  REACT_APP_ALIGN_CHECKIN_URL).
+- Tests: iteration_147 backend 10/10 + UI 100%; test_safety_gate.py incl. week-rule test; 72 passed across check-in/Safety Gate suites.

@@ -1,0 +1,19 @@
+{
+  "summary": "Tested the new Family check-in reminder (GET /api/family-checkin/reminder, POST /reminder/dismiss, ReminderNote in the card) and the /admin DomainGuard removal, using the public URL. Backend: new suite test_family_checkin_reminder_iter147.py passed 10/10, and the iter146 regression passed 10/10. test_safety_gate.py (including main agent's new week-rule test) and test_family_checkin_iter145.py passed 42/42. Results: 401 without auth on both endpoints. An unlinked parent gets show:false with Cache-Control no-store. A fresh case and a 6-day-old case give false; an 8-day-old case gives true for both parents. Datetime and ISO-string dates both parse. Dismiss applies per account only (the other parent still sees it), is idempotent (one doc with only user_id and dismissed_at), still hides at 6 days and shows again at 8 days. When the check-in is done it hides for both parents and comes back when the flag flips to false. A parent in several cases sees it until all of their cases are done. UI (Playwright): in the Court view at 1920px, parent A sees the reminder text 'Your Family check-in is still open...' under 'Not finished yet'. The close button is 44x44, the purple tone has good contrast (#3b1566 on #f8f4fd), and the note stays hidden after close and reload. In the Self view at 390px, parent B sees the reminder with no horizontal overflow. After a signed screening_offered=true update, parent B's card shows Done, no reminder, and the thanks note. /admin now loads on the preview host: a non-admin sees the 'Admin only' screen and the admin overview API returns 200.",
+  "backend_issues": {"critical": [], "minor": []},
+  "frontend_issues": {"ui_bugs": [], "integration_issues": [], "design_issues": []},
+  "test_report_links": ["/app/backend/tests/test_family_checkin_reminder_iter147.py", "/app/test_reports/pytest/iter147_reminder.xml"],
+  "action_items": [],
+  "critical_code_review_comments": [
+    "case_safety.linked_at_for uses the latest acceptance among parents who have accepted. If only one parent has accepted, the 7-day clock starts from that parent's acceptance, not from 'both linked'. This is fine if intended; otherwise require all parents to have accepted_at.",
+    "For a parent in several cases, linked_at_for takes the min across cases. Adding a new case while an older one is linked shows the reminder right away (when not all cases are done). This is probably acceptable.",
+    "cs._aware is a private helper used from case_safety_routes. Consider making it public. A malformed stored dismissed_at or created_at string would raise a 500 from datetime.fromisoformat (low risk).",
+    "Removing the /admin DomainGuard is safe because AdminDashboard is still gated by the backend's 403 and shows the 'Admin only' screen."
+  ],
+  "updated_files": ["/app/backend/tests/test_family_checkin_reminder_iter147.py"],
+  "success_rate": {"backend": "100%", "frontend": "100%"},
+  "seed_data_creation": "Used ui_seed_iter145.py setup/set/cleanup, and aged the case to 8 days via Mongo. Everything was cleaned up, including the family_checkin_thanks and family_checkin_reminder docs. The pytest suite seeds and cleans itself.",
+  "retest_needed": false,
+  "should_main_agent_self_test": false,
+  "context_for_next_testing_agent": "Reminder testids are court-family-checkin-reminder[-close] and self-family-checkin-reminder[-close]. To show the reminder in the UI, age joint_alignment_cases.created_at and parents.$[].accepted_at by more than 7 days. Login in Playwright via page.request.post('/api/auth/login') (cookie auth), then go to '/' and click door-court or door-self. Run: cd /app/backend/tests && python -m pytest test_family_checkin_reminder_iter147.py."
+}

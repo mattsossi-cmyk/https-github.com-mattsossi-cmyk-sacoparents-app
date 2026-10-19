@@ -260,7 +260,7 @@ async def setup_complete_for(db, user_id: str) -> bool:
     return combine([await resolved_for_case(db, c, "user", user_id) for c in ids])["setup_complete"]
 
 
-def _aware(v):
+def as_utc(v):
     if isinstance(v, str):
         v = datetime.fromisoformat(v.replace("Z", "+00:00"))
     return v.replace(tzinfo=timezone.utc) if isinstance(v, datetime) and v.tzinfo is None else v
@@ -270,8 +270,8 @@ async def linked_at_for(db, user_id: str) -> Optional[datetime]:
     """Case-level link date (latest parent acceptance, else case creation): the same for both parents."""
     dates = []
     async for d in db[CASES].find({"parents.user_id": user_id}, {"_id": 0, "created_at": 1, "parents.accepted_at": 1}):
-        accepted = [_aware(p["accepted_at"]) for p in d.get("parents") or [] if p.get("accepted_at")]
-        when = max(accepted) if accepted else _aware(d.get("created_at"))
+        accepted = [as_utc(p["accepted_at"]) for p in d.get("parents") or [] if p.get("accepted_at")]
+        when = max(accepted) if accepted else as_utc(d.get("created_at"))
         if isinstance(when, datetime):
             dates.append(when)
     return min(dates) if dates else None
