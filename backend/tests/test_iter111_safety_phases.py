@@ -201,3 +201,16 @@ def test_who_looked_parent_sees_views_admin_by_role_only():
     else:
         assert rep.status_code == 400 and "Your assessment answers (report)" not in labels  # report not yet available → nothing viewed, nothing listed
     assert all(e["viewer_role"] != "Parent A" and e["viewer_role"] != "Parent B" for e in mine["events"])
+
+
+def test_combined_consent_accepts_privacy_and_access_notice_once():
+    # owner 2026-10-19: one prompt — accepting the Privacy Notification also records the "Who can see your information" notice for parents
+    from privacy_notice import PRIVACY_NOTICE_VERSION
+    from safety_screening import PROFESSIONAL_ACCESS_NOTICE, STEP_NOTICE_VERSION
+    pro, pa, pb, rid = _case()
+    n = pa.get(f"{API}/privacy-notice").json()["notice"]
+    assert n["access_notice"] == PROFESSIONAL_ACCESS_NOTICE and n["access_notice"].startswith("Who can see your information")
+    assert pro.get(f"{API}/privacy-notice").json()["notice"]["access_notice"] is None
+    assert pa.post(f"{API}/privacy-notice/accept", json={"version": PRIVACY_NOTICE_VERSION, "acknowledged": True}).status_code == 200
+    e = pa.get(f"{API}/me/safety-entry").json()
+    assert e["needs_notice"] is False and e["notice_version"] == STEP_NOTICE_VERSION

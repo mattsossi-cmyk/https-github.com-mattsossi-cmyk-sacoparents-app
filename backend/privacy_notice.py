@@ -52,8 +52,8 @@ def build_router(db, get_current_user) -> APIRouter:
 
     @r.get("/privacy-notice")
     async def get_notice(user=Depends(get_current_user)):
-        full = await db.users.find_one({"_id": user["_id"]}, {"privacy_notice": 1})
-        return {"notice": NOTICE, "needs_acceptance": needs_acceptance(full or {}), "accepted": (full or {}).get("privacy_notice")}
+        full = await db.users.find_one({"_id": user["_id"]}, {"privacy_notice": 1, "role": 1})
+        return {"notice": {**NOTICE, "access_notice": __import__("safety_screening").PROFESSIONAL_ACCESS_NOTICE if (full or {}).get("role") == "parent" else None}, "needs_acceptance": needs_acceptance(full or {}), "accepted": (full or {}).get("privacy_notice")}
 
     @r.post("/privacy-notice/accept")
     async def accept(body: AcceptIn, user=Depends(get_current_user)):
@@ -62,7 +62,11 @@ def build_router(db, get_current_user) -> APIRouter:
         if body.version != PRIVACY_NOTICE_VERSION:
             raise HTTPException(status_code=409, detail="The privacy notification has been updated. Please review the current version.")
         rec = {"version": PRIVACY_NOTICE_VERSION, "accepted_at": datetime.now(timezone.utc).isoformat()}
-        await db.users.update_one({"_id": user["_id"]}, {"$set": {"privacy_notice": rec}, "$push": {"privacy_notice_history": rec}})
+        upd = {"$set": {"privacy_notice": rec}, "$push": {"privacy_notice_history": rec}}
+        if user.get("role") == "parent":  # combined consent (owner 2026-10-19): the "Who can see your information" notice is shown on this page and accepted together
+            from safety_screening import STEP_NOTICE_VERSION
+            upd["$set"]["safety_step_notice"] = {"version": STEP_NOTICE_VERSION, "seen_at": rec["accepted_at"]}
+        await db.users.update_one({"_id": user["_id"]}, upd)
         return {"ok": True, **rec}
 
     def _admin(user):

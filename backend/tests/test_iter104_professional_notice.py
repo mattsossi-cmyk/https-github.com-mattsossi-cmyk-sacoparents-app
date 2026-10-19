@@ -24,7 +24,8 @@ def _register(role):
 def test_text_is_verbatim():
     assert NOTICE["tagline"] == "Start With Safety. Alignment Before Agreement."
     assert NOTICE["principle"] == "AI Structures Data. Professionals Evaluate. Courts Decide."
-    assert [p["heading"] for p in NOTICE["points"]] == ["Confidentiality", "Family Violence and Safety", "Separate Parent Perspectives", "Artificial Intelligence", "Professional Responsibility", "Court Reports"]
+    assert [p["heading"] for p in NOTICE["points"]] == ["Confidentiality", "Family Violence and Safety", "Separate Parent Perspectives", "Access Is Visible to Parents", "Artificial Intelligence", "Professional Responsibility", "Court Reports"]
+    assert "Parents can see when you view their information, including your name and role." in NOTICE["points"][3]["body"] and PROFESSIONAL_NOTICE_VERSION == "2026-10-19.1"
     assert NOTICE["checkbox"].startswith("By continuing, I acknowledge that SA CoParents Align is a professional support tool")
 
 

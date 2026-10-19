@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { HeartHandshake } from "lucide-react";
 import api from "@/lib/api";
 import { QuickExitBar } from "@/components/QuickExit";
@@ -39,7 +39,9 @@ export default function StartWithSafety() {
         <h1 className="mt-5 text-3xl font-bold tracking-tight text-[#3D1A78] sm:text-4xl" data-testid="start-safety-title">{SAFETY_HUB_TITLE}</h1>
         <p className="mt-3 text-base leading-relaxed text-slate-700" data-testid="start-safety-body">{SAFETY_HUB_BODY}</p>
         {!s.has_case && <p className="mt-3 text-sm text-slate-600" data-testid="start-safety-no-case">The check-in opens once you have accepted an invitation to a case. You can continue to your home screen now.</p>}
-        <aside className="mt-6 rounded-2xl border border-[#3D1A78]/20 bg-white p-4 text-sm leading-relaxed text-slate-700" role="note" data-testid="professional-access-notice" style={{ whiteSpace: "pre-line" }}>{s.notice || PROFESSIONAL_ACCESS_NOTICE}</aside>
+        {s.needs_notice
+          ? <aside className="mt-6 rounded-2xl border border-[#3D1A78]/20 bg-white p-4 text-sm leading-relaxed text-slate-700" role="note" data-testid="professional-access-notice" style={{ whiteSpace: "pre-line" }}>{s.notice || PROFESSIONAL_ACCESS_NOTICE}</aside>
+          : <p className="mt-6 text-sm text-slate-600" data-testid="professional-access-notice-accepted">You have already accepted "Who can see your information" with the privacy notification. <Link to="/privacy-notice" className="font-semibold text-brand-purple underline underline-offset-2" data-testid="professional-access-notice-reread">Read it again</Link></p>}
         <div className="mt-6 flex flex-wrap gap-3">
           {s.has_case && satisfied ? (
             <button type="button" onClick={decline} disabled={busy} className="rounded-full bg-[#3D1A78] px-7 py-3 text-base font-bold text-white transition-colors hover:bg-[#2f1460]" data-testid="start-safety-continue-btn">Continue</button>

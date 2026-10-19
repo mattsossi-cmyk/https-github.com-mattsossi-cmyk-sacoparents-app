@@ -61,6 +61,9 @@ export default function PrivacyNotice() {
           <p id="privacy-legal-heading" className="flex items-center gap-2 text-sm font-bold text-amber-900 md:text-base"><ShieldAlert className="h-4 w-4" aria-hidden="true" /> {n.legal_heading}</p>
           <p className="mt-1 text-sm leading-relaxed text-amber-900/90" data-testid="privacy-legal-text">{n.legal}</p>
         </section>
+        {n.access_notice && (
+          <section className="mt-6 whitespace-pre-line rounded-2xl border border-[#3D1A78]/20 bg-white p-4 text-sm leading-relaxed text-slate-700 sm:p-5" aria-label="Who can see your information" data-testid="privacy-access-notice">{n.access_notice}</section>
+        )}
         <label htmlFor="privacy-ack" className="mt-6 flex cursor-pointer items-start gap-3 rounded-2xl border border-[#3D1A78]/20 bg-white p-4 hover:bg-[#3D1A78]/5">
           <Checkbox id="privacy-ack" checked={ok} onCheckedChange={(v) => setOk(v === true)} className="mt-0.5 border-[#3D1A78] data-[state=checked]:bg-[#3D1A78]" data-testid="privacy-ack-checkbox" />
           <span className="text-sm font-medium">{n.checkbox}</span>
