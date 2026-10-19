@@ -1184,3 +1184,5 @@ Owner rulings: 1 replace A/B/C with 8-domain set; 2 professional-decides (no aut
 
 ## 2026-10-19 — STANDING RULE (owner, emphatic): Claude is NEVER an option in Legal Lens, and the Align Assistant has NO second-opinion model switch (GPT-5.5 only). Claude Sonnet 5.5 stays ONLY in the professional drafting tools (ai_tools.py). Do not re-add.
 - Removed: claude from assistant.MODELS, legal_ai.MODELS, lens_data.AI_MODELS; Assistant header toggle replaced by static GPT-5.5 label. Tests updated (iter66, iter115). PREVIEW ONLY until owner says deploy.
+
+## 2026-10-19 — Owner LIFTED the webhook test-ping pause ('i lift that explicitly'). Still: no secret in chat; SAFETY_STATUS_WEBHOOK stays false until a successful ping and a separate owner go-live. Procedure given: parent-app side generates fresh ALIGN_WEBHOOK_SECRET → owner enters same value in Align Deploy → Secrets → owner clicks Admin → Webhook check → 'Send signed test ping' on production.
