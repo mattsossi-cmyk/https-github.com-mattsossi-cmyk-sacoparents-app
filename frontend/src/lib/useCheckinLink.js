@@ -3,21 +3,21 @@ import { useEffect, useState } from "react";
 import { api } from "./api";
 
 const TEMPLATE = process.env.REACT_APP_ALIGN_CHECKIN_URL || "";
-const CASE_RE = /^SA-[A-Z0-9]{4,10}$/;
+const REF_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/;
 
-// Fills the parent's own case number into the check-in address; no single linked case -> the main Align site.
+// Fills this parent's own align_ref into the check-in address; not linked to a case -> the main Align site.
 export function useCheckinLink(alignUrl) {
-  const [caseId, setCaseId] = useState(null);
+  const [ref, setRef] = useState(null);
   useEffect(() => {
     let live = true;
     api
       .get("/family-checkin/link")
-      .then((r) => live && setCaseId(r.data?.case_id || null))
+      .then((r) => live && setRef(r.data?.align_ref || null))
       .catch(() => {});
     return () => {
       live = false;
     };
   }, []);
-  if (!TEMPLATE.includes("{case_id}") || !CASE_RE.test(caseId || "")) return alignUrl;
-  return TEMPLATE.replace("{case_id}", encodeURIComponent(caseId));
+  if (!TEMPLATE.includes("{align_ref}") || !REF_RE.test(ref || "")) return alignUrl;
+  return TEMPLATE.replace("{align_ref}", ref);
 }

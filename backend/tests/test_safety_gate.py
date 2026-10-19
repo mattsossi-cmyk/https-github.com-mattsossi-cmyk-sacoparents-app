@@ -533,13 +533,23 @@ def test_checkin_thanks_once_per_account():
 
 
 # Check-in link: both parents in one case get the same case number; no case -> null (main Align site).
-def test_checkin_link_case_number():
+def test_checkin_link_uses_each_parents_align_ref():
+    import re as _re
     case_id, ha, hb = _case()
     url = f"{API}/family-checkin/link"
     a, b = httpx.get(url, headers=ha, timeout=20), httpx.get(url, headers=hb, timeout=20)
-    assert a.json() == b.json() == {"case_id": case_id}
+    ra, rb = a.json()["align_ref"], b.json()["align_ref"]
+    uuid4 = r"^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$"
+    assert _re.match(uuid4, ra) and _re.match(uuid4, rb) and ra != rb
+    ua = db.users.find_one({"align_ref": ra}, {"_id": 0, "user_id": 1, "email": 1})
+    assert ua and ua["email"] in _emails
+    assert httpx.get(url, headers=ha, timeout=20).json()["align_ref"] == ra
+    me = httpx.get(f"{API}/auth/me", headers=ha, timeout=20).text
+    assert ra not in me and ra not in _flags(ha).text
     assert "no-store" in a.headers.get("cache-control", "")
     assert httpx.get(url, timeout=20).status_code == 401
+    _, hl = _user()
+    assert httpx.get(url, headers=hl, timeout=20).json() == {"align_ref": None}
 
 
 # Reminder: a week after the case was linked, still not done; closing hides it for a week; never once done.
@@ -587,3 +597,31 @@ def test_setup_completed_on_date():
     assert on(ha) == today == on(hb)
     db.case_safety.update_one({"case_id": case_id}, {"$unset": {"setup_completed_at": ""}})
     assert on(ha) is None and _flags(ha).json()["setup_complete"] is True
+
+
+# align_ref: set once at account creation, unchanged by login, never in API user data; new case parent entries get one too.
+def test_align_ref_created_once_and_private():
+    uid, h = _user()
+    ref = db.users.find_one({"user_id": uid})["align_ref"]
+    email = db.users.find_one({"user_id": uid})["email"]
+    r = httpx.post(f"{API}/auth/login", json={"email": email, "password": PASSWORD}, timeout=20)
+    assert r.status_code == 200 and ref not in r.text
+    assert db.users.find_one({"user_id": uid})["align_ref"] == ref
+    assert ref not in httpx.get(f"{API}/auth/me", headers=h, timeout=20).text
+    import asyncio
+    from motor.motor_asyncio import AsyncIOMotorClient
+    from align_ref import backfill_align_refs
+    case_id = f"SA-T{uuid.uuid4().hex[:6].upper()}"
+    _cases.append(case_id)
+    db.joint_alignment_cases.insert_one({"case_id": case_id, "parents": [{"parent_slot": "A"}, {"parent_slot": "B", "align_ref": "keep-me"}]})
+
+    async def run():
+        cli = AsyncIOMotorClient(os.environ["MONGO_URL"])
+        try:
+            return await backfill_align_refs(cli[os.environ["DB_NAME"]])
+        finally:
+            cli.close()
+    asyncio.run(run())
+    ps = db.joint_alignment_cases.find_one({"case_id": case_id})["parents"]
+    assert len(ps[0]["align_ref"]) == 36 and ps[1]["align_ref"] == "keep-me"
+    assert db.users.find_one({"user_id": uid})["align_ref"] == ref

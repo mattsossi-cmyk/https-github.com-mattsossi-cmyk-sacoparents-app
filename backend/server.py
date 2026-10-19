@@ -323,6 +323,9 @@ async def startup_log():
     logger.info("SA CoParents backend ready. DB=%s", os.environ.get("DB_NAME"))
     await ensure_case_safety_indexes(app.state.db)
     await seed_help_services(app.state.db)
+    from align_ref import backfill_align_refs
+    import asyncio as _asyncio
+    app.state.align_ref_backfill = _asyncio.create_task(backfill_align_refs(app.state.db))
     # Contract sanity: every duration advertised by the joint-artefact
     # share-link dialogs MUST be in `auth.SHARE_TOKEN_WINDOWS`. If not,
     # `create_share_token` silently downgrades to the 7-day default and

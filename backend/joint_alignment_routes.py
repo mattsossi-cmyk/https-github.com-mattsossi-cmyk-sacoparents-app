@@ -74,6 +74,7 @@ from fastapi import APIRouter, Depends, Header, HTTPException, Path, Request, Re
 from motor.motor_asyncio import AsyncIOMotorDatabase
 from pydantic import BaseModel, EmailStr, Field, ValidationError
 
+from align_ref import new_align_ref
 from auth import UserPublic, get_current_user, get_db
 from integration_keys import match_integration_key
 
@@ -695,6 +696,7 @@ async def _create_and_invite_case(
                 "token_expires_at": token_exp,
                 "accepted_at": None,
                 "user_id": None,
+                "align_ref": new_align_ref(),
                 "assessment_completed_at": None,
                 "assessment_ref": None,
             }
@@ -1772,6 +1774,7 @@ async def integration_create_case(
                 "token_expires_at": token_exp,
                 "accepted_at": None,
                 "user_id": None,
+                "align_ref": new_align_ref(),
                 "assessment_completed_at": None,
                 "assessment_ref": None,
             }

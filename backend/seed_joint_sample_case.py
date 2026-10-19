@@ -40,6 +40,8 @@ from datetime import datetime, timezone, timedelta
 from dotenv import load_dotenv
 from motor.motor_asyncio import AsyncIOMotorClient
 
+from align_ref import new_align_ref
+
 
 load_dotenv("/app/backend/.env")
 
@@ -66,6 +68,7 @@ async def _ensure_user(db, *, email: str, name: str) -> dict:
         "created_at": now,
         "email_verified": True,
         "auth_method": "jwt",
+        "align_ref": new_align_ref(),
     }
     await db.users.insert_one(doc)
     return doc
@@ -113,6 +116,9 @@ async def _seed_communication(db, *, user_id: str) -> None:
 
 async def _upsert_demo_case(db, *, parent_a: dict, parent_b: dict) -> dict:
     now = datetime.now(timezone.utc)
+    # Keep each slot's align_ref across re-seeds (it must never change).
+    prev = await db.joint_alignment_cases.find_one({"case_id": DEMO_CASE_ID}, {"_id": 0, "parents": 1}) or {}
+    kept = {p.get("parent_slot"): p.get("align_ref") for p in prev.get("parents") or [] if isinstance(p, dict)}
     parents_doc = []
     for slot, u in (("A", parent_a), ("B", parent_b)):
         parents_doc.append({
@@ -123,6 +129,7 @@ async def _upsert_demo_case(db, *, parent_a: dict, parent_b: dict) -> dict:
             "token_expires_at": now + timedelta(days=30),
             "accepted_at": now,
             "user_id": _uid(u),
+            "align_ref": kept.get(slot) or new_align_ref(),
             "assessment_completed_at": now,
             "assessment_ref": None,
         })

@@ -2,6 +2,7 @@
 import os
 import secrets
 import uuid
+from align_ref import new_align_ref
 from datetime import datetime, timedelta, timezone
 from typing import Optional
 
@@ -274,6 +275,7 @@ async def register(
         "hb300_ack_at":      datetime.now(timezone.utc).isoformat(),
         "marketing_opt_in":  False,
         "created_at": datetime.now(timezone.utc).isoformat(),
+        "align_ref": new_align_ref(),
         **consent,
     }
     await db.users.insert_one(doc)
@@ -355,6 +357,7 @@ async def _upsert_oauth_user(
         "mediation_date": None,
         "email_verified": True,
         "created_at": datetime.now(timezone.utc).isoformat(),
+        "align_ref": new_align_ref(),
     }
     await db.users.insert_one(user_doc)
     return user_doc
@@ -510,6 +513,7 @@ async def start_guest_session(
         "mediation_date": None,
         "picture": None,
         "created_at": datetime.now(timezone.utc).isoformat(),
+        "align_ref": new_align_ref(),
     }
     await db.users.insert_one(doc)
     token = create_jwt(user_id)
@@ -788,6 +792,7 @@ async def signup_from_token(
         "picture": None,
         "email_verified": True,
         "created_at": datetime.now(timezone.utc).isoformat(),
+        "align_ref": new_align_ref(),
         **consent,
     }
     await db.users.insert_one(doc)

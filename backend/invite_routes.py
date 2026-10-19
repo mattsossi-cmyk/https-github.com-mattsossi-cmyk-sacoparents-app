@@ -23,6 +23,7 @@ import os
 import re
 import secrets
 import uuid
+from align_ref import new_align_ref
 from datetime import datetime, timedelta, timezone
 from typing import Optional
 
@@ -596,6 +597,7 @@ async def accept_coparent_invite(
         "email_verified": True,  # Email ownership proven via the invite link.
         "invited_by_user_id": invite.get("inviter_user_id"),
         "created_at": _iso(_now()),
+        "align_ref": new_align_ref(),
         **consent,
     }
     await db.users.insert_one(doc.copy())
