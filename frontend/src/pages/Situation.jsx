@@ -9,8 +9,7 @@
  *   - Co-Parenting       → /special-needs-v2 (Co-Parenting Assessment)
  *   - Communication      → /communication
  *   - My Child's Needs   → /special-needs-v2 (deep-dive picker inside)
- *   - Safety / Family
- *     Violence           → /safety-assessment
+ *   - Get Help           → /help
  *
  * The route is intentionally shallow — no session required. Guest
  * parents who came in from `/` land here, pick a topic, and the
@@ -26,7 +25,7 @@ import {
   Handshake,
   MessageCircle,
   Baby,
-  ShieldAlert,
+  LifeBuoy,
   Phone,
 } from "lucide-react";
 import AppShell from "../components/AppShell";
@@ -76,18 +75,18 @@ const TOPICS = [
     testid: "situation-topic-child-needs",
   },
   {
-    key: "safety",
-    label: "Safety / Family Violence",
-    body: "A private safety screen — never asks you to cooperate with the other parent. Includes hotlines and a downloadable safety plan.",
-    route: "/safety-assessment",
-    icon: ShieldAlert,
+    key: "help",
+    label: "Get Help",
+    body: "Local services and crisis lines, any time.",
+    route: "/help",
+    icon: LifeBuoy,
     tone: {
       bg: "bg-gradient-to-br from-[#B45F13] to-[#D97836]",
       border: "border-[#F1D9B7] hover:border-[#B45F13]",
       chip: "bg-[#FFEEDA] text-[#8A4610]",
       arrow: "text-[#8A4610]",
     },
-    testid: "situation-topic-safety",
+    testid: "situation-topic-help",
   },
 ];
 

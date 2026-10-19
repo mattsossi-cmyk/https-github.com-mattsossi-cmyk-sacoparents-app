@@ -1,0 +1,292 @@
+{
+ "signed_out": {
+  "/accessibility": {
+   "landed": "/accessibility",
+   "snippets": [
+    "n Summary, Co-Parenting Agreement, Special Needs Care Plan, Safety Screen) is produced with structured headings, real text (not scann"
+   ]
+  },
+  "/confidentiality": {
+   "landed": "/privacy-notice",
+   "snippets": [
+    "Assigned professionals may see individual screening answers, as described in the Privacy Notification you accep",
+    "Your co-parent never sees your individual screening answers"
+   ]
+  },
+  "/for-professionals": {
+   "landed": "/for-professionals",
+   "snippets": [
+    "Family-violence safety screen precedes any co-parent invite",
+    "What about family-violence safety?"
+   ]
+  },
+  "/help": {
+   "landed": "/help",
+   "snippets": [
+    "National Domestic Violence Hotline"
+   ]
+  },
+  "/legacy": {
+   "landed": "/legacy",
+   "snippets": [
+    "1-800-799-SAFE \u2014 National Domestic Violence Hotline"
+   ]
+  },
+  "/legal/app-store-privacy": {
+   "landed": "/legal/app-store-privacy",
+   "snippets": [
+    "Family-violence safety screen responses",
+    "Personal info \u2192 Other info (safety screen answers)\tYes\tNo\tNo\tOptional\tApp functionality",
+    "Reflections, assessment answers, and family-violence screens are never used to train the AI models that generate",
+    "ss (Health, self-reported, child-centered), Sensitive Info (safety screen), Identifiers (User ID)"
+   ]
+  },
+  "/legal/hipaa": {
+   "landed": "/legal/hipaa",
+   "snippets": [
+    "Findings 1 (family-violence pattern) and 2 (trauma impact) of the Safety Lens: private",
+    "diagnoses, medication routines, therapy attendance, family-violence history \u2014 would be Protected Health Information (PHI) in a",
+    "in the Special Needs Co-Parenting Assessment or the Family Safety and Functioning Reflection, you are self-reporting information about your c"
+   ]
+  },
+  "/methodology": {
+   "landed": "/methodology",
+   "snippets": [
+    ", 1986) and the HITS screening tool (Sherin et\u00a0al",
+    "Because a family-violence screen carries weight, we publish the names, credentials, r",
+    "Family Violence and Communication Safety Screen",
+    "Physical violence (recent + historical)",
+    "The Section-1 immediate-safety screen is adapted from the widely-used Danger Assessment (Campbell",
+    "This is a screening tool, not a validated clinical assessment"
+   ]
+  },
+  "/privacy": {
+   "landed": "/privacy-notice",
+   "snippets": [
+    "Assigned professionals may see individual screening answers, as described in the Privacy Notification you accep",
+    "Your co-parent never sees your individual screening answers"
+   ]
+  },
+  "/privacy-notice": {
+   "landed": "/privacy-notice",
+   "snippets": [
+    "Assigned professionals may see individual screening answers, as described in the Privacy Notification you accep",
+    "Your co-parent never sees your individual screening answers"
+   ]
+  },
+  "/privacy-policy": {
+   "landed": "/privacy-notice",
+   "snippets": [
+    "Assigned professionals may see individual screening answers, as described in the Privacy Notification you accep",
+    "Your co-parent never sees your individual screening answers"
+   ]
+  },
+  "/safety": {
+   "landed": "/safety",
+   "snippets": [
+    "911, the National Domestic Violence Hotline, local services in your state, and tips for keeping",
+    "City-wide violence prevention resources, including safety planning and connections to advocates",
+    "Family Violence Prevention Services / Battered Women & Children's Shelter",
+    "If you, your child, or someone you love is experiencing domestic violence, intimate partner violence, or feels unsafe \u2014 please reach",
+    "National Domestic Violence Hotline",
+    "Parenting concerns in domestic violence cases"
+   ]
+  },
+  "/safety-assessment": {
+   "landed": "/help",
+   "snippets": [
+    "National Domestic Violence Hotline"
+   ]
+  },
+  "/samples": {
+   "landed": "/samples",
+   "snippets": [
+    "Family Violence & Safety",
+    "Family Violence & Safety \u00b7 1",
+    "Family Violence \u2014 Confidential Safety Report"
+   ]
+  },
+  "/terms": {
+   "landed": "/terms",
+   "snippets": [
+    "tervention \u2014 if you are in danger, call 911 or the National Domestic Violence Hotline (1-800-799-7233)"
+   ]
+  },
+  "/what-professionals-see": {
+   "landed": "/what-professionals-see",
+   "snippets": [
+    "Needs report, Journey certificate, Foundation Statement or Safety Assessment PDF",
+    "Safety Assessment",
+    "The Complete Report shows whether your Quick Safety Check was completed and whether it was cleared or flagged, withou",
+    "The Family Safety and Functioning court report includes four summary findings: the family-vio",
+    "The Safety Assessment PDF you download for yourself includes your answers",
+    "What can leave: When you email your Safety Assessment to a mediator, your answers are left out unless you choose"
+   ]
+  }
+ },
+ "parent": {
+  "/accessibility": {
+   "landed": "/accessibility",
+   "snippets": [
+    "n Summary, Co-Parenting Agreement, Special Needs Care Plan, Safety Screen) is produced with structured headings, real text (not scann"
+   ]
+  },
+  "/communication": {
+   "landed": "/communication",
+   "snippets": [
+    "ggests it isn\u2019t safe to communicate, we\u2019ll route you to the Family Violence & Safety pathway instead"
+   ]
+  },
+  "/companion-assessment": {
+   "landed": "/companion-assessment",
+   "snippets": [
+    "You\u2019ve completed the Safety screen"
+   ]
+  },
+  "/confidentiality": {
+   "landed": "/privacy-notice",
+   "snippets": [
+    "Assigned professionals may see individual screening answers, as described in the Privacy Notification you accep",
+    "Your co-parent never sees your individual screening answers"
+   ]
+  },
+  "/for-professionals": {
+   "landed": "/for-professionals",
+   "snippets": [
+    "Family-violence safety screen precedes any co-parent invite",
+    "What about family-violence safety?"
+   ]
+  },
+  "/help": {
+   "landed": "/help",
+   "snippets": [
+    "National Domestic Violence Hotline"
+   ]
+  },
+  "/joint-reports": {
+   "landed": "/joint-reports",
+   "snippets": [
+    "Family Violence \u00b7 Communication Safety",
+    "National Domestic Violence Hotline: 1-800-799-7233 \u00b7 text START to 88788",
+    "front door on your dashboard \u2014 Co-Parenting, Communication, Family Violence & Safety, and Child Needs"
+   ]
+  },
+  "/legacy": {
+   "landed": "/legacy",
+   "snippets": [
+    "1-800-799-SAFE \u2014 National Domestic Violence Hotline"
+   ]
+  },
+  "/legal/app-store-privacy": {
+   "landed": "/legal/app-store-privacy",
+   "snippets": [
+    "Family-violence safety screen responses",
+    "Personal info \u2192 Other info (safety screen answers)\tYes\tNo\tNo\tOptional\tApp functionality",
+    "Reflections, assessment answers, and family-violence screens are never used to train the AI models that generate",
+    "ss (Health, self-reported, child-centered), Sensitive Info (safety screen), Identifiers (User ID)"
+   ]
+  },
+  "/legal/hipaa": {
+   "landed": "/legal/hipaa",
+   "snippets": [
+    "Findings 1 (family-violence pattern) and 2 (trauma impact) of the Safety Lens: private",
+    "diagnoses, medication routines, therapy attendance, family-violence history \u2014 would be Protected Health Information (PHI) in a",
+    "in the Special Needs Co-Parenting Assessment or the Family Safety and Functioning Reflection, you are self-reporting information about your c"
+   ]
+  },
+  "/methodology": {
+   "landed": "/methodology",
+   "snippets": [
+    ", 1986) and the HITS screening tool (Sherin et\u00a0al",
+    "Because a family-violence screen carries weight, we publish the names, credentials, r",
+    "Family Violence and Communication Safety Screen",
+    "Physical violence (recent + historical)",
+    "The Section-1 immediate-safety screen is adapted from the widely-used Danger Assessment (Campbell",
+    "This is a screening tool, not a validated clinical assessment"
+   ]
+  },
+  "/nd-risk-assessment": {
+   "landed": "/nd-risk-assessment",
+   "snippets": [
+    "FAMILY VIOLENCE \u00b7 ASSESSMENT",
+    "Your safety plan depends on this being accurate"
+   ]
+  },
+  "/pathway-report": {
+   "landed": "/pathway-report",
+   "snippets": [
+    "Prioritise safety planning with a qualified professional",
+    "tion, a legal opinion, or a substitute for a mediator's own screening"
+   ]
+  },
+  "/privacy": {
+   "landed": "/privacy-notice",
+   "snippets": [
+    "Assigned professionals may see individual screening answers, as described in the Privacy Notification you accep",
+    "Your co-parent never sees your individual screening answers"
+   ]
+  },
+  "/privacy-notice": {
+   "landed": "/privacy-notice",
+   "snippets": [
+    "Assigned professionals may see individual screening answers, as described in the Privacy Notification you accep",
+    "Your co-parent never sees your individual screening answers"
+   ]
+  },
+  "/privacy-policy": {
+   "landed": "/privacy-notice",
+   "snippets": [
+    "Assigned professionals may see individual screening answers, as described in the Privacy Notification you accep",
+    "Your co-parent never sees your individual screening answers"
+   ]
+  },
+  "/safety": {
+   "landed": "/safety",
+   "snippets": [
+    "911, the National Domestic Violence Hotline, local services in your state, and tips for keeping",
+    "City-wide violence prevention resources, including safety planning and connections to advocates",
+    "Family Violence Prevention Services / Battered Women & Children's Shelter",
+    "If you, your child, or someone you love is experiencing domestic violence, intimate partner violence, or feels unsafe \u2014 please reach",
+    "National Domestic Violence Hotline",
+    "Parenting concerns in domestic violence cases"
+   ]
+  },
+  "/safety-assessment": {
+   "landed": "/help",
+   "snippets": [
+    "National Domestic Violence Hotline"
+   ]
+  },
+  "/samples": {
+   "landed": "/samples",
+   "snippets": [
+    "Family Violence & Safety",
+    "Family Violence & Safety \u00b7 1",
+    "Family Violence \u2014 Confidential Safety Report"
+   ]
+  },
+  "/shared-with-professionals": {
+   "landed": "/shared-with-professionals",
+   "snippets": [
+    "Your Family Violence and Communication Safety Screen - SA CoParents"
+   ]
+  },
+  "/terms": {
+   "landed": "/terms",
+   "snippets": [
+    "tervention \u2014 if you are in danger, call 911 or the National Domestic Violence Hotline (1-800-799-7233)"
+   ]
+  },
+  "/what-professionals-see": {
+   "landed": "/what-professionals-see",
+   "snippets": [
+    "Needs report, Journey certificate, Foundation Statement or Safety Assessment PDF",
+    "Safety Assessment",
+    "The Complete Report shows whether your Quick Safety Check was completed and whether it was cleared or flagged, withou",
+    "The Family Safety and Functioning court report includes four summary findings: the family-vio",
+    "The Safety Assessment PDF you download for yourself includes your answers",
+    "What can leave: When you email your Safety Assessment to a mediator, your answers are left out unless you choose"
+   ]
+  }
+ }
+}

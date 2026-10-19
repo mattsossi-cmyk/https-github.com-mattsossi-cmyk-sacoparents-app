@@ -7,7 +7,7 @@ import { Link, useParams } from "react-router-dom";
 import AppShell from "../AppShell";
 import { api } from "../../lib/api";
 import { toast } from "sonner";
-import { ArrowLeft, Download, Loader2, ShieldAlert, Sparkles, TrendingUp, Star, MessageCircle, HelpCircle, Grid3x3 } from "lucide-react";
+import { ArrowLeft, Download, Loader2, Sparkles, TrendingUp, Star, MessageCircle, HelpCircle, Grid3x3 } from "lucide-react";
 import { logError } from "../../lib/logger";
 import AlignmentMilestoneCelebration from "./AlignmentMilestoneCelebration";
 import PathwayReportPrompt from "../PathwayReportPrompt";
@@ -223,7 +223,6 @@ export default function DeepDiveCompareView({ pathway }) {
   const { share_id: shareId } = useParams();
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [safetyBlocked, setSafetyBlocked] = useState(false);
   const [data, setData] = useState(null);
   const [timeline, setTimeline] = useState(null);
   const [downloading, setDownloading] = useState(false);
@@ -234,7 +233,6 @@ export default function DeepDiveCompareView({ pathway }) {
   const load = useCallback(async () => {
     setLoading(true);
     setError(null);
-    setSafetyBlocked(false);
     try {
       const res = await api.get(`${pathway.apiPrefix}/${shareId}`);
       setData(res.data);
@@ -249,7 +247,6 @@ export default function DeepDiveCompareView({ pathway }) {
     } catch (err) {
       logError(`${t} view`, err);
       const detail = err?.response?.data?.detail || "Could not load the comparison.";
-      if (err?.response?.status === 403 && /safety/i.test(detail)) setSafetyBlocked(true);
       setError(detail);
     } finally {
       setLoading(false);
@@ -297,23 +294,10 @@ export default function DeepDiveCompareView({ pathway }) {
 
         <ReportReviewNotice variant="comparison" className="mt-5" />
 
-        {safetyBlocked && (
-          <div className="mt-5 rounded-2xl border-2 border-[#B02A2A]/40 bg-[#F8D7D7]/40 p-4 sm:p-5" data-testid={`${t}-view-safety-block`}>
-            <div className="flex items-start gap-3">
-              <ShieldAlert className="text-[#B02A2A] shrink-0 mt-0.5" size={18} />
-              <div className="text-sm text-[#4B4567]">
-                Your Safety Screen recommends a limited-contact pathway. Access to the comparison is paused.
-                <div className="mt-2">
-                  <Link to="/safety-assessment" className="underline text-[#B02A2A] font-semibold">Review Safety Screen</Link>
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
 
         {loading && <div className="mt-6 text-sm text-[#4B4567]"><Loader2 className="animate-spin inline" size={14} /> Loading comparison…</div>}
 
-        {!loading && error && !safetyBlocked && (
+        {!loading && error && (
           <div className="mt-6 rounded-2xl border border-[#E5E0EE] bg-white p-5 text-sm text-[#B02A2A]" data-testid={`${t}-view-error`}>
             {error}
           </div>

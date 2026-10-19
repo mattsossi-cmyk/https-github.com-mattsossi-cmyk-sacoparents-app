@@ -9,7 +9,14 @@ import AppShell from "../AppShell";
 import { api } from "../../lib/api";
 import { toast } from "sonner";
 import {
-  ArrowLeft, Loader2, Mail, ShieldAlert, Check, X, Eye, RotateCcw, Users,
+  ArrowLeft,
+  Loader2,
+  Mail,
+  Check,
+  X,
+  Eye,
+  RotateCcw,
+  Users,
 } from "lucide-react";
 import { logError } from "../../lib/logger";
 import PathwayReportUnlockHint from "../PathwayReportUnlockHint";
@@ -47,7 +54,6 @@ export default function DeepDiveCompareHub({ pathway }) {
   const [shares, setShares] = useState([]);
   const [email, setEmail] = useState("");
   const [busy, setBusy] = useState(false);
-  const [safetyBlocked, setSafetyBlocked] = useState(false);
   const t = pathway.testidPrefix;
 
   const load = useCallback(async () => {
@@ -69,7 +75,6 @@ export default function DeepDiveCompareHub({ pathway }) {
     e?.preventDefault?.();
     if (!email.trim()) return;
     setBusy(true);
-    setSafetyBlocked(false);
     try {
       const res = await api.post(`${pathway.apiPrefix}/link`, { email: email.trim() });
       if (res.data?.already_existed) {
@@ -82,7 +87,6 @@ export default function DeepDiveCompareHub({ pathway }) {
     } catch (err) {
       logError(`${t} link`, err);
       const detail = err?.response?.data?.detail || "Could not create the comparison request.";
-      if (err?.response?.status === 403 && /safety/i.test(detail)) setSafetyBlocked(true);
       toast.error(detail);
     } finally { setBusy(false); }
   };
@@ -96,7 +100,6 @@ export default function DeepDiveCompareHub({ pathway }) {
     } catch (err) {
       logError(`${t} consent`, err);
       const detail = err?.response?.data?.detail || "Could not update your consent.";
-      if (err?.response?.status === 403 && /safety/i.test(detail)) setSafetyBlocked(true);
       toast.error(detail);
     } finally { setBusy(false); }
   };
@@ -131,26 +134,6 @@ export default function DeepDiveCompareHub({ pathway }) {
           {pathway.description}
         </p>
 
-        {safetyBlocked && (
-          <div className="mt-6 rounded-3xl border-2 border-[#B02A2A]/40 bg-[#F8D7D7]/40 p-5 sm:p-6" data-testid={`${t}-safety-block`}>
-            <div className="flex items-start gap-3">
-              <ShieldAlert className="text-[#B02A2A] shrink-0 mt-0.5" size={20} />
-              <div>
-                <div className="font-semibold text-[#B02A2A]">Comparison is paused for your safety.</div>
-                <p className="text-sm text-[#4B4567] mt-2">
-                  Your latest Safety Screen recommends a limited-contact communication pathway.
-                  Sharing detailed {pathway.safetyNoun} directly with your co-parent may not be
-                  appropriate right now. Please review your safety options before continuing.
-                </p>
-                <div className="mt-3">
-                  <Link to="/safety-assessment" data-testid={`${t}-safety-link`} className="inline-flex items-center gap-2 px-4 py-2 rounded-full text-xs bg-[#B02A2A] text-white hover:brightness-110">
-                    Review Safety Screen
-                  </Link>
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
 
         <PathwayReportUnlockHint shares={shares} testidPrefix={t} />
 
@@ -258,8 +241,7 @@ export default function DeepDiveCompareHub({ pathway }) {
         </div>
 
         <p className="text-[0.6875rem] text-[#4B4567] mt-8 italic max-w-3xl">
-          This tool is neutral: neither parent is labeled as correct. Safety Screen data is never
-          shared automatically. Either parent can revoke at any time.
+          This tool is neutral: neither parent is labeled as correct. Either parent can revoke at any time.
         </p>
       </div>
     </AppShell>

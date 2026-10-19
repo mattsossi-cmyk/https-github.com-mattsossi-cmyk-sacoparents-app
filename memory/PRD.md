@@ -9322,3 +9322,15 @@ dashboard for sharing SELECTED completed reports with any professional.
 - Platform (support agent): normal redeploys don't change the DB; automated backups hourly/daily 7 days + 7-day PITR (restore via
   support); no automatic pre-deploy backup — manual Dump DB.
 - Demo parents for screenshots: demo.checkin.a/b@example.com (case SA-DEMOCK), see test_credentials.md.
+\n
+### 2026-10-19 — Neutral wording (picker + comparison notes), new preview webhook secret (PREVIEW ONLY, no deploy)
+- /situation: "Safety / Family Violence" card → neutral "Get Help" card ("Local services and crisis lines, any time.", /help,
+  LifeBuoy icon, testid situation-topic-help).
+- Comparison screens (DeepDiveCompareHub/View, SpecialNeedsV2Compare/View): dead "Comparison is paused for your safety… Review
+  Safety Screen" banners + safetyBlocked state removed; footer now "This tool is neutral: neither parent is labeled as correct.
+  Either parent can revoke at any time."
+- Checked list of the rest: memory/SAFETY_WORDING_LIST.md (scan script memory/safety_wording_scan.py). Awaiting user decisions.
+- User asked "please generate a new align webhook secret": new 64-hex ALIGN_WEBHOOK_SECRET written to preview backend/.env only
+  (never printed; 0 copies elsewhere, 0 git commits). Webhook ON in preview, self-test OK (201 ms), unsigned POST 401.
+  96 tests passed across Safety Gate / check-in / align_ref suites. User must copy it into Passwords + Align's Secrets tab
+  (replaces the earlier value). Two-app test still NOT run (needs Align's test address + user "go").
