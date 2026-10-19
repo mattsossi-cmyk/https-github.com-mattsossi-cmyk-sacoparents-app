@@ -1147,3 +1147,9 @@ Owner rulings: 1 replace A/B/C with 8-domain set; 2 professional-decides (no aut
 - ALIGN_WEBHOOK_SECRET: value pasted in chat by owner → burned. Removed from backend/.env; 0 occurrences in tree, git history, logs, DB. Left UNSET; no replacement generated; SAFETY_STATUS_WEBHOOK=false; admin test ping disabled. Parent app returned 401 to signed pings (acceptable while paused).
 - Read-only UI pass iteration_74: professional, judge, parent flows OK; 14-day invite wording; no SMS card; Google button present.
 - Production secrets table and EMAIL_DNS_SETUP.md (sacoparentsalign.com) delivered in chat.
+
+## 2026-10-18 19:32–20:xx CDT — PRODUCTION LIVE (align-report.emergent.host, run 45d2385e, same code as preview)
+- Owner said 'deploy' → first deploy via deployer; redeploy by owner after secrets edit; both Live. Static-check .gitignore '.env blocker' is a generic rule — owner keeps .env untracked and uses Deployment Secrets; deploy succeeded that way.
+- Prod secrets (names): 17/19 required present; RETENTION_ENGINE_ENABLED and GOOGLE_SIGNIN absent (defaults off/on); ALIGN_WEBHOOK_SECRET absent; INTEGRATION_PROXY_URL platform-managed (ignore). Owner to add the two missing keys at next deploy.
+- CORRECTION: seeded pro accounts joy@bsossi.com / dralsmith@gmail.com existed in prod since an earlier release (Sept activity), not created today. Joy already set own password (must_change_password cleared). Dr Smith: temp password never used to log in; owner chose option (iii): forgot-password email sent once from prod (15-min code); temp password NOT invalidated. Deployer agent is read-only for prod data; DB Manager one-liner documented in chat if owner wants hard invalidation later.
+- Owner decision (a): Family check-in stays live; A/B/C removed. Webhook paused; no replacement secret.
