@@ -1141,3 +1141,9 @@ Owner rulings: 1 replace A/B/C with 8-domain set; 2 professional-decides (no aut
 - Twilio/SMS removed: sms.py, UrgentSmsSettings.jsx, court_messages alert-settings/test-sms routes + _urgent_sms, test_iter76_urgent_sms.py deleted; twilio removed from requirements.txt and pip; TWILIO_* removed from backend/.env. Urgent-safety EMAIL alert to judges remains.
 - SAFETY_STATUS_WEBHOOK=false; ALIGN_WEBHOOK_SECRET unset (unchanged).
 - Tests: safety suites 66 passed / 5 skipped (A/B/C), iter88 13 passed/4 skipped; court/ai suites 21 passed.
+
+## 2026-10-18 (18:54 CDT approval + addition) — PREVIEW ONLY, nothing deployed
+- Owner chose (a): Family check-in stays the single live screening; A/B/C stays removed. No code change.
+- ALIGN_WEBHOOK_SECRET: value pasted in chat by owner → burned. Removed from backend/.env; 0 occurrences in tree, git history, logs, DB. Left UNSET; no replacement generated; SAFETY_STATUS_WEBHOOK=false; admin test ping disabled. Parent app returned 401 to signed pings (acceptable while paused).
+- Read-only UI pass iteration_74: professional, judge, parent flows OK; 14-day invite wording; no SMS card; Google button present.
+- Production secrets table and EMAIL_DNS_SETUP.md (sacoparentsalign.com) delivered in chat.
