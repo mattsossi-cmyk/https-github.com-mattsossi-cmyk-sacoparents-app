@@ -1197,3 +1197,4 @@ Owner rulings: 1 replace A/B/C with 8-domain set; 2 professional-decides (no aut
 - PROFESSIONAL_ACCESS_NOTICE (backend+frontend, identical): 'professionals assigned to your case', status may appear in case documents never answers, admins included (supervisors cannot open answers unless assigned/admin).
 - fv PRIVACY_NOTE plural + reporting line conditional ('in Texas, any person must report'); hub privacy line; footnote 'skipped, not why'; after-submit line; ai_tools fallback label 5.5.
 - Tests updated: iter108 (exact notice + version), iter95 (version), iter97 (collection line). Counsel review of wording recommended before deploy.
+- STANDING FACT (owner 2026-10-19): Align serves Texas families only. Reporting line is Texas-specific (fv_screening.MANDATORY_REPORTING_NOTE), no conditional wording.
