@@ -303,7 +303,7 @@ def test_record_encrypted_and_audited():
     case_id, ha, _ = _case()
     _send(_body(case_id, 1, mode="restricted", set_by="professional"))
     doc = _stored(case_id)
-    assert set(doc) == {"case_id", "version", "enc", "updated_at"}
+    assert set(doc) == {"case_id", "version", "enc", "updated_at", "setup_completed_at"}
     assert "restricted" not in doc["enc"] and "Reviewer" not in doc["enc"]
     assert cs.decrypt(doc["enc"])["professional_name"] == "Dr. Reviewer"
     _flags(ha)
@@ -566,3 +566,24 @@ def test_checkin_reminder_week_rule():
     assert show(ha) is False and show(hb) is False
     assert "no-store" in httpx.get(url, headers=ha, timeout=20).headers.get("cache-control", "")
     assert httpx.get(url, timeout=20).status_code == 401
+
+
+# "Finished on" date: set when setup turns complete, kept while complete, cleared when reopened, newer date after re-complete.
+def test_setup_completed_on_date():
+    from datetime import datetime as _dt, timezone as _tz
+    case_id, ha, hb = _case()
+    on = lambda h: _flags(h).json()["setup_completed_on"]  # noqa: E731
+    assert on(ha) is None and on(hb) is None
+    assert _send(_body(case_id, 1, set_by="default", offered=True)).status_code == 200
+    today = _dt.now(_tz.utc).date().isoformat()
+    a, b = _flags(ha), _flags(hb)
+    assert a.content == b.content and a.json()["setup_completed_on"] == today
+    db.case_safety.update_one({"case_id": case_id}, {"$set": {"setup_completed_at": "2026-01-02T03:04:05+00:00"}})
+    assert _send(_body(case_id, 2, mode="structured", set_by="professional", offered=True)).status_code == 200
+    assert on(ha) == "2026-01-02"
+    assert _send(_body(case_id, 3, set_by="default", offered=False)).status_code == 200
+    assert on(ha) is None and db.case_safety.find_one({"case_id": case_id})["setup_completed_at"] is None
+    assert _send(_body(case_id, 4, set_by="default", offered=True)).status_code == 200
+    assert on(ha) == today == on(hb)
+    db.case_safety.update_one({"case_id": case_id}, {"$unset": {"setup_completed_at": ""}})
+    assert on(ha) is None and _flags(ha).json()["setup_complete"] is True

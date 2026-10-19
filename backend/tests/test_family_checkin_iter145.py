@@ -79,7 +79,7 @@ class TestCaseSettings:
     def test_fields_and_no_banned_words(self):
         d = cs(ST["a"]).json()
         assert set(d.keys()) == {"banner", "set_by_label", "features", "template_categories", "settings",
-                                 "plan_options", "setup_complete"}
+                                 "plan_options", "setup_complete", "setup_completed_on"}
         low = json.dumps(d).lower()
         for w in BANNED:
             assert w not in low.replace("setup_complete", ""), w

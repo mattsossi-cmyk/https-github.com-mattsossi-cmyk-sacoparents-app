@@ -158,7 +158,8 @@ async def read_record(db, case_id: str, actor_type: str, actor_id: Optional[str]
     await audit(db, actor_type, actor_id, "read", case_id)
     if not doc:
         return None
-    return {**decrypt(doc["enc"]), "version": doc["version"], "updated_at": doc["updated_at"]}
+    return {**decrypt(doc["enc"]), "version": doc["version"], "updated_at": doc["updated_at"],
+            "setup_completed_at": doc.get("setup_completed_at")}
 
 
 async def apply_update(db, upd: Dict[str, Any]) -> str:
@@ -176,7 +177,11 @@ async def apply_update(db, upd: Dict[str, Any]) -> str:
         if old["safety_mode"] == "restricted" and old["set_by"] == "auto_red" and fields["set_by"] != "professional" and not keeps_restricted:
             await audit(db, "system", "sacoparentsalign", "write_ignored_until_professional", case_id)
             return "locked"
-    doc = {"case_id": case_id, "version": version, "enc": encrypt(fields), "updated_at": now_iso()}
+    # Date the case setup was marked complete: set when it turns complete, kept while it stays complete, cleared if reopened.
+    was_complete = bool(cur) and decrypt(cur["enc"])["screening_offered"]
+    completed_at = (cur.get("setup_completed_at") if was_complete else now_iso()) if fields["screening_offered"] else None
+    doc = {"case_id": case_id, "version": version, "enc": encrypt(fields), "updated_at": now_iso(),
+           "setup_completed_at": completed_at}
     if cur:
         res = await db[COLL].update_one({"case_id": case_id, "version": cur["version"]}, {"$set": doc})
         if not res.modified_count:
@@ -200,7 +205,8 @@ def resolve(rec: Optional[Dict[str, Any]]) -> Dict[str, Any]:
         if not r["screening_offered"] and RANK[mode] < RANK["structured"]:
             mode, source = "structured", "case_setup"
     return {"mode": mode, "source": source, "referral": r["referral"], "note_review": bool(r["note_review"]) and mode == "restricted",
-            "setup_complete": bool(r["screening_offered"])}
+            "setup_complete": bool(r["screening_offered"]),
+            "setup_completed_at": r.get("setup_completed_at") if r["screening_offered"] else None}
 
 
 def combine(resolved: List[Dict[str, Any]]) -> Dict[str, Any]:
@@ -208,6 +214,7 @@ def combine(resolved: List[Dict[str, Any]]) -> Dict[str, Any]:
     if not resolved:
         return resolve(None)
     top = max(resolved, key=lambda x: RANK[x["mode"]])
+    dates = [x["setup_completed_at"] for x in resolved]
     same = [x for x in resolved if x["mode"] == top["mode"]]
     return {
         "mode": top["mode"],
@@ -215,6 +222,7 @@ def combine(resolved: List[Dict[str, Any]]) -> Dict[str, Any]:
         "referral": "parallel_parenting" if any(x["referral"] == "parallel_parenting" for x in resolved) else "none",
         "note_review": any(x["note_review"] for x in same),
         "setup_complete": all(x["setup_complete"] for x in resolved),
+        "setup_completed_at": max(dates) if all(dates) else None,
     }
 
 
@@ -231,6 +239,7 @@ def payload(res: Dict[str, Any]) -> Dict[str, Any]:
         "settings": [{"label": a, "value": b} for a, b in settings],
         "plan_options": res["referral"] == "parallel_parenting",
         "setup_complete": res["setup_complete"],
+        "setup_completed_on": (res["setup_completed_at"] or "")[:10] or None,
     }
 
 

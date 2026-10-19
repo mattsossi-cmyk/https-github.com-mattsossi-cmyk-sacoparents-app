@@ -7,10 +7,17 @@ import { useCheckinReminder } from "../../lib/useCheckinReminder";
 import { useCheckinThanks } from "../../lib/useCheckinThanks";
 import { ReminderNote, ThanksNote } from "./FamilyCheckinNotes";
 
+// Case-level UTC date, so both parents see the same day.
+const finishedOn = (d) =>
+  /^\d{4}-\d{2}-\d{2}$/.test(d || "")
+    ? new Date(`${d}T00:00:00Z`).toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric", timeZone: "UTC" })
+    : null;
+
 // Same words for both parents. The check-in itself happens on the Align site; this app never asks or saves anything.
 export function FamilyCheckinCard({ alignUrl, testid = "family-checkin", stacked = false }) {
   const settings = useCaseSettings();
   const done = settings?.setup_complete === true;
+  const finished = done ? finishedOn(settings.setup_completed_on) : null;
   const [thanks, closeThanks] = useCheckinThanks(done);
   const [reminder, closeReminder] = useCheckinReminder(!!settings && !done);
   const href = useCheckinLink(alignUrl);
@@ -34,6 +41,11 @@ export function FamilyCheckinCard({ alignUrl, testid = "family-checkin", stacked
                 </span>
               )}
             </div>
+            {finished && (
+              <p data-testid={`${testid}-finished-on`} className="text-xs font-semibold text-emerald-800 mt-1">
+                Finished on {finished}
+              </p>
+            )}
             <p className="text-sm text-[#5f6368] mt-0.5">A short check-in for your case, done on your professional&apos;s site.</p>
           </div>
         </div>
