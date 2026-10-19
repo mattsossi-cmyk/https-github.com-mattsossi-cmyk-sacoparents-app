@@ -172,7 +172,7 @@ export default function Align() {
           <p>
             Created by Matt Sossi, Founder of SA CoParents (San Antonio,
             Texas). Future production domain:
-            <span className="font-mono"> sacoparentsalign.online</span>.
+            <span className="font-mono"> sacoparentsalign.com</span>.
           </p>
         </footer>
       </main>

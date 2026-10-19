@@ -36,6 +36,7 @@ internal_router = APIRouter(include_in_schema=False)
 MAX_AGE_SECONDS = 300
 SIGNATURE_HEADER = "X-Align-Signature"
 NO_STORE = {"Cache-Control": "no-store"}
+THANKS = "family_checkin_thanks"
 SUPPORT_EMAILS = {e.strip().lower() for e in os.environ["SUPPORT_EMAILS"].split(",") if e.strip()}
 
 
@@ -139,6 +140,29 @@ async def case_settings(case_id: Optional[str] = None, current: UserPublic = Dep
         ids = [case_id]
     resolved = [await cs.resolved_for_case(db, c, "user", current.user_id) for c in ids]
     return JSONResponse(cs.payload(cs.combine(resolved)), headers=NO_STORE)
+
+# Case number for the Align check-in link: only when the parent is in exactly one case.
+@router.get("/family-checkin/link")
+async def checkin_link(current: UserPublic = Depends(get_current_user), db=Depends(get_db)):
+    ids = await cs.case_ids_for(db, current.user_id)
+    return JSONResponse({"case_id": ids[0] if len(ids) == 1 else None}, headers=NO_STORE)
+
+
+# One-time "Thanks, your check-in is done" note, per parent account. Only a seen time is stored.
+@router.get("/family-checkin/thanks")
+async def checkin_thanks(current: UserPublic = Depends(get_current_user), db=Depends(get_db)):
+    if await db[THANKS].find_one({"user_id": current.user_id}, {"_id": 1}):
+        return JSONResponse({"show": False}, headers=NO_STORE)
+    return JSONResponse({"show": await cs.setup_complete_for(db, current.user_id)}, headers=NO_STORE)
+
+
+@router.post("/family-checkin/thanks/seen")
+async def checkin_thanks_seen(current: UserPublic = Depends(get_current_user), db=Depends(get_db)):
+    await db[THANKS].update_one({"user_id": current.user_id},
+                                {"$setOnInsert": {"user_id": current.user_id, "seen_at": cs.now_iso()}}, upsert=True)
+    return {"ok": True}
+
+
 
 
 def require_support(current: UserPublic = Depends(get_current_user)) -> UserPublic:

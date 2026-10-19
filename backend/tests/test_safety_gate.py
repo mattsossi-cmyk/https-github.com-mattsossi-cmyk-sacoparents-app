@@ -515,3 +515,28 @@ def test_family_checkin_status_same_for_both_parents():
     assert a.content == b.content and a.json()["setup_complete"] is True
     item = lambda h: next(i for i in httpx.post(f"{API}/court-path/checklist", json={}, headers=h, timeout=20).json()["items"] if i["key"] == "family_checkin")  # noqa: E731
     assert item(ha) == item(hb) and item(ha)["status"] == "done"
+
+
+# "Thanks, your check-in is done" shows once per parent account, only after the case is set up.
+def test_checkin_thanks_once_per_account():
+    case_id, ha, hb = _case()
+    url = f"{API}/family-checkin/thanks"
+    show = lambda h: httpx.get(url, headers=h, timeout=20).json()["show"]  # noqa: E731
+    assert show(ha) is False and show(hb) is False
+    assert _send(_body(case_id, 1, set_by="default", offered=True)).status_code == 200
+    assert show(ha) is True and show(hb) is True
+    assert httpx.post(f"{url}/seen", headers=ha, timeout=20).json() == {"ok": True}
+    assert httpx.post(f"{url}/seen", headers=ha, timeout=20).status_code == 200
+    assert show(ha) is False and show(hb) is True
+    assert "no-store" in httpx.get(url, headers=hb, timeout=20).headers.get("cache-control", "")
+    assert httpx.get(url, timeout=20).status_code == 401
+
+
+# Check-in link: both parents in one case get the same case number; no case -> null (main Align site).
+def test_checkin_link_case_number():
+    case_id, ha, hb = _case()
+    url = f"{API}/family-checkin/link"
+    a, b = httpx.get(url, headers=ha, timeout=20), httpx.get(url, headers=hb, timeout=20)
+    assert a.json() == b.json() == {"case_id": case_id}
+    assert "no-store" in a.headers.get("cache-control", "")
+    assert httpx.get(url, timeout=20).status_code == 401

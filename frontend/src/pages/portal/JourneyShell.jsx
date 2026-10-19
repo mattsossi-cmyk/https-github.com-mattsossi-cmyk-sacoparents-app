@@ -488,7 +488,7 @@ const PRIMARY_MODULES = [
 // code change.
 const ALIGN_SITE_URL =
   process.env.REACT_APP_ALIGN_SITE_URL ||
-  "https://sacoparentsalign.online";
+  "https://sacoparentsalign.com";
 
 export function JourneyShell({
   user,
