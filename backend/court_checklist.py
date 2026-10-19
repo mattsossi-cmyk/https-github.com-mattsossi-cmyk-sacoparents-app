@@ -12,6 +12,7 @@ from motor.motor_asyncio import AsyncIOMotorDatabase
 from pydantic import BaseModel, Field
 
 from auth import UserPublic, get_current_user, get_db
+from case_safety import setup_complete_for
 from court_summary import build_summary
 from pdf_base import _safe, render_pdf_copyright
 
@@ -23,9 +24,6 @@ MUTED = (100, 116, 139)
 EMERALD = (56, 161, 105)
 AMBER = (217, 119, 6)
 CN_NAMES = {"medical": "Medical", "educational": "Educational", "psychological": "Psychological"}
-MODULES = [("foundation", "A", "Child Needs & Priorities"), ("coparenting", "B", "Co-Parenting Dynamics"),
-           ("safety", "C", "Conflict Readiness")]
-MODULE_STATUS = {"completed": "done", "in_progress": "in_progress", "not_yet": "todo"}
 DISCLAIMER = ("Personal progress summary from SA CoParents. It is not a legal document "
               "or proof of compliance with a court order.")
 
@@ -40,11 +38,6 @@ RequestKey = Literal["coparent", "self", "educational", "medical", "psychologica
 class RequestedBody(BaseModel):
     # Which Court-page options the parent's professional asked them to complete.
     keys: List[RequestKey] = Field(default_factory=list, max_length=7)
-
-
-class ChecklistBody(BaseModel):
-    # Module A/B/C status exactly as the Court page shows it.
-    modules: Dict[str, Literal["completed", "in_progress", "not_yet"]] = Field(default_factory=dict)
 
 
 def _day(iso: Optional[str]) -> str:
@@ -108,7 +101,7 @@ async def _requested_items(db: AsyncIOMotorDatabase, uid: str, keys: List[str]) 
             for k in REQUESTABLE if k in keys]
 
 
-async def build_checklist(db: AsyncIOMotorDatabase, user: UserPublic, modules: Dict[str, str], requested: Optional[List[str]] = None) -> Dict[str, Any]:
+async def build_checklist(db: AsyncIOMotorDatabase, user: UserPublic, requested: Optional[List[str]] = None) -> Dict[str, Any]:
     uid = user.user_id
     ps = await db.portal_state.find_one(
         {"user_id": uid}, {"_id": 0, "court_key": 1, "court_legal_name": 1, "biff_logs": 1}
@@ -129,11 +122,9 @@ async def build_checklist(db: AsyncIOMotorDatabase, user: UserPublic, modules: D
         _item("case", "Case code verified", "done" if case else "todo", f"Case {case}" if case else "",
               "Enter the code from your court order on the Court page."),
     ]
-    for key, letter, title in MODULES:
-        status = MODULE_STATUS[modules.get(key, "not_yet")]
-        items.append(_item(f"module_{key}", f"Module {letter}: {title}", status,
-                           {"done": "Completed", "in_progress": "In progress"}.get(status, ""),
-                           f"Finish Module {letter} on the Court page."))
+    checkin = await setup_complete_for(db, uid)
+    items.append(_item("family_checkin", "Family check-in", "done" if checkin else "todo", "Done" if checkin else "",
+                       "Open the Family check-in at the top of your Court page."))
     items += [
         _item("card1", "Self-Assessment", "done" if sa else "todo",
               f"{len(sa)} completed · latest {_day(sa[0]['completed_at'])}" if sa else "",
@@ -213,7 +204,7 @@ def _header(pdf: FPDF, data: Dict[str, Any]) -> None:
     if data.get("requested_only"):
         pdf.set_font("Helvetica", "I", 8.5)
         pdf.set_text_color(*MUTED)
-        pdf.cell(0, 4.6, "Showing your case, your safety check and the assessments your professional asked for.",
+        pdf.cell(0, 4.6, "Showing your case, your Family check-in and the assessments your professional asked for.",
                  new_x="LMARGIN", new_y="NEXT")
     pdf.ln(2)
     pdf.set_font("Helvetica", "B", 11)
@@ -285,21 +276,19 @@ async def get_summary(user: UserPublic = Depends(get_current_user), db: AsyncIOM
 
 @router.post("/checklist")
 async def get_checklist(
-    body: ChecklistBody,
     user: UserPublic = Depends(get_current_user),
     db: AsyncIOMotorDatabase = Depends(get_db),
 ) -> Dict[str, Any]:
-    return await build_checklist(db, user, body.modules)
+    return await build_checklist(db, user)
 
 
 @router.post("/checklist/pdf")
 async def checklist_pdf(
-    body: ChecklistBody,
     user: UserPublic = Depends(get_current_user),
     db: AsyncIOMotorDatabase = Depends(get_db),
 ) -> StreamingResponse:
     req = _requested_shape(await _sync_professional_requests(db, user.user_id))["keys"]
-    pdf_bytes = build_checklist_pdf(await build_checklist(db, user, body.modules, req))
+    pdf_bytes = build_checklist_pdf(await build_checklist(db, user, req))
     return StreamingResponse(
         BytesIO(pdf_bytes),
         media_type="application/pdf",

@@ -296,12 +296,12 @@ class TestChecklistPDF:
     def test_pdf_with_ticks_shows_only_requested(self, db):
         user = _register(_mk_email())
         requests.put(f"{API}/court-path/requested", headers=_auth(user), json={"keys": ["medical", "self", "parallel"]})
-        r = requests.post(f"{API}/court-path/checklist/pdf", headers=_auth(user), json={"modules": {}})
+        r = requests.post(f"{API}/court-path/checklist/pdf", headers=_auth(user), json={})
         assert r.status_code == 200
         assert r.headers.get("content-type", "").startswith("application/pdf")
         text = self._pdftext(r.content)
         assert "Case code verified" in text
-        assert "Safety check" in text
+        assert "Family check-in" in text
         assert "asked for" in text  # from the italic note
         assert "Module A" not in text and "Module B" not in text and "Module C" not in text
         assert "BIFF" not in text
@@ -315,21 +315,18 @@ class TestChecklistPDF:
         # No ticks + wipe any auto-tick (no case assigned)
         r = requests.put(f"{API}/court-path/requested", headers=_auth(user), json={"keys": []})
         assert r.status_code == 200
-        r = requests.post(f"{API}/court-path/checklist/pdf", headers=_auth(user),
-                         json={"modules": {"foundation": "not_yet", "coparenting": "not_yet", "safety": "not_yet"}})
+        r = requests.post(f"{API}/court-path/checklist/pdf", headers=_auth(user), json={})
         assert r.status_code == 200
         text = self._pdftext(r.content)
-        assert "Module A" in text
-        assert "Module B" in text
-        assert "Module C" in text
+        assert "Family check-in" in text
+        assert "Module A" not in text
         assert "Self-Assessment" in text
         assert "BIFF" in text
         requests.delete(f"{API}/auth/account", headers=_auth(user))
 
     def test_checklist_json_card_unchanged(self):
         user = _register(_mk_email())
-        r = requests.post(f"{API}/court-path/checklist", headers=_auth(user),
-                         json={"modules": {"foundation": "not_yet", "coparenting": "not_yet", "safety": "not_yet"}})
+        r = requests.post(f"{API}/court-path/checklist", headers=_auth(user), json={})
         assert r.status_code == 200
         data = r.json()
         keys = {i["key"] for i in data["items"]}

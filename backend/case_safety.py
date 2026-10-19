@@ -199,7 +199,8 @@ def resolve(rec: Optional[Dict[str, Any]]) -> Dict[str, Any]:
         mode, source = r["safety_mode"], "professional"
         if not r["screening_offered"] and RANK[mode] < RANK["structured"]:
             mode, source = "structured", "case_setup"
-    return {"mode": mode, "source": source, "referral": r["referral"], "note_review": bool(r["note_review"]) and mode == "restricted"}
+    return {"mode": mode, "source": source, "referral": r["referral"], "note_review": bool(r["note_review"]) and mode == "restricted",
+            "setup_complete": bool(r["screening_offered"])}
 
 
 def combine(resolved: List[Dict[str, Any]]) -> Dict[str, Any]:
@@ -213,6 +214,7 @@ def combine(resolved: List[Dict[str, Any]]) -> Dict[str, Any]:
         "source": "professional" if any(x["source"] == "professional" for x in same) else "case_setup",
         "referral": "parallel_parenting" if any(x["referral"] == "parallel_parenting" for x in resolved) else "none",
         "note_review": any(x["note_review"] for x in same),
+        "setup_complete": all(x["setup_complete"] for x in resolved),
     }
 
 
@@ -228,6 +230,7 @@ def payload(res: Dict[str, Any]) -> Dict[str, Any]:
         "template_categories": TEMPLATE_CATEGORIES,
         "settings": [{"label": a, "value": b} for a, b in settings],
         "plan_options": res["referral"] == "parallel_parenting",
+        "setup_complete": res["setup_complete"],
     }
 
 
@@ -249,3 +252,9 @@ async def case_ids_for(db, user_id: str) -> List[str]:
 
 async def resolved_for_case(db, case_id: str, actor_type: str, actor_id: Optional[str]) -> Dict[str, Any]:
     return resolve(await read_record(db, case_id, actor_type, actor_id))
+
+
+async def setup_complete_for(db, user_id: str) -> bool:
+    """Family check-in done for every case this parent is in (same answer for both parents)."""
+    ids = await case_ids_for(db, user_id)
+    return combine([await resolved_for_case(db, c, "user", user_id) for c in ids])["setup_complete"]

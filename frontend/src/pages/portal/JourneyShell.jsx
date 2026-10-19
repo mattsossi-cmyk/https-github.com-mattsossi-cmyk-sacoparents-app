@@ -4,6 +4,7 @@ import { toast } from "sonner";
 
 import InviteCoparentCard from "../../components/InviteCoparentCard";
 import { SelfAssessmentView } from "./SelfAssessmentView";
+import { FamilyCheckinCard } from "../../components/caseSettings/FamilyCheckinCard";
 import { CourtOrderedView } from "./CourtOrderedView";
 import { ParallelParentingView } from "./ParallelParentingView";
 import { useSelfAssessmentHistory } from "./selfAssessment/useSelfAssessmentHistory";
@@ -482,21 +483,6 @@ const PRIMARY_MODULES = [
   },
 ];
 
-const STATUS_META = {
-  completed: {
-    label: "Completed",
-    chip: "bg-emerald-100 text-emerald-800 border-emerald-200",
-  },
-  in_progress: {
-    label: "In progress",
-    chip: "bg-blue-100 text-blue-800 border-blue-200",
-  },
-  not_yet: {
-    label: "Not started",
-    chip: "bg-slate-100 text-slate-700 border-slate-200",
-  },
-};
-
 // Professional (Align) site opened from the Court Ordered sub-view.
 // Env-overridable so the founder can switch the hostname without a
 // code change.
@@ -515,11 +501,9 @@ export function JourneyShell({
   onDownloadCourtPdf,
   courtRequest = 0,
   overlayOpen = false,
-  onOpenSafety = () => {},
   onClearGreyRock = () => {},
   onOpenSafetyRetake = () => {},
   selfAssessmentUrl = "/coparenting-self-assessment-preview.html",
-  onOpenGuidedJourney = () => {},
   onOpenBiffCoach = () => {},
   biffCoachOpen = false,
   onOpenCommBuilder = () => {},
@@ -949,18 +933,6 @@ export function JourneyShell({
 
   const greetingName = user?.name ? user.name.split(" ")[0] : null;
 
-  const moduleCta = (m) => {
-    // Primary module tap: Conflict Readiness opens the Safety
-    // screen because the clinical SafetyScreen is where the
-    // "readiness" questions live. The other two open their guided
-    // journey topic.
-    if (m.topic === "safety") {
-      onOpenSafety();
-    } else {
-      onOpenGuidedJourney(m.topic);
-    }
-  };
-
   // Shared sub-view header (brand + back + switch-door + quick-exit).
   const SubViewHeader = ({ title, subtitle }) => {
     const otherDoor = view === "court" ? "self" : "court";
@@ -1182,11 +1154,6 @@ export function JourneyShell({
           courtKey={courtKey}
           mediator={verifiedMediator}
           onVerify={onVerifyCourtKey}
-          modules={PRIMARY_MODULES.map((m) => {
-            const status = progressByTopic?.[m.topic] || "not_yet";
-            return { ...m, status, ...STATUS_META[status] };
-          })}
-          onOpenModule={moduleCta}
           onOpenCard={openCourtCard}
           fb={foundationBuilder}
           onOpenParallel={(screen) => openPp(screen)}
@@ -1271,6 +1238,7 @@ export function JourneyShell({
           title="Self Journey"
           subtitle="Take the next step to build a safer, calmer, and more child-focused future."
         />
+        <FamilyCheckinCard alignUrl={ALIGN_SITE_URL} testid="self-family-checkin" />
 
         <GoalBanner
           testid="door-self-goal"

@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import io
+import re
 import os
 import uuid
 from datetime import datetime, timezone
@@ -131,60 +132,49 @@ class TestTipHistoryPdf:
 # ---------------- court checklist JSON ----------------
 class TestCourtChecklistJson:
     def test_auth_required(self):
-        r = requests.post(f"{API}/court-path/checklist", json={"modules": {}}, timeout=15)
+        r = requests.post(f"{API}/court-path/checklist", json={}, timeout=15)
         assert r.status_code == 401
-
-    def test_invalid_module_status_422(self, tok_p1):
-        r = requests.post(f"{API}/court-path/checklist",
-                          json={"modules": {"foundation": "banana"}},
-                          headers=_h(tok_p1), timeout=15)
-        assert r.status_code == 422
 
     def test_checklist_shape_and_keys(self, tok_p2):
         r = requests.post(
             f"{API}/court-path/checklist",
-            json={"modules": {"foundation": "completed", "coparenting": "in_progress", "safety": "not_yet"}},
+            json={},
             headers=_h(tok_p2), timeout=20,
         )
         assert r.status_code == 200, r.text
         data = r.json()
-        assert data["total"] == 10
-        assert len(data["items"]) == 10
+        assert data["total"] == 7
+        assert len(data["items"]) == 7
         keys = [i["key"] for i in data["items"]]
-        assert keys == ["case", "safety", "module_foundation", "module_coparenting", "module_safety",
-                        "card1", "card2", "card3", "card4", "biff"]
+        assert keys == ["case", "family_checkin", "card1", "card2", "card3", "card4", "biff"]
         for it in data["items"]:
             assert set(it.keys()) >= {"key", "label", "status", "detail", "hint"}
             assert it["status"] in {"done", "in_progress", "todo"}
-        # module mapping
         m = {i["key"]: i for i in data["items"]}
-        assert m["module_foundation"]["status"] == "done"
-        assert m["module_coparenting"]["status"] == "in_progress"
-        assert m["module_safety"]["status"] == "todo"
+        assert m["family_checkin"]["label"] == "Family check-in"
+        assert m["family_checkin"]["status"] in {"done", "todo"}
         # case ref for parent2 (preseeded COURT-8842)
         assert "case_ref" in data
 
-    def test_safety_item_never_reveals_flagged(self, tok_p1):
-        r = requests.post(f"{API}/court-path/checklist", json={"modules": {}},
-                          headers=_h(tok_p1), timeout=20)
+    def test_family_checkin_item_is_neutral(self, tok_p1):
+        r = requests.post(f"{API}/court-path/checklist", json={}, headers=_h(tok_p1), timeout=20)
         assert r.status_code == 200
-        safety = next(i for i in r.json()["items"] if i["key"] == "safety")
-        # Must not leak flag info; detail is only 'Completed' or empty
-        assert safety["detail"] in {"", "Completed"}
-        for word in ["flag", "flagged", "unsafe", "risk"]:
-            assert word.lower() not in safety["detail"].lower()
+        item = next(i for i in r.json()["items"] if i["key"] == "family_checkin")
+        assert item["detail"] in {"", "Done"}
+        for word in ["flag", "unsafe", "risk", "safety", "screening"]:
+            assert word not in (item["detail"] + item["hint"] + item["label"]).lower()
 
 
 # ---------------- court checklist PDF ----------------
 class TestCourtChecklistPdf:
     def test_pdf_auth_required(self):
-        r = requests.post(f"{API}/court-path/checklist/pdf", json={"modules": {}}, timeout=15)
+        r = requests.post(f"{API}/court-path/checklist/pdf", json={}, timeout=15)
         assert r.status_code == 401
 
     def test_pdf_structure(self, tok_p2):
         r = requests.post(
             f"{API}/court-path/checklist/pdf",
-            json={"modules": {"foundation": "completed", "coparenting": "in_progress", "safety": "not_yet"}},
+            json={},
             headers=_h(tok_p2), timeout=30,
         )
         assert r.status_code == 200
@@ -194,14 +184,17 @@ class TestCourtChecklistPdf:
         assert len(reader.pages) == 1, "Must be a one-page PDF"
         text = _pdf_text(r.content)
         assert "Court Path Checklist" in text
-        assert "of 10 done" in text
+        assert re.search(r"\d+ of \d+ done", text)
         assert "What's left" in text or "Everything on this checklist is done" in text
         assert "Notes for my mediator meeting" in text
         assert "not a legal document" in text
-        # Row labels
-        for label in ["Case code verified", "Safety check", "Module A", "Module B", "Module C",
-                      "Self-Assessment", "Co-Parenting Relationship assessment",
-                      "Child Needs", "Foundation Statement", "BIFF messages saved"]:
+        assert "Module A" not in text
+        # Row labels (a parent with professional-requested items only sees case, check-in and those items)
+        labels = ["Case code verified", "Family check-in"]
+        if "asked for" not in text:
+            labels += ["Self-Assessment", "Co-Parenting Relationship assessment", "Child Needs", "Foundation Statement",
+                       "BIFF messages saved"]
+        for label in labels:
             assert label in text, f"Missing row label: {label}"
 
 

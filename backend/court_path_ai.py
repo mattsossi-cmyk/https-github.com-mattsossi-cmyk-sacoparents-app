@@ -3,7 +3,7 @@ from __future__ import annotations
 
 import json
 import re
-from typing import Any, Dict, Literal, Optional
+from typing import Any, Dict, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Request
 from motor.motor_asyncio import AsyncIOMotorDatabase
@@ -31,7 +31,7 @@ _SPLIT_TASK = (
 _TASK = (
     "You are now the SA CoParents Court Assistant. The parent is on a court-ordered co-parenting path in the app: "
     "Self Journey steps (Self-Assessment, Co-Parenting Relationship assessment, Child Needs, Foundation Statement), "
-    "court modules (A Child Needs & Priorities, B Co-Parenting Dynamics, C Conflict Readiness), a court-ready "
+    "a Family check-in that opens on their professional's site, a court-ready "
     "summary PDF, a Court checklist PDF, a Communication Builder that rewrites messages in BIFF style (Brief, "
     "Informative, Friendly, Firm), and a professional site where their mediator, attorney or parenting coordinator "
     "reviews their reports. You are not a lawyer: give general information only, never legal advice, never predict "
@@ -52,7 +52,6 @@ _TASK = (
 class ChatBody(BaseModel):
     message: str = Field(..., min_length=1, max_length=1000)
     session_id: Optional[str] = Field(default=None, max_length=64)
-    modules: Dict[str, Literal["completed", "in_progress", "not_yet"]] = Field(default_factory=dict)
     safety_flagged: bool = False
 
 
@@ -70,7 +69,7 @@ async def start_new_chat(user: UserPublic = Depends(get_current_user), db: Async
 async def chat(
     body: ChatBody, request: Request, user: UserPublic = Depends(require_ai_notice), db: AsyncIOMotorDatabase = Depends(get_db)
 ) -> Dict[str, str]:
-    checklist = await build_checklist(db, user, body.modules)
+    checklist = await build_checklist(db, user)
     lines = [f"- {i['label']}: {STATUS_WORDS[i['status']]}" for i in checklist["items"] if i["key"] != "case"]
     case = "verified" if checklist["case_ref"] else "not entered yet"
     context = f"The parent's court path progress (case code {case}):\n" + "\n".join(lines)

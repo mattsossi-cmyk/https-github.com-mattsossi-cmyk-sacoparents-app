@@ -502,3 +502,16 @@ def test_other_case_not_readable():
 def test_internal_endpoint_hidden_from_docs():
     paths = httpx.get("http://localhost:8001/openapi.json", timeout=20).json()["paths"]
     assert not any("internal" in p for p in paths)
+
+
+# Family check-in status: same for both parents, only "case setup complete" (screening_offered) is exposed.
+def test_family_checkin_status_same_for_both_parents():
+    case_id, ha, hb = _case()
+    assert all(_flags(h).json()["setup_complete"] is False for h in (ha, hb))
+    assert _send(_body(case_id, 1, set_by="default", offered=False)).status_code == 200
+    assert all(_flags(h).json()["setup_complete"] is False for h in (ha, hb))
+    assert _send(_body(case_id, 2, set_by="default", offered=True)).status_code == 200
+    a, b = _flags(ha), _flags(hb)
+    assert a.content == b.content and a.json()["setup_complete"] is True
+    item = lambda h: next(i for i in httpx.post(f"{API}/court-path/checklist", json={}, headers=h, timeout=20).json()["items"] if i["key"] == "family_checkin")  # noqa: E731
+    assert item(ha) == item(hb) and item(ha)["status"] == "done"

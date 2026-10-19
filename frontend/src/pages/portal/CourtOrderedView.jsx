@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
 import { toast } from "sonner";
 
+import { FamilyCheckinCard } from "../../components/caseSettings/FamilyCheckinCard";
 import { CourtAcceptDialog } from "./court/CourtAcceptDialog";
 import { CourtAgreeCard } from "./court/CourtAgreement";
 import { CourtCelebration } from "./court/CourtCelebration";
@@ -28,17 +29,17 @@ const AGREED_MARK = " (agreed): ";
 const openTab = (url) => window.open(url, "_blank", "noopener,noreferrer");
 
 // Full-page Court Ordered path (portal): interactive journey artwork, court tools, and a saved AI chat.
-export function CourtOrderedView({ onBack, onQuickExit, courtKey, mediator, onVerify, modules, onOpenModule, onOpenCard, onOpenChildNeeds, assessDone = {}, ppDone = false, fb, onOpenParallel, onDownloadPdf, onOpenBiffHistory, alignUrl, safetyFlag, signedIn, hidden = false }) {
+export function CourtOrderedView({ onBack, onQuickExit, courtKey, mediator, onVerify, onOpenCard, onOpenChildNeeds, assessDone = {}, ppDone = false, fb, onOpenParallel, onDownloadPdf, onOpenBiffHistory, alignUrl, safetyFlag, signedIn, hidden = false }) {
   const [hints, setHints] = useState(true);
   const [dialog, setDialog] = useState(null);
   const [chatOpen, setChatOpen] = useState(false);
   const [chatDraft, setChatDraft] = useState("");
-  const checklist = useCourtChecklist({ modules, courtKey, hidden });
+  const checklist = useCourtChecklist({ courtKey, hidden });
   const summary = useCourtSummary(!hidden);
   const compare = useCourtCompare(!hidden);
   const requested = useCourtRequested(signedIn);
   const cc = useCourtCase({ courtKey, savedName: checklist.data?.parent_name, onVerify, signedIn, alignUrl, onDownloadPdf });
-  const chat = useGuideChat("/court-path/ai/chat", { modules: Object.fromEntries(modules.map((m) => [m.topic, m.status])), safety_flagged: !!safetyFlag });
+  const chat = useGuideChat("/court-path/ai/chat", { safety_flagged: !!safetyFlag });
   useLockScroll(!hidden);
   const progress = compare.data?.state === "ready" ? compare.data.progress : null;
   const celebrate = !hidden && !!progress?.all_agreed && !progress.celebrated;
@@ -153,6 +154,7 @@ export function CourtOrderedView({ onBack, onQuickExit, courtKey, mediator, onVe
         <div className="grid grid-cols-1 lg:grid-cols-12 lg:grid-rows-[auto_1fr] gap-8 items-start">
           {/* Phones: requested list, picture, the rest, then chat. Desktop: list + rest on the left, picture + chat on the right. */}
           <div data-testid="court-top" className="order-1 lg:order-none lg:col-start-1 lg:col-span-7 lg:row-start-1 space-y-6">
+            <FamilyCheckinCard alignUrl={alignUrl} testid="court-family-checkin" />
             {signedIn && asked.length > 0 && doneCount === asked.length && <CourtCompleteCard count={asked.length} />}
             <CourtMenu statusFor={statusFor} requested={requested.keys} proKeys={requested.proKeys} proName={requested.proName} onToggle={requested.toggle} onOpen={openOption} />
           </div>
@@ -181,8 +183,6 @@ export function CourtOrderedView({ onBack, onQuickExit, courtKey, mediator, onVe
               onCase={() => setDialog({ type: "accept" })}
               onBiff={onOpenBiffHistory}
               onPillar={openPillar}
-              modules={modules}
-              onOpenModule={onOpenModule}
               checklist={checklist}
             />
           </div>

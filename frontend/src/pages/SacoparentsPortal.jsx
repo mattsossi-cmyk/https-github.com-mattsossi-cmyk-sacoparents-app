@@ -1648,8 +1648,6 @@ export default function SacoparentsPortal() {
               shareLegalOpen ||
               shareCompleteOpen
             }
-            onOpenSafety={() => openGuidedJourney("safety")}
-            onOpenGuidedJourney={(topic) => openGuidedJourney(topic)}
             onOpenBiffCoach={() => setBiffDrawerOpen(true)}
             biffCoachOpen={biffDrawerOpen}
             onOpenCommBuilder={(focus) => {

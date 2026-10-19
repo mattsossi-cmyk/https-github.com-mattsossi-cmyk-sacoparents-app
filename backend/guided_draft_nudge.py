@@ -40,11 +40,9 @@ NUDGE_MIN_DAYS = 5
 DRAFT_TTL_DAYS = 14
 
 # Human-friendly topic labels — kept in lockstep with the frontend
-# ``TOPIC_TITLES`` map in ``GuidedJourneyModal.jsx``.
+# ``TOPIC_TITLES`` map in ``GuidedJourneyModal.jsx``. The hidden A/C reflection topics get no nudges.
 _TOPIC_LABELS: Dict[str, str] = {
-    "foundation": "Foundation Statement",
     "coparenting": "Co-parenting Assessment",
-    "safety": "Conflict Readiness",
     "medical": "Medical Needs Assessment",
     "educational": "Educational Assessment",
     "psychological": "Psychological Assessment",
