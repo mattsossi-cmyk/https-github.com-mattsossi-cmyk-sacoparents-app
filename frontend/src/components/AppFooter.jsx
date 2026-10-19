@@ -1,5 +1,6 @@
 import React from "react";
 import { Link } from "react-router-dom";
+import { useOwnFooterLink } from "../lib/footerLink";
 import { ShieldCheck, LifeBuoy, FlaskConical, Accessibility as A11yIcon, HardDrive, FileText, UserCheck } from "lucide-react";
 
 /**
@@ -8,6 +9,7 @@ import { ShieldCheck, LifeBuoy, FlaskConical, Accessibility as A11yIcon, HardDri
  * privacy, methodology, retention, and accessibility are always one tap away.
  */
 export default function AppFooter() {
+  useOwnFooterLink();
   return (
     <footer
       className="mt-16 border-t border-[#E5E0EE] bg-white/60 backdrop-blur-sm"

@@ -108,7 +108,7 @@ export default function SafetyAssessmentResultsCard({
           appropriate professional.
         </div>
         <p className="text-sm sm:text-base text-[#4B4567] leading-relaxed mb-6">{result.pathway_summary}</p>
-        <DeclinedAnswersNote total={result.declined_count} section1={result.section_1_declined_count} floor={result.skip_floor_ids?.length} />
+        <DeclinedAnswersNote total={result.declined_count} section1={result.section_1_declined_count} />
 
         {rules.length > 0 && (
           <div

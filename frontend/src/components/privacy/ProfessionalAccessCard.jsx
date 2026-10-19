@@ -24,8 +24,7 @@ export function ProfessionalAccessCard() {
         <i className="fa-solid fa-user-shield mr-1.5" aria-hidden="true"></i>Who can see your information
       </h2>
       <p className="mt-1">
-        Your co-parent never sees your safety answers. Your assigned professionals can, and a small number of administrators for safety checks. Every
-        view is recorded for you to check. Court documents show only whether you completed this step, never your answers.
+        Your co-parent never sees your safety answers.
       </p>
       <Link
         to="/who-can-see-my-information"

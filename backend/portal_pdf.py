@@ -856,8 +856,10 @@ def build_portal_complete_report_pdf(
         cleared = bool(safety_ack.get("cleared"))
         flagged = bool(safety_ack.get("flagged"))
         completed_at = str(safety_ack.get("date") or "")
+        skipped = int(safety_ack.get("skipped") or 0)
         status_line = (
-            "Cleared - no risk flag." if cleared and not flagged
+            ("Completed - no risk flag. Skipped: %d question%s." % (skipped, "" if skipped == 1 else "s")) if cleared and not flagged and skipped
+            else "Cleared - no risk flag." if cleared and not flagged
             else "Flagged for safety concerns."
         )
         pdf.set_font("Helvetica", "B", 10)

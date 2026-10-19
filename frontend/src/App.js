@@ -33,6 +33,7 @@ import Safety from "@/pages/Safety";
 import Watch from "@/pages/Watch";
 import PrivacyNotice from "@/pages/PrivacyNotice";
 import WhoCanSee from "@/pages/WhoCanSee";
+import { FooterLinkProvider, GlobalFooterLink } from "@/lib/footerLink";
 import { ConsentGate } from "@/components/privacy/ConsentGate";
 import { AiNoticeProvider } from "@/components/aiNotice/AiNoticeProvider";
 import WhatProfessionalsSee from "@/pages/WhatProfessionalsSee";
@@ -685,11 +686,14 @@ function App() {
       <BrowserRouter>
         <AuthProvider>
           <AiNoticeProvider>
+            <FooterLinkProvider>
             <LegalAcknowledgment />
             <AppRoutes />
+            <GlobalFooterLink />
             <BackToDashboardPill />
             <PreShareConsentHost />
             <Toaster position="bottom-right" toastOptions={TOAST_OPTIONS} />
+            </FooterLinkProvider>
           </AiNoticeProvider>
         </AuthProvider>
       </BrowserRouter>

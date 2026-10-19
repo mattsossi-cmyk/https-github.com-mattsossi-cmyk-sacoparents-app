@@ -235,7 +235,11 @@ def _sanitize_safety_ack(raw: Optional[Dict[str, Any]]) -> Optional[Dict[str, An
     date = str(raw.get("date", ""))[:40]
     if not date:
         return None
-    return {"cleared": cleared, "flagged": flagged, "date": date}
+    out = {"cleared": cleared, "flagged": flagged, "date": date}
+    skipped = raw.get("skipped")
+    if isinstance(skipped, int) and not isinstance(skipped, bool) and 0 < skipped <= 3:
+        out["skipped"] = skipped
+    return out
 
 
 _SAFETY_PLAN_KEYS = (

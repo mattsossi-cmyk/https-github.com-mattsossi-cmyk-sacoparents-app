@@ -1,5 +1,5 @@
-"""Step 4: "I'd rather not answer" is a skip, never a concern, except a skip on an immediate-danger,
-physical/sexual-harm or harm-to-children question makes the result at least Amber (Level 2)."""
+"""Step 4: "I'd rather not answer" is a plain skip. It never raises (or lowers) the level, never flags,
+never blocks anything, and shows as "Skipped" in the PDF. The quick check stores the skip count."""
 import io
 import os
 import sys
@@ -14,12 +14,13 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 load_dotenv(ROOT / ".env")
 
-from safety_assessment_routes import (  # noqa: E402
-    SECTION_1_QUESTIONS, SECTION_2_QUESTIONS, SKIP_FLOOR_S1_IDS, AssessmentSubmit, score_assessment,
-)
+from safety_assessment_routes import SECTION_1_QUESTIONS, SECTION_2_QUESTIONS, AssessmentSubmit, score_assessment  # noqa: E402
+from portal_routes import _sanitize_safety_ack  # noqa: E402
 
 API = "http://localhost:8001/api"
+CONSENT = {"ack_privacy_notice": True, "consent_sensitive_info": True}
 db = MongoClient(os.environ["MONGO_URL"])[os.environ["DB_NAME"]]
+DANGER = ("s1_q1", "s1_q2", "s1_q11", "s1_q12", "s1_q13", "s1_q14", "s1_q15", "s1_q19", "s1_q20", "s1_q21", "s1_q25", "s1_q26")
 
 
 def answers(s1=None, s2=None, child=None):
@@ -28,63 +29,66 @@ def answers(s1=None, s2=None, child=None):
     return AssessmentSubmit(section_1={**a1, **(s1 or {})}, section_2={**a2, **(s2 or {})}, child_experience=child or {})
 
 
-def level(**kw):
-    return score_assessment(answers(**kw))["level"]
+def score(**kw):
+    return score_assessment(answers(**kw))
 
 
 def test_baseline_is_level_4():
-    assert level() == 4
+    assert score()["level"] == 4
 
 
-def test_ordinary_skips_never_raise():
-    assert level(s1={"s1_q3": "prefer_not", "s1_q6": "prefer_not", "s1_q27": "prefer_not"}) == 4
-    assert level(s2={q["id"]: "prefer_not" for q in SECTION_2_QUESTIONS}) == 4
-    assert level(child={"ce_q3": "prefer_not", "ce_q6": "prefer_not"}) == 4
+def test_no_skip_ever_changes_the_level():
+    assert score(s1={q: "prefer_not" for q in DANGER})["level"] == 4
+    assert score(s1={q["id"]: "prefer_not" for q in SECTION_1_QUESTIONS})["level"] == 4
+    assert score(s2={q["id"]: "prefer_not" for q in SECTION_2_QUESTIONS})["level"] == 4
+    assert score(child={"ce_q1": "prefer_not", "ce_q8": "prefer_not"})["level"] == 4
+    assert score(s1={"s1_q1": "yes", "s1_q2": "prefer_not"})["level"] == score(s1={"s1_q1": "yes"})["level"]
 
 
-def test_skip_on_danger_or_harm_question_is_at_least_amber():
-    for qid in sorted(SKIP_FLOOR_S1_IDS):
-        r = score_assessment(answers(s1={qid: "prefer_not"}))
-        assert r["level"] == 2 and r["skip_floor_ids"] == [qid], qid
-    for qid in ("ce_q1", "ce_q8"):
-        assert level(child={qid: "prefer_not"}) == 2
-
-
-def test_floor_never_lowers_a_red_result():
-    assert level(s1={"s1_q1": "yes", "s1_q2": "prefer_not"}) == 1
-
-
-def test_unsure_unchanged_and_counts_reported():
-    assert level(s1={"s1_q2": "unsure"}) == 4
-    r = score_assessment(answers(s1={"s1_q2": "prefer_not", "s1_q3": "prefer_not"}, s2={"s2_q1": "prefer_not"}))
-    assert r["declined_count"] == 3 and r["section_1_declined_count"] == 2
+def test_result_has_counts_and_no_floor():
+    r = score(s1={"s1_q2": "prefer_not", "s1_q3": "prefer_not"}, s2={"s2_q1": "prefer_not"})
+    assert r["declined_count"] == 3 and r["section_1_declined_count"] == 2 and "skip_floor_ids" not in r
+    assert r["high_concern_hits"] == [] and r["coercive_hits"] == [] and r["section_1_yes_count"] == 0 and r["section_2_concern_count"] == 0
 
 
 def test_extension_skip_is_not_counted_as_answered():
     from lens_extensions import analyse_child_experience
-    skipped = analyse_child_experience({"ce_q3": "prefer_not"})
-    blank = analyse_child_experience({})
-    assert skipped == blank
+    assert analyse_child_experience({"ce_q3": "prefer_not"}) == analyse_child_experience({})
 
 
-def test_saved_result_and_pdf_show_prefer_not():
+def test_quick_check_skip_count_is_stored_only_when_valid():
+    base = {"cleared": True, "flagged": False, "date": "2026-10-19T00:00:00Z"}
+    assert _sanitize_safety_ack({**base, "skipped": 2}) == {**base, "skipped": 2}
+    for bad in (0, 4, "2", True, None):
+        assert "skipped" not in _sanitize_safety_ack({**base, "skipped": bad})
+
+
+def test_saved_result_pdf_says_skipped_and_invite_not_blocked():
     email = f"test_step4_{uuid.uuid4().hex[:8]}@example.com"
-    r = httpx.post(f"{API}/auth/register", json={"email": email, "password": "Str0ng!Pass99", "name": "Step Four",
-                                                 "ack_privacy_notice": True, "consent_sensitive_info": True}, timeout=20)
+    r = httpx.post(f"{API}/auth/register", json={"email": email, "password": "Str0ng!Pass99", "name": "Step Four", **CONSENT}, timeout=20)
     assert r.status_code == 200, r.text
     h = {"Authorization": f"Bearer {r.json()['access_token']}"}
-    body = answers(s1={"s1_q13": "prefer_not"}).model_dump()
+    uid = db.users.find_one({"email": email})["user_id"]
     try:
-        r = httpx.post(f"{API}/safety-assessment", json=body, headers=h, timeout=60)
+        r = httpx.post(f"{API}/safety-assessment", json=answers(s1={q: "prefer_not" for q in DANGER}).model_dump(), headers=h, timeout=60)
         assert r.status_code == 200, r.text
-        res = r.json()["result"]
-        assert res["level"] == 2 and res["skip_floor_ids"] == ["s1_q13"] and res["section_1_declined_count"] == 1
-        pdf = httpx.get(f"{API}/safety-assessment/{r.json()['assessment_id']}/pdf", headers=h, timeout=60)
+        assert r.json()["result"]["level"] == 4
+        pdf = httpx.get(f"{API}/safety-assessment/{r.json()['assessment_id']}/pdf", headers=h, timeout=90)
         assert pdf.status_code == 200 and pdf.content.startswith(b"%PDF")
         from pypdf import PdfReader
         text = " ".join(p.extract_text() or "" for p in PdfReader(io.BytesIO(pdf.content)).pages).upper()
-        assert "PREFER NOT TO ANSWER" in text
+        assert "SKIPPED" in text and "PREFER NOT TO ANSWER" not in text
+        import asyncio
+        from motor.motor_asyncio import AsyncIOMotorClient
+        from self_assessment_reminders import is_safety_flagged
+
+        async def flagged():
+            c = AsyncIOMotorClient(os.environ["MONGO_URL"])
+            try:
+                return await is_safety_flagged(c[os.environ["DB_NAME"]], uid)
+            finally:
+                c.close()
+        assert asyncio.run(flagged()) is False
     finally:
-        uid = db.users.find_one({"email": email})["user_id"]
         db.safety_assessments.delete_many({"user_id": uid})
         db.users.delete_many({"user_id": uid})

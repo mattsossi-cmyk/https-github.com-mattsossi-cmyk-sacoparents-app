@@ -423,24 +423,13 @@ def _is_no(v: Any) -> bool:
     return isinstance(v, str) and v.strip().lower() == "no"
 
 
-# Skipping one of these ("I'd rather not answer") makes the result at least Amber (Level 2):
-# immediate danger, physical or sexual harm, or harm to children.
-SKIP_FLOOR_S1_IDS = frozenset({
-    "s1_q1", "s1_q11", "s1_q12", "s1_q15", "s1_q20", "s1_q25", "s1_q26",  # immediate danger
-    "s1_q2", "s1_q13", "s1_q19",  # physical harm
-    "s1_q14", "s1_q21",  # sexual harm
-})
-SKIP_FLOOR_CHILD_IDS = frozenset({"ce_q1", "ce_q8"})  # harm to children
-SKIP_FLOOR_LEVEL = 2
-
-
 def _is_declined(v: Any) -> bool:
     return isinstance(v, str) and v.strip().lower() == "prefer_not"
 
 
 def _answer_text(v: Any) -> str:
-    """Answer as shown in PDFs and summaries; 'I'd rather not answer' reads as a plain label."""
-    return "Prefer not to answer" if _is_declined(v) else (v or "—")
+    """Answer as shown in PDFs and summaries; 'I'd rather not answer' shows as skipped."""
+    return "Skipped" if _is_declined(v) else (v or "—")
 
 
 def score_assessment(payload: AssessmentSubmit) -> Dict[str, Any]:
@@ -451,14 +440,9 @@ def score_assessment(payload: AssessmentSubmit) -> Dict[str, Any]:
     high_concern_hits = sorted([qid for qid in HIGH_CONCERN_IDS if _is_yes(s1.get(qid))])
     coercive_hits = sorted([qid for qid in COERCIVE_IDS if _is_yes(s1.get(qid))])
     section_1_yes = sum(1 for q in SECTION_1_QUESTIONS if _is_yes(s1.get(q["id"])))
-    # "I'd rather not answer" is a skip: it never counts toward a concern, except the floor below.
+    # "I'd rather not answer" is a skip: it never counts toward a concern and never changes the level.
     section_1_declined = sum(1 for q in SECTION_1_QUESTIONS if _is_declined(s1.get(q["id"])))
     declined = section_1_declined + sum(1 for q in SECTION_2_QUESTIONS if _is_declined(s2.get(q["id"])))
-    child = getattr(payload, "child_experience", None) or {}
-    floor_skips = sorted(
-        [qid for qid in SKIP_FLOOR_S1_IDS if _is_declined(s1.get(qid))]
-        + [qid for qid in SKIP_FLOOR_CHILD_IDS if _is_declined(child.get(qid))]
-    )
     # Section 2: "no" answers indicate communication is NOT safe/ready.
     # Q8 is inverted in tone ("would a neutral 3rd party reduce conflict?") — a "yes" there
     # is actually a signal that direct communication is harder, so we count it as a concern.
@@ -483,8 +467,6 @@ def score_assessment(payload: AssessmentSubmit) -> Dict[str, Any]:
         level = 3
     else:
         level = 4
-    if floor_skips:
-        level = min(level, SKIP_FLOOR_LEVEL)
 
     pathway = PATHWAYS[level]
     result = {
@@ -499,7 +481,6 @@ def score_assessment(payload: AssessmentSubmit) -> Dict[str, Any]:
         "section_1_yes_count": section_1_yes,
         "section_1_declined_count": section_1_declined,
         "declined_count": declined,
-        "skip_floor_ids": floor_skips,
         "section_2_concern_count": section_2_concerns,
     }
     # Trauma-Informed Safety and Functioning Lens (TISFL) — attach the

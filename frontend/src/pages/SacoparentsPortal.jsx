@@ -57,6 +57,7 @@ import {
 } from "./portal/SafetyScreen";
 import { SafetyCrisisStrip } from "./portal/SafetyCrisisStrip";
 import { ProfessionalAccessCard } from "../components/privacy/ProfessionalAccessCard";
+import { useOwnFooterLink } from "../lib/footerLink";
 import { ShareLegalModal } from "./portal/ShareLegalModal";
 
 /**
@@ -74,6 +75,7 @@ import { ShareLegalModal } from "./portal/ShareLegalModal";
  *     Quick Safety Check returned a risk flag.
  */
 export default function SacoparentsPortal() {
+  useOwnFooterLink();
   const { user } = useAuth();
 
   // iter248 — the parent-journey screen (and its hub-tabs toggle)
@@ -725,11 +727,13 @@ export default function SacoparentsPortal() {
     [requestDoorEntry]
   );
 
-  const onSafetyCleared = useCallback(() => {
+  const onSafetyCleared = useCallback((answers) => {
+    const skipped = Object.values(answers || {}).filter((v) => v === "prefer_not").length;
     const ack = {
       date: new Date().toISOString(),
       cleared: true,
       flagged: false,
+      ...(skipped ? { skipped } : {}),
     };
     writeJson(SAFETY_ACK_KEY, ack);
     setSafetyAck(ack);

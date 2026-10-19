@@ -52,13 +52,10 @@ export function SafetyScreen({
 
   const answered = phys != null && coerce != null && device != null;
 
-  // "I'd rather not answer" counts like "Not sure": it opens the same gentle support card.
+  // "I'd rather not answer" is a skip: it never flags anything.
   const isFlagged =
     phys === "no" ||
-    phys === "prefer_not" ||
-    device === "prefer_not" ||
     coerce === "yes" ||
-    coerce === "prefer_not" ||
     device === "no" ||
     device === "unsure";
 

@@ -1,5 +1,5 @@
 """Iter150 public-URL regression: Step 4 "I'd rather not answer" (prefer_not) on the legacy Safety Assessment,
-and Step 3 Privacy Notice version bump (2026-10-19-v3)."""
+and the Privacy Notice version bump. A skip never changes the level (no floor)."""
 import os
 import uuid
 
@@ -58,7 +58,7 @@ def test_baseline_level4(client, questions):
     r = client.post(f"{API}/safety-assessment", json={"section_1": s1, "section_2": s2}, timeout=60)
     assert r.status_code == 200, r.text
     res = r.json()["result"]
-    assert res["level"] == 4 and res["declined_count"] == 0 and res["skip_floor_ids"] == []
+    assert res["level"] == 4 and res["declined_count"] == 0 and "skip_floor_ids" not in res
 
 
 # All prefer_not is accepted as answered (not "missing")
@@ -69,7 +69,7 @@ def test_all_prefer_not_accepted(client, questions):
     assert r.status_code == 200, r.text
     res = r.json()["result"]
     assert res["declined_count"] == 36 and res["section_1_declined_count"] == 28
-    assert res["level"] == 2 and len(res["skip_floor_ids"]) == 12
+    assert res["level"] == 4
 
 
 # Ordinary skip does not raise
@@ -83,14 +83,14 @@ def test_ordinary_skip_level4(client, questions):
     assert res["level"] == 4 and res["declined_count"] == 2 and res["section_1_declined_count"] == 1
 
 
-# Child experience floor
-def test_child_floor(client, questions):
+# Child-experience skip does not raise either
+def test_child_skip_no_raise(client, questions):
     s1, s2 = _base(questions)
     r = client.post(f"{API}/safety-assessment", json={"section_1": s1, "section_2": s2,
                                                        "child_experience": {"ce_q8": "prefer_not"}}, timeout=60)
     assert r.status_code == 200
     res = r.json()["result"]
-    assert res["level"] == 2 and res["skip_floor_ids"] == ["ce_q8"]
+    assert res["level"] == 4
 
 
 # Mixed case accepted; invalid value rejected
@@ -98,14 +98,14 @@ def test_case_insensitive_and_invalid(client, questions):
     s1, s2 = _base(questions)
     s1["s1_q1"] = "PREFER_NOT"
     r = client.post(f"{API}/safety-assessment", json={"section_1": s1, "section_2": s2}, timeout=60)
-    assert r.status_code == 200 and r.json()["result"]["level"] == 2
+    assert r.status_code == 200 and r.json()["result"]["declined_count"] == 1 and r.json()["result"]["level"] == 4
     s1["s1_q1"] = "maybe"
     r = client.post(f"{API}/safety-assessment", json={"section_1": s1, "section_2": s2}, timeout=60)
     assert r.status_code == 400
     assert "s1_q1" in r.json()["detail"]["missing"]["section_1"]
 
 
-# Persisted + PDF + one-pager show "Prefer not to answer"
+# Persisted + PDF + one-pager
 def test_persist_and_pdf(client, questions):
     s1, s2 = _base(questions)
     s1["s1_q21"] = "prefer_not"
@@ -113,7 +113,7 @@ def test_persist_and_pdf(client, questions):
     aid = r.json()["assessment_id"]
     me = client.get(f"{API}/safety-assessment/me", timeout=30).json()
     assert me["assessment_id"] == aid and me["section_1"]["s1_q21"] == "prefer_not"
-    assert me["result"]["skip_floor_ids"] == ["s1_q21"]
+    assert me["result"]["level"] == 4
     pdf = client.get(f"{API}/safety-assessment/{aid}/pdf", timeout=90)
     assert pdf.status_code == 200 and pdf.content.startswith(b"%PDF")
     op = client.get(f"{API}/safety-assessment/{aid}/one-pager", timeout=90)
@@ -127,4 +127,4 @@ def test_privacy_version(client):
     txt = r.text
     # version is surfaced somewhere in consent status; tolerate either location
     r2 = client.get(f"{API}/privacy/consent-status", timeout=30)
-    assert "2026-10-19-v3" in txt or (r2.status_code == 200 and "2026-10-19-v3" in r2.text) or r2.status_code == 404
+    assert "2026-10-19-v4" in txt or (r2.status_code == 200 and "2026-10-19-v4" in r2.text) or r2.status_code == 404
