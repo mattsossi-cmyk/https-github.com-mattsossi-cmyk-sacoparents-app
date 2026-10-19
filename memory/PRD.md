@@ -9295,3 +9295,12 @@ dashboard for sharing SELECTED completed reports with any professional.
 - Open question to user: preview ALIGN_WEBHOOK_SECRET is still set (from "generate it"); user said the webhook "stays paused" —
   awaiting their decision whether to remove it from preview. Not changed.
 - Tests: iteration_148 backend 10/10 (tests/test_align_ref_iter148.py) + UI 100%; 75 passed across Safety Gate / check-in suites.
+
+### 2026-10-19 — Preview webhook PAUSED (PREVIEW ONLY, no deploy)
+- User asked to pause: ALIGN_WEBHOOK_SECRET line removed from preview backend/.env (only that line; 46 other keys intact,
+  SAFETY_ENC_KEY untouched), backend restarted. Verified: POST /api/internal/safety-status → 503 "Unavailable.", admin
+  align-status webhook_on=false, self-test {"ok":false,"reason":"not_configured"}, secret absent from running backend env,
+  tests/test_webhook_off.py 3 passed. Do NOT set/generate a new secret until the user says so.
+- "Finished on" date kept (user replied "recommended").
+- Still waiting on Align's builder + user approval: test address for the two-app test, and a neutral check-in page.
+  Per user, the only Align endpoint we may call is GET https://sacoparentsalign.com/api/health (connectivity only).
