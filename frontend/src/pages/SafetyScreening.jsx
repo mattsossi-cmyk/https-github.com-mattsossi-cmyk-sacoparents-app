@@ -10,6 +10,7 @@ import { SafeContactStep } from "@/components/SafeContactStep";
 import { QuickExitBar, quickExit } from "@/components/QuickExit";
 import { useNavigate } from "react-router-dom";
 import { CrisisResourcesButton } from "@/components/CrisisResources";
+import { PROFESSIONAL_ACCESS_NOTICE } from "@/content/safetyEntry";
 
 const Hotline = ({ resources, externalNote }) => (
   <div className="rounded-md border border-red-200 bg-red-50 p-3 text-sm" data-testid="screening-hotline">
@@ -122,6 +123,7 @@ export default function SafetyScreening() {
               <h1 className="mt-1 text-2xl font-semibold" data-testid="screening-title">{spec.title}</h1>
               <p className="mt-3 text-sm" data-testid="screening-intro-text">{spec.intro}</p>
               <p className="mt-2 rounded-md border-l-4 border-amber-500 bg-amber-50 p-2 text-xs" data-testid="screening-trigger-warning">{spec.trigger_warning}</p>
+              <p className="mt-2 rounded-md border border-[#3D1A78]/20 bg-[#3D1A78]/5 p-2 text-xs leading-relaxed" data-testid="screening-access-notice">{PROFESSIONAL_ACCESS_NOTICE} <Link to="/privacy-notice" className="font-semibold text-brand-purple underline underline-offset-2" data-testid="screening-privacy-notice-link">Read the privacy notification</Link></p>
               <Hotline resources={spec.resources} externalNote={spec.external_link_note} />
             </div>
             {parts.map((part) => (

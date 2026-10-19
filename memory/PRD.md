@@ -1158,3 +1158,8 @@ Owner rulings: 1 replace A/B/C with 8-domain set; 2 professional-decides (no aut
 - Deployer agent is READ-ONLY for prod data; main agent has no prod DB access. Sentinel '!disabled…' is WRONG (bcrypt raises ValueError → 500); correct invalidation = valid bcrypt hash of a discarded random value. Owner declined; temp password for dralsmith@gmail.com remains valid (must_change_password=true forces new password on first login). Joy untouched (password_reset_by_user=true).
 - BACKLOG P1 (owner-approved for a future release, not now): admin 'Disable password & send reset link' endpoint + button.
 - Prod flags: RETENTION_ENGINE_ENABLED absent→OFF; GOOGLE_SIGNIN absent→ON; SAFETY_STATUS_WEBHOOK present, value unreadable by agent (owner to eyeball = false); ALIGN_WEBHOOK_SECRET absent.
+
+## 2026-10-18 19:55 CDT — preview-only edits (NOT deployed)
+- Owner (a) confirmed: Family check-in live; A/B/C removed (code only in safety_screening.py for legacy reads).
+- SMS leftovers removed: SampleTour tooltip now says email alert; CourtThread '+ texted' suffix dropped.
+- Owner 'say so': Family check-in intro card now shows the Professional Access Notice (from content/safetyEntry.js, same text as Step 0) + 'Read the privacy notification' link → /privacy-notice (data-testid screening-access-notice / screening-privacy-notice-link). Verified in browser.
