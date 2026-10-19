@@ -53,7 +53,7 @@ def pattern_panel(triggered: list[str]) -> list[dict]:
 def _forbidden_terms() -> list[str]:
     terms = [it["text"] for it in ITEMS + LEGACY_ITEMS if it.get("text")]
     terms += [o for o in TF if o.lower() not in ("never", "prefer not to answer")]
-    terms += ["Red — protected", "Amber — structured", "triggered_rules"] + [v for v in RULE_LABEL.values() if len(v) > 12]
+    terms += ["Red — protected", "Amber — structured", "triggered_rules", "Tier 1 —", "Tier 2 —", "Tier 3 —", "Tier not available"] + [v for v in RULE_LABEL.values() if len(v) > 12]
     return terms
 
 

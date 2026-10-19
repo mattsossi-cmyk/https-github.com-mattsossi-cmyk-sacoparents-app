@@ -175,7 +175,8 @@ def public_spec(version: str) -> dict:
     items = [i for i in v["items"] if i["id"] != "safe"] + EXTRA_ITEMS + [i for i in v["items"] if i["id"] == "safe"]
     if version == "FV":
         import fv_screening as fv
-        return {**v, "label": LABEL, "trigger_warning": TRIGGER_WARNING, "scale_note": None, "scales": {**fv.SCALES, "yn3": YN3}, "resources": FV_RESOURCES, "external_link_note": EXTERNAL_LINK_NOTE,
+        pub_items = [{k: x for k, x in i.items() if k not in ("weight", "tier3")} for i in v["items"]]  # rule weights are professional-only
+        return {**v, "items": pub_items, "label": LABEL, "trigger_warning": TRIGGER_WARNING, "scale_note": None, "scales": {**fv.SCALES, "yn3": YN3}, "resources": FV_RESOURCES, "external_link_note": EXTERNAL_LINK_NOTE,
                 "safe_device_notice": "Use a device your co-parent cannot see. The Quick Exit button (or pressing Escape twice) leaves this page immediately and clears it from this browser."}
     return {**v, "items": items, "label": v.get("label", LABEL), "trigger_warning": TRIGGER_WARNING, "scale_note": SCALE_NOTE, "scales": {"freq": FREQ, "yn": YN, "safe": SAFE, "yn3": YN3}, "resources": resources_for(version),
             "external_link_note": EXTERNAL_LINK_NOTE,
@@ -255,15 +256,14 @@ def entry_label(doc: dict, role: str) -> str:
 
 
 def receipt(scr: dict | None, parent_label: str, declined_at: str | None = None) -> str:
-    """Court-safe line: receipt, version, tier, date. Never answer text. Declined is a neutral status, not a finding."""
+    """Court-safe line: receipt, version, date. Never answer text, never a tier (owner 2026-10-18). Declined is a neutral status, not a finding."""
     if not scr and declined_at:
         return f"{parent_label}: safety screening — Declined (parent chose not to answer at this time, {str(declined_at)[:10]})."
     if not scr:
         return f"{parent_label}: safety screening — Not started."
     ver = VERSION_LABEL.get(scr.get("version") or "", "legacy format")
     date = str(scr.get("completed_at") or "")[:10]
-    tier = TIER_LABEL.get(scr.get("tier"), "Tier not available (legacy format)")
-    return f"{parent_label}: safety screening — Received ({ver}, {scr.get('source') or 'sacoparentsalign.com'}){f', completed {date}' if date else ''}. {tier}."
+    return f"{parent_label}: safety screening — Received ({ver}, {scr.get('source') or 'sacoparentsalign.com'}){f', completed {date}' if date else ''}."
 
 
 def item_view(scr: dict) -> list[dict]:
@@ -402,6 +402,9 @@ def build_router(db, get_current_user, get_joint_report_doc, report_role, log_ac
                 v["version_label"] = VERSION_LABEL_PRO.get(v["version"] or "")
         else:
             st = {role: st[role]} if role else {}
+            for v in st.values():  # parents never see a tier, flag or triggered rule (review fix 2026-10-18)
+                for k in ("app_tier", "app_tier_label", "triggered_rules", "tier", "tier_label"):
+                    v.pop(k, None)
         mine = st.get(role) if role else None
         spec = public_spec(mine["version"]) if mine and mine["version"] and not mine["choice_needed"] else None
         choice = None

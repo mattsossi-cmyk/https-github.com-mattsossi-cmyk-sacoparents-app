@@ -1172,3 +1172,8 @@ Owner rulings: 1 replace A/B/C with 8-domain set; 2 professional-decides (no aut
 - Mandatory-reporting sentence removed from intro → fv_screening.MANDATORY_REPORTING_NOTE (restore by appending to PRIVACY_NOTE).
 - Tests edited: test_iter110 (red/amber params, new test_removed_parts_never_served_and_never_score), test_iter111 (stalk instead of strangle; 'Followed' signal), test_iter112 (stalk). Safety suites 62 passed / 7 skipped.
 - 20:1x CDT: owner 'restore' → mandatory-reporting sentence back in PRIVACY_NOTE; owner 'deploy' → deployment dispatched.
+
+## 2026-10-18 ~20:30 CDT — Code review fixes (PREVIEW ONLY, not deployed; owner approved 1a + 2)
+- 1a: receipt() no longer prints a tier in court/co-parent output; export scan now blocks 'Tier 1/2/3 —' and 'Tier not available'.
+- 2: parent branch of screening_overview strips app_tier/app_tier_label/triggered_rules/tier/tier_label; public FV spec strips per-question weight/tier3.
+- Tests: new test_review_fixes_no_tier_in_receipt_scan_or_parent_overview (iter111); iter87 (2 asserts) and iter88 (PDF needle) flipped from 'Tier 3 present' to 'Tier absent'. Safety suites green.

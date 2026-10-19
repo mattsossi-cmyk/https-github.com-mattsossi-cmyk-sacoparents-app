@@ -405,7 +405,7 @@ class TestProfessionalReport:
         # Required framing strings
         for needle in [
             "Version A",
-            "Tier 3",
+            "Received",
             "Not a validated or diagnostic instrument",
             "answers six questions",
             "SOURCE: PARENT-REPORTED",
@@ -414,4 +414,5 @@ class TestProfessionalReport:
             assert needle in text, f"missing in PDF: {needle!r}"
         # Must NOT include raw answers
         assert UNIQUE_SIGNAL not in text, "LEAK: unique signal appears in PDF"
+        assert "Tier 3" not in text, "LEAK: screening tier appears in court PDF (review fix 2026-10-18)"
         assert "Sometimes" not in text, "LEAK: raw answer scale value appears in PDF"

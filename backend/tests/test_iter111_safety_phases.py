@@ -149,3 +149,20 @@ def test_provisions_pdf_has_footer_no_screening_text_and_export_scan_blocks_leak
 def test_scan_helper_is_importable_for_report_builders(fn):
     mod, name = fn.split(".")
     assert hasattr(__import__(mod), name)
+
+
+def test_review_fixes_no_tier_in_receipt_scan_or_parent_overview():
+    # Code review 2026-10-18: (1a) court receipt line never carries a tier and the export scan blocks tier labels; (2) parent payload has no tier/flag keys
+    import safety_screening as ss
+    line = ss.receipt({"version": "FV", "tier": 3, "completed_at": "2026-10-18T00:00:00+00:00"}, "Parent A")
+    assert "Received" in line and "Tier" not in line and "tier" not in line
+    for t in ss.TIER_LABEL.values():
+        assert sr.scan_text(f"Parent A: safety screening — Received. {t}.")
+    pro, pa, pb, rid = _case()
+    pa.put(f"{API}/joint/reports/{rid}/safety-screening", json={"responses": {**ALL_NO, "stalk": "In the last 12 months"}, "safe_contact": None})
+    mine = pa.get(f"{API}/joint/reports/{rid}/safety-screening").json()
+    blob = json.dumps(mine).lower()
+    for k in ("app_tier", "app_tier_label", "triggered_rules", "tier", "tier_label"):
+        assert k not in mine["roles"]["a"]
+    assert "followed / showed up" not in blob and "tier 3" not in blob and "\"red\"" not in blob
+    assert "tier" in pro.get(f"{API}/joint/reports/{rid}/safety-screening").json()["roles"]["a"]
