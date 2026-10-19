@@ -63,10 +63,11 @@ def crisis_resources_for(version: str | None) -> dict:
 
 SAFETY_BANNER_TEXT = "Start with Safety. A private check-in is available any time."
 # Owner-approved 2026-10-15. Single editable string; bump STEP_NOTICE_VERSION so every parent sees the step screen again.
-STEP_NOTICE_VERSION = "2026-10-15.1"
-PROFESSIONAL_ACCESS_NOTICE = ("Professional Access Notice: Your individual answers are not shared with your co-parent. The professional linked to your case may be notified "
-                              "whether you have completed or declined this required step, and assigned professionals may see individual screening answers as described in "
-                              "the privacy notification. This status notification does not itself disclose your answers.")
+STEP_NOTICE_VERSION = "2026-10-19.1"
+PROFESSIONAL_ACCESS_NOTICE = ("Professional Access Notice: Your individual answers are not shared with your co-parent. Professionals assigned to your case may be notified "
+                              "whether you have completed, not started, or declined this required step, and case documents may show that status — never your answers. "
+                              "Professionals assigned to your case, and SA CoParents administrators, may see your individual answers on a protected, access-logged screen "
+                              "as described in the privacy notification.")
 # Version B source switch. "cdc" (default, TEMPORARY) = CDC NISVS behavior-category adaptation.
 # "velonis" = HITS-based items (Velonis et al. 2021, J. Interpersonal Violence; © SAGE) — kept, switched OFF until written permission is obtained.
 VERSION_B_SOURCE = os.environ.get("VERSION_B_SOURCE", "cdc")

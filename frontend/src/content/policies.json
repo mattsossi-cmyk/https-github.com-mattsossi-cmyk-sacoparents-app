@@ -12,7 +12,7 @@
       { "heading": "What we collect", "bullets": [
         "Account information (name, email address, and the role you choose, parent or professional).",
         "Your preparation (reflections, assessments, the safety screening, communication readiness answers, and agreement drafts).",
-        "Safety screening (which version you took, A, B, or C, your answers, and a tier; we never ask for or store your sexual orientation).",
+        "Safety check-in (your answers, which questions you skipped, the date, and an internal concern level visible only to professionals assigned to your case; we never ask for or store your sexual orientation).",
         "Records of use (when you accepted this notice, and when assigned professionals view your information)."
       ] },
       { "heading": "How we use it", "paragraphs": [
@@ -53,7 +53,7 @@
       { "heading": "Private by default", "bullets": [
         "Each parent's answers, reflections, and safety screening are stored under that parent's own record and are never returned to the co-parent by any screen, report, PDF, or email.",
         "Joint reports show the generated comparison only. Family-violence screenings are never compared or shared with the other parent.",
-        "Court and professional documents show only that a screening was received, a tier, and a neutral pathway label confirmed by the assigned professional."
+        "Court and professional documents show only that a safety check-in was received, not started, or declined, and a neutral pathway label confirmed by the professionals assigned to your case. They never show a tier, flag, or answer."
       ] },
       { "heading": "Who can see what", "bullets": [
         "Parents see their own information.",
@@ -78,7 +78,7 @@
         "Email delivery (Resend): recipient address, subject, and links. Never screening answers.",
         "Hosting and database (Emergent): the application and its database run on Emergent's infrastructure.",
         "Research summaries (Perplexity): only category labels, a joint rating, and a professional's ZIP code. Never names, case numbers, or answers.",
-        "Report drafting assistant (Google Gemini via Emergent): case code, parent and child names, and the professional's draft text. Never screening answers."
+        "Report drafting assistant (Claude Sonnet 5.5 via Emergent): case code, child's first initial, and the professional's draft text. Never safety check-in answers, free text, or safe-contact details. Legal Lens research (Gemini 3.1 Pro or GPT-5.5) receives the professional's research question only."
       ] },
       { "heading": "Your controls", "bullets": [
         "You can delete your account from your dashboard. Your answers and screening are removed from the case immediately.",
@@ -98,7 +98,7 @@
         "Your answers, reflections, and journal entries belong to you. Your co-parent does not see them."
       ] },
       { "heading": "Safety first", "paragraphs": [
-        "If you report family violence concerns, we limit what appears in joint reports, invitations, and email. Reports show only that your screening was received, a tier, and a neutral pathway label. They never show your raw answers, your narrative, or your locations, and the version appears only as a neutral label."
+        "If you report family violence concerns, we limit what appears in joint reports, invitations, and email. Reports show only that your safety check-in was received, not started, or declined, and a neutral pathway label. They never show your answers, a tier or flag, your narrative, or your locations."
       ] },
       { "heading": "Professionals", "paragraphs": [
         "Assigned professionals can see individual screening answers on a protected screen. Every view is logged. They receive reports built from what you authorize."

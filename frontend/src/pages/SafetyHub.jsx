@@ -54,7 +54,7 @@ export default function SafetyHub() {
         </section>
         <section className="text-center">
           <Link to={`/joint/${id}/safety-screening`}><Button size="lg" className="h-auto min-h-12 w-full max-w-md whitespace-normal rounded-full bg-[#3D1A78] px-6 py-3 text-base font-bold leading-snug hover:bg-[#2f1460] focus-visible:ring-2 focus-visible:ring-[#3D1A78] focus-visible:ring-offset-2 sm:w-auto sm:px-8" data-testid="hub-begin-btn">Begin Confidential Safety Assessment</Button></Link>
-          <p className="mt-3 text-sm text-slate-600" data-testid="hub-privacy-line">Your answers are private and never shown to the other parent.</p>
+          <p className="mt-3 text-sm text-slate-600" data-testid="hub-privacy-line">Your answers are never shown to the other parent and are shared only with professionals assigned to your case.</p>
         </section>
         <section className="rounded-2xl bg-red-700 p-5 text-white" data-testid="hub-emergency" aria-label="Emergency resources">
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">

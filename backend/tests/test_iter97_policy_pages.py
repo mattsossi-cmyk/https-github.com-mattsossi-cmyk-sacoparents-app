@@ -25,7 +25,7 @@ def test_privacy_text():
     t = _text("privacy")
     for s in ["SA CoParents provides two connected tools: a parent app (sacoparentsapp.online) and a professional portal (sacoparentsalign.com).",
               "Contact: mattsossi@bsossi.com, 210-224-1667.",
-              "Safety screening (which version you took, A, B, or C, your answers, and a tier; we never ask for or store your sexual orientation).",
+              "Safety check-in (your answers, which questions you skipped, the date, and an internal concern level visible only to professionals assigned to your case; we never ask for or store your sexual orientation).",
               "We don't sell your information.", "Service providers: email delivery (Resend).", "We limit access by role and keep access logs.",
               "Raw screening answers are deleted 90 days after the case closes or the account is deleted, whichever comes first. Court submissions are kept for 6 months from the date they are submitted.",
               "Deleting your account does not remove a record already submitted to a court.", "If this notice changes, we'll show it again and ask you to confirm."]:
@@ -37,7 +37,7 @@ def test_privacy_text():
 
 def test_confidentiality_text():
     t = _text("confidentiality")
-    assert "They never show your raw answers, your narrative, or your locations, and the version appears only as a neutral label." in t
+    assert "They never show your answers, a tier or flag, your narrative, or your locations." in t
     assert "which version you took" not in t
     assert "San Antonio, Family Violence Prevention Services 24-hour line: 210-733-8810." in t and "1-800-799-7233 (text START to 88788)" in t and "Call 911." in t
     assert "mandatory" not in t.lower() and "mandated" not in t.lower()

@@ -76,9 +76,10 @@ def test_professional_access_notice_on_step_screen():
     from pathlib import Path
 
     from safety_screening import PROFESSIONAL_ACCESS_NOTICE, STEP_NOTICE_VERSION
-    exact = ("Professional Access Notice: Your individual answers are not shared with your co-parent. The professional linked to your case may be notified "
-             "whether you have completed or declined this required step, and assigned professionals may see individual screening answers as described in "
-             "the privacy notification. This status notification does not itself disclose your answers.")
+    exact = ("Professional Access Notice: Your individual answers are not shared with your co-parent. Professionals assigned to your case may be notified "
+             "whether you have completed, not started, or declined this required step, and case documents may show that status — never your answers. "
+             "Professionals assigned to your case, and SA CoParents administrators, may see your individual answers on a protected, access-logged screen "
+             "as described in the privacy notification.")
     assert PROFESSIONAL_ACCESS_NOTICE == exact
     assert exact in Path("/app/frontend/src/content/safetyEntry.js").read_text(encoding="utf-8")
     page = Path("/app/frontend/src/pages/StartWithSafety.jsx").read_text(encoding="utf-8")
@@ -92,4 +93,4 @@ def test_professional_access_notice_on_step_screen():
     assert pb.post(f"{API}/joint/reports/{rid}/safety-screening/decline").json()["entry_status"] == "declined"
     eb = pb.get(f"{API}/me/safety-entry").json()
     assert eb["status"] == "declined" and eb["needs_notice"] is True
-    assert "2026-10-10.2" in Path("/app/backend/privacy_notice.py").read_text(encoding="utf-8")
+    assert "2026-10-19.1" in Path("/app/backend/privacy_notice.py").read_text(encoding="utf-8")

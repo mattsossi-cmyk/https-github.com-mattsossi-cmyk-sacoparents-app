@@ -82,7 +82,7 @@ def _jev_routes(r: APIRouter, db, get_current_user, own_case) -> None:
         try:
             text = await _claude(PARALLEL_SYSTEM, payload, f"parallel-summary-{rid}")
             text = text if text.lower().startswith("ai-assisted draft") else f"{AI_LABEL}. {text}"
-            model = "Claude Sonnet 4.6"
+            model = "Claude Sonnet 5.5"
         except Exception as exc:
             logger.warning("claude parallel summary unavailable: %s", exc)
             text = (f"{AI_LABEL}. Safety indicators were identified for these parents; a Parallel Parenting structure applies: written app-only communication limited to child logistics, neutral-site or "

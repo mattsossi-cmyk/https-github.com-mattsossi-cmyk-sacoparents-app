@@ -1191,3 +1191,9 @@ Owner rulings: 1 replace A/B/C with 8-domain set; 2 professional-decides (no aut
 - BUG: GET /api/integrations/safety-screening-spec returned 500 (KeyError 'gate') since FV joined VERSIONS — the bridge spec export only knew A/B/C kinds. Fixed: schema_version 4 → offered FV items (no weights/tiers), legacy A/B/C under legacy_versions, assignment none, check_in_links, privacy text 'never a tier'. PRODUCTION still has the 500 until next deploy.
 - Stale tests updated: iter89 (spec export shape; PDF no 'tier 3' + 'not started'; reminder link /safety-hub), iter99 (parents complete Start-with-Safety before responses → 423 pause check reachable).
 - Prod checks: /api/health 200; /check-in SPA 200 (bundle main.5a04a0ff.js contains alias → latest deploy live); /api/me/check-in 401 unauth; case-invite + spec 401 with wrong/no key.
+
+## 2026-10-19 — Notice text update (PREVIEW ONLY; owner 'apply'). PRIVACY_NOTICE_VERSION 2026-10-10.2→2026-10-19.1; STEP_NOTICE_VERSION 2026-10-15.1→2026-10-19.1 (both re-shown once).
+- policies.json: no 'a tier' claims (3 places), drafting assistant = Claude Sonnet 5.5 (Gemini/GPT only Legal Lens), 'Safety check-in' collection wording.
+- PROFESSIONAL_ACCESS_NOTICE (backend+frontend, identical): 'professionals assigned to your case', status may appear in case documents never answers, admins included (supervisors cannot open answers unless assigned/admin).
+- fv PRIVACY_NOTE plural + reporting line conditional ('in Texas, any person must report'); hub privacy line; footnote 'skipped, not why'; after-submit line; ai_tools fallback label 5.5.
+- Tests updated: iter108 (exact notice + version), iter95 (version), iter97 (collection line). Counsel review of wording recommended before deploy.
