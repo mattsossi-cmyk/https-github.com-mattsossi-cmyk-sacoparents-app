@@ -627,6 +627,10 @@ async def get_joint_report(rid: str, user=Depends(get_current_user)):
     pend = await db.invitations.find({"report_id": rid, "status": "pending"}, {"_id": 0}).to_list(10)
     out = joint_public(doc, user, pend[0] if pend else None, pending=pend)
     out.update(_pause_view(doc, user.get("role") == "admin" or user["_id"] in (doc.get("professional_id"), doc.get("created_by"))))
+    if out.get("foundation_statements"):  # professional saw parents' Foundation Statements on the case page: log once per day (parents can see this in "Who has looked")
+        day = datetime.now(timezone.utc).date().isoformat()
+        if not await db.access_events.find_one({"report_id": rid, "kind": "foundation_view", "by": user["_id"], "at": {"$regex": f"^{day}"}}, {"_id": 1}):
+            await _log_report_access(doc, user, "Viewed Foundation Statement(s) on case page", "foundation_view")
     return out
 
 

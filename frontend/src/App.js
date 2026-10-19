@@ -1,5 +1,5 @@
 import "@/App.css";
-import { BrowserRouter, Routes, Route, Navigate, useParams, useLocation } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate, useParams, useLocation, Link } from "react-router-dom";
 import { Toaster } from "@/components/ui/sonner";
 import { AuthProvider, useAuth } from "@/context/AuthContext";
 import Landing from "@/pages/Landing";
@@ -76,6 +76,12 @@ function Protected({ children }) {
   return children;
 }
 
+function FooterPrivacyLink() {
+  const { user } = useAuth();
+  const to = user?.role === "parent" ? "/who-can-see" : "/legal/privacy";
+  return <Link to={to} className="underline underline-offset-2 hover:text-brand-purple" data-testid="footer-who-can-see-link">Who can see my information</Link>;
+}
+
 function AppRoutes() {
   const location = useLocation();
   if (location.hash?.includes("session_id=")) return <AuthCallback />;
@@ -96,6 +102,7 @@ function AppRoutes() {
             <Route path="/professional-notice" element={<Protected><ProfessionalNotice /></Protected>} />
             <Route path="/start-with-safety" element={<Protected><StartWithSafety /></Protected>} />
             <Route path="/check-in" element={<Protected><CheckInAlias /></Protected>} />
+            <Route path="/who-can-see" element={<Protected><CheckInAlias to="hub" /></Protected>} />
             <Route path="/joint/:id/communication-readiness" element={<Protected><CommunicationReadiness /></Protected>} />
             <Route path="/joint/:id/safety-screening" element={<Protected><SafetyScreening /></Protected>} />
             <Route path="/joint/:id/safety-screening/:role" element={<Protected><SafetyResponses /></Protected>} />
@@ -141,7 +148,7 @@ function App() {
         <BrowserRouter>
           <AppRoutes />
           <footer className="py-4 text-center text-xs text-muted-foreground" data-testid="copyright-footer">
-            Copyright 2026 SA CoParents. All Rights Reserved. · sacoparentsalign.com
+            Copyright 2026 SA CoParents. All Rights Reserved. · sacoparentsalign.com · <FooterPrivacyLink />
           </footer>
         </BrowserRouter>
         <Toaster position="top-center" />

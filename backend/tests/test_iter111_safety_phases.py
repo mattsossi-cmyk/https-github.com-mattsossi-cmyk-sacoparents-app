@@ -191,3 +191,13 @@ def test_who_looked_parent_sees_views_admin_by_role_only():
     assert all(e["viewer"] and e["at"] for e in ev) and all("Parent" not in e["viewer"] for e in ev)
     assert pb.get(f"{API}/joint/reports/{rid}/safety-screening/who-looked").json()["events"] == [e for e in [] ] or all("Your individual answers" not in e["what"] for e in pb.get(f"{API}/joint/reports/{rid}/safety-screening/who-looked").json()["events"])
     assert pro.get(f"{API}/joint/reports/{rid}/safety-screening/who-looked").status_code == 403
+    # widened 2026-10-19: professional views of assessment answers in the report + Foundation Statements appear too, labelled clearly
+    pb.put(f"{API}/joint/reports/{rid}/safety-screening", json={"responses": {**ALL_NO}, "safe_contact": None})
+    rep = pro.get(f"{API}/joint/reports/{rid}/report"); pro.get(f"{API}/joint/reports/{rid}")
+    mine = pa.get(f"{API}/joint/reports/{rid}/safety-screening/who-looked").json()
+    labels = {e["what"] for e in mine["events"]}
+    if rep.status_code == 200:
+        assert "Your assessment answers (report)" in labels
+    else:
+        assert rep.status_code == 400 and "Your assessment answers (report)" not in labels  # report not yet available → nothing viewed, nothing listed
+    assert all(e["viewer_role"] != "Parent A" and e["viewer_role"] != "Parent B" for e in mine["events"])

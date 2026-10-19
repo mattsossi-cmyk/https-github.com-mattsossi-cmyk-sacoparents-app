@@ -486,13 +486,14 @@ def build_router(db, get_current_user, get_joint_report_doc, report_role, log_ac
 
     @r.get("/joint/reports/{rid}/safety-screening/who-looked")
     async def who_looked(rid: str, user=Depends(get_current_user)):
-        """Parent-facing, read-only: every recorded opening of this parent's own safety answers (owner ruling 2026-10-19). Admins appear by role, never by name."""
+        """Parent-facing, read-only: every recorded professional/admin opening of this parent's information (owner ruling 2026-10-19). Admins appear by role, never by name."""
         doc = await get_joint_report_doc(rid, user)
         role = report_role(doc, user["_id"])
         if not role or _is_pro(doc, user):
             raise HTTPException(status_code=403, detail="Available to the parent whose answers these are")
         what = {"safety_screening": "Your individual answers and safe-contact details", "safety_review": "Your check-in status and concern level (not your answers)",
-                "redaction": "A single answer in the joint report", "safety_review_export": "Safety provisions document (no answers)"}
+                "redaction": "A single answer in the joint report", "safety_review_export": "Safety provisions document (no answers)",
+                "view": "Your assessment answers (report)", "download": "Your assessment answers (report)", "foundation_view": "Your Foundation Statement (report)"}
         tag = f"Parent {role.upper()}"
         rows = await db.access_events.find({"report_id": rid, "kind": {"$in": list(what)}}, {"_id": 0}).sort("at", -1).to_list(500)
         ids = {e.get("by") for e in rows if e.get("by")}
@@ -501,10 +502,15 @@ def build_router(db, get_current_user, get_joint_report_doc, report_role, log_ac
         for e in rows:
             if e["kind"] in ("safety_screening", "redaction") and tag not in (e.get("action") or ""):
                 continue
+            if (e.get("by_role") or "").startswith("Parent"):
+                continue  # a parent opening their own report is not a professional view
+            label = what[e["kind"]]
+            if "Communications Log" in (e.get("action") or ""):
+                label = "Communications log (report)"
             admin = e.get("by") in admins
             out.append({"at": e.get("at"), "viewer": "SA CoParents administrator" if admin else (e.get("by_name") or "Professional"),
-                        "viewer_role": "SA CoParents administrator" if admin else (e.get("by_role") or "Assigned professional"), "what": what[e["kind"]]})
-        return {"role": role, "events": out, "note": "Every opening of your protected answers is recorded here. Your co-parent never appears in this list because they can never open your answers."}
+                        "viewer_role": "SA CoParents administrator" if admin else (e.get("by_role") or "Assigned professional"), "what": label})
+        return {"role": role, "events": out, "note": "Every time a professional or administrator opens your safety answers, your assessment answers in the report, or your Foundation Statement, it is recorded here. Your co-parent never appears in this list because they can never open your answers."}
 
 
     @r.get("/me/check-in")
