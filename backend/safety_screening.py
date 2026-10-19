@@ -64,10 +64,27 @@ def crisis_resources_for(version: str | None) -> dict:
 SAFETY_BANNER_TEXT = "Start with Safety. A private check-in is available any time."
 # Owner-approved 2026-10-15. Single editable string; bump STEP_NOTICE_VERSION so every parent sees the step screen again.
 STEP_NOTICE_VERSION = "2026-10-19.1"
-PROFESSIONAL_ACCESS_NOTICE = ("Professional Access Notice: Your individual answers are not shared with your co-parent. Professionals assigned to your case may be notified "
-                              "whether you have completed, not started, or declined this required step, and case documents may show that status — never your answers. "
-                              "Professionals assigned to your case, and SA CoParents administrators, may see your individual answers on a protected, access-logged screen "
-                              "as described in the privacy notification.")
+PROFESSIONAL_ACCESS_NOTICE = """Who can see your information
+
+Your co-parent never sees your answers. Nothing you write in the safety check-in is ever shown to them.
+
+The professionals assigned to your case can see:
+• Your individual answers, including anything you write in your own words
+• Which questions you skipped (they see that you skipped, not why)
+• The safe ways to contact you, if you choose to share them
+• A concern level based on your answers, which helps your professional decide what support to offer
+• Whether you have started, finished, or declined this step
+
+A small number of SA CoParents administrators can also open your answers, only to check that the service is working safely.
+
+Your answers are kept on a protected screen. Each time anyone opens it, that is recorded, and you can see who looked and when in your privacy records.
+
+Court documents and reports show only whether this step was completed, not started, or declined. They never show your answers, what you wrote, or your concern level.
+
+If your answers suggest a child has been abused or neglected, the professional who reads them must report it. Texas law requires anyone who suspects child abuse or neglect to report it.
+
+Every question can be skipped, and you can stop at any time.
+If you skip a question about serious safety concerns, your professional will be asked to check in with you."""
 # Version B source switch. "cdc" (default, TEMPORARY) = CDC NISVS behavior-category adaptation.
 # "velonis" = HITS-based items (Velonis et al. 2021, J. Interpersonal Violence; © SAGE) — kept, switched OFF until written permission is obtained.
 VERSION_B_SOURCE = os.environ.get("VERSION_B_SOURCE", "cdc")

@@ -10,7 +10,7 @@ export const SafeContactStep = ({ value, onChange }) => {
   return (
     <section className="space-y-3 rounded-lg border border-border bg-white p-4" data-testid="screening-safe-contact">
       <h2 className="text-base md:text-lg font-semibold text-brand-purple">Optional · Safe way to reach you</h2>
-      <p className="text-sm text-muted-foreground">If a professional needs to reach you about your safety, what is the safest way? Only your assigned professional can see this. You can skip it.</p>
+      <p className="text-sm text-muted-foreground">If a professional needs to reach you about your safety, what is the safest way? Only the professionals assigned to your case can see this. You can skip it.</p>
       {!open ? (
         <div className="flex flex-wrap gap-2">
           <button type="button" onClick={() => setOpen(true)} className="rounded-full border border-brand-purple px-4 py-1.5 text-sm font-semibold text-brand-purple hover:bg-brand-purple/5" data-testid="safe-contact-add-btn">Add a safe contact method</button>

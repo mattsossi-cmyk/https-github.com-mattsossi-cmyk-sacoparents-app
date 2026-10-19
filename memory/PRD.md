@@ -1199,3 +1199,7 @@ Owner rulings: 1 replace A/B/C with 8-domain set; 2 professional-decides (no aut
 - Tests updated: iter108 (exact notice + version), iter95 (version), iter97 (collection line). Counsel review of wording recommended before deploy.
 - STANDING FACT (owner 2026-10-19): Align serves Texas families only. Reporting line is Texas-specific (fv_screening.MANDATORY_REPORTING_NOTE), no conditional wording.
 - Owner final reporting wording 2026-10-19: 'If your answers suggest a child has been abused or neglected, the professional who reads them must report it. Texas law requires anyone who suspects child abuse or neglect to report it.'
+
+## 2026-10-19 — Owner rulings 1b/2b; Professional Access Notice replaced with owner's 'Who can see your information' text verbatim (backend+frontend identical, multi-line; rendered pre-line on Start-with-Safety + check-in). All parent lines → 'the professionals assigned to your case'. After-submit line per owner. PREVIEW ONLY.
+- OPEN CONFLICT: Notice says parents 'can see who looked and when in your privacy records' — Align has NO parent-facing access-log view today (access_events visible to assigned professional only via report activity). Needs owner decision: build parent view or drop sentence.
+- Parent app's 'Prefer not to answer counts like Unsure' is THEIR assessment; Align FV never scores skips except red_skipped.

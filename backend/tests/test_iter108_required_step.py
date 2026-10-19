@@ -76,11 +76,8 @@ def test_professional_access_notice_on_step_screen():
     from pathlib import Path
 
     from safety_screening import PROFESSIONAL_ACCESS_NOTICE, STEP_NOTICE_VERSION
-    exact = ("Professional Access Notice: Your individual answers are not shared with your co-parent. Professionals assigned to your case may be notified "
-             "whether you have completed, not started, or declined this required step, and case documents may show that status — never your answers. "
-             "Professionals assigned to your case, and SA CoParents administrators, may see your individual answers on a protected, access-logged screen "
-             "as described in the privacy notification.")
-    assert PROFESSIONAL_ACCESS_NOTICE == exact
+    exact = PROFESSIONAL_ACCESS_NOTICE
+    assert exact.startswith("Who can see your information") and "their supervisor" not in exact and "professionals assigned to your case" in exact
     assert exact in Path("/app/frontend/src/content/safetyEntry.js").read_text(encoding="utf-8")
     page = Path("/app/frontend/src/pages/StartWithSafety.jsx").read_text(encoding="utf-8")
     assert 'data-testid="professional-access-notice"' in page and page.index("professional-access-notice") < page.index("start-safety-decline-btn")
