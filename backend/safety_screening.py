@@ -330,24 +330,30 @@ def _status(doc: dict) -> dict:
 
 def spec_export() -> dict:
     """Machine-readable spec for the parent app: identical wording, scales, tiering, and the import payload contract."""
-    return {"schema_version": 3, "label": LABEL, "scale_note": SCALE_NOTE, "trigger_warning": TRIGGER_WARNING, "scales": {"freq": FREQ, "yn": YN, "safe": SAFE}, "resources": RESOURCES, "resources_c": RESOURCES_C, "external_link_note": EXTERNAL_LINK_NOTE,
-            "version_b_source": VERSION_B_SOURCE, "version_b_import_sources": IMPORT_SOURCE_B,
-            "versions": {k: {"version": k, "title": v["title"], "intro": v["intro"], "label": v.get("label", LABEL), "source": v["source"],
-                             "items": [{"id": i["id"], "part": i["part"], "stem": i["stem"], "text": i["text"], "kind": i["kind"], "scale": {"freq": "freq", "yn": "yn", "safe": "safe", "text": None}[i["kind"]], "tier3": i["tier3"]} for i in v["items"]]} for k, v in VERSIONS.items()},
-            "tiers": {"note": "Design guide, not a validated or clinical cutoff. Skipped and 'Prefer not to say' never raise the tier.",
-                      "1": "All frequency items Never/Rarely AND closing Very safe or Somewhat safe.",
-                      "2": "Any frequency item Sometimes/Frequently, OR closing Somewhat safe with any frequency item above Never.",
-                      "3": "Any item flagged tier3 answered Sometimes/Frequently, OR closing Not safe.",
-                      "tier3_items": {k: [i["id"] for i in v["items"] if i["tier3"]] for k, v in VERSIONS.items()}},
-            "additional_items": __import__("safety_pathway").EXTRA_ITEMS, "scales_extra": {"yn3": __import__("safety_pathway").YN3},
-            "safety_pathway": {"flags": __import__("safety_pathway").FLAGS, "flag_map": __import__("safety_pathway").FLAG_MAP, "rules": {"protected_review": list(__import__("safety_pathway").P1), "structured": list(__import__("safety_pathway").P2)}, "labels": __import__("safety_pathway").LABEL,
+    def _items(v, with_weights):
+        out = []
+        for i in v["items"]:
+            row = {"id": i["id"], "part": i["part"], "stem": i.get("stem"), "text": i["text"], "kind": i["kind"], "follow": i.get("follow")}
+            if with_weights:
+                row["tier3"] = bool(i.get("tier3"))
+            out.append(row)
+        return out
+    fv = __import__("fv_screening")
+    legacy = {k: {"version": k, "title": v["title"], "intro": v["intro"], "label": v.get("label", LABEL), "source": v["source"], "items": _items(v, True)} for k, v in VERSIONS.items() if k != "FV"}
+    return {"schema_version": 4, "label": LABEL, "trigger_warning": TRIGGER_WARNING, "resources": FV_RESOURCES, "external_link_note": EXTERNAL_LINK_NOTE,
+            "offered": {"version": OFFERED_VERSION, "title": fv.TITLE, "intro": fv.PRIVACY_NOTE, "items": _items(VERSIONS["FV"], False), "scales": {**fv.SCALES, "yn3": __import__("safety_pathway").YN3},
+                        "note": "One Family check-in, identical for every parent. No choice screen, no gender inference. Rule weights and tiers are professional-only and are not exported."},
+            "legacy_versions": {"note": "A/B/C were retired 2026-10-18; listed only so previously imported records can be read.", "scales": {"freq": FREQ, "yn": YN, "safe": SAFE}, "scale_note": SCALE_NOTE,
+                                "resources_c": RESOURCES_C, "version_b_source": VERSION_B_SOURCE, "version_b_import_sources": IMPORT_SOURCE_B, "versions": legacy},
+            "additional_items": __import__("safety_pathway").EXTRA_ITEMS,
+            "safety_pathway": {"flags": __import__("safety_pathway").FLAGS, "flag_map": __import__("safety_pathway").FLAG_MAP, "labels": __import__("safety_pathway").LABEL,
                                "export_fields": {"safety_flags": "dict of the 9 booleans (optional)", "safety_pathway": "standard|structured|protected_review (optional)"}, "note": "Suggested flag only; the assigned professional confirms. Highest restriction wins across parents."},
             "communication_readiness": {"items": COMM_ITEMS, "export_field": "communication_readiness", "shape": {"completed_at": "ISO-8601", "responses": {"cr_conflict": "Low|Moderate|High|Safety concerns", "cr_direct": "Yes|Only in writing|Not comfortable", "cr_channel": "one of the listed channels", "cr_child": "free text (optional)"}}},
-            "assignment": {"choice_screen": "Which questions fit your situation best?", "default_by_gender": {"woman": "A", "man": "B"}, "no_gender_or_non_binary": ["A", "B", "C"], "always_offer": "C",
-                           "store_only": "version letter (A|B|C) — never infer or store orientation"},
+            "assignment": {"choice_screen": None, "note": "No assignment step. Every parent receives the Family check-in (version FV)."},
+            "check_in_links": {"alias": "https://sacoparentsalign.com/check-in?case=<SA case code>", "direct": "https://sacoparentsalign.com/joint/<report_id>/safety-screening", "report_id_source": "GET /api/integrations/case-invite/{token} → report_id"},
             "export_contract": {"path": "GET /api/integrations/export-assessments?email=<parent email>", "field": "safety_screening",
-                                "shape": {"version": "A|B|C", "source": "for Version B: cdc_nisvs_adapted (current) | velonis_hits (legacy ids b1-b9; auto-detected if omitted)", "completed_at": "ISO-8601", "tier": "1|2|3 (optional; recomputed if missing)", "answered_count": "int (optional)", "responses": {"<item id>": "<scale value or free text>"}},
-                                "privacy": "Reports/PDFs/co-parent views show only Received, version letter, tier, date. Raw responses go to the assigned professional only."}}
+                                "shape": {"version": "FV (A|B|C accepted for legacy records)", "completed_at": "ISO-8601", "answered_count": "int (optional)", "responses": {"<item id>": "<scale value or free text>"}},
+                                "privacy": "Reports/PDFs/co-parent views show only Received, version and date — never a tier, flag or answer. Raw responses go to the assigned professional only."}}
 
 
 def build_router(db, get_current_user, get_joint_report_doc, report_role, log_access) -> APIRouter:

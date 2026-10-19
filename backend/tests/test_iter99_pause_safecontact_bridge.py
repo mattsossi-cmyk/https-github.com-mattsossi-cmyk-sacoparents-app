@@ -37,6 +37,7 @@ class TestJointPause:
 
     def test_parents_see_only_neutral_message(self, pro_case, parent_a_session, parent_b_session):
         for s in (parent_a_session, parent_b_session):
+            s.post(f"{BASE}/api/joint/reports/{pro_case['id']}/safety-screening/decline", timeout=15)  # required Start-with-Safety step first (owner Option A)
             d = s.get(f"{BASE}/api/joint/reports/{pro_case['id']}", timeout=15).json()
             assert d["joint_blocked"] is True and d["joint_blocked_message"] == NEUTRAL_MESSAGE and "joint_paused" not in d
             low = str(d).lower()

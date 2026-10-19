@@ -56,18 +56,20 @@ def test_pdf_shows_version_c_tier_only():
     v = sample_legal_lens()
     v["safety_screening"] = {"a": public_record(build_record("C", RAW_C)), "b": None}
     text = " ".join("\n".join(p.get_text() for p in pymupdf.open(stream=build_legal_lens_pdf(v), filetype="pdf")).split()).lower()
-    assert "version c" in text and "tier 3" in text and "not received" in text
+    assert "version c" in text and "tier 3" not in text and "not started" in text  # review fix 2026-10-18: receipt carries no tier; "Not started" wording
     assert not any(w in text for w in IDENTITY_WORDS) and "frequently" not in text and "somewhat safe" not in text
 
 
 def test_spec_export_matches_runtime():
     from safety_screening import spec_export
     spec = spec_export()
-    assert set(spec["versions"]) == {"A", "B", "C"} and spec["assignment"]["no_gender_or_non_binary"] == ["A", "B", "C"]
-    for k, v in spec["versions"].items():
+    # 2026-10-18: the bridge exports the single offered Family check-in (no weights/tiers) plus A/B/C as read-only legacy versions
+    assert spec["offered"]["version"] == "FV" and [i["id"] for i in spec["offered"]["items"]] == [i["id"] for i in VERSIONS["FV"]["items"]]
+    assert not any("tier3" in i or "weight" in i for i in spec["offered"]["items"]) and "tiers" not in spec
+    assert set(spec["legacy_versions"]["versions"]) == {"A", "B", "C"} and spec["assignment"]["choice_screen"] is None
+    for k, v in spec["legacy_versions"]["versions"].items():
         assert [i["id"] for i in v["items"]] == [i["id"] for i in VERSIONS[k]["items"]]
-        assert all(compute_tier(k, {i: "Sometimes"}) == 3 for i in spec["tiers"]["tier3_items"][k])
-    assert "orientation" in spec["assignment"]["store_only"] and spec["export_contract"]["field"] == "safety_screening"
+    assert spec["export_contract"]["field"] == "safety_screening" and "never a tier" in spec["export_contract"]["privacy"]
 
 
 def test_screening_reminder_nudges_once_after_seven_days():
@@ -93,7 +95,7 @@ def test_screening_reminder_nudges_once_after_seven_days():
             n2 = await run_screening_reminders(db, fake_send, lambda: "https://x.test", "SA", logging.getLogger("t"))
             mine = [s for s in sent if s["case_id"] == rid]
             assert len(mine) == 1 and n2 == 0 and n1 >= 1
-            assert mine[0]["to"] == "qa.remind@example.com" and "/safety-screening" in mine[0]["html"]
+            assert mine[0]["to"] == "qa.remind@example.com" and "/safety-hub" in mine[0]["html"]  # reminder lands on the Safety hub (Start-with-Safety first)
             low = (mine[0]["subject"] + mine[0]["html"]).lower()
             assert "lgbtq" not in low and "women" not in low and "version" not in low
             doc = await db.joint_reports.find_one({"id": rid})

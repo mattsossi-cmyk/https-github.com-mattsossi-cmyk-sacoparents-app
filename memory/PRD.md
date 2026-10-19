@@ -1186,3 +1186,8 @@ Owner rulings: 1 replace A/B/C with 8-domain set; 2 professional-decides (no aut
 - Removed: claude from assistant.MODELS, legal_ai.MODELS, lens_data.AI_MODELS; Assistant header toggle replaced by static GPT-5.5 label. Tests updated (iter66, iter115). PREVIEW ONLY until owner says deploy.
 
 ## 2026-10-19 — Owner LIFTED the webhook test-ping pause ('i lift that explicitly'). Still: no secret in chat; SAFETY_STATUS_WEBHOOK stays false until a successful ping and a separate owner go-live. Procedure given: parent-app side generates fresh ALIGN_WEBHOOK_SECRET → owner enters same value in Align Deploy → Secrets → owner clicks Admin → Webhook check → 'Send signed test ping' on production.
+
+## 2026-10-19 — Option (a) inbound bridge check + BUG FIX (PREVIEW ONLY)
+- BUG: GET /api/integrations/safety-screening-spec returned 500 (KeyError 'gate') since FV joined VERSIONS — the bridge spec export only knew A/B/C kinds. Fixed: schema_version 4 → offered FV items (no weights/tiers), legacy A/B/C under legacy_versions, assignment none, check_in_links, privacy text 'never a tier'. PRODUCTION still has the 500 until next deploy.
+- Stale tests updated: iter89 (spec export shape; PDF no 'tier 3' + 'not started'; reminder link /safety-hub), iter99 (parents complete Start-with-Safety before responses → 423 pause check reachable).
+- Prod checks: /api/health 200; /check-in SPA 200 (bundle main.5a04a0ff.js contains alias → latest deploy live); /api/me/check-in 401 unauth; case-invite + spec 401 with wrong/no key.
