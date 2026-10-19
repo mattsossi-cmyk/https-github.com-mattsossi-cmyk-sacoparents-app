@@ -84,7 +84,7 @@ Court documents and reports show only whether this step was completed, not start
 If your answers suggest a child has been abused or neglected, the professional who reads them must report it. Texas law requires anyone who suspects child abuse or neglect to report it.
 
 Every question can be skipped, and you can stop at any time.
-If you skip a question about serious safety concerns, your professional will be asked to check in with you."""
+If you skip a question about immediate danger, physical or sexual harm, or harm to your children, your professional will be asked to check in with you."""
 # Version B source switch. "cdc" (default, TEMPORARY) = CDC NISVS behavior-category adaptation.
 # "velonis" = HITS-based items (Velonis et al. 2021, J. Interpersonal Violence; © SAGE) — kept, switched OFF until written permission is obtained.
 VERSION_B_SOURCE = os.environ.get("VERSION_B_SOURCE", "cdc")
@@ -483,6 +483,29 @@ def build_router(db, get_current_user, get_joint_report_doc, report_role, log_ac
         pending = next((s for s in statuses if s[1] == "not_started"), None)
         rid, status = pending or statuses[0]
         return {"applies": True, "has_case": True, "status": status, "report_id": rid, "text": SAFETY_BANNER_TEXT, **notice}
+
+    @r.get("/joint/reports/{rid}/safety-screening/who-looked")
+    async def who_looked(rid: str, user=Depends(get_current_user)):
+        """Parent-facing, read-only: every recorded opening of this parent's own safety answers (owner ruling 2026-10-19). Admins appear by role, never by name."""
+        doc = await get_joint_report_doc(rid, user)
+        role = report_role(doc, user["_id"])
+        if not role or _is_pro(doc, user):
+            raise HTTPException(status_code=403, detail="Available to the parent whose answers these are")
+        what = {"safety_screening": "Your individual answers and safe-contact details", "safety_review": "Your check-in status and concern level (not your answers)",
+                "redaction": "A single answer in the joint report", "safety_review_export": "Safety provisions document (no answers)"}
+        tag = f"Parent {role.upper()}"
+        rows = await db.access_events.find({"report_id": rid, "kind": {"$in": list(what)}}, {"_id": 0}).sort("at", -1).to_list(500)
+        ids = {e.get("by") for e in rows if e.get("by")}
+        admins = {u["_id"] async for u in db.users.find({"_id": {"$in": list(ids)}, "role": "admin"}, {"_id": 1})}
+        out = []
+        for e in rows:
+            if e["kind"] in ("safety_screening", "redaction") and tag not in (e.get("action") or ""):
+                continue
+            admin = e.get("by") in admins
+            out.append({"at": e.get("at"), "viewer": "SA CoParents administrator" if admin else (e.get("by_name") or "Professional"),
+                        "viewer_role": "SA CoParents administrator" if admin else (e.get("by_role") or "Assigned professional"), "what": what[e["kind"]]})
+        return {"role": role, "events": out, "note": "Every opening of your protected answers is recorded here. Your co-parent never appears in this list because they can never open your answers."}
+
 
     @r.get("/me/check-in")
     async def my_check_in(case: str | None = None, user=Depends(get_current_user)):

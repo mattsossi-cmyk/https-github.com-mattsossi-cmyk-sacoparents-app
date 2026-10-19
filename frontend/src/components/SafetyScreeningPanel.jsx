@@ -17,7 +17,7 @@ export function SafetyScreeningPanel({ rid }) {
       <p className="flex items-center gap-1.5 text-sm font-semibold"><ShieldCheck className="h-4 w-4 text-brand-purple" /> Private safety screening <span className="text-xs font-normal text-muted-foreground">— screening questions, not a diagnostic tool</span></p>
       {mine && !d.is_professional && (
         <div className="mt-2 text-sm" data-testid="safety-screening-mine">
-          {mine.received ? <p data-testid="safety-screening-mine-done">Your screening was received privately. Only the professionals assigned to your case can see your answers, and every view is recorded. <Link to={`/joint/${rid}/safety`} className="font-semibold text-brand-purple hover:underline" data-testid="safety-hub-link">Open the safety hub</Link></p>
+          {mine.received ? <p data-testid="safety-screening-mine-done">Your screening was received privately. Only the professionals assigned to your case can see your answers, and every view is recorded. <Link to={`/joint/${rid}/safety`} className="font-semibold text-brand-purple hover:underline" data-testid="safety-screening-who-looked-link">See who has looked</Link> · <Link to={`/joint/${rid}/safety`} className="font-semibold text-brand-purple hover:underline" data-testid="safety-hub-link">Open the safety hub</Link></p>
             : (mine.version || mine.choice_needed) ? <Link to={`/joint/${rid}/safety`}><Button size="sm" variant="outline" data-testid="safety-screening-start-btn">Open my confidential safety &amp; readiness hub</Button></Link>
             : <p className="text-muted-foreground" data-testid="safety-screening-mine-unassigned">Your professional will assign your screening shortly.</p>}
         </div>

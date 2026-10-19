@@ -27,4 +27,4 @@ Court documents and reports show only whether this step was completed, not start
 If your answers suggest a child has been abused or neglected, the professional who reads them must report it. Texas law requires anyone who suspects child abuse or neglect to report it.
 
 Every question can be skipped, and you can stop at any time.
-If you skip a question about serious safety concerns, your professional will be asked to check in with you.`;
+If you skip a question about immediate danger, physical or sexual harm, or harm to your children, your professional will be asked to check in with you.`;

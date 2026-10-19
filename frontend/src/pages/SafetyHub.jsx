@@ -5,6 +5,7 @@ import api from "@/lib/api";
 import { QuickExitBar } from "@/components/QuickExit";
 import { CrisisResourcesButton } from "@/components/CrisisResources";
 import { Button } from "@/components/ui/button";
+import { WhoLooked } from "@/components/WhoLooked";
 
 const CARDS = [
   { key: "safety", icon: ShieldCheck, title: "Private Safety & Power Dynamics", body: "Screens for coercive control, boundary violations, physical or emotional safety risks, and conflict history.", cta: "Start Private Screening", to: "safety-screening" },
@@ -56,6 +57,7 @@ export default function SafetyHub() {
           <Link to={`/joint/${id}/safety-screening`}><Button size="lg" className="h-auto min-h-12 w-full max-w-md whitespace-normal rounded-full bg-[#3D1A78] px-6 py-3 text-base font-bold leading-snug hover:bg-[#2f1460] focus-visible:ring-2 focus-visible:ring-[#3D1A78] focus-visible:ring-offset-2 sm:w-auto sm:px-8" data-testid="hub-begin-btn">Begin Confidential Safety Assessment</Button></Link>
           <p className="mt-3 text-sm text-slate-600" data-testid="hub-privacy-line">Your answers are never shown to the other parent and are shared only with the professionals assigned to your case.</p>
         </section>
+        <WhoLooked rid={id} />
         <section className="rounded-2xl bg-red-700 p-5 text-white" data-testid="hub-emergency" aria-label="Emergency resources">
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
             {EMERGENCY.map(([k, v]) => <p key={k} className="flex items-center gap-2 text-sm"><Phone className="h-4 w-4 shrink-0" aria-hidden="true" /><span><span className="font-semibold">{k}:</span> {v}</span></p>)}

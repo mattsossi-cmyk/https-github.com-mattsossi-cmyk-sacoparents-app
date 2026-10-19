@@ -177,3 +177,17 @@ def test_check_in_alias_resolves_by_session_and_shared_code():
     assert pa.get(f"{API}/me/check-in", params={"case": "SA-000000"}).status_code == 404
     assert pro.get(f"{API}/me/check-in").status_code == 403
     body = pa.get(f"{API}/me/check-in").json(); assert not any(k in body for k in ("tier", "app_tier", "triggered_rules"))
+
+
+def test_who_looked_parent_sees_views_admin_by_role_only():
+    pro, pa, pb, rid = _case()
+    pa.put(f"{API}/joint/reports/{rid}/safety-screening", json={"responses": {**ALL_NO}, "safe_contact": None})
+    assert pa.get(f"{API}/joint/reports/{rid}/safety-screening/who-looked").json()["events"] == []
+    assert pro.get(f"{API}/joint/reports/{rid}/safety-screening/a/responses").status_code == 200
+    assert pro.get(f"{API}/joint/reports/{rid}/safety-review").status_code == 200
+    ev = pa.get(f"{API}/joint/reports/{rid}/safety-screening/who-looked").json()["events"]
+    kinds = [e["what"] for e in ev]
+    assert "Your individual answers and safe-contact details" in kinds and any("concern level" in k for k in kinds)
+    assert all(e["viewer"] and e["at"] for e in ev) and all("Parent" not in e["viewer"] for e in ev)
+    assert pb.get(f"{API}/joint/reports/{rid}/safety-screening/who-looked").json()["events"] == [e for e in [] ] or all("Your individual answers" not in e["what"] for e in pb.get(f"{API}/joint/reports/{rid}/safety-screening/who-looked").json()["events"])
+    assert pro.get(f"{API}/joint/reports/{rid}/safety-screening/who-looked").status_code == 403
