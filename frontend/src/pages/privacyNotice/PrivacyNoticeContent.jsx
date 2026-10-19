@@ -43,11 +43,37 @@ export function PrivacyNoticeContent() {
           do not use analytics or advertising trackers.
         </p>
         <p>We call the medical, psychological and special-education information above Sensitive Family Information.</p>
-        <p data-testid="privacy-notice-who-can-see">
-          <strong>Who can see your information.</strong> Your co-parent never sees your individual screening answers. A professional linked to your case
-          (for example a mediator or attorney) may see information you add to a shared case. Assigned professionals may see individual screening answers,
-          as described in the Privacy Notification you accepted at sign-in. We share nothing else without your permission.
-        </p>
+        <div data-testid="privacy-notice-who-can-see" className="space-y-2">
+          <p>
+            <strong>Who can see your information.</strong> Your co-parent never sees your answers. Nothing you write in the safety check-in is ever shown
+            to them.
+          </p>
+          <p>The professionals assigned to your case can see:</p>
+          <ul className="list-disc pl-6 space-y-1">
+            <li>Your individual answers, including anything you write in your own words</li>
+            <li>Which questions you skipped (they see that you skipped, not why)</li>
+            <li>The safe ways to contact you, if you choose to share them</li>
+            <li>A concern level based on your answers, which helps your professional decide what support to offer</li>
+            <li>Whether you have started, finished, or declined this step</li>
+          </ul>
+          <p>A small number of SA CoParents administrators can also open your answers, only to check that the service is working safely.</p>
+          <p>
+            Your answers are kept on a protected screen. Each time anyone opens it, that is recorded, and you can see who looked and when under &ldquo;Who
+            has looked at my information.&rdquo;
+          </p>
+          <p>
+            Court documents and reports show only whether this step was completed, not started, or declined. They never show your answers, what you
+            wrote, or your concern level.
+          </p>
+          <p>
+            If your answers suggest a child has been abused or neglected, the professional who reads them must report it. Texas law requires anyone who
+            suspects child abuse or neglect to report it.
+          </p>
+          <p>
+            Every question can be skipped, and you can stop at any time. If you skip a question about immediate danger, physical or sexual harm, or harm
+            to your children, your professional will be asked to check in with you.
+          </p>
+        </div>
       </section>
 
       <section id="ai" data-testid="privacy-notice-ai" className="scroll-mt-6 space-y-4">

@@ -1,6 +1,6 @@
 import React from "react";
 
-import { CaseVisibilityNotice } from "../../../components/privacy/CaseVisibilityNotice";
+import { ProfessionalAccessNotice } from "../../../components/privacy/ProfessionalAccessNotice";
 import { CourtDialog } from "./CourtDialog";
 
 const input =
@@ -46,7 +46,7 @@ export function CourtAcceptDialog({ open, onClose, cc, mediator, courtKey, onCon
             {cc.status.text}
           </p>
         )}
-        <CaseVisibilityNotice testid="court-accept-visibility" className="mb-3.5" />
+        <ProfessionalAccessNotice testid="court-accept-visibility" className="mb-3.5" />
         <button
           type="submit"
           data-testid="court-accept-confirm"

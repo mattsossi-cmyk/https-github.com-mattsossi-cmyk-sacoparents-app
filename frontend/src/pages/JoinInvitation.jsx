@@ -28,7 +28,7 @@ import {
 } from "lucide-react";
 
 import AppShell from "../components/AppShell";
-import { CaseVisibilityNotice } from "../components/privacy/CaseVisibilityNotice";
+import { ProfessionalAccessNotice } from "../components/privacy/ProfessionalAccessNotice";
 import { toast } from "sonner";
 import { api } from "../lib/api";
 import { useAuth } from "../context/AuthContext";
@@ -274,7 +274,7 @@ export default function JoinInvitation() {
                   benefit from additional discussion, options, or resources.
                 </p>
               </div>
-              <CaseVisibilityNotice testid="join-invitation-visibility" className="mt-3" />
+              <ProfessionalAccessNotice testid="join-invitation-visibility" className="mt-3" />
 
               {/* Auth wall */}
               {authKnown && !isSignedIn && (

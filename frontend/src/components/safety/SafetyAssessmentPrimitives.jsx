@@ -38,19 +38,21 @@ export function StepHeader({ step, total, title, subtitle }) {
   );
 }
 
-export function YNUButton({ value, current, label, onClick, testid }) {
+export function YNUButton({ value, current, label, onClick, testid, wide = false }) {
   const active = current === value;
   const palette = {
     yes: active ? "bg-[#9A3A23] text-white border-[#9A3A23]" : "bg-white text-[#1A1330] border-[#E5E0EE] hover:border-[#9A3A23]",
     no: active ? "bg-[#3C7858] text-white border-[#3C7858]" : "bg-white text-[#1A1330] border-[#E5E0EE] hover:border-[#3C7858]",
     unsure: active ? "bg-[#857E9C] text-white border-[#857E9C]" : "bg-white text-[#1A1330] border-[#E5E0EE] hover:border-[#857E9C]",
+    prefer_not: active ? "bg-[#5E5873] text-white border-[#5E5873]" : "bg-white text-[#4B4567] border-dashed border-[#B9B3C9] hover:border-[#5E5873]",
   };
   return (
     <button
       type="button"
       onClick={() => onClick(value)}
       data-testid={testid}
-      className={`flex-1 px-3 py-2 rounded-full border text-xs sm:text-sm font-semibold transition-colors ${palette[value]}`}
+      aria-pressed={active}
+      className={`${wide ? "basis-full" : "flex-1"} min-h-9 px-3 py-2 rounded-full border text-xs sm:text-sm font-semibold transition-colors ${palette[value]}`}
     >
       {label}
     </button>
@@ -95,10 +97,11 @@ export function QuestionRow({ idx, question, value, onChange, highConcern, missi
           )}
         </div>
       </div>
-      <div className="flex items-stretch gap-2">
+      <div className="flex flex-wrap items-stretch gap-2">
         <YNUButton value="yes" current={value} label="Yes" onClick={onChange} testid={`${question.id}-yes`} />
         <YNUButton value="no" current={value} label="No" onClick={onChange} testid={`${question.id}-no`} />
         <YNUButton value="unsure" current={value} label="Unsure" onClick={onChange} testid={`${question.id}-unsure`} />
+        <YNUButton value="prefer_not" current={value} label="I'd rather not answer" onClick={onChange} testid={`${question.id}-prefer-not`} wide />
       </div>
     </div>
   );

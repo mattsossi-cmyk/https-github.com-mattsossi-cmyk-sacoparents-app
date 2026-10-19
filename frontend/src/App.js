@@ -32,6 +32,7 @@ import Summary from "@/pages/Summary";
 import Safety from "@/pages/Safety";
 import Watch from "@/pages/Watch";
 import PrivacyNotice from "@/pages/PrivacyNotice";
+import WhoCanSee from "@/pages/WhoCanSee";
 import { ConsentGate } from "@/components/privacy/ConsentGate";
 import { AiNoticeProvider } from "@/components/aiNotice/AiNoticeProvider";
 import WhatProfessionalsSee from "@/pages/WhatProfessionalsSee";
@@ -260,6 +261,7 @@ function AppRoutes() {
           }
         />
         <Route path="/privacy-notice" element={<PrivacyNotice />} />
+        <Route path="/who-can-see-my-information" element={<WhoCanSee />} />
         <Route path="/privacy" element={<Navigate to="/privacy-notice" replace />} />
         <Route path="/privacy-policy" element={<Navigate to="/privacy-notice" replace />} />
         <Route path="/confidentiality" element={<Navigate to="/privacy-notice" replace />} />

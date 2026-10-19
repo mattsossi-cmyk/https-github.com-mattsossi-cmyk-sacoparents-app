@@ -56,6 +56,7 @@ import {
   SafetySoftBanner,
 } from "./portal/SafetyScreen";
 import { SafetyCrisisStrip } from "./portal/SafetyCrisisStrip";
+import { ProfessionalAccessCard } from "../components/privacy/ProfessionalAccessCard";
 import { ShareLegalModal } from "./portal/ShareLegalModal";
 
 /**
@@ -1764,6 +1765,7 @@ export default function SacoparentsPortal() {
 
       {/* MAIN CONTAINER */}
       <main className="max-w-md mx-auto px-4 py-4 flex-1 w-full space-y-4">
+        {screen === "journey" && <ProfessionalAccessCard />}
         {screen === "journey" && (
           <JourneyShell
             user={user}
@@ -1819,6 +1821,10 @@ export default function SacoparentsPortal() {
       <div data-testid="portal-privacy-footer" className="no-print py-4 text-center text-[0.8125rem]">
         <Link to="/privacy-notice" data-testid="portal-privacy-footer-link" className="font-semibold text-[#3D1A78] underline underline-offset-2">
           Privacy Notice
+        </Link>
+        <span aria-hidden="true" className="mx-2 text-[#B9B3C9]">·</span>
+        <Link to="/who-can-see-my-information" data-testid="portal-who-can-see-footer-link" className="font-semibold text-[#3D1A78] underline underline-offset-2">
+          Who can see my information
         </Link>
       </div>
 

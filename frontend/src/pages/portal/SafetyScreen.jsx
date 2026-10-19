@@ -32,9 +32,9 @@ export function SafetyScreen({
   safetyPlan,
   onSaveSafetyPlan,
 }) {
-  const [phys, setPhys] = useState(null); // 'yes' | 'no'
+  const [phys, setPhys] = useState(null); // 'yes' | 'no' | 'prefer_not'
   const [coerce, setCoerce] = useState(null); // 'yes' | 'no' | 'prefer_not'
-  const [device, setDevice] = useState(null); // 'yes' | 'no' | 'unsure'
+  const [device, setDevice] = useState(null); // 'yes' | 'no' | 'unsure' | 'prefer_not'
   const [showFlaggedCard, setShowFlaggedCard] = useState(false);
 
   // Reset the questionnaire whenever the modal re-opens so the parent
@@ -52,8 +52,11 @@ export function SafetyScreen({
 
   const answered = phys != null && coerce != null && device != null;
 
+  // "I'd rather not answer" counts like "Not sure": it opens the same gentle support card.
   const isFlagged =
     phys === "no" ||
+    phys === "prefer_not" ||
+    device === "prefer_not" ||
     coerce === "yes" ||
     coerce === "prefer_not" ||
     device === "no" ||
@@ -113,7 +116,7 @@ export function SafetyScreen({
               <label className="font-semibold text-slate-700 block mb-1">
                 1. Do you feel physically safe right now?
               </label>
-              <div className="flex gap-2">
+              <div className="flex gap-2 flex-wrap">
                 <button
                   type="button"
                   data-testid="safety-q-phys-yes"
@@ -138,6 +141,7 @@ export function SafetyScreen({
                 >
                   No
                 </button>
+                <PreferNotButton testid="safety-q-phys-prefer-not" value={phys} onPick={setPhys} />
               </div>
             </div>
 
@@ -172,18 +176,7 @@ export function SafetyScreen({
                 >
                   No
                 </button>
-                <button
-                  type="button"
-                  data-testid="safety-q-coerce-prefer-not"
-                  onClick={() => setCoerce("prefer_not")}
-                  className={
-                    coerce === "prefer_not"
-                      ? "w-full mt-1 py-2 rounded-lg font-bold bg-amber-600 text-white text-[0.6875rem]"
-                      : "w-full mt-1 py-2 rounded-lg font-bold bg-slate-100 text-slate-600 text-[0.6875rem] border border-slate-200"
-                  }
-                >
-                  Prefer not to say
-                </button>
+                <PreferNotButton testid="safety-q-coerce-prefer-not" value={coerce} onPick={setCoerce} />
               </div>
             </div>
 
@@ -229,6 +222,7 @@ export function SafetyScreen({
                 >
                   Not sure
                 </button>
+                <PreferNotButton testid="safety-q-device-prefer-not" value={device} onPick={setDevice} />
               </div>
             </div>
 
@@ -439,5 +433,24 @@ export function SafetySoftBanner({ context }) {
         </div>
       </div>
     </div>
+  );
+}
+
+function PreferNotButton({ testid, value, onPick }) {
+  const on = value === "prefer_not";
+  return (
+    <button
+      type="button"
+      data-testid={testid}
+      aria-pressed={on}
+      onClick={() => onPick("prefer_not")}
+      className={
+        on
+          ? "w-full mt-1 py-2 rounded-lg font-bold bg-slate-600 text-white text-[0.6875rem]"
+          : "w-full mt-1 py-2 rounded-lg font-bold bg-white text-slate-600 text-[0.6875rem] border border-dashed border-slate-300"
+      }
+    >
+      I'd rather not answer
+    </button>
   );
 }

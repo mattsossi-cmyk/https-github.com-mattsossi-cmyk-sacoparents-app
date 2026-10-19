@@ -1,6 +1,6 @@
 import React from "react";
 import { Link } from "react-router-dom";
-import { ShieldCheck, LifeBuoy, FlaskConical, Accessibility as A11yIcon, HardDrive, FileText } from "lucide-react";
+import { ShieldCheck, LifeBuoy, FlaskConical, Accessibility as A11yIcon, HardDrive, FileText, UserCheck } from "lucide-react";
 
 /**
  * AppFooter — persistent slim footer for authenticated / in-app pages.
@@ -16,6 +16,7 @@ export default function AppFooter() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 py-6">
         <div className="flex flex-wrap gap-x-6 gap-y-3 items-center justify-center text-[0.8125rem] text-[#4B4567]">
           <FooterLink to="/privacy-notice" icon={<ShieldCheck size={13} />} testId="footer-privacy">Privacy Notice</FooterLink>
+          <FooterLink to="/who-can-see-my-information" icon={<UserCheck size={13} />} testId="footer-who-can-see">Who can see my information</FooterLink>
           <FooterLink to="/terms" icon={<FileText size={13} />} testId="footer-terms">Terms</FooterLink>
           <FooterLink to="/data-retention" icon={<HardDrive size={13} />} testId="footer-data-retention">Data retention</FooterLink>
           <FooterLink to="/methodology" icon={<FlaskConical size={13} />} testId="footer-methodology">Methodology</FooterLink>

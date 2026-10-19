@@ -5,6 +5,7 @@ import { toast } from "sonner";
 import InviteCoparentCard from "../../components/InviteCoparentCard";
 import { SelfAssessmentView } from "./SelfAssessmentView";
 import { FamilyCheckinCard } from "../../components/caseSettings/FamilyCheckinCard";
+import { SafetyScreenLink } from "./SafetyScreenLink";
 import { CourtOrderedView } from "./CourtOrderedView";
 import { ParallelParentingView } from "./ParallelParentingView";
 import { useSelfAssessmentHistory } from "./selfAssessment/useSelfAssessmentHistory";
@@ -519,7 +520,6 @@ export function JourneyShell({
   // are still accepted for API compatibility with the handlers in
   // SacoparentsPortal.
   void onEnterParent;
-  void onOpenSafetyRetake;
   void biffPairCount;
 
   const safetyFlag = safetyFlagged || !!(safetyAck && safetyAck.flagged);
@@ -1239,6 +1239,7 @@ export function JourneyShell({
           subtitle="Take the next step to build a safer, calmer, and more child-focused future."
         />
         <FamilyCheckinCard alignUrl={ALIGN_SITE_URL} testid="self-family-checkin" stacked />
+        <SafetyScreenLink done={!!safetyAck} onOpen={onOpenSafetyRetake} />
 
         <GoalBanner
           testid="door-self-goal"

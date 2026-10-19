@@ -12,6 +12,7 @@
  * is not friction, it's a legal-strength consent gate.
  */
 import { useEffect, useState } from "react";
+import { ProfessionalAccessNotice } from "./privacy/ProfessionalAccessNotice";
 import { X, ShieldAlert } from "lucide-react";
 
 // -- promise-bridge -----------------------------------------------------
@@ -115,7 +116,7 @@ export function PreShareConsentHost() {
           </button>
         </div>
 
-        <div className="px-6 sm:px-7 py-5 space-y-4">
+        <div className="px-6 sm:px-7 py-5 space-y-4 max-h-[60vh] overflow-y-auto">
           <div
             className="rounded-2xl border border-[#E5E0EE] bg-gradient-to-br from-[#F1EAFF] to-[#F8F7FC] p-4 space-y-3"
             data-testid="preshare-consent-headline"
@@ -137,6 +138,8 @@ export function PreShareConsentHost() {
               <li key={b.id}>{b.text}</li>
             ))}
           </ul>
+
+          <ProfessionalAccessNotice testid="preshare-consent-access-notice" />
 
           <label
             className="flex items-start gap-3 rounded-2xl border border-[#E5E0EE] bg-[#F8F7FC] p-3 cursor-pointer hover:border-[#3D1A78] transition"
