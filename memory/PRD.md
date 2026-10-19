@@ -9200,3 +9200,13 @@ dashboard for sharing SELECTED completed reports with any professional.
   of raw body with optional sha256=, key name ALIGN_WEBHOOK_SECRET — never its value, timestamp rules) + "Copy for Align's
   builder"; opens automatically when wrong-signature refusals exist. "Too old" hint shown when old_timestamp refusals exist.
   Daily table made compact on phones. Verified by screenshot at 390px (copy text checked, no secret value).
+
+### 2026-10-18 — ALIGN_WEBHOOK_SECRET burned and removed (PREVIEW ONLY, no deploy)
+- Value was pasted in chat by mistake. Removed the key from backend/.env (left UNSET, no replacement generated), redacted the
+  one copy in a local tool-output cache, restarted backend. Scan of /app (incl. git history), /var/log, /tmp, /etc, /root,
+  /home and process environments: 0 occurrences (value never printed).
+- Webhook is OFF while unset: POST /api/internal/safety-status → 503, records reject reason `webhook_off`, changes nothing.
+  align-status returns `webhook_on: false`; admin panel shows a red "webhook is off" note. self-test → not_configured,
+  align-ping → configured:false.
+- Tests: signing suites skip when the secret is unset; new tests/test_webhook_off.py (2/2 pass).
+- User must remove it from the Emergent Secrets tab themselves if it was ever added there (agent can't edit Secrets).

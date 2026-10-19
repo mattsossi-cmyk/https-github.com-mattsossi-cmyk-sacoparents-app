@@ -14,7 +14,10 @@ from pymongo import MongoClient
 FE = dotenv_values("/app/frontend/.env")
 BE = dotenv_values("/app/backend/.env")
 BASE_URL = FE["REACT_APP_BACKEND_URL"].rstrip("/")
-SECRET = BE["ALIGN_WEBHOOK_SECRET"]
+SECRET = BE.get("ALIGN_WEBHOOK_SECRET")
+
+if not SECRET:
+    pytest.skip("ALIGN_WEBHOOK_SECRET is not set: the webhook is off", allow_module_level=True)
 DB = MongoClient(BE["MONGO_URL"].strip('"'))[BE["DB_NAME"].strip('"')]
 CASE_ID = "SA-T" + uuid.uuid4().hex[:5].upper()
 BANNED = ["safety", "screening", "violence", "risk", "restricted", "structured", "auto_red", "professional_name"]

@@ -9,6 +9,7 @@ const REASONS = {
   old_timestamp: "Too old",
   invalid_body: "Unreadable",
   replay: "Sent twice",
+  webhook_off: "Webhook off",
 };
 const when = (iso) => (iso ? new Date(iso).toLocaleString(undefined, { dateStyle: "medium", timeStyle: "short" }) : "—");
 
@@ -42,6 +43,11 @@ export function AlignStatusPanel({ onForbidden }) {
   return (
     <section data-testid="align-status-panel" className="rounded-2xl border border-[#E5E0EE] bg-white px-4 py-3">
       <h2 className="text-base md:text-lg font-semibold text-[#1A1330]">Updates from Align</h2>
+      {s.webhook_on === false && (
+        <p role="status" data-testid="align-webhook-off" className="mt-2 rounded-xl border border-rose-200 bg-rose-50 px-3 py-2 text-sm text-[#8A1F1F]">
+          The webhook is off: ALIGN_WEBHOOK_SECRET isn&apos;t set on this app, so every update from Align is refused and nothing changes.
+        </p>
+      )}
       {quiet && (
         <p role="status" data-testid="align-status-silence" className="mt-2 rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-[#7A4A00]">
           {s.silence.days_since == null

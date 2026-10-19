@@ -15,7 +15,10 @@ from pymongo import MongoClient
 load_dotenv(Path(__file__).resolve().parents[1] / ".env")
 load_dotenv(Path(__file__).resolve().parents[2] / "frontend" / ".env")
 BASE = os.environ["REACT_APP_BACKEND_URL"].rstrip("/") + "/api"
-SECRET = os.environ["ALIGN_WEBHOOK_SECRET"]
+SECRET = os.environ.get("ALIGN_WEBHOOK_SECRET")
+
+if not SECRET:
+    pytest.skip("ALIGN_WEBHOOK_SECRET is not set: the webhook is off", allow_module_level=True)
 db = MongoClient(os.environ["MONGO_URL"])[os.environ["DB_NAME"]]
 STATUS = f"{BASE}/admin/safety-audit-log/align-status"
 COUNTS = f"{BASE}/admin/safety-audit-log/daily-counts"

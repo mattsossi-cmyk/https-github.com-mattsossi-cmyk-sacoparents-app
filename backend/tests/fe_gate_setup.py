@@ -23,5 +23,5 @@ if sys.argv[1] == "setup":
 else:
     _, cid, v, mode, set_by, ref = sys.argv[1:]
     raw = json.dumps({"case_id": cid, "safety_mode": mode, "set_by": set_by, "professional_name": "Dr. X", "referral": ref, "screening_offered": True, "version": int(v), "timestamp": int(time.time())}).encode()
-    sig = hmac.new(os.environ["ALIGN_WEBHOOK_SECRET"].encode(), raw, hashlib.sha256).hexdigest()
+    sig = hmac.new((os.environ.get("ALIGN_WEBHOOK_SECRET") or "").encode(), raw, hashlib.sha256).hexdigest()
     print(requests.post(f"{API}/internal/safety-status", data=raw, headers={"X-Align-Signature": sig, "Content-Type": "application/json"}, timeout=20).status_code)

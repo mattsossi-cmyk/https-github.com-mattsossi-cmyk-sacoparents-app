@@ -17,7 +17,10 @@ load_dotenv(ROOT / ".env")
 load_dotenv(ROOT.parent / "frontend" / ".env")
 BASE = os.environ["REACT_APP_BACKEND_URL"].rstrip("/")
 API = f"{BASE}/api"
-SECRET = os.environ["ALIGN_WEBHOOK_SECRET"]
+SECRET = os.environ.get("ALIGN_WEBHOOK_SECRET")
+
+if not SECRET:
+    pytest.skip("ALIGN_WEBHOOK_SECRET is not set: the webhook is off", allow_module_level=True)
 db = MongoClient(os.environ["MONGO_URL"])[os.environ["DB_NAME"]]
 CONSENT = {"ack_privacy_notice": True, "consent_sensitive_info": True}
 LIMITED = ("free_form_messaging", "calls_video", "addresses_visible", "gps_checkins")

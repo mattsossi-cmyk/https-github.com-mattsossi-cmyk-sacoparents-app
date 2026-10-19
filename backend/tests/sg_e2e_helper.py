@@ -28,7 +28,7 @@ elif cmd == "send":
     b = {"case_id": st["case_id"], "safety_mode": sys.argv[2], "set_by": sys.argv[3], "professional_name": "Dr TEST",
          "referral": sys.argv[4], "screening_offered": True, "version": int(sys.argv[5]), "timestamp": int(time.time())}
     raw = json.dumps(b).encode()
-    sig = hmac.new(BE["ALIGN_WEBHOOK_SECRET"].encode(), raw, hashlib.sha256).hexdigest()
+    sig = hmac.new((BE.get("ALIGN_WEBHOOK_SECRET") or "").encode(), raw, hashlib.sha256).hexdigest()
     r = requests.post(f"{BASE}/api/internal/safety-status", data=raw, headers={"Content-Type": "application/json", "X-Align-Signature": sig})
     print(r.status_code, r.text)
 elif cmd == "cleanup":

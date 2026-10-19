@@ -27,7 +27,10 @@ from media_scrub import UnsupportedFile, scrub_upload  # noqa: E402
 API = "http://localhost:8001/api"
 CONSENT = {"ack_privacy_notice": True, "consent_sensitive_info": True}
 PASSWORD = "Str0ng!Pass99"
-SECRET = os.environ["ALIGN_WEBHOOK_SECRET"]
+SECRET = os.environ.get("ALIGN_WEBHOOK_SECRET")
+
+if not SECRET:
+    pytest.skip("ALIGN_WEBHOOK_SECRET is not set: the webhook is off", allow_module_level=True)
 db = MongoClient(os.environ["MONGO_URL"])[os.environ["DB_NAME"]]
 _emails, _cases = [], []
 LIMITED = ("free_form_messaging", "calls_video", "addresses_visible", "gps_checkins")

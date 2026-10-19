@@ -101,6 +101,10 @@ def _fresh(ts: Union[int, float, str]) -> bool:
 
 @internal_router.post("/internal/safety-status")
 async def receive_safety_status(request: Request, db=Depends(get_db)):
+    if not os.environ.get("ALIGN_WEBHOOK_SECRET"):
+        # Webhook is off until a secret is set; nothing is read or changed.
+        await cs.record_reject(db, "webhook_off")
+        raise HTTPException(status_code=503, detail="Unavailable.")
     raw = await request.body()
     if not _signature_ok(raw, request.headers.get(SIGNATURE_HEADER, "")):
         await cs.record_reject(db, "bad_signature")
@@ -193,7 +197,7 @@ async def safety_daily_counts(current: UserPublic = Depends(require_admin), db=D
 
 
 APPLIED_ACTIONS = ["write", "write_ignored_stale_version", "write_ignored_until_professional"]
-REJECT_REASONS = ("bad_signature", "old_timestamp", "invalid_body", "replay")
+REJECT_REASONS = ("bad_signature", "old_timestamp", "invalid_body", "replay", "webhook_off")
 
 
 @router.get("/admin/safety-audit-log/align-status")
@@ -218,5 +222,6 @@ async def align_status(current: UserPublic = Depends(require_admin), db=Depends(
         "rejected_30d": totals,
         "silence": cs.silence_status(last["at"] if last else None, datetime.now(timezone.utc)),
         "last_test": last_test,
+        "webhook_on": bool(os.environ.get("ALIGN_WEBHOOK_SECRET")),
     }, headers=NO_STORE)
 
