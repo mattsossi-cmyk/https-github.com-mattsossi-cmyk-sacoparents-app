@@ -9246,3 +9246,21 @@ dashboard for sharing SELECTED completed reports with any professional.
 - SAFETY_STATUS_WEBHOOK is an Align-app setting (user checks Align Deploy → Secrets); nothing in this app uses it.
 - Tests: iteration_145 backend 11/11 (tests/test_family_checkin_iter145.py) + UI 100%; Safety Gate suites 80 passed; checklist
   tests updated. 3 framing tests fail with 428 (AI notice), unrelated and already failing before this change.
+
+### 2026-10-19 — Check-in direct link, one-time thanks note, Align links → .com (PREVIEW ONLY, no deploy)
+- Probed from the pod: sacoparentsalign.online has NO DNS (all .online Align links were dead). sacoparentsalign.com is live
+  (/api/health healthy, build 2026-09-26.1). Align's test-ping endpoint /api/internal/parents-test-ping returns 404 (not built yet).
+- User chose .com for all Align links: frontend/.env REACT_APP_ALIGN_HOSTNAME / REACT_APP_ALIGN_URL → .com, new
+  REACT_APP_ALIGN_SITE_URL=https://sacoparentsalign.com and
+  REACT_APP_ALIGN_CHECKIN_URL=https://sacoparentsalign.com/joint/{case_id}/safety-screening (user explicitly accepted the case
+  number and the path words in the address). JourneyShell fallback + Align.jsx text → .com.
+- GET /api/family-checkin/link → {case_id} only when the parent is in exactly one case (else null → main Align site); no-store.
+  lib/useCheckinLink.js fills {case_id} (validated ^SA-[A-Z0-9]{4,10}$).
+- One-time note "Thanks, your check-in is done. There's nothing else you need to do for it." inside the card, per parent account:
+  GET /api/family-checkin/thanks {show}, POST /api/family-checkin/thanks/seen (collection family_checkin_thanks {user_id, seen_at},
+  covered by the generic account purge). lib/useCheckinThanks.js marks seen when shown; close button 44x44.
+- ALIGN_PING_URL still unset: the user sent https://sacoparentsalign.com/api/health, but that is a status check and cannot do the
+  signed round trip. Waiting on Align's builder for the spec endpoint.
+- Heads-up (pre-existing): DomainGuard sends /admin and /align on the production parent host (sacoparentsapp.online) to
+  REACT_APP_ALIGN_URL, so this app's admin pages (Updates from Align, audit log) can't be reached on that host as configured.
+- Tests: iteration_146 backend 10/10 + UI 100% (desktop + 390px); Safety Gate suite incl. 3 new check-in tests passing.

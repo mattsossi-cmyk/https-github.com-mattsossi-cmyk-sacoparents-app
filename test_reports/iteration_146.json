@@ -1,0 +1,18 @@
+{
+  "summary": "Tested the Family check-in case-number link and the one-time thanks note, with the new REACT_APP_ALIGN_* values (sacoparentsalign.com), using the public URL. Backend: new suite test_family_checkin_link_thanks_iter146.py passed 10/10. GET /api/family-checkin/link returns 401 without auth, {case_id:null} for an unlinked parent, the same SA-XXXX case for both linked parents, null for a parent in 2 cases, and sends Cache-Control no-store. The /api/family-checkin/thanks endpoint returns show:false until setup is complete and show:true for both parents after a signed screening_offered=true update. After POST /thanks/seen, show is false for that account only (the other parent still sees true). Seen is idempotent: one doc holding only user_id and seen_at. It stays hidden after the setup flips false and back to true. A parent in several cases sees it only after all of them are complete. The iter145 regression passed 11/11. UI (Playwright, desktop 1920 and mobile 390): in the Court view, court-family-checkin-open has href https://sacoparentsalign.com/joint/SA-864654/safety-screening and opens that address in a new tab. The status changes from 'Not finished yet' to 'Done' after the update. The thanks note appears once ('Thanks, your check-in is done. There's nothing else you need to do for it.'). Its close button is 44x44 and closes the note, and the note does not come back after a reload. Parent B in the Self view sees the same href and status, gets their own one-time note, and has no horizontal overflow at 390px. An unlinked parent's link falls back to https://sacoparentsalign.com and gets no note.",
+  "backend_issues": {"critical": [], "minor": []},
+  "frontend_issues": {"ui_bugs": [], "integration_issues": [], "design_issues": []},
+  "test_report_links": ["/app/backend/tests/test_family_checkin_link_thanks_iter146.py", "/app/test_reports/pytest/iter146_link_thanks.xml"],
+  "action_items": [],
+  "critical_code_review_comments": [
+    "The check-in href path contains '/safety-screening' (from REACT_APP_ALIGN_CHECKIN_URL). It is not shown as text, but parents can see it in the browser status bar on hover and in the new tab's address bar. iter145 kept the words 'safety' and 'screening' out of parent-facing copy, so confirm with the user that this path is OK.",
+    "useCheckinThanks marks the note seen as soon as the GET returns show:true. If a parent has both the Court and Self cards mounted in one session, or opens two tabs, a race could show it twice. This is harmless.",
+    "The family_checkin_thanks collection is keyed by user_id, so the generic account purge (account_purge.py looks up user_id fields) should cover it. Deleting an account was not exercised in this run."
+  ],
+  "updated_files": ["/app/backend/tests/test_family_checkin_link_thanks_iter146.py"],
+  "success_rate": {"backend": "100%", "frontend": "100%"},
+  "seed_data_creation": "TEST_ users from ui_seed_iter145.py plus a lone user were created and then cleaned up, including their family_checkin_thanks docs.",
+  "retest_needed": false,
+  "should_main_agent_self_test": false,
+  "context_for_next_testing_agent": "Run 'cd /app/backend/tests && python -m pytest test_family_checkin_link_thanks_iter146.py'. It is self-seeding and self-cleaning. For UI: run 'python ui_seed_iter145.py setup', then 'set true', then 'cleanup'. Cleanup does not delete family_checkin_thanks docs, so delete those by uids. The portal at '/' has door-court and door-self, and the card testids are court-family-checkin* and self-family-checkin* (-status, -open, -thanks, -thanks-close)."
+}
