@@ -1,0 +1,28 @@
+{
+  "summary": "Part 3 privacy retest (preview). FRONTEND: logged in as parent1. The consent screen did not appear because parent1 had already accepted v7. /prep/issues: there is no issue-safety_concerns box. The issue-safety-step-card shows, the check-in link goes to https://sacoparentsalign.com/check-in?case=SA-783115 with target=_blank (no .online host, no align_ref), and the help link goes to /help. Saving still works: text typed in communication_conflict was still there after Continue -> /prep/priority -> back (the text was put back to empty afterwards). /privacy-notice h2s are exactly '1. Our promise','2. Information we collect','3. AI Communication Builder','4. Questions or complaints'. privacy-notice-who-can-see contains 'Safety step: see SACOparentsAlign' and no 'not started'. /who-can-see-my-information: no access-log link and no 'not started'. /methodology and /what-professionals-see show both 'completed on SACOparentsAlign' and 'see SACOparentsAlign', and never 'Safety step: not started'. /summary: the shared-rule text is exact, and own-only notes show for readiness and changes_since_last. Copy share link (through the preshare consent dialog) returned 200 with the clean:1 claim. The latest parent1 summary is pre-update (no clean_inputs), so an AI-rewritten share_copy with no readiness keys was saved. The shared PDF has no readiness label or score. Mobile 390px: no horizontal overflow on /prep/issues, /privacy-notice, /who-can-see-my-information or /summary. BACKEND: tests/test_part3_privacy.py passed 15/15. New public-URL spot-check file passed 6/6: complete-report PDF wording, court checklist PDF has no 'Safety step: not started', prep GET has no safety_concerns, old share token returns 410 'made before a privacy update', old-result gate is neutral and compare/link returns 403, set_by=default keeps the hold, and a professional lifts it.",
+  "backend_issues": {"critical": [], "minor": [
+    {"endpoint": "POST /api/mediation/summary/{id}/share-link", "issue": "For pre-update summaries, prepare() runs the AI rewrite inside the request. The first share took about 15-20s and the button only shows a spinner. Not a bug, but slow UX."}
+  ]},
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": [
+      {"screen": "AppShell top nav (desktop 1920)", "issues": ["'Shared with pros' and 'Child Goals' nav labels wrap onto 2-3 lines, so the header looks crowded (cosmetic, likely pre-existing)"]}
+    ]
+  },
+  "test_report_links": ["/app/backend/tests/test_part3_privacy.py", "/app/backend/tests/test_part3_public_spotcheck.py", "/app/test_reports/pytest/part3_public.xml"],
+  "action_items": [
+    "Optional: when sharing a pre-update summary or agreement, show a 'Preparing a privacy-safe copy...' hint, because the AI rewrite takes about 15-20s",
+    "Optional: stop the desktop nav labels from wrapping ('Shared with pros')"
+  ],
+  "critical_code_review_comments": [
+    "mediation_sharing.prepare does nothing if the user has not accepted the AI notice, and falls back to goals + agenda. Correct, but the share_copy is cached forever: a later rewrite will not run if prep data changes (acceptable because the doc is a snapshot).",
+    "/what-professionals-see still says steps can be 'done, in progress or not started'. This is about case step progress, not the safety step, so it is fine under the spec."
+  ],
+  "updated_files": ["/app/backend/tests/test_part3_public_spotcheck.py"],
+  "success_rate": {"backend": "100% (21/21 incl. 15 existing + 6 public spot-checks)", "frontend": "100% of requested flows"},
+  "seed_data_creation": "One TEST_part3 1-day share link plus one UI 7-day share link on parent1 summary sum_1fc99a72acf7 (which now has a share_copy). Temporary test users and cases were cleaned up.",
+  "retest_needed": false,
+  "should_main_agent_self_test": false,
+  "context_for_next_testing_agent": "parent1 has already accepted Privacy Notice v7, so the consent screen does not show. parent1's latest summary sum_1fc99a72acf7 is pre-update and now holds a share_copy. The Copy share link button opens preshare-consent-dialog (tick preshare-consent-ack-checkbox, then preshare-consent-continue). Public spot-check tests: backend/tests/test_part3_public_spotcheck.py."
+}

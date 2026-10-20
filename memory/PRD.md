@@ -9378,3 +9378,13 @@ dashboard for sharing SELECTED completed reports with any professional.
 - Tests: tests/test_align_safety_step.py (23), tests/legacy_safety.py helper (old results written to Mongo), obsolete legacy tests
   deleted/replaced; iteration_152 (frontend 100%). Remaining suite failures are pre-existing (sign-in now required on guided/voice/BIFF
   routes, AI-notice 428, Resend 502 in preview, weekly-note html escape, daily-cap counters).
+
+---
+## 2026-10-20 — Part 3 privacy + Safety First banner (PREVIEW ONLY, not deployed)
+- Safety-step wording is two states only: "Safety step: completed on SACOparentsAlign" (when Align confirms) or "Safety step: see SACOparentsAlign". "not started" is removed everywhere (case_safety.safety_step_text). The court checklist no longer lists the safety step under "What's left".
+- Old-result hold (saved level 1-2) still blocks invites and comparisons with the neutral note only. A named professional's signed Align case settings (set_by=professional) lift it (safety_gate.is_blocked, now also used by the snc2 and deep-dive comparisons). set_by=default and auto_red can't lift it.
+- Mediation Prep: the Issues safety box is replaced by the Family check-in card + Get help. New safety text is dropped; old saved text is kept and never shown, sent to AI or shared. Shared copies (share link, mediator email, joint agreement, Complete report) come from mediation_sharing.shared_view: no readiness, safety text, reflection or snapshots. Pre-update links return 410. Pre-update docs get an AI rewrite made without the sensitive inputs, or only goals + priorities. Pre-update secure-doc PDFs return 410. Align no longer gets reflection or readiness.
+- Privacy Notice v7: sections 1-4, new safety-step wording. The REACT_APP_ALIGN_ACCESS_LOG_URL placeholder is empty, so the link stays hidden.
+- Safety First banner (components/caseSettings/SafetyFirstBanner.jsx) sits on the parent home above the Court Ordered / Self Journey doors. It has an Open Family check-in link (case link, or the Align root), Quick exit, and the 911 + DV Hotline numbers. Once Align confirms the check-in, it becomes "Safety step: completed".
+- Tests: the 27 old failures in the 50-file group are fixed (outdated tests updated; tests/ai_ready.py signs in and accepts the notices). tests/test_part3_privacy.py has 15 tests. Testing agent iteration_153: all pass.
+- Open: 21 old failures in the second test group (same cause: AI tests don't sign in or accept the AI notice). Align has not yet answered the "Who has looked" URL question or the reflection/readiness deletion question. The first share of an older summary is slow (15-20s) while the AI rewrite runs.

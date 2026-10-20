@@ -5,6 +5,7 @@ import { toast } from "sonner";
 import InviteCoparentCard from "../../components/InviteCoparentCard";
 import { SelfAssessmentView } from "./SelfAssessmentView";
 import { FamilyCheckinCard } from "../../components/caseSettings/FamilyCheckinCard";
+import { SafetyFirstBanner } from "../../components/caseSettings/SafetyFirstBanner";
 import { SafetyScreenLink } from "./SafetyScreenLink";
 import { CourtOrderedView } from "./CourtOrderedView";
 import { ParallelParentingView } from "./ParallelParentingView";
@@ -1011,6 +1012,9 @@ export function JourneyShell({
             <p className="text-xs text-slate-600">
               Two ways in. The Communication Builder works with either one.
             </p>
+          </div>
+          <div className="pb-3">
+            <SafetyFirstBanner alignUrl={ALIGN_SITE_URL} onQuickExit={quickExitAction} />
           </div>
           <div className="space-y-3">
             <button
