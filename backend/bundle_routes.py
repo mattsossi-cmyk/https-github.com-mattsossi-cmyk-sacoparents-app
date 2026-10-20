@@ -130,16 +130,7 @@ _STATIC_ENDPOINTS: List[Dict[str, Any]] = [
 # Endpoints that need a list-first lookup. The lookup endpoint returns
 # the caller's owned artefact id(s); the bundler then hits the PDF
 # route with that id substituted in.
-_LOOKUP_ENDPOINTS: List[Dict[str, Any]] = [
-    {
-        "lookup_path": "/api/safety-assessment/me",
-        "id_field": "id",  # top-level `id` on the /me response
-        "pdf_path_template": "/api/safety-assessment/{id}/pdf",
-        "filename": "09-safety-assessment.pdf",
-        "label": "Safety Assessment",
-        "readiness_signal": True,
-    },
-]
+_LOOKUP_ENDPOINTS: List[Dict[str, Any]] = []
 
 
 _REQUEST_TIMEOUT = httpx.Timeout(30.0, connect=5.0)

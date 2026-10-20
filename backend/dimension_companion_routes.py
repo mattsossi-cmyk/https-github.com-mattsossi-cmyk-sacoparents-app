@@ -372,10 +372,7 @@ async def email_four_dimension_briefing(
         )
 
     # ---- Load latest Safety + Companion ------------------------------------
-    safety_doc = await db.safety_assessments.find_one(
-        {"user_id": user.user_id}, {"_id": 0},
-        sort=[("created_at", -1)],
-    )
+    safety_doc = None  # in-app safety screen is off
     companion_doc = await db[COLLECTION].find_one(
         {"user_id": user.user_id}, {"_id": 0},
         sort=[("created_at", -1)],
@@ -383,8 +380,8 @@ async def email_four_dimension_briefing(
     if not safety_doc and not companion_doc:
         raise HTTPException(
             404,
-            "No Safety or Companion assessment on file yet. Complete at "
-            "least one before emailing the briefing.",
+            "No Companion assessment on file yet. Complete it "
+            "before emailing the briefing.",
         )
 
     audience = body.audience_label or ROLE_TO_AUDIENCE.get(body.recipient_role or "other", ROLE_TO_AUDIENCE["other"])
@@ -495,10 +492,7 @@ async def download_four_dimension_briefing(
     from four_dimension_briefing_pdf import build_four_dimension_briefing_pdf
     from pdf_signing import sign_kwargs
 
-    safety_doc = await db.safety_assessments.find_one(
-        {"user_id": user.user_id}, {"_id": 0},
-        sort=[("created_at", -1)],
-    )
+    safety_doc = None  # in-app safety screen is off
     companion_doc = await db[COLLECTION].find_one(
         {"user_id": user.user_id}, {"_id": 0},
         sort=[("created_at", -1)],
@@ -506,8 +500,8 @@ async def download_four_dimension_briefing(
     if not safety_doc and not companion_doc:
         raise HTTPException(
             404,
-            "No Safety or Companion assessment on file yet. Complete at least "
-            "one before generating the four-dimension briefing.",
+            "No Companion assessment on file yet. Complete it "
+            "before generating the four-dimension briefing.",
         )
 
     kwargs = sign_kwargs(sign, user.name, signed_note)

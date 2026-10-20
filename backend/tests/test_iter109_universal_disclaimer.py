@@ -67,18 +67,3 @@ def test_safety_assessment_pdf_disclaimer_uses_the_shared_constant():
         "trauma_lens.SELF_REFLECTION_DISCLAIMER so the language stays "
         "in sync across the app."
     )
-
-
-def test_safety_assessment_intake_page_carries_the_agreed_language():
-    with open("/app/frontend/src/pages/SafetyAssessment.jsx", encoding="utf-8") as fh:
-        src = fh.read()
-    assert "guided self-reflection and preparation" in src
-    assert "not a clinical, forensic, legal, or professional" in src
-
-
-def test_results_card_leads_with_the_agreed_language():
-    """The results card must show the disclaimer prominently — a parent
-    who lands here after scoring must see the framing before results."""
-    with open("/app/frontend/src/pages/SafetyAssessment.jsx", encoding="utf-8") as fh:
-        src = fh.read()
-    assert 'data-testid="results-self-reflection-disclaimer"' in src

@@ -153,7 +153,7 @@ export function PreShareConsentHost() {
               className="mt-1 h-4 w-4 accent-[#3D1A78] shrink-0"
             />
             <span className="text-[0.8125rem] text-[#1A1330] leading-relaxed">
-              <strong>I understand.</strong> I&apos;ve read the six points above and I want to share {state.label} anyway.
+              <strong>I understand.</strong> I&apos;ve read the information above and I want to share {state.label}.
             </span>
           </label>
         </div>

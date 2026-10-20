@@ -33,6 +33,7 @@ from deep_dive_comparison_core import (  # noqa: E402
     _extract_alignment_lists,
     build_comparison_from_spec,
 )
+from legacy_safety import save_old_result  # noqa: E402
 
 
 # ---------------------------------------------------------------------------
@@ -304,12 +305,7 @@ PATHWAYS_ALL = [
 
 
 def _post_safety_level_4(client):
-    s1 = {f"s1_q{i}": "no" for i in range(1, 29)}
-    s2 = {f"s2_q{i}": "yes" for i in range(1, 9)}
-    s2["s2_q8"] = "no"
-    payload = {"section_1": s1, "section_2": s2}
-    r = client.post(f"{BASE_URL}/api/safety-assessment", json=payload, timeout=30)
-    assert r.status_code == 200, r.text
+    save_old_result(client, BASE_URL, 4)
 
 
 def _all_schema_keys(client, prefix):

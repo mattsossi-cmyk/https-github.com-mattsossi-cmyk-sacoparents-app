@@ -328,16 +328,12 @@ def _derive_all_three_from_portal_state(state: Optional[dict]) -> bool:
     covered = {
         snap.get("topic")
         for snap in history
-        if isinstance(snap, dict)
+        if isinstance(snap, dict) and snap.get("save_key") != "safety_ack"
     }
     # Foundation can also be signalled by non-empty foundation_text.
     foundation_text = (state.get("foundation_text") or "").strip()
     if foundation_text:
         covered.add("foundation")
-    # Safety can be signalled by a stored safety_ack with ack_at.
-    safety_ack = state.get("safety_ack") or {}
-    if isinstance(safety_ack, dict) and safety_ack.get("ack_at"):
-        covered.add("safety")
     return _PRIMARY_TOPICS.issubset(covered)
 
 

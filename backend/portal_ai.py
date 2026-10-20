@@ -64,20 +64,15 @@ _BIFF_SYSTEM = (
 )
 
 
-# Grey-rock variant: used when the parent's own Quick Safety Check
-# flagged coercion / intimidation / device-monitoring risk. Same JSON
-# shape, but the rewrite guidance leans into DV-safe grey-rock replies
-# — factual only, no warmth, no "thanks", no engagement with the
-# coercive framing. Keeping the coach voice consistent lets the parent
-# swap between the two variants without a UI re-learning cost.
+# Grey-rock variant: used when the parent turns on grey-rock tone (their own
+# manual choice). Same JSON shape, but the rewrite is factual only, with no
+# warmth and no engagement with heated framing.
 _BIFF_GREYROCK_SYSTEM = (
     SAFETY_GUARDRAIL
     + "You are the BIFF Communication Coach for the SA CoParents portal. "
-    "IMPORTANT SAFETY CONTEXT: The parent has indicated to us that there "
-    "may be intimidation, coercion, financial control, or monitoring in "
-    "their co-parenting relationship. Warm openers (e.g. 'Thanks for "
-    "letting me know'), apologies, and emotion words can be used by a "
-    "coercive co-parent as ammunition or as bait for further engagement. "
+    "The parent has chosen grey-rock tone. Warm openers (e.g. 'Thanks for "
+    "letting me know'), apologies, and emotion words can invite further "
+    "back-and-forth, so leave them out. "
     "Rewrite the parent's draft in a GREY-ROCK BIFF variant:\n"
     "  • Brief — one or two short sentences, absolute minimum words.\n"
     "  • Informative — bare observable facts (times, dates, amounts, "
@@ -232,15 +227,15 @@ _GUIDED_SCRIPTS: Dict[str, Dict[str, Any]] = {
         ],
     },
     "safety": {
-        "save_key": "safety_ack",
+        "save_key": "readiness_note",
         "intro": (
-            "Before you build anything joint, let's do a fast wellbeing "
-            "check. Three questions. Your answers stay on your device."
+            "Let's get ready for the harder moments: tense conversations, "
+            "schedule changes and hand-offs. Three short questions."
         ),
         "questions": [
-            "Right now, do you feel physically safe in your home and in handoffs? (Yes / mostly / no — tell me anything you want to add)",
-            "Has there been intimidation, coercion, control of money, or physical harm from your co-parent? You can say 'prefer not to say'.",
-            "Is this device private — no one else can read what you type here? (Yes / no / unsure)",
+            "When a conversation with your co-parent gets tense, what usually sets it off? (a topic, a time of day, the way something is asked)",
+            "What helps you stay calm, brief and child-focused in those moments, and what would you like to try next time?",
+            "What would a smooth hand-off or update look like for your child this month?",
         ],
     },
     "coparenting": {

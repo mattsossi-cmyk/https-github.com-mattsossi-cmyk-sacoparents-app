@@ -40,19 +40,16 @@ const EMPTY = {
 function _fetchOnce() {
   if (_cached) return Promise.resolve(_cached);
   if (_inflight) return _inflight;
-  _inflight = Promise.all([
-    api.get("/dashboard/progress").catch(() => ({ data: {} })),
-    api.get("/safety-assessment/me").catch(() => ({ data: {} })),
-  ])
-    .then(([progressRes, safetyRes]) => {
+  // The in-app safety screen is off, so "situation" is never marked from saved answers.
+  _inflight = Promise.all([api.get("/dashboard/progress").catch(() => ({ data: {} }))])
+    .then(([progressRes]) => {
       const p = progressRes?.data || {};
-      const s = safetyRes?.data || {};
       const commReadiness =
         typeof p.communication_readiness === "number"
           ? p.communication_readiness
           : 0;
       _cached = {
-        situation: !!(s?.result && s.result.level != null),
+        situation: false,
         "child-needs": !!p.child_needs_identified,
         relationship: !!p.foundation_completed,
         communication: commReadiness >= 50,

@@ -39,8 +39,8 @@ export default function PathwayReportPrompt({ shareId, testidPrefix = "compare" 
               Both parents have consented — generate the two-parent pathway report
             </div>
             <p className="text-sm text-[#4B4567] mt-2 max-w-2xl leading-relaxed">
-              Combines this compare with both parents&apos; Safety Screen,
-              Companion, and ND Risk data to identify which dispute
+              Combines this compare with both parents&apos;
+              Companion and ND Risk data to identify which dispute
               resolution pathway warrants professional consideration —
               Mediation, Child-Centered Relational Mediation, Collaborative
               Law, or court intervention. Includes suitability ratings,

@@ -19,6 +19,7 @@ import CoachModelPickerChip, {
   useCoachModelPreference,
 } from "../components/coach/CoachModelPickerChip";
 import { api } from "../lib/api";
+import { useCheckinLink } from "../lib/useCheckinLink";
 import { logError } from "../lib/logger";
 import { AiGuardFrame, useAiGuard } from "../components/aiNotice/AiGuard";
 
@@ -72,6 +73,7 @@ function useSessions() {
 }
 
 function SafetyBanner() {
+  const checkinHref = useCheckinLink(process.env.REACT_APP_ALIGN_SITE_URL);
   return (
     <div
       className="rounded-2xl bg-[#FEF1EC] border border-[#F5C9B4] p-4 flex items-start gap-3"
@@ -88,15 +90,17 @@ function SafetyBanner() {
         >
           National DV Hotline (1-800-799-7233)
         </a>{" "}
-        or dial 911. In-app,{" "}
-        <Link
-          to="/safety-assessment"
+        or dial 911. You can also open your{" "}
+        <a
+          href={checkinHref || undefined}
+          target="_blank"
+          rel="noopener noreferrer"
           className="font-semibold underline"
-          data-testid="coach-safety-assessment-link"
+          data-testid="coach-family-checkin-link"
         >
-          take the Safety Screen
-        </Link>{" "}
-        for a personalised pathway.
+          Family check-in on SACOparentsAlign
+        </a>
+        .
       </div>
     </div>
   );

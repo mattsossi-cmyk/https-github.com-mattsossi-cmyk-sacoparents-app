@@ -271,7 +271,7 @@ def test_alerts_safety_flagged_never_emailed():
     # Flagged parent cannot share
     p1 = _login("parent1@test.com")
     r = requests.post(f"{API}/court-path/compare/share", headers=_h(p1), json={"shared": True}, timeout=20).json()
-    assert r.get("state") == "safety_off"
+    assert r.get("state") == "not_available"
     assert r.get("shared") is False
 
 

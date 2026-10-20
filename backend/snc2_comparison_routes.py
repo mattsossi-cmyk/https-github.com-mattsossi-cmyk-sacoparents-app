@@ -41,6 +41,7 @@ from motor.motor_asyncio import AsyncIOMotorDatabase
 from pydantic import BaseModel, EmailStr
 
 from auth import UserPublic, get_current_user, get_db
+from safety_gate import NOT_AVAILABLE
 from snc2_comparison import build_comparison
 from snc2_comparison_pdf import build_comparison_pdf
 
@@ -197,12 +198,7 @@ async def link_partner(
     if level in BLOCKING_SAFETY_LEVELS:
         raise HTTPException(
             status_code=403,
-            detail=(
-                "Your Safety Assessment recommends a limited-contact pathway. "
-                "Sharing detailed Special Needs answers directly with your "
-                "co-parent is not appropriate right now. Please review your "
-                "safety options before starting a comparison."
-            ),
+            detail=NOT_AVAILABLE,
         )
 
     now = _now_iso()
@@ -263,11 +259,7 @@ async def consent(
         if level in BLOCKING_SAFETY_LEVELS:
             raise HTTPException(
                 status_code=403,
-                detail=(
-                    "Your Safety Assessment recommends a limited-contact "
-                    "pathway. Please review your safety options before "
-                    "consenting to a Special Needs comparison."
-                ),
+                detail=NOT_AVAILABLE,
             )
 
     is_creator = share["creator_user_id"] == me.user_id
@@ -335,11 +327,7 @@ async def _load_comparison(
     if my_level in BLOCKING_SAFETY_LEVELS:
         raise HTTPException(
             status_code=403,
-            detail=(
-                "Your Safety Assessment recommends a limited-contact pathway. "
-                "Access to co-parent comparison is paused. Please review your "
-                "safety options."
-            ),
+            detail=NOT_AVAILABLE,
         )
     creator_a = await db[ASSESSMENTS].find_one({"user_id": share["creator_user_id"]})
     partner_a = await db[ASSESSMENTS].find_one({"user_id": share["partner_user_id"]})
@@ -392,8 +380,7 @@ async def get_comparison_pdf(
     pdf_bytes = build_comparison_pdf(
         comparison=comparison,
         safety_notice=(
-            "Safety notice: If either parent's circumstances change, please "
-            "revisit the Family Violence & Communication Safety Assessment "
+            "If either parent's circumstances change, please pause "
             "before continuing to share detailed information."
         ),
         **sign_kwargs(sign, me.name, note),

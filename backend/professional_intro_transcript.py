@@ -102,14 +102,6 @@ PARAGRAPHS: List = [
         "wording is preserved on both sides.",
     ),
     (
-        "Safety-screen privacy",
-        "Where a parent has completed the Trauma-Informed Safety and "
-        "Functioning Lens, only Finding 3 — Parenting-Plan "
-        "Implications — is ever included in the joint artefacts. The "
-        "underlying family-violence and trauma findings remain private "
-        "to the parent who completed the screen.",
-    ),
-    (
         "In short",
         "These documents reflect what the parents said, not what "
         "SA CoParents or any professional has concluded. They are meant "

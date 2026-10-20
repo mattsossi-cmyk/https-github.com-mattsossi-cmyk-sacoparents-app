@@ -1,7 +1,6 @@
 """Iteration 18 regression tests:
 - Guest auth + Section-coaching endpoint (all 4 sections + invalid rejection)
-- Safety assessment: 18 Section 1 questions, DA-informed high_concern items
-- Submitting YES to any DA-domain item (s1_q11..s1_q18) escalates OFF-Green pathway
+- The old Safety Assessment is gone; the "safety" coaching section is rejected
 - Static video assets HEAD 200 with video/mp4
 """
 import os
@@ -77,21 +76,10 @@ class TestSectionCoaching:
         for k in ("opener", "strengths", "attention", "next_step"):
             assert k in body and isinstance(body[k], str) and body[k].strip()
 
-    def test_safety_coaching(self, auth_headers):
-        payload = {
-            "section": "safety",
-            "data": {
-                "level": "Yellow",
-                "pathway_title": "Structured Written Communication Only",
-                "section_1_yes_count": 2, "section_2_concern_count": 1,
-            },
-        }
-        r = requests.post(f"{API}/mediation/section-coaching", json=payload,
-                          headers=auth_headers, timeout=45)
-        assert r.status_code == 200, f"safety coaching failed: {r.status_code} {r.text}"
-        body = r.json()
-        for k in ("opener", "strengths", "attention", "next_step"):
-            assert k in body and isinstance(body[k], str) and body[k].strip()
+    def test_safety_section_rejected(self, auth_headers):
+        payload = {"section": "safety", "data": {"level": "Yellow"}}
+        r = requests.post(f"{API}/mediation/section-coaching", json=payload, headers=auth_headers, timeout=15)
+        assert 400 <= r.status_code < 500, f"expected 4xx, got {r.status_code} {r.text}"
 
     def test_overall_coaching(self, auth_headers):
         payload = {
@@ -127,62 +115,13 @@ class TestSectionCoaching:
 
 
 # ------------------------------------------------------------------
-# Safety assessment structure & scoring
+# The old in-app Safety Assessment is hidden (Align safety step)
 # ------------------------------------------------------------------
-class TestSafetyAssessment:
-    def test_questions_endpoint_has_18_section_1_items(self, auth_headers):
-        r = requests.get(f"{API}/safety-assessment/questions",
-                         headers=auth_headers, timeout=15)
-        assert r.status_code == 200, r.text
-        body = r.json()
-        s1 = body.get("section_1") or []
-        assert len(s1) == 18, f"expected 18 Section 1 questions, got {len(s1)}"
-        ids = {q["id"] for q in s1}
-        # DA-informed items must be present
-        for qid in [f"s1_q{i}" for i in range(11, 19)]:
-            assert qid in ids, f"missing DA-informed question {qid}"
-        # All DA items must be high_concern=True
-        for q in s1:
-            if q["id"] in {f"s1_q{i}" for i in range(11, 19)}:
-                assert q.get("high_concern") is True, f"{q['id']} not high_concern"
-
-    def test_da_wording_present(self, auth_headers):
-        r = requests.get(f"{API}/safety-assessment/questions",
-                         headers=auth_headers, timeout=15)
-        body = r.json()
-        s1 = body.get("section_1") or []
-        all_text = " ".join(q.get("text", "").lower() for q in s1)
-        # DA-informed keywords across s1_q11..s1_q18
-        for keyword in ["strangl", "weapon", "kill", "jealous", "control",
-                        "drug", "unemploy", "increased"]:
-            assert keyword in all_text, f"expected wording containing '{keyword}' in section 1"
-
-    def test_submit_yes_on_da_item_is_not_green_pathway(self, auth_headers):
-        # Answer "no" everywhere except s1_q11 (strangulation, high_concern)
-        section_1 = {f"s1_q{i}": "no" for i in range(1, 29)}
-        section_1["s1_q11"] = "yes"
-        section_2 = {f"s2_q{i}": "yes" for i in range(1, 9)}
-        section_2["s2_q8"] = "no"  # inverted
-        payload = {"section_1": section_1, "section_2": section_2}
-        r = requests.post(f"{API}/safety-assessment",
-                          json=payload, headers=auth_headers, timeout=15)
-        assert r.status_code == 200, r.text
-        body = r.json()
-        result = body.get("result") or body
-        # Level 1 in this system = "No Direct Communication Recommended" (danger),
-        # Level 4 = "Cooperative Co-Parenting Communication" (green).
-        # A YES on a high_concern DA item MUST NOT land at the cooperative/green level.
-        level = result.get("level")
-        title = (result.get("pathway_title") or "").lower()
-        assert level != 4, f"DA item YES landed on level 4 (green): {result}"
-        assert "cooperative co-parenting" not in title, f"DA item YES landed on Green: {result}"
-        # Must record a high_concern hit
-        assert "s1_q11" in (result.get("high_concern_hits") or []), \
-            f"expected s1_q11 in high_concern_hits: {result}"
+def test_old_safety_questions_are_gone(auth_headers):
+    r = requests.get(f"{API}/safety-assessment/questions", headers=auth_headers, timeout=15)
+    assert r.status_code == 404
 
 
-# ------------------------------------------------------------------
-# Static video assets
 # ------------------------------------------------------------------
 class TestVideoAssets:
     @pytest.mark.parametrize("name", [

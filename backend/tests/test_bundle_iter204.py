@@ -157,19 +157,7 @@ class TestPdfRegression:
             assert "pdf" in ct.lower(), f"{path} not PDF content-type: {ct}"
             assert r.content[:4] == b"%PDF", f"{path} content not %PDF"
 
-    def test_safety_assessment_pdf(self, parent1_token):
-        # lookup id then fetch pdf
+    def test_old_safety_assessment_pdf_is_gone(self, parent1_token):
         r = requests.get(f"{BASE_URL}/api/safety-assessment/me",
-                         headers={"Authorization": f"Bearer {parent1_token}"},
-                         timeout=30)
-        if r.status_code != 200:
-            pytest.skip(f"no safety assessment: {r.status_code}")
-        sid = r.json().get("id")
-        if not sid:
-            pytest.skip("no id in /me payload")
-        r2 = requests.get(f"{BASE_URL}/api/safety-assessment/{sid}/pdf",
-                          headers={"Authorization": f"Bearer {parent1_token}"},
-                          timeout=60)
-        assert r2.status_code in (200, 404, 409)
-        if r2.status_code == 200:
-            assert r2.content[:4] == b"%PDF"
+                         headers={"Authorization": f"Bearer {parent1_token}"}, timeout=30)
+        assert r.status_code == 404

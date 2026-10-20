@@ -52,11 +52,6 @@ LANES: List[Dict[str, str]] = [
         "blurb": "Medical, educational, psychological, and behavioural needs.",
     },
     {
-        "id": "safety",
-        "title": "Safety Reflection",
-        "blurb": "Private safety screen — routed only to your professional.",
-    },
-    {
         "id": "coparenting",
         "title": "Co-Parenting Assessment",
         "blurb": "Priorities, working style, and how you want to communicate.",
@@ -204,10 +199,6 @@ async def aggregate_for_user(
         db, user_id=user_id, lane_id="schedule",
         collection="parenting_schedule_reflection",
     )
-    safety = await _lane_generic(
-        db, user_id=user_id, lane_id="safety",
-        collection="safety_assessments",
-    )
     coparenting = await _lane_generic(
         db, user_id=user_id, lane_id="coparenting",
         collection="cp_reports",
@@ -218,7 +209,6 @@ async def aggregate_for_user(
         "activities": activities,
         "schedule": schedule,
         "child_needs": child_needs,
-        "safety": safety,
         "coparenting": coparenting,
     }
 

@@ -18,7 +18,7 @@ import { api } from "../lib/api";
  * jumps to the right next surface in the app.
  *
  * URL: /next-steps/:assessment  where assessment ∈
- *      { readiness, comm_style, safety, special_needs }
+ *      { readiness, comm_style, coparenting }
  */
 
 const ASSESSMENT_META = {
@@ -33,12 +33,6 @@ const ASSESSMENT_META = {
     context: "Based on the communication pattern you just named.",
     back_to: "/prep/communication",
     back_label: "Back to Communication Style",
-  },
-  safety: {
-    title: "Your next three steps from the Safety Screen",
-    context: "Routed by your current safety level. High-concern responses always route to hotlines and parallel-parenting resources first.",
-    back_to: "/safety-assessment",
-    back_label: "Back to the assessment",
   },
 };
 

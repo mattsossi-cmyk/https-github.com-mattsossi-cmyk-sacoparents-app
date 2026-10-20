@@ -103,7 +103,6 @@ import VerifySignature from "@/pages/VerifySignature";
 import SecureDocument from "@/pages/SecureDocument";
 import VerifyBriefing from "@/pages/VerifyBriefing";
 import VerifyPathway from "@/pages/VerifyPathway";
-import VerifyCourtReport from "@/pages/VerifyCourtReport";
 import AdminReviewers from "@/pages/AdminReviewers";
 import AdminNDCoordinator from "@/pages/AdminNDCoordinator";
 import PathwayReport from "@/pages/PathwayReport";
@@ -118,7 +117,6 @@ import DimensionCompanion from "@/pages/DimensionCompanion";
 import InterventionCompliance from "@/pages/InterventionCompliance";
 import SignUp from "@/pages/SignUp";
 import MediatorBadge from "@/pages/MediatorBadge";
-import SafetyAssessment from "@/pages/SafetyAssessment";
 import GetHelp from "@/pages/GetHelp";
 import CalendarPage from "@/pages/CalendarPage";
 import AdminHelpServices from "@/pages/AdminHelpServices";
@@ -189,7 +187,7 @@ function AppRoutes() {
         <Route path="/verify-email" element={<VerifyEmail />} />
         <Route path="/verify/briefing/:sig_id" element={<VerifyBriefing />} />
         <Route path="/verify/pathway/:sig_id" element={<VerifyPathway />} />
-        <Route path="/verify/court-report/:sig_id" element={<VerifyCourtReport />} />
+        <Route path="/verify/court-report/:sig_id" element={<Navigate to="/" replace />} />
         <Route path="/verify/:sig_id" element={<VerifySignature />} />
         <Route path="/doc/:token" element={<SecureDocument />} />
         <Route path="/admin/reviewers" element={<AdminReviewers />} />
@@ -289,14 +287,9 @@ function AppRoutes() {
         <Route path="/admin/audit-log" element={<ProtectedRoute><AdminAuditLog /></ProtectedRoute>} />
         <Route path="/watch" element={<Watch />} />
 
-        <Route
-          path="/safety-assessment"
-          element={
-            <ProtectedRoute>
-              <SafetyAssessment />
-            </ProtectedRoute>
-          }
-        />
+        {/* The in-app safety screen is off; the safety step is the Family check-in on SACOparentsAlign. */}
+        <Route path="/safety-assessment" element={<Navigate to="/help" replace />} />
+        <Route path="/next-steps/safety" element={<Navigate to="/" replace />} />
         <Route
           path="/nd-risk-assessment"
           element={

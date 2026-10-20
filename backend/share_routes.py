@@ -155,7 +155,8 @@ async def list_my_shares(user: UserPublic = Depends(get_current_user),
     """Return active + past share tokens created by the current user,
     each enriched with view/download counts and a last-opened timestamp
     aggregated from `phi_access_log`."""
-    cursor = db[COLLECTION].find({"user_id": user.user_id}, {"_id": 0}).sort("created_at", -1)
+    # Old safety-assessment links are dead (the in-app screen is off) and are no longer listed.
+    cursor = db[COLLECTION].find({"user_id": user.user_id, "doc_type": {"$ne": "safety"}}, {"_id": 0}).sort("created_at", -1)
     rows = [_public_row(r) async for r in cursor]
     now = datetime.now(timezone.utc)
     analytics = await _load_view_analytics(

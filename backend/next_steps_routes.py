@@ -24,7 +24,7 @@ from auth import get_current_user
 
 router = APIRouter(prefix="/next-steps", tags=["next-steps"])
 
-ASSESSMENTS = ("readiness", "comm_style", "safety", "coparenting")
+ASSESSMENTS = ("readiness", "comm_style", "coparenting")
 
 
 def _now_iso() -> str:
@@ -113,11 +113,11 @@ def _readiness_steps(prep: dict) -> List[dict]:
         ),
         "conflict": _step(
             "readiness_safety_review",
-            what="Review the Family Violence & Communication Safety pathway",
+            what="Look over the safety resources",
             why="A low Conflict-Managed score doesn't mean you're doing anything "
                 "wrong — it means the pattern is worth surfacing with a coach.",
             how_long="6 minutes",
-            cta_label="Open the Safety pathway",
+            cta_label="Open safety resources",
             cta_path="/safety",
             category="safety",
         ),
@@ -196,78 +196,6 @@ def _comm_steps(prep: dict) -> List[dict]:
         cta_path="/gmail",
         category="preparation",
     ))
-    return steps[:3]
-
-
-def _safety_steps(prep: dict) -> List[dict]:
-    """Safety pathway — routed by the safety assessment level (L1–L4)."""
-    sa = prep.get("safety_assessment") or {}
-    level = (sa.get("level") or sa.get("risk_level") or "L1").upper()
-    steps: List[dict] = []
-
-    if level in ("L3", "L4"):
-        steps.append(_step(
-            "safety_hotline",
-            what="Call the National DV Hotline (1-800-799-7233)",
-            why="Your responses indicate coercive control or fear-of-harm "
-                "signals. An advocate can help you plan the next step safely.",
-            how_long="15 minutes",
-            cta_label="Open Safety resources",
-            cta_path="/safety",
-            category="safety",
-        ))
-        steps.append(_step(
-            "safety_parallel",
-            what="Move to Parallel Parenting communication",
-            why="Direct exchanges are unlikely to be safe right now. A "
-                "structured, third-party channel protects your child from "
-                "the conflict.",
-            how_long="10 minutes",
-            cta_label="Open the Parallel Parenting toolkit",
-            cta_path="/safety#parallel",
-            category="safety",
-        ))
-        steps.append(_step(
-            "safety_share_report",
-            what="Share your Safety Assessment with an advocate or attorney",
-            why="A written record helps if you need to make a legal decision "
-                "about mediation itself.",
-            how_long="3 minutes",
-            cta_label="Download / share the report",
-            cta_path="/safety-assessment/report",
-            category="safety",
-        ))
-    else:
-        steps.append(_step(
-            "safety_biff_practice",
-            what="Practice a BIFF reply for the next hard message",
-            why="Your Safety level is currently low-concern. Skill-building on "
-                "communication is the highest-value next step.",
-            how_long="5 minutes",
-            cta_label="Open the AI Coach",
-            cta_path="/coach",
-            category="preparation",
-        ))
-        steps.append(_step(
-            "safety_review_plan",
-            what="Review your personal safety plan",
-            why="Even a low-concern score benefits from an explicit written "
-                "plan — 'what would I do if this changed?'",
-            how_long="8 minutes",
-            cta_label="Open Safety resources",
-            cta_path="/safety",
-            category="safety",
-        ))
-        steps.append(_step(
-            "safety_retake_reminder",
-            what="Retake this assessment before your next mediation",
-            why="Dynamics can shift. A pre-mediation re-check gives your "
-                "mediator the current safety picture.",
-            how_long="10 minutes",
-            cta_label="Retake later",
-            cta_path="/safety-assessment",
-            category="safety",
-        ))
     return steps[:3]
 
 
@@ -366,14 +294,6 @@ async def _generate(db, assessment: str, current) -> List[dict]:
     if assessment == "comm_style":
         prep = await _load_prep(db, current.user_id)
         return _comm_steps(prep)
-    if assessment == "safety":
-        prep = await _load_prep(db, current.user_id)
-        sa = await db.safety_assessments.find_one(
-            {"user_id": current.user_id}, {"_id": 0}, sort=[("created_at", -1)]
-        )
-        if sa:
-            prep = {**prep, "safety_assessment": sa}
-        return _safety_steps(prep)
     if assessment == "special_needs":
         return []
     if assessment == "coparenting":

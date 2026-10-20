@@ -19,6 +19,7 @@ from pydantic import BaseModel, EmailStr
 from pymongo.errors import DuplicateKeyError
 
 from auth import UserPublic, get_current_user, get_db
+from safety_gate import NOT_AVAILABLE
 from email_service import send_compare_invite
 
 
@@ -131,12 +132,7 @@ def make_deep_dive_compare_router(
         }
 
     def _safety_message() -> str:
-        return (
-            "Your Safety Screen recommends a limited-contact pathway. "
-            f"Sharing detailed {product_label} answers directly with your "
-            "co-parent is not appropriate right now. Please review your "
-            "safety options before starting a comparison."
-        )
+        return NOT_AVAILABLE
 
     @router.post("/link")
     async def link_partner(body: LinkIn,
@@ -265,10 +261,7 @@ def make_deep_dive_compare_router(
         if body.consent:
             level = await _latest_safety_level(db, me.user_id)
             if level in BLOCKING_SAFETY_LEVELS:
-                raise HTTPException(status_code=403, detail=(
-                    "Your Safety Screen recommends a limited-contact pathway. "
-                    f"Please review your safety options before consenting to a "
-                    f"{product_label} comparison."))
+                raise HTTPException(status_code=403, detail=NOT_AVAILABLE)
 
         is_creator = share["creator_user_id"] == me.user_id
         now = _now_iso()
@@ -328,9 +321,7 @@ def make_deep_dive_compare_router(
             raise HTTPException(status_code=409, detail="Both parents must consent before the comparison is visible.")
         my_level = await _latest_safety_level(db, me_id)
         if my_level in BLOCKING_SAFETY_LEVELS:
-            raise HTTPException(status_code=403, detail=(
-                "Your Safety Screen recommends a limited-contact pathway. "
-                "Access to co-parent comparison is paused. Please review your safety options."))
+            raise HTTPException(status_code=403, detail=NOT_AVAILABLE)
         creator_a = await db[assessments_collection].find_one({"user_id": share["creator_user_id"]})
         partner_a = await db[assessments_collection].find_one({"user_id": share["partner_user_id"]})
         if not creator_a or not creator_a.get("completed"):
@@ -424,8 +415,7 @@ def make_deep_dive_compare_router(
         pdf_bytes = build_comparison_pdf(
             comparison=comparison,
             safety_notice=(
-                "Safety notice: If either parent's circumstances change, please "
-                "revisit the Family Violence and Communication Safety Screen "
+                "If either parent's circumstances change, please pause "
                 "before continuing to share detailed information."
             ),
             product_title=pdf_product_title,

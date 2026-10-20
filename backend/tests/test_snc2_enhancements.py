@@ -16,6 +16,7 @@ import os
 import uuid
 import pytest
 import requests
+from legacy_safety import save_old_result  # noqa: E402
 
 BASE_URL = os.environ.get("REACT_APP_BACKEND_URL", "").rstrip("/")
 if not BASE_URL:
@@ -94,38 +95,22 @@ def _seed_medical(sess: requests.Session):
     assert r.status_code == 200, r.text
 
 
-def _submit_safety(sess: requests.Session, section_1: dict, section_2: dict | None = None) -> tuple[str, int]:
-    # Autofill defaults so the server-side "all questions answered" guard
-    # (iter 104) passes — callers only need override the items that drive
-    # the target level.
-    full_s1 = {f"s1_q{i}": "no" for i in range(1, 29)}
-    full_s1.update(section_1 or {})
-    full_s2 = {f"s2_q{i}": "yes" for i in range(1, 9)}
-    full_s2["s2_q8"] = "no"
-    full_s2.update(section_2 or {})
-    payload = {"section_1": full_s1, "section_2": full_s2}
-    r = sess.post(f"{BASE_URL}/api/safety-assessment", json=payload)
-    assert r.status_code == 200, r.text
-    body = r.json()
-    return body["assessment_id"], body["result"]["level"]
+def _submit_safety(sess: requests.Session, level: int) -> tuple[str, int]:
+    return save_old_result(sess, BASE_URL, level)["assessment_id"], level
 
 
 def _safety_level_1(sess):
     # s1_q1 is high_concern -> level 1
-    return _submit_safety(sess, {"s1_q1": "yes"})
+    return _submit_safety(sess, 1)
 
 
 def _safety_level_2(sess):
     # s1_q3 is coercive but not high_concern -> level 2
-    return _submit_safety(sess, {"s1_q3": "yes"})
+    return _submit_safety(sess, 2)
 
 
 def _safety_level_4(sess):
-    # All no + section 2 safe answers -> level 4
-    s1 = {f"s1_q{i}": "no" for i in range(1, 29)}
-    s2 = {f"s2_q{i}": "yes" for i in range(1, 8)}
-    s2["s2_q8"] = "no"
-    return _submit_safety(sess, s1, s2)
+    return _submit_safety(sess, 4)
 
 
 def _delete_safety(aid: str):
@@ -186,103 +171,23 @@ def _module_cleanup():
 
 
 # =====================================================================
-# SAFETY RECOMMEND — override at 1, 2; no override at 3, 4
+# An old saved safety result never changes the recommendation
 # =====================================================================
-class TestSafetyRecommendOverride:
-    def test_level1_hard_overrides_to_parallel(self, parent1):
-        # Baseline: no safety -> get a report first
+class TestOldSafetyResultIgnored:
+    def test_level1_does_not_override_or_go_stale(self, parent1):
         _seed_medical(parent1)
         r = parent1.post(f"{BASE_URL}/api/snc2/report/regenerate")
         assert r.status_code == 200, r.text
-        baseline_rec = r.json()["report"]["recommended_structure"]
-        baseline_id = baseline_rec["structure_id"]
-        assert baseline_rec["safety_override_applied"] is False
-
-        aid, lvl = _safety_level_1(parent1)
-        assert lvl == 1
+        baseline = r.json()["report"]["recommended_structure"]
+        aid, _ = _safety_level_1(parent1)
         try:
+            assert parent1.get(f"{BASE_URL}/api/snc2/report/status").json()["stale"] is False
             r = parent1.post(f"{BASE_URL}/api/snc2/report/regenerate")
             assert r.status_code == 200, r.text
-            body = r.json()
-            rec = body["report"]["recommended_structure"]
-            assert rec["structure_id"] == "parallel_or_supported"
-            assert rec["safety_override_applied"] is True
-            assert rec["safety_level"] == 1
-            assert "Family Violence" in rec["rationale"] and "Safety Assessment" in rec["rationale"]
-            # Cached alongside report at doc-level too
-            assert body.get("safety_level_at_generation") == 1
-        finally:
-            _delete_safety(aid)
-        # baseline_id noted (not asserted equal to "cooperative"): baseline
-        # varies with score volatility; we only need to prove override at L1.
-        _ = baseline_id
-
-    def test_level2_at_least_structured(self, parent1):
-        _seed_medical(parent1)
-        # Fresh baseline
-        r = parent1.post(f"{BASE_URL}/api/snc2/report/regenerate")
-        baseline_rec = r.json()["report"]["recommended_structure"]
-        baseline_id = baseline_rec["structure_id"]
-
-        aid, lvl = _safety_level_2(parent1)
-        assert lvl == 2
-        try:
-            r = parent1.post(f"{BASE_URL}/api/snc2/report/regenerate")
-            assert r.status_code == 200
             rec = r.json()["report"]["recommended_structure"]
-            # Never 'cooperative' when safety=2
-            assert rec["structure_id"] in {"structured", "parallel_or_supported"}
-            assert rec["safety_level"] == 2
-            # Override applied iff baseline was cooperative
-            if baseline_id == "cooperative":
-                assert rec["safety_override_applied"] is True
-            else:
-                # baseline was already structured/parallel — override may be False
-                assert rec["safety_override_applied"] in (False, True)
-        finally:
-            _delete_safety(aid)
-
-    def test_level4_no_override(self, parent1):
-        _seed_medical(parent1)
-        aid, lvl = _safety_level_4(parent1)
-        assert lvl == 4
-        try:
-            r = parent1.post(f"{BASE_URL}/api/snc2/report/regenerate")
-            assert r.status_code == 200
-            rec = r.json()["report"]["recommended_structure"]
-            assert rec["safety_override_applied"] is False
-            assert rec["safety_level"] == 4
-        finally:
-            _delete_safety(aid)
-
-
-# =====================================================================
-# Cache invalidation — safety level change flips `stale`
-# =====================================================================
-class TestSafetyCacheInvalidation:
-    def test_status_becomes_stale_after_safety_submission(self, parent1):
-        _seed_medical(parent1)
-        # Generate a report with no safety
-        r = parent1.post(f"{BASE_URL}/api/snc2/report/regenerate")
-        assert r.status_code == 200
-        r = parent1.get(f"{BASE_URL}/api/snc2/report/status")
-        assert r.status_code == 200
-        assert r.json()["stale"] is False
-
-        aid, lvl = _safety_level_1(parent1)
-        assert lvl == 1
-        try:
-            r = parent1.get(f"{BASE_URL}/api/snc2/report/status")
-            assert r.status_code == 200
-            assert r.json()["stale"] is True, "status should be stale after safety change"
-
-            r = parent1.post(f"{BASE_URL}/api/snc2/report/regenerate")
-            assert r.status_code == 200
-            rec = r.json()["report"]["recommended_structure"]
-            assert rec["structure_id"] == "parallel_or_supported"
-
-            r = parent1.get(f"{BASE_URL}/api/snc2/report/status")
-            assert r.json()["stale"] is False
+            assert rec["structure_id"] == baseline["structure_id"]
+            assert rec["safety_override_applied"] is False and rec.get("safety_level") is None
+            assert "Family Violence" not in rec.get("rationale", "") and "Safety Assessment" not in rec.get("rationale", "")
         finally:
             _delete_safety(aid)
 

@@ -20,6 +20,7 @@ import {
 } from "lucide-react";
 import { logError } from "../../lib/logger";
 import PathwayReportUnlockHint from "../PathwayReportUnlockHint";
+import { toastNotAvailable } from "../NotAvailableNote";
 
 function StatusBadge({ share, testidPrefix }) {
   const base = "inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[0.625rem] font-semibold border";
@@ -87,7 +88,7 @@ export default function DeepDiveCompareHub({ pathway }) {
     } catch (err) {
       logError(`${t} link`, err);
       const detail = err?.response?.data?.detail || "Could not create the comparison request.";
-      toast.error(detail);
+      if (!toastNotAvailable(detail)) toast.error(detail);
     } finally { setBusy(false); }
   };
 
@@ -100,7 +101,7 @@ export default function DeepDiveCompareHub({ pathway }) {
     } catch (err) {
       logError(`${t} consent`, err);
       const detail = err?.response?.data?.detail || "Could not update your consent.";
-      toast.error(detail);
+      if (!toastNotAvailable(detail)) toast.error(detail);
     } finally { setBusy(false); }
   };
 

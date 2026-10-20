@@ -272,6 +272,17 @@ async def setup_complete_for(db, user_id: str) -> bool:
     return combine([await resolved_for_case(db, c, "user", user_id) for c in ids])["setup_complete"]
 
 
+SAFETY_STEP_DONE = "Safety step: completed on SACOparentsAlign"
+SAFETY_STEP_TODO = "Safety step: not started"
+
+
+async def safety_step_line(db, *user_ids: Optional[str]) -> str:
+    """The only safety wording documents may carry, from the same status as the Family check-in card."""
+    ids = [u for u in user_ids if u]
+    done = bool(ids) and all([await setup_complete_for(db, u) for u in ids])
+    return SAFETY_STEP_DONE if done else SAFETY_STEP_TODO
+
+
 def as_utc(v):
     if isinstance(v, str):
         v = datetime.fromisoformat(v.replace("Z", "+00:00"))

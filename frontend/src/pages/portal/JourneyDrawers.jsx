@@ -4,7 +4,6 @@ import { toast } from "sonner";
 
 import { BiffTab } from "./BiffTab";
 import { GreyRockToggleChip } from "./AlignmentHub";
-import { SafetySoftBanner } from "./SafetyScreen";
 import { RECORDS_ENABLED } from "./portalStorage";
 
 /**
@@ -88,8 +87,7 @@ export function BiffCoachDrawer({
   // inside the drawer so a parent revising a message can clear
   // grey-rock mode without navigating back to Step 2.
   safetyFlagged = false,
-  onClearGreyRock = () => {},
-  onOpenSafetyRetake = () => {},
+  onSetGreyRock = () => {},
   // iter250 Draft-to-Snapshot — one-tap action to file the raw
   // first-draft + BIFF rewrite pair into the Snapshot Library.
   // Returns true on successful save (both texts non-empty).
@@ -104,13 +102,7 @@ export function BiffCoachDrawer({
       title="BIFF Coach"
       testId="biff-coach-drawer"
     >
-      {safetyFlagged && <SafetySoftBanner context="biff" />}
-      {safetyFlagged && (
-        <GreyRockToggleChip
-          onClear={onClearGreyRock}
-          onRetake={onOpenSafetyRetake}
-        />
-      )}
+      <GreyRockToggleChip on={safetyFlagged} onChange={onSetGreyRock} />
       <BiffTab safetyFlagged={safetyFlagged} {...biffProps} />
 
       <BiffSnapshotCard
@@ -495,8 +487,7 @@ export function FoundationDrawer({
           </button>
         </div>
 
-        {/* Email-to-coparent — iter219 safety guardrail. Blocked
-            when the parent's own Safety Check flagged risk. */}
+        {/* Email-to-coparent: off while the parent's own grey-rock switch is on. */}
         {safetyFlagged ? (
           <div
             data-testid="foundation-email-coparent-blocked"
@@ -509,8 +500,7 @@ export function FoundationDrawer({
                   Email to co-parent blocked
                 </div>
                 <p className="text-rose-800 leading-snug mt-0.5">
-                  You flagged safety concerns on your Quick Safety
-                  Check, so we won't help send your Foundation
+                  Grey-rock is on, so we won't help send your Foundation
                   Statement directly to your co-parent. Route through
                   your attorney or mediator instead.
                 </p>

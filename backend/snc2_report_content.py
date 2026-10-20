@@ -566,10 +566,9 @@ def _s9_recommended_structure(
         "safety_override_applied": safety_override_applied,
         "safety_notice": (
             "If you experience family violence, coercive control, intimidation, "
-            "or fear in this co-parenting relationship, please complete the SA "
-            "CoParents Family Violence & Communication Safety Assessment. Do "
-            "not accept a joint communication structure that puts you or your "
-            "child at risk."
+            "or fear in this co-parenting relationship, please open your Family "
+            "check-in on SACOparentsAlign. Do not accept a joint communication "
+            "structure that puts you or your child at risk."
         ),
     }
 

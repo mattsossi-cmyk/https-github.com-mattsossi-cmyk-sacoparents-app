@@ -9,9 +9,8 @@ Design commitments (intentional, enforced):
   * Never uses possession/access/custody language or makes recommendations
     to a court. Phrasing is always "the parents' responses indicate ..."
     or "the parents' responses align on ...".
-  * Only Finding 3 (Parenting-Plan Implications) of the Trauma-Informed
-    Safety and Functioning Lens is ever included; Findings 1 & 2 remain
-    private to the survivor per the existing app-wide privacy stance.
+  * No safety results are ever included; the only safety wording is the
+    "Safety step: ..." line from the Family check-in status.
   * The report is prep-material, not evaluation-material. This is stated
     on every surface and in the payload's `disclaimer` field.
 
@@ -517,7 +516,6 @@ def _section_agreements_and_differences(comparison: Dict[str, Any]) -> Tuple[Dic
 
 def _section_issues_for_professional_discussion(
     diff_section: Dict[str, Any], comm_section: Dict[str, Any],
-    lens_finding3: Optional[Dict[str, Any]],
 ) -> Dict[str, Any]:
     """Top items likely to benefit from mediation / professional support."""
     rows: List[Dict[str, Any]] = []
@@ -538,29 +536,6 @@ def _section_issues_for_professional_discussion(
             "alignment": src.get("alignment"),
             "alignment_label": src.get("alignment_label"),
         })
-
-    # Finding 3 (Parenting-Plan Implications) — the ONE finding safe to share.
-    if lens_finding3:
-        head = str(lens_finding3.get("headline") or "").strip()
-        tier = lens_finding3.get("feasibility_tier") or {}
-        if head:
-            rows.append({
-                "topic": "Recommended parenting-plan structure spectrum",
-                "childs_need": "A parenting-plan structure appropriate for the family's current context",
-                "issue_for_discussion": (
-                    f"One parent's trauma-informed safety screen surfaced the "
-                    f"following parenting-plan framing (Finding 3 only — the "
-                    f"underlying findings are private to that parent): "
-                    f"\"{head}\""
-                    + (
-                        f" The screen suggested tier: {tier.get('label')} "
-                        f"(review point ~{tier.get('review_point_days')} days)."
-                        if tier else ""
-                    )
-                ),
-                "alignment": "insufficient",
-                "alignment_label": "Individual screen output",
-            })
 
     return _wrap_section(
         title="Issues that may benefit from mediation or professional discussion",
@@ -656,7 +631,6 @@ def _bucket_where_you_see_things_differently(
 def _bucket_what_may_need_attention(
     issues: Dict[str, Any],
     household: Dict[str, Any],
-    lens_f3: Optional[Dict[str, Any]],
 ) -> Dict[str, Any]:
     """Bucket 3 — the topics worth resolving before parenting decisions."""
     items: List[Dict[str, Any]] = []
@@ -673,12 +647,6 @@ def _bucket_what_may_need_attention(
                 "reason": row.get("professional_focus") or row.get("difference_summary") or "",
                 "source": "household",
             })
-    if lens_f3 and lens_f3.get("summary"):
-        items.append({
-            "topic": "Parenting-plan implications from the safety screen",
-            "reason": lens_f3.get("summary") or "",
-            "source": "safety",
-        })
     return {
         "title": "What May Need Attention",
         "description": (
@@ -837,7 +805,6 @@ def _build_parent_view(
     differences: Dict[str, Any],
     issues: Dict[str, Any],
     shared_pathways: List[str],
-    lens_f3: Optional[Dict[str, Any]],
 ) -> Dict[str, Any]:
     """Compose the 5-bucket parent-friendly view over the existing
     clinical sections. Detailed row strips remain in `sections` for
@@ -850,7 +817,7 @@ def _build_parent_view(
             differences, communication,
         ),
         "what_may_need_attention": _bucket_what_may_need_attention(
-            issues, household, lens_f3,
+            issues, household,
         ),
         "options_to_consider": _bucket_options_to_consider(
             differences, communication, issues, household,
@@ -893,16 +860,9 @@ def build_joint_report(
     prep_b: Dict[str, Any],
     dim_a: Optional[Dict[str, Any]] = None,
     dim_b: Optional[Dict[str, Any]] = None,
-    lens_finding3_a: Optional[Dict[str, Any]] = None,
-    lens_finding3_b: Optional[Dict[str, Any]] = None,
+    safety_step: str = "Safety step: not started",
 ) -> Dict[str, Any]:
-    """Assemble the neutral joint report.
-
-    `lens_finding3_a` / `lens_finding3_b` — Finding 3 ONLY of each parent's
-    Trauma-Informed Safety and Functioning Lens. The caller is responsible
-    for redacting Findings 1 & 2 before passing them in. Passing None
-    means the parent did not complete the safety screen.
-    """
+    """Assemble the neutral joint report. `safety_step` is its only safety wording."""
     shared_pri = _section_shared_priorities(prep_a, prep_b)
     medical = _section_pathway(
         comparison, "medical", "Child's identified medical needs",
@@ -920,17 +880,7 @@ def build_joint_report(
     communication = _section_communication(comparison, dim_a, dim_b)
     agreements, differences = _section_agreements_and_differences(comparison)
 
-    # Combine the two parents' Finding 3 statements (each parent's screen
-    # is individual — this section carries whichever findings exist).
-    combined_f3: Optional[Dict[str, Any]] = None
-    for f3 in (lens_finding3_a, lens_finding3_b):
-        if f3 and not combined_f3:
-            combined_f3 = f3
-            break
-
-    issues = _section_issues_for_professional_discussion(
-        differences, communication, combined_f3,
-    )
+    issues = _section_issues_for_professional_discussion(differences, communication)
 
     parent_view = _build_parent_view(
         shared_pri=shared_pri,
@@ -943,7 +893,6 @@ def build_joint_report(
         differences=differences,
         issues=issues,
         shared_pathways=comparison.get("shared_pathways") or [],
-        lens_f3=combined_f3,
     )
 
     return {
@@ -955,13 +904,7 @@ def build_joint_report(
         "disclaimer": DISCLAIMER,
         "neutral_language_note": NEUTRAL_LANGUAGE_NOTE,
         "not_a_custody_evaluation": True,
-        "safety_privacy_note": (
-            "Only Finding 3 (Parenting-Plan Implications) of the Trauma-"
-            "Informed Safety and Functioning Lens is included in this "
-            "report. Findings 1 (Family-Violence Pattern) and 2 (Trauma "
-            "Impact) remain private to the parent who completed the "
-            "screen and are not shown to the co-parent."
-        ),
+        "safety_step": safety_step,
         "shared_pathways": comparison.get("shared_pathways") or [],
         "parent_view": parent_view,
         "sections": {

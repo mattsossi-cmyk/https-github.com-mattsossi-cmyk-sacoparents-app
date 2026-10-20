@@ -1,17 +1,15 @@
 import React, { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
 import {
   Loader2,
   Mail,
   CheckCircle2,
   Send,
   Users,
-  ShieldAlert,
-  Phone,
   Lock,
   Clock,
 } from "lucide-react";
 import { api } from "../lib/api";
+import { NotAvailableNote } from "./NotAvailableNote";
 import { logError } from "../lib/logger";
 
 const STATUS_META = {
@@ -38,9 +36,7 @@ function fmtDate(iso) {
  * Reusable "Invite your co-parent" card.
  *
  * Founder guardrails (2026-03-04):
- *   1. IPV / family-violence safety screen must be complete AND Level 3+ before
- *      the invite input is even rendered. Otherwise the card swaps to the
- *      appropriate compassionate state.
+ *   1. A parent with an older saved concerning result sees only the neutral note.
  *   2. Only ONE lifetime invitation per inviter. Once used, the form is hidden
  *      and the current status is shown instead — no re-invitations, no
  *      "swap the recipient" trick.
@@ -48,7 +44,7 @@ function fmtDate(iso) {
 export default function InviteCoparentCard({ variant = "dashboard" }) {
   const [invites, setInvites] = useState([]);
   const [inviteUsed, setInviteUsed] = useState(false);
-  const [gate, setGate] = useState(null); // {clear, level, code}
+  const [gate, setGate] = useState(null); // {clear, code}
   const [email, setEmail] = useState("");
   const [sending, setSending] = useState(false);
   const [error, setError] = useState(null);
@@ -131,84 +127,8 @@ export default function InviteCoparentCard({ variant = "dashboard" }) {
         </div>
       )}
 
-      {/* Gate: safety screen not yet taken */}
-      {!loading && gate && !gate.clear && gate.code === "safety_screen_required" && (
-        <div
-          className="mt-6 rounded-2xl border-2 border-[#F1D9B7] bg-[#FFF6EA] p-4 sm:p-5"
-          data-testid="invite-coparent-gate-required"
-        >
-          <div className="flex items-start gap-3">
-            <ShieldAlert size={20} className="text-[#904B0E] shrink-0 mt-0.5" />
-            <div className="flex-1">
-              <h4 className="font-serif text-lg text-[#5A3C10]">
-                Complete the family-violence safety screen first
-              </h4>
-              <p className="text-sm text-[#5A3C10]/90 mt-1 leading-relaxed">
-                To keep both parents safe, we ask every parent to complete a short
-                private safety screen (about 5 minutes) before sending a co-parent
-                invitation. Your answers stay private.
-              </p>
-              <Link
-                to="/safety"
-                data-testid="invite-coparent-take-safety-link"
-                className="mt-3 inline-flex items-center gap-2 px-4 py-2 rounded-full bg-[#B45F13] text-white text-sm font-semibold hover:brightness-110"
-              >
-                Take the safety screen
-              </Link>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Gate: safety screen shows FV concerns (Level 1 or 2) */}
-      {!loading && gate && !gate.clear && gate.code === "safety_screen_blocked" && (
-        <div
-          className="mt-6 rounded-2xl border-2 border-[#F1B7B7] bg-[#FDECEC] p-4 sm:p-5"
-          data-testid="invite-coparent-gate-blocked"
-        >
-          <div className="flex items-start gap-3">
-            <ShieldAlert size={20} className="text-[#9A3A23] shrink-0 mt-0.5" />
-            <div className="flex-1">
-              <h4 className="font-serif text-lg text-[#5B1F1F]">
-                Direct outreach isn&rsquo;t recommended right now
-              </h4>
-              <p className="text-sm text-[#5B1F1F]/90 mt-1 leading-relaxed">
-                Based on your safety screen, sending an invitation directly to
-                your co-parent through this app isn&rsquo;t safe. A mediator,
-                attorney, or DV advocate can handle communication safely on
-                your behalf.
-              </p>
-              <div className="mt-3 rounded-xl bg-white/70 border border-[#F1B7B7] px-4 py-3 flex items-center gap-3">
-                <Phone size={16} className="text-[#9A3A23] shrink-0" />
-                <div className="text-sm text-[#5B1F1F]">
-                  <strong>In danger?</strong> Call{" "}
-                  <a href="tel:911" className="underline font-semibold">911</a> or the National DV Hotline{" "}
-                  <a href="tel:18007997233" className="underline font-semibold">1-800-799-7233</a>.
-                </div>
-              </div>
-              {/* Warm handoff — one-tap to a vetted mediator/attorney */}
-              <Link
-                to="/professionals"
-                data-testid="invite-coparent-warm-handoff-cta"
-                className="mt-4 inline-flex items-center gap-2 rounded-full bg-[#9A3A23] text-white px-4 py-2 text-sm font-semibold hover:brightness-110"
-              >
-                Send my case to a mediator instead
-              </Link>
-              <p className="mt-2 text-[0.6875rem] text-[#5B1F1F]/80 leading-relaxed">
-                A vetted family-law professional receives your case code and can
-                reach your co-parent safely — you never need to email them
-                directly.
-              </p>
-              <Link
-                to="/safety"
-                data-testid="invite-coparent-review-safety-link"
-                className="mt-3 inline-flex items-center gap-2 text-sm font-semibold text-[#9A3A23] underline"
-              >
-                Review my safety plan
-              </Link>
-            </div>
-          </div>
-        </div>
+      {!loading && gate && !gate.clear && (
+        <NotAvailableNote testid="invite-coparent-not-available" className="mt-6" />
       )}
 
       {/* Send form — only when gate is clear AND no invite has been used yet */}

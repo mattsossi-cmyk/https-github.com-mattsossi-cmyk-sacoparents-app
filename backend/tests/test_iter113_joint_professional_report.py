@@ -14,6 +14,10 @@ import uuid
 import pytest
 import requests
 
+# Fresh accounts each run (older shared test accounts may hold a saved concerning result, which blocks comparisons).
+P1 = f"test_jpr_a_{uuid.uuid4().hex[:6]}@example.com"
+P2 = f"test_jpr_b_{uuid.uuid4().hex[:6]}@example.com"
+
 BASE_URL = os.environ.get("REACT_APP_BACKEND_URL", "").rstrip("/")
 if not BASE_URL:
     with open("/app/frontend/.env") as f:
@@ -27,7 +31,8 @@ if not BASE_URL:
 def _register(email: str, name: str, password: str = "TestPass123!") -> requests.Session:
     r = requests.post(
         f"{BASE_URL}/api/auth/register",
-        json={"email": email, "password": password, "name": name},
+        json={"email": email, "password": password, "name": name,
+              "ack_privacy_notice": True, "consent_sensitive_info": True},
         timeout=30,
     )
     if r.status_code == 400:
@@ -94,12 +99,12 @@ def _seed_snc2(sess: requests.Session, answers=None, pathways=("medical",)):
 
 @pytest.fixture(scope="module")
 def parent1():
-    return _register("parent1@test.com", "Sam Parent")
+    return _register(P1, "Sam Parent")
 
 
 @pytest.fixture(scope="module")
 def parent2():
-    return _register("parent2@test.com", "Riley Parent")
+    return _register(P2, "Riley Parent")
 
 
 @pytest.fixture(scope="module")
@@ -109,14 +114,14 @@ def active_share(parent1, parent2):
     r = parent1.get(f"{BASE_URL}/api/snc2/compare/me")
     if r.status_code == 200:
         for s in r.json().get("shares", []):
-            if s.get("partner_email") == "parent2@test.com" and s.get("status") != "revoked":
+            if s.get("partner_email") == P2 and s.get("status") != "revoked":
                 parent1.post(f"{BASE_URL}/api/snc2/compare/{s['share_id']}/revoke")
 
     _seed_snc2(parent1, SEED_MED)
     _seed_snc2(parent2, SEED_MED_B)
 
     r = parent1.post(f"{BASE_URL}/api/snc2/compare/link",
-                     json={"email": "parent2@test.com"})
+                     json={"email": P2})
     assert r.status_code == 200, r.text
     share_id = r.json()["share"]["share_id"]
     r = parent2.post(f"{BASE_URL}/api/snc2/compare/{share_id}/consent",
@@ -174,11 +179,12 @@ class TestPayloadShape:
         assert "not a custody evaluation" in d.lower()
         assert "neutral" in body["neutral_language_note"].lower()
 
-    def test_safety_privacy_only_finding3(self, parent1, active_share):
+    def test_safety_step_line_only(self, parent1, active_share):
         r = parent1.get(f"{BASE_URL}/api/joint-professional-report/{active_share}")
         body = r.json()
-        # The privacy note must be present and mention Finding 3.
-        assert "finding 3" in body["safety_privacy_note"].lower()
+        # Only the safety-step line; no safety-lens finding or note.
+        assert body["safety_step"] == "Safety step: not started"
+        assert "safety_privacy_note" not in body and "finding 3" not in str(body).lower()
         # No leaked Finding 1/2 language anywhere in the payload.
         text = str(body).lower()
         assert "family_violence_pattern" not in text

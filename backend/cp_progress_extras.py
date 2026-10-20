@@ -19,7 +19,7 @@ SOURCE_LABELS = {
 
 async def load_grey_rock_timeline(db: AsyncIOMotorDatabase, user_id: str, limit: int = 20) -> List[Dict[str, Any]]:
     rows = await db.grey_rock_audit.find(
-        {"user_id": user_id}, {"_id": 0, "event": 1, "source": 1, "at": 1}
+        {"user_id": user_id, "source": {"$ne": "safety_screen"}}, {"_id": 0, "event": 1, "source": 1, "at": 1}
     ).sort("at", -1).to_list(limit)
     return [
         {"at": r.get("at"), "event": r.get("event"), "source": SOURCE_LABELS.get(r.get("source"), r.get("source") or "")}

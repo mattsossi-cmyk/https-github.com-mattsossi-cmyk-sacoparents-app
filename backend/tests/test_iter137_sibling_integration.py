@@ -52,7 +52,7 @@ def _register(client: TestClient) -> tuple[str, str]:
     email = f"iter137_{uuid.uuid4().hex[:8]}@example.com"
     r = client.post(
         "/api/auth/register",
-        json={"email": email, "password": "TestPass123!", "name": "Iter137 Parent"},
+        json={"email": email, "password": "TestPass123!", "name": "Iter137 Parent", "ack_privacy_notice": True, "consent_sensitive_info": True},
     )
     assert r.status_code in (200, 201), r.text
     # Founder rule (2026-03-04): a parent must pass the family-violence
@@ -236,7 +236,7 @@ def test_export_shape_for_new_parent(client: TestClient) -> None:
     r = client.get(url, headers={"X-Integration-Key": SHARED_SECRET})
     assert r.status_code == 200, r.text
     body = r.json()
-    assert body["redacted_for_safety"] is False
+    assert "redacted_for_safety" not in body
     assert body["parent"]["email"] == email
     assert "situation_snapshot" in body
     assert "foundation_statement" in body

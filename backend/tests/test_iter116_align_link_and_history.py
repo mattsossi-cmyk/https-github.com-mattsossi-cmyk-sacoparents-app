@@ -53,14 +53,12 @@ def test_align_link_status_unauth():
     assert r.status_code in (401, 403)
 
 
-def test_journey6_cannot_mint_due_to_safety():
+def test_journey6_without_saved_result_can_mint():
+    # No saved result -> never blocked (the old "take the screen first" rule is gone).
     tok = _login("journey6@test.com")
     r = requests.post(f"{BASE_URL}/api/link-codes", json={"context": "account"},
                       headers={"Authorization": f"Bearer {tok}"}, timeout=15)
-    assert r.status_code == 403
-    detail = r.json().get("detail")
-    assert isinstance(detail, dict), detail
-    assert detail.get("code") == "safety_screen_required"
+    assert r.status_code == 200, r.text
 
 
 def test_parent2_mint_verify_link_and_history_cap_at_5(db, users):
@@ -132,12 +130,12 @@ def test_parent1_safety_flagged_reads_redacted(db, users):
     r = requests.get(f"{BASE_URL}/api/integrations/export-assessments?email=parent1@test.com",
                     headers={"X-Integration-Key": SECRET}, timeout=15)
     assert r.status_code == 200, r.text
-    assert r.json()["redacted_for_safety"] is True
+    assert "redacted_for_safety" not in r.json()
 
-    # PDF - should be 403 for safety-flagged
+    # PDF - same reply as "nothing saved yet" for a held-back parent
     r = requests.get(f"{BASE_URL}/api/integrations/foundation-statement.pdf?email=parent1@test.com",
                     headers={"X-Integration-Key": SECRET}, timeout=15)
-    assert r.status_code == 403, r.text
+    assert r.status_code == 409, r.text
 
     tok = _login("parent1@test.com")
     r = requests.get(f"{BASE_URL}/api/integrations/align-link",
@@ -148,10 +146,10 @@ def test_parent1_safety_flagged_reads_redacted(db, users):
     # Find labels and notes
     export_r = next(r for r in status["recent_reads"] if r["what"].startswith("Your Situation Snapshot"))
     assert export_r["redacted"] is True
-    assert export_r["note"] == "Answers and writing withheld for safety"
+    assert export_r["note"] == "Not shared"
     pdf_r = next(r for r in status["recent_reads"] if r["what"] == "Your Foundation Statement PDF")
     assert pdf_r["redacted"] is True
-    assert pdf_r["note"] == "Blocked for safety"
+    assert pdf_r["note"] == "Not shared"
 
 
 def test_cleanup_leave_parent1_linked_parent2_unlinked(db, users):

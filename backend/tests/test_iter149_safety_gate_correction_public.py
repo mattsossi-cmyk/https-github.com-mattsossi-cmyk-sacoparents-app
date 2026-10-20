@@ -118,6 +118,7 @@ class TestNewCase:
 
 
 # --- legacy assessment restored
+@pytest.mark.skip(reason="The old in-app Safety Assessment is hidden (Align safety step); see test_align_safety_step.py.")
 class TestLegacyAssessment:
     def test_full_flow(self):
         h, _ = _register()

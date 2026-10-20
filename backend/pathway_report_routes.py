@@ -78,9 +78,7 @@ async def _load_party_context(
     profile = await db.users.find_one(
         {"user_id": user_id}, {"_id": 0, "name": 1},
     ) or {}
-    safety = await db.safety_assessments.find_one(
-        {"user_id": user_id}, sort=[("created_at", -1)],
-    )
+    safety = None  # in-app safety screen is off
     # NOTE: the Dimension Companion assessment persists to
     # `dimension_companion_assessments` (see dimension_companion_routes.py
     # `COLLECTION`). The old `dimension_companion` name is unused legacy.
@@ -180,7 +178,6 @@ async def preview_pathway_report(
     out = result.to_public_dict()
     out["caller_display_name"] = ctx.display_name or ""
     out["data_inputs_present"] = {
-        "safety_screen":     ctx.safety_level is not None,
         "dimension_companion": any([
             ctx.dim2_communication_tier,
             ctx.dim3_emotional_reg_tier,
@@ -282,7 +279,6 @@ async def preview_pathway_report_pdf(
         result=out,
         caller_display_name=ctx.display_name or "",
         data_inputs_present={
-            "safety_screen":       ctx.safety_level is not None,
             "dimension_companion": any([
                 ctx.dim2_communication_tier,
                 ctx.dim3_emotional_reg_tier,
@@ -342,7 +338,6 @@ async def dual_pathway_report_pdf(
         # Never leak per-input state for the other parent — surface only
         # the caller's own presence flags in the "data inputs used" block.
         data_inputs_present={
-            "safety_screen":       ctx_a.safety_level is not None,
             "dimension_companion": any([
                 ctx_a.dim2_communication_tier,
                 ctx_a.dim3_emotional_reg_tier,
@@ -464,8 +459,8 @@ async def email_pathway_report(
                 and ctx_a.nd_risk_tier is None):
             raise HTTPException(
                 404,
-                "You have no assessment data on file yet. Complete at least "
-                "the Safety Screen or Dimension Companion first.",
+                "You have no assessment data on file yet. Complete the "
+                "Dimension Companion first.",
             )
         result = score_pathway_single(ctx_a)
         out = result.to_public_dict()
@@ -484,7 +479,6 @@ async def email_pathway_report(
         result=out,
         caller_display_name=ctx_a.display_name or "",
         data_inputs_present={
-            "safety_screen":       ctx_a.safety_level is not None,
             "dimension_companion": any([
                 ctx_a.dim2_communication_tier,
                 ctx_a.dim3_emotional_reg_tier,

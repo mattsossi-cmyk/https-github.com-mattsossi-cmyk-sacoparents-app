@@ -1,7 +1,7 @@
 """Iter75 backend tests: PATCH semantics for POST/PUT /api/portal/state.
 
 Verifies that `pydantic.model_dump(exclude_unset=True)` allows partial
-updates so a client sending `{safety_plan: null}` clears only that
+updates so a client sending `{court_key: ""}` clears only that
 field without clobbering align_records / milestones / biff_logs /
 foundation_text / court_key / health_index / legal_report.
 
@@ -77,7 +77,7 @@ def _put_state(tok: str, body: dict) -> dict:
 # ------------------------------------------------------------------ #
 class TestPatchSemantics:
     def test_full_populate_then_null_safety_plan_keeps_other_fields(self, token_p1):
-        """Populate all → PUT {safety_plan: null} → only safety_plan cleared."""
+        """Populate all → PUT {court_key: ""} → only court_key cleared; the old safety plan can't be written or read."""
         full = {
             "align_records": [{"id": "a1", "note": "test"}],
             "milestones": [{"id": "m1", "title": "milestone1", "type": "success"}],
@@ -87,22 +87,22 @@ class TestPatchSemantics:
         }
         _put_state(token_p1, full)
         s = _get_state(token_p1)
-        assert s["safety_plan"] is not None
-        assert s["safety_plan"].get("safe_place") == "Mom"
+        assert "safety_plan" not in s
         assert s["foundation_text"] == "our foundation is love"
         assert s["court_key"] == "ALIGN-SA-2026"
-        assert len(s["align_records"]) == 1
+        assert s["align_records"] == []  # child record folders are switched off
         assert len(s["milestones"]) == 1
 
-        # PATCH just safety_plan → null
-        _put_state(token_p1, {"safety_plan": None})
+        # PATCH just court_key → empty
+        _put_state(token_p1, {"court_key": ""})
         s2 = _get_state(token_p1)
-        assert s2["safety_plan"] is None, f"safety_plan should be None: {s2['safety_plan']}"
+        assert not s2["court_key"]
+        _put_state(token_p1, {"court_key": "ALIGN-SA-2026"})
+        s2 = _get_state(token_p1)
         # Untouched fields must remain
         assert s2["foundation_text"] == "our foundation is love"
         assert s2["court_key"] == "ALIGN-SA-2026"
-        assert len(s2["align_records"]) == 1
-        assert s2["align_records"][0].get("id") == "a1"
+        assert s2["align_records"] == []  # child record folders are switched off
         assert len(s2["milestones"]) == 1
 
     def test_patch_court_key_only(self, token_p1):
@@ -111,7 +111,7 @@ class TestPatchSemantics:
         assert s["court_key"] == "NEW-KEY-2026"
         # Other fields intact
         assert s["foundation_text"] == "our foundation is love"
-        assert len(s["align_records"]) == 1
+        assert s["align_records"] == []  # child record folders are switched off
 
     def test_empty_body_patch(self, token_p1):
         before = _get_state(token_p1)
@@ -146,9 +146,8 @@ class TestPatchSemantics:
         assert s["foundation_text"] == "p2 foundation"
         assert s["court_key"] == "COURT-8842"
         assert s["health_index"] == {"s1": 7, "s2": 6, "s3": 5}
-        assert s["safety_ack"]["cleared"] is True
-        assert s["safety_plan"]["safe_place"] == "Aunt house"
-        assert len(s["align_records"]) == 1
+        assert "safety_ack" not in s and "safety_plan" not in s
+        assert s["align_records"] == []  # child record folders are switched off
         assert len(s["biff_logs"]) == 1
 
 

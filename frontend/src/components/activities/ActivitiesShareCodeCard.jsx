@@ -4,9 +4,7 @@
  *
  * The "Send this to your mediator or attorney" card at the bottom of
  * the ready state. Owns three render branches:
- *   1. `shareError`  — safety-gate block (family-violence screen
- *                      required OR direct outreach blocked) with the
- *                      correct escape CTAs.
+ *   1. `shareError`  — the neutral "not available" note.
  *   2. `shareCode`   — success state showing the SA-XXXXXX code + a
  *                      Copy button + 15-minute expiry note.
  *   3. default       — a "Get a share code" mint button.
@@ -15,14 +13,13 @@
  * `onMint` callback and passes down the resolved shareCode/shareError.
  */
 import React from "react";
-import { Link } from "react-router-dom";
 import {
   Copy,
   Link as LinkIcon,
   Loader2,
   Send,
-  ShieldAlert,
 } from "lucide-react";
+import { NotAvailableNote } from "../NotAvailableNote";
 
 export default function ActivitiesShareCodeCard({
   shareError,
@@ -48,38 +45,7 @@ export default function ActivitiesShareCodeCard({
       </div>
 
       {shareError ? (
-        <div
-          className="rounded-2xl border-2 border-[#F1B7B7] bg-[#FDECEC] p-4 flex items-start gap-3"
-          data-testid="activities-alignment-share-error"
-        >
-          <ShieldAlert size={18} className="text-[#9A3A23] shrink-0 mt-0.5" />
-          <div className="text-sm text-[#5B1F1F] leading-relaxed">
-            <div className="font-semibold">
-              {shareError.code === "safety_screen_required"
-                ? "Complete the family-violence safety screen first"
-                : "Direct outreach isn't recommended right now"}
-            </div>
-            <p className="mt-1">{shareError.message}</p>
-            <div className="mt-3 flex flex-wrap gap-2">
-              <Link
-                to="/safety"
-                className="inline-flex items-center gap-2 rounded-full bg-[#9A3A23] text-white px-4 py-2 text-xs font-semibold hover:brightness-110"
-              >
-                {shareError.code === "safety_screen_required"
-                  ? "Take the safety screen"
-                  : "Review my safety plan"}
-              </Link>
-              {shareError.code === "safety_screen_blocked" && (
-                <Link
-                  to="/professionals"
-                  className="inline-flex items-center gap-2 rounded-full border border-[#9A3A23] text-[#9A3A23] px-4 py-2 text-xs font-semibold hover:bg-[#FDECEC]"
-                >
-                  Send my case to a mediator instead
-                </Link>
-              )}
-            </div>
-          </div>
-        </div>
+        <NotAvailableNote testid="activities-alignment-share-error" />
       ) : shareCode ? (
         <div
           className="rounded-2xl bg-[#F1F9F4] border border-[#C7E5D3] p-5"

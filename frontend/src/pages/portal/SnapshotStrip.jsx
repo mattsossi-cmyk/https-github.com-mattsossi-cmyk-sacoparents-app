@@ -21,7 +21,7 @@ import React, { useState } from "react";
 const TOPIC_LABEL = {
   foundation: "Foundation",
   coparenting: "Co-parenting",
-  safety: "Safety Check",
+  safety: "Conflict Readiness",
   medical: "Medical",
   educational: "Educational",
   psychological: "Psychological",

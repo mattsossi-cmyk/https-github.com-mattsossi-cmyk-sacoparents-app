@@ -24,7 +24,8 @@ export function ProfessionalAccessCard() {
         <i className="fa-solid fa-user-shield mr-1.5" aria-hidden="true"></i>Who can see your information
       </h2>
       <p className="mt-1">
-        Your co-parent never sees your safety answers.
+        Safety questions are answered privately on SACOparentsAlign, not in this app. Your co-parent never sees your answers. This
+        app&apos;s reports show only whether your safety step is completed or not started.
       </p>
       <Link
         to="/who-can-see-my-information"

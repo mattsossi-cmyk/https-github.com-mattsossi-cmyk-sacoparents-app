@@ -147,7 +147,7 @@ def test_fridge_pair_safety_flagged_meta_on_both_cards():
     assert resp.status_code == 200
     reader = pypdf.PdfReader(io.BytesIO(resp.content))
     text = reader.pages[0].extract_text() or ""
-    assert text.count("Safety-flagged voice") >= 2, f"got: {text!r}"
+    assert text.count("Grey-rock voice") >= 2, f"got: {text!r}"
 
 
 # --- Regression: /api/portal/state guided_drafts round trip needs auth,

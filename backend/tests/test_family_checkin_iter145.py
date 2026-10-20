@@ -126,7 +126,7 @@ class TestChecklist:
 class TestPdf:
     def test_pdf_full(self):
         t = pdf_text(ST["a"])
-        assert "Family check-in" in t
+        assert "Safety step: not started" in t and "Family check-in" in t
         for w in ("Module A", "Module B", "Module C", "Child Needs & Priorities", "Co-Parenting Dynamics", "Conflict Readiness"):
             assert w not in t
         for w in BANNED:
@@ -136,7 +136,7 @@ class TestPdf:
         r = ST["a"].put(f"{BASE_URL}/api/court-path/requested", json={"keys": ["coparent", "self"]})
         assert r.status_code == 200, r.text
         t = " ".join(pdf_text(ST["a"]).split())
-        assert "Showing your case, your Family check-in and the assessments your professional asked for." in t
+        assert "Showing your case, your safety step and the assessments your professional asked for." in t
         assert "Family check-in" in t
 
 

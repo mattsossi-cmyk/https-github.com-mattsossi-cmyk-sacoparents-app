@@ -90,25 +90,16 @@ def test_disclaimer_names_completeness_vs_readiness_distinction():
     assert "coercive" in disc or "safety" in disc
 
 
-def test_high_scores_still_produce_caveat_when_safety_concerns_present():
-    """The exact failure mode the user flagged — polished answers, high
-    score, but a coercive relationship in the background. The caveat
-    must fire."""
+def test_old_safety_data_never_changes_the_profile():
+    """The in-app safety screen is off: old safety data must not change scores, caveats or wording."""
     prep = _prep_baseline()
-    # Push every self-rating to the top so the score comes out strong.
     prep["comm_style"]["scores"] = {k: 5.0 for k in prep["comm_style"]["scores"]}
     prep["readiness"]["scores"] = {k: 5.0 for k in prep["readiness"]["scores"]}
-    # Safety concerns present.
-    prep["safety_assessment"] = {"high_risk": True}
-    r = compute_readiness(prep)
-    # The score can still be reported (backwards compat), but the caveat
-    # must warn about coercive patterns making mediation unsafe.
-    joined = " ".join(r["caveats"]).lower()
-    assert "coercive" in joined
-    assert "finding 3" in joined or "family-violence practitioner" in joined
-    # And the disclaimer at the top level also carries the warning.
-    assert "coercive" in r["readiness_disclaimer"].lower()
-
+    plain = compute_readiness(prep)
+    flagged = compute_readiness({**prep, "safety_assessment": {"high_risk": True}})
+    assert plain == flagged
+    joined = " ".join(flagged["caveats"]).lower()
+    assert "finding 3" not in joined and "trauma-informed" not in joined
 
 def test_polished_communication_plus_high_conflict_load_triggers_caveat():
     """Direct capture of the user's stated concern: 'a parent who writes
@@ -149,15 +140,10 @@ def test_low_score_produces_emerging_profile_with_scaffolding_recommendations():
     assert any(word in joined for word in ("coach", "support person", "written", "review", "practitioner"))
 
 
-def test_profile_recommendations_reference_trauma_informed_lens_for_trust_emerging():
-    """When trust is emerging (safety concerns present), the
-    preparation recommendations should route the parent to the
-    Trauma-Informed Safety and Functioning Lens — not straight into
-    joint mediation."""
+def test_trust_emerging_recommendations_never_point_to_the_old_lens():
+    """Trust emerging: preparation tips stay general and never send the parent to the retired safety lens."""
     prep = _prep_baseline()
-    prep["safety_assessment"] = {"high_risk": True}
     prep["readiness"]["scores"] = {k: 1.0 for k in prep["readiness"]["scores"]}
     r = compute_readiness(prep)
-    trust = r["profile"]["trust"]
-    joined = " ".join(trust["preparation_recommendations"]).lower()
-    assert "trauma-informed" in joined or "finding 3" in joined
+    joined = " ".join(r["profile"]["trust"]["preparation_recommendations"]).lower()
+    assert joined and "trauma-informed" not in joined and "finding 3" not in joined

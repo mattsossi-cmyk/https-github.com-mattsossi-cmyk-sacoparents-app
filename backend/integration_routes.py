@@ -310,10 +310,11 @@ async def export_assessments(
     _verify_integration_key(x_integration_key)
     user = await _linked_user(db, email)
     user_id = user["user_id"]
-    redacted = await is_safety_flagged(db, user_id)
-    await _log_read(db, user_id, "export-assessments", redacted)
+    # A parent with an older saved concerning result gets the same reply as one with nothing saved yet (no flag).
+    held = await is_safety_flagged(db, user_id)
+    await _log_read(db, user_id, "export-assessments", held)
 
-    prep = await db.prep_data.find_one({"user_id": user_id}, {"_id": 0}) or {}
+    prep = {} if held else (await db.prep_data.find_one({"user_id": user_id}, {"_id": 0}) or {})
     completed = prep.get("completed") or {}
 
     # Situation Snapshot = the parent's saved mediation prep answers,
@@ -364,14 +365,10 @@ async def export_assessments(
     # completed a lane, the field is null (the sibling app can render
     # accordingly).
     special_needs = {
-        "medical": await _latest_deep_dive_report(db, "med_deep_reports", user_id),
-        "educational": await _latest_deep_dive_report(db, "edu_deep_reports", user_id),
-        "psychological": await _latest_deep_dive_report(db, "psych_deep_reports", user_id),
+        "medical": None if held else await _latest_deep_dive_report(db, "med_deep_reports", user_id),
+        "educational": None if held else await _latest_deep_dive_report(db, "edu_deep_reports", user_id),
+        "psychological": None if held else await _latest_deep_dive_report(db, "psych_deep_reports", user_id),
     }
-    if redacted:
-        situation_snapshot, foundation_statement, special_needs = _redact_for_safety(
-            situation_snapshot, foundation_statement, special_needs
-        )
 
     return {
         "parent": {
@@ -381,7 +378,6 @@ async def export_assessments(
         "situation_snapshot": situation_snapshot,
         "foundation_statement": foundation_statement,
         "special_needs": special_needs,
-        "redacted_for_safety": redacted,
         "exported_at": _iso(_now()),
         "schema_version": 1,
     }
@@ -432,8 +428,8 @@ _READ_LABELS = {
 
 
 _REDACTED_NOTES = {
-    "export-assessments": "Answers and writing withheld for safety",
-    "foundation-statement.pdf": "Blocked for safety",
+    "export-assessments": "Not shared",
+    "foundation-statement.pdf": "Not shared",
 }
 
 
@@ -482,18 +478,6 @@ async def unlink_align(current: UserPublic = Depends(get_current_user), db: Asyn
     await db[_LINKS].update_one({"user_id": current.user_id, "unlinked_at": None}, {"$set": {"unlinked_at": _now()}})
     logger.info("align unlinked user=%s", current.user_id)
     return await _link_status(db, current.user_id)
-
-
-_KEEP_WHEN_REDACTED = ("completed_sections", "updated_at")
-
-
-def _redact_for_safety(snapshot: Dict[str, Any], foundation: Dict[str, Any], needs: Dict[str, Any]):
-    """Safety-flagged parent: drop every answer and narrative; keep which sections are done, ratings and dates."""
-    snap = {k: (v if k in _KEEP_WHEN_REDACTED else None) for k, v in snapshot.items()}
-    fs = {k: None for k in ("child_lens", "my_part", "best_case", "coparent_lens")}
-    fs.update(canonical={k: None for k in foundation["canonical"]}, updated_at=foundation.get("updated_at"))
-    sn = {k: (v and {"rating_areas": v.get("rating_areas"), "generated_at": v.get("generated_at")}) for k, v in needs.items()}
-    return snap, fs, sn
 
 
 class CourtKeyUpsert(BaseModel):
@@ -630,12 +614,10 @@ async def integrations_foundation_statement_pdf(
     """
     _verify_integration_key(x_integration_key)
     user = await _linked_user(db, email)
-    if await is_safety_flagged(db, user["user_id"]):
-        await _log_read(db, user["user_id"], "foundation-statement.pdf", True)
-        raise HTTPException(status_code=403, detail="Not available for this parent.")
-    await _log_read(db, user["user_id"], "foundation-statement.pdf", False)
+    held = await is_safety_flagged(db, user["user_id"])
+    await _log_read(db, user["user_id"], "foundation-statement.pdf", held)
 
-    prep = await db.prep_data.find_one({"user_id": user["user_id"]}, {"_id": 0}) or {}
+    prep = {} if held else (await db.prep_data.find_one({"user_id": user["user_id"]}, {"_id": 0}) or {})
     reflection = prep.get("reflection") or {}
 
     # Reuse the parent-facing builder so future visual updates flow

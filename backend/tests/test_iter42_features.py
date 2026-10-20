@@ -23,6 +23,7 @@ import uuid
 import time
 import pytest
 import requests
+from legacy_safety import NOT_AVAILABLE, save_old_result  # noqa: E402
 
 BASE_URL = os.environ.get("REACT_APP_BACKEND_URL", "").rstrip("/")
 if not BASE_URL:
@@ -135,104 +136,17 @@ class TestRegenSummaryLengthToggle:
 # 2) Expiring share links + revocation
 # ============================================================
 def _post_safety(client, level=4):
-    """Submit a safety assessment. Level-4 = no concerns (all section 2 yes).
-
-    Server-side "all answered" guard (iter 104) requires every s1_q1..s1_q18
-    and s2_q1..s2_q8 to have a valid Yes/No/Unsure value, so we fill both
-    sections with a neutral baseline and only override the items that
-    drive the target level.
-    """
-    s1 = {f"s1_q{i}": "no" for i in range(1, 29)}
-    s2 = {f"s2_q{i}": "yes" for i in range(1, 9)}
-    s2["s2_q8"] = "no"  # s2_q8 is inverted — "no" is the safe answer
-    if level == 4:
-        payload = {"section_1": s1, "section_2": s2}
-    elif level == 2:
-        s1["s1_q3"] = "yes"  # coercive-control hit → level 2
-        payload = {"section_1": s1, "section_2": s2}
-    elif level == 1:
-        s1["s1_q1"] = "yes"
-        payload = {"section_1": s1, "section_2": s2}
-    else:
-        payload = {"section_1": s1, "section_2": s2}
-    r = client.post(f"{BASE_URL}/api/safety-assessment", json=payload, timeout=30)
-    assert r.status_code == 200, r.text
-    return r.json()
+    return save_old_result(client, BASE_URL, level)
 
 
 class TestExpiringShareLinks:
     """Share-link endpoints must accept expire_days + label and record a jti
     that can later be revoked via /api/share/revoke."""
 
-    def test_safety_share_link_carries_jti_and_expires_at(self, p1_client):
-        # Ensure a level-4 assessment exists so we don't accidentally trip
-        # any downstream safety guardrails.
-        sa = _post_safety(p1_client, level=4)
-        aid = sa["assessment_id"]
-        label = f"TEST_share_{uuid.uuid4().hex[:6]}"
-        r = p1_client.post(f"{BASE_URL}/api/safety-assessment/{aid}/share-link",
-                           json={"expire_days": 1, "label": label})
-        assert r.status_code == 200, r.text
-        body = r.json()
-        assert body.get("token")
-        assert body.get("jti"), "jti missing on share-link response"
-        assert body.get("expires_at"), "expires_at missing on 1-day link"
-
-    def test_safety_share_link_never_expires(self, p1_client):
-        sa = _post_safety(p1_client, level=4)
-        aid = sa["assessment_id"]
-        r = p1_client.post(f"{BASE_URL}/api/safety-assessment/{aid}/share-link",
-                           json={"expire_days": None, "label": "TEST_never"})
-        assert r.status_code == 200, r.text
-        body = r.json()
-        assert body.get("jti")
-        # "Never" link → no expires_at
-        assert body.get("expires_at") in (None, "")
-
-    def test_share_mine_lists_active_and_supports_revoke(self, p1_client):
-        # Mint a link, verify it appears in /share/mine active list, revoke it,
-        # verify it moves to past and subsequent shared GET → 404.
-        sa = _post_safety(p1_client, level=4)
-        aid = sa["assessment_id"]
-        mint = p1_client.post(f"{BASE_URL}/api/safety-assessment/{aid}/share-link",
-                              json={"expire_days": 7, "label": "TEST_revoke_me"})
-        assert mint.status_code == 200, mint.text
-        jti = mint.json()["jti"]
-        token = mint.json()["token"]
-
-        listing = p1_client.get(f"{BASE_URL}/api/share/mine")
-        assert listing.status_code == 200
-        data = listing.json()
-        active_jtis = {r["jti"] for r in data.get("active", [])}
-        assert jti in active_jtis, f"minted jti {jti} not in /share/mine active"
-
-        # Confirm the shared endpoint works pre-revocation.
-        pre = requests.get(f"{BASE_URL}/api/safety-assessment/shared/{token}",
-                           allow_redirects=False, timeout=30)
-        assert pre.status_code in (200, 302), pre.status_code
-
-        # Revoke.
-        rv = p1_client.post(f"{BASE_URL}/api/share/revoke", json={"jti": jti})
-        assert rv.status_code == 200, rv.text
-        assert rv.json().get("ok") is True
-
-        # Idempotent revoke.
-        rv2 = p1_client.post(f"{BASE_URL}/api/share/revoke", json={"jti": jti})
-        assert rv2.status_code == 200
-        assert rv2.json().get("already_revoked") is True
-
-        # Post-revoke: shared GET must fail (404 with revoked message).
-        after = requests.get(f"{BASE_URL}/api/safety-assessment/shared/{token}",
-                             allow_redirects=False, timeout=30)
-        assert after.status_code == 404, f"expected 404 after revoke, got {after.status_code}"
-        detail = (after.json() or {}).get("detail", "").lower()
-        assert "revoked" in detail or "invalid" in detail, detail
-
-        # Listing now shows it under past (status=revoked).
-        listing2 = p1_client.get(f"{BASE_URL}/api/share/mine").json()
-        past_row = next((r for r in listing2.get("past", []) if r["jti"] == jti), None)
-        assert past_row, "revoked link not in past list"
-        assert past_row.get("status") == "revoked"
+    def test_old_safety_share_link_mint_is_gone(self, p1_client):
+        aid = _post_safety(p1_client, level=4)["assessment_id"]
+        r = p1_client.post(f"{BASE_URL}/api/safety-assessment/{aid}/share-link", json={"expire_days": 1})
+        assert r.status_code == 404, r.text
 
     def test_share_revoke_unknown_jti_404(self, p1_client):
         r = p1_client.post(f"{BASE_URL}/api/share/revoke",
@@ -270,7 +184,7 @@ class TestEduDeepCompare:
         r = p1_client.post(f"{BASE_URL}/api/edu-deep/compare/link",
                            json={"email": PARENT2["email"]})
         assert r.status_code == 403, r.text
-        assert "safety" in r.json().get("detail", "").lower()
+        assert r.json().get("detail") == NOT_AVAILABLE
 
         # Restore to level-4 to unblock any subsequent tests.
         _post_safety(p1_client, level=4)

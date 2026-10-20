@@ -58,7 +58,8 @@ SEED_ANSWERS_MEDICAL = {
 def _register(email: str, name: str, password: str = "TestPass123!") -> requests.Session:
     r = requests.post(
         f"{BASE_URL}/api/auth/register",
-        json={"email": email, "password": password, "name": name},
+        json={"email": email, "password": password, "name": name,
+              "ack_privacy_notice": True, "consent_sensitive_info": True},
         timeout=30,
     )
     if r.status_code == 400:
@@ -87,18 +88,23 @@ def _seed_assessment(sess: requests.Session, pathways=("medical",)):
     assert r.status_code == 200, r.text
 
 
+NOT_AVAILABLE = "This isn't available right now. Your Family check-in on SACOparentsAlign is the next step."
+
+
 def _submit_safety_level_1(sess: requests.Session) -> str:
-    """Submit a Safety Assessment that scores level 1 for the session user."""
-    section_1 = {f"s1_q{i}": "no" for i in range(1, 29)}
-    section_1["s1_q1"] = "yes"  # high-concern hit → level 1
-    section_2 = {f"s2_q{i}": "yes" for i in range(1, 9)}
-    section_2["s2_q8"] = "no"
-    payload = {"section_1": section_1, "section_2": section_2}
-    r = sess.post(f"{BASE_URL}/api/safety-assessment", json=payload)
-    assert r.status_code == 200, r.text
-    body = r.json()
-    assert body["result"]["level"] == 1
-    return body["assessment_id"]
+    """Store an older saved level-1 result for the session user (the in-app screen itself is off)."""
+    import os as _os
+    from datetime import datetime, timezone
+    from dotenv import load_dotenv
+    from pymongo import MongoClient
+    load_dotenv("/app/backend/.env")
+    uid = sess.get(f"{BASE_URL}/api/auth/me").json()["user_id"]
+    aid = f"sa_{uuid.uuid4().hex[:10]}"
+    cli = MongoClient(_os.environ["MONGO_URL"])
+    cli[_os.environ["DB_NAME"]].safety_assessments.insert_one(
+        {"assessment_id": aid, "user_id": uid, "created_at": datetime.now(timezone.utc).isoformat(), "result": {"level": 1}})
+    cli.close()
+    return aid
 
 
 def _delete_safety(sess: requests.Session, aid: str):
@@ -120,6 +126,10 @@ def _delete_safety(sess: requests.Session, aid: str):
         print(f"safety cleanup failed for {aid}: {e}")
 
 
+P1 = f"test_snc2_a_{uuid.uuid4().hex[:6]}@example.com"
+P2 = f"test_snc2_b_{uuid.uuid4().hex[:6]}@example.com"
+
+
 # ---------- fixtures ----------
 @pytest.fixture(scope="module")
 def base_url():
@@ -129,14 +139,14 @@ def base_url():
 
 @pytest.fixture(scope="module")
 def parent1():
-    """Canonical parent1@test.com — happy-path user."""
-    return _register("parent1@test.com", "Sam Parent")
+    """Fresh happy-path user (older shared accounts may hold a saved concerning result)."""
+    return _register(P1, "Sam Parent")
 
 
 @pytest.fixture(scope="module")
 def parent2():
-    """Canonical parent2@test.com — happy-path partner."""
-    return _register("parent2@test.com", "Riley Parent")
+    """Fresh happy-path partner."""
+    return _register(P2, "Riley Parent")
 
 
 @pytest.fixture(scope="module")
@@ -146,14 +156,14 @@ def happy_share(parent1, parent2):
     r = parent1.get(f"{BASE_URL}/api/snc2/compare/me")
     if r.status_code == 200:
         for s in r.json().get("shares", []):
-            if s.get("partner_email") == "parent2@test.com" and s.get("status") != "revoked":
+            if s.get("partner_email") == P2 and s.get("status") != "revoked":
                 parent1.post(f"{BASE_URL}/api/snc2/compare/{s['share_id']}/revoke")
 
     _seed_assessment(parent1)
     _seed_assessment(parent2)
 
     r = parent1.post(f"{BASE_URL}/api/snc2/compare/link",
-                     json={"email": "parent2@test.com"})
+                     json={"email": P2})
     assert r.status_code == 200, r.text
     share_id = r.json()["share"]["share_id"]
 
@@ -170,7 +180,7 @@ def happy_share(parent1, parent2):
 class TestLinkCreation:
     def test_link_own_email_400(self, parent1):
         r = parent1.post(f"{BASE_URL}/api/snc2/compare/link",
-                         json={"email": "parent1@test.com"})
+                         json={"email": P1})
         assert r.status_code == 400
         assert "own email" in r.json()["detail"].lower()
 
@@ -184,7 +194,7 @@ class TestLinkCreation:
     def test_link_dedup_returns_existing(self, happy_share, parent1):
         # Second /link for same pair should return already_existed=True
         r = parent1.post(f"{BASE_URL}/api/snc2/compare/link",
-                         json={"email": "parent2@test.com"})
+                         json={"email": P2})
         assert r.status_code == 200
         body = r.json()
         assert body["already_existed"] is True
@@ -287,7 +297,7 @@ class TestSafetyGuardrailAtCreation:
             r = sess_a.post(f"{BASE_URL}/api/snc2/compare/link",
                             json={"email": email_b})
             assert r.status_code == 403, r.text
-            assert "safety" in r.json()["detail"].lower()
+            assert r.json()["detail"] == NOT_AVAILABLE
         finally:
             _delete_safety(sess_a, aid)
 
@@ -308,7 +318,7 @@ class TestSafetyGuardrailAtConsent:
             r = sess_b.post(f"{BASE_URL}/api/snc2/compare/{share_id}/consent",
                             json={"consent": True})
             assert r.status_code == 403, r.text
-            assert "safety" in r.json()["detail"].lower()
+            assert r.json()["detail"] == NOT_AVAILABLE
         finally:
             _delete_safety(sess_b, aid)
 
@@ -320,7 +330,7 @@ class TestSafetyGuardrailAtView:
         try:
             r = parent1.get(f"{BASE_URL}/api/snc2/compare/{happy_share}")
             assert r.status_code == 403, r.text
-            assert "safety" in r.json()["detail"].lower()
+            assert r.json()["detail"] == NOT_AVAILABLE
             # And PDF should also be blocked.
             r2 = parent1.get(f"{BASE_URL}/api/snc2/compare/{happy_share}/pdf")
             assert r2.status_code == 403

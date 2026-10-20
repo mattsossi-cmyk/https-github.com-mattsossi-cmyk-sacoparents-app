@@ -8,7 +8,7 @@ Locks:
     * `email_service.send_weekly_compliance_reminder()` accepts and
       renders a `wall_cheer_digest` block into both HTML and plain
       text.
-    * `GET /api/safety-assessment/{id}/one-pager` returns a valid PDF
+    * the old `GET /api/safety-assessment/{id}/one-pager` is gone (Align safety step)
       that includes the universal self-reflection disclaimer, at least
       one recommended-question, and a "what this tool is NOT" section.
     * The one-pager endpoint requires auth and 404s on unknown IDs.
@@ -189,65 +189,13 @@ def _login() -> str | None:
     return (r.json().get("access_token") or r.json().get("token")) if r.status_code == 200 else None
 
 
-def _submit(headers: dict) -> dict:
-    s1 = {f"s1_q{i}": "no" for i in range(1, 29)}
-    s2 = {f"s2_q{i}": "yes" for i in range(1, 9)}
-    s2["s2_q8"] = "no"
-    r = requests.post(f"{API}/safety-assessment",
-                      json={"section_1": s1, "section_2": s2},
-                      headers=headers, timeout=20)
-    assert r.status_code == 200
-    return r.json()
-
-
 @pytest.mark.skipif(not API, reason="No backend URL available")
-def test_one_pager_endpoint_returns_valid_pdf():
+def test_old_one_pager_is_gone():
     tok = _login()
     if not tok:
         pytest.skip("parent1 login unavailable")
-    headers = {"Authorization": f"Bearer {tok}"}
-    body = _submit(headers)
-    aid = body["assessment_id"]
-    r = requests.get(f"{API}/safety-assessment/{aid}/one-pager", headers=headers, timeout=15)
-    assert r.status_code == 200, r.text
-    assert r.headers.get("content-type", "").startswith("application/pdf")
-    assert r.content[:4] == b"%PDF"
-    # It's a real, non-stub PDF. It embeds the branded logo so the byte
-    # size is dominated by that image, not by prose. We just check the
-    # file is structurally valid and non-empty.
-    assert len(r.content) > 3_000
-
-
-@pytest.mark.skipif(not API, reason="No backend URL available")
-def test_one_pager_requires_auth():
-    r = requests.get(f"{API}/safety-assessment/anything/one-pager", timeout=10)
-    assert r.status_code in (401, 403)
-
-
-@pytest.mark.skipif(not API, reason="No backend URL available")
-def test_one_pager_404_for_unknown_assessment():
-    tok = _login()
-    if not tok:
-        pytest.skip("parent1 login unavailable")
-    r = requests.get(
-        f"{API}/safety-assessment/sa_definitely_not_real/one-pager",
-        headers={"Authorization": f"Bearer {tok}"},
-        timeout=10,
-    )
+    r = requests.get(f"{API}/safety-assessment/anything/one-pager", headers={"Authorization": f"Bearer {tok}"}, timeout=10)
     assert r.status_code == 404
-
-
-def test_one_pager_content_carries_universal_disclaimer_and_questions():
-    """Direct source check on the module — the one-pager must reference
-    the universal disclaimer constant and pull from the recommended-
-    questions bank."""
-    with open("/app/backend/safety_one_pager_pdf.py", encoding="utf-8") as fh:
-        source = fh.read()
-    assert "SELF_REFLECTION_DISCLAIMER" in source
-    assert "_QUESTIONS_BY_DOMAIN" in source
-    assert '"pattern"' in source and '"trauma"' in source
-    assert '"plan"' in source and '"child"' in source
-    assert '"general"' in source
 
 
 def test_compliance_email_has_only_a_count():

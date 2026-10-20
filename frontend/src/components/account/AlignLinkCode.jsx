@@ -1,9 +1,9 @@
 import React, { useEffect, useRef, useState } from "react";
 import { Copy, KeyRound, Loader2 } from "lucide-react";
-import { Link } from "react-router-dom";
 import { toast } from "sonner";
 
 import { api } from "../../lib/api";
+import { NotAvailableNote } from "../NotAvailableNote";
 
 const ALIGN_SITE = "sacoparentsalign.com";
 const mmss = (s) => `${Math.floor(s / 60)}:${String(s % 60).padStart(2, "0")}`;
@@ -51,7 +51,7 @@ export function AlignLinkCode({ onPoll }) {
       setCode(data);
     } catch (e) {
       const d = e?.response?.data?.detail;
-      if (d?.message) setBlocked(d);
+      if (d?.code === "not_available") setBlocked(d);
       else toast.error("Couldn't create a code. Please try again.");
     } finally {
       setBusy(false);
@@ -84,14 +84,7 @@ export function AlignLinkCode({ onPoll }) {
         {code ? "New code" : "Get a link code"}
       </button>
       {code && <CodePanel code={code.code} left={left} />}
-      {blocked && (
-        <p data-testid="align-link-code-blocked" className="order-last basis-full mt-1 rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-950 leading-relaxed">
-          {blocked.message}{" "}
-          {blocked.safety_screen_url && (
-            <Link to={blocked.safety_screen_url} className="font-semibold underline">Go to the safety screen</Link>
-          )}
-        </p>
-      )}
+      {blocked && <NotAvailableNote testid="align-link-code-blocked" className="order-last basis-full mt-1" />}
     </>
   );
 }

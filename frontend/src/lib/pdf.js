@@ -44,8 +44,8 @@ const EMPTY_STATE_ROUTES = [
   // share flow lives.
   { prefix: "/api/joint-professional-report",           route: "/special-needs-v2",   label: "Set up Compare with my co-parent" },
   { prefix: "/api/joint-agreement",                     route: "/summary?tab=agreement", label: "Generate my agreement draft" },
-  // Pathway Report — safety assessment is the front door.
-  { prefix: "/api/pathway-report",                      route: "/safety-assessment",  label: "Complete Safety Assessment" },
+  // Pathway Report — the Dimension Companion is the front door.
+  { prefix: "/api/pathway-report",                      route: "/dashboard",          label: "Open my dashboard" },
   // Complete Alignment (individual + joint) — no single assessment
   // gates this; the friendliest next step is the dashboard itself
   // where every lane is enumerated.

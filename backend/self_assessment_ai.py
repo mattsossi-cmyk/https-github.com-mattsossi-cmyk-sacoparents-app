@@ -15,7 +15,6 @@ from fastapi import APIRouter, Depends, HTTPException, Request
 from pydantic import BaseModel, Field
 
 from ai_service import _extract_json, _make_chat
-from self_assessment_reminders import is_safety_flagged
 from self_assessment_routes import CONTENT, FRAMING_LOG
 from emergentintegrations.llm.chat import UserMessage
 from ai_notice_routes import require_ai_notice
@@ -71,7 +70,8 @@ class FramingBody(BaseModel):
 
 
 async def _grey_rock(request: Request, user, hint: bool) -> bool:
-    return hint or bool(user and await is_safety_flagged(request.app.state.db, user.user_id))
+    # Only the parent's own grey-rock switch; the old saved safety result is never used.
+    return hint
 
 
 async def _guard(request: Request) -> None:

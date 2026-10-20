@@ -6,9 +6,8 @@ Covers the backend tasks of iteration 115:
   * export-assessments / foundation-statement.pdf return 404 for unlinked
     parents (same body as unknown emails) and 200 for linked parents, with
     last_read_at updated via align_access_log inserts.
-  * Safety-flagged + linked parent (parent1) gets redacted_for_safety=true
-    export (narrative fields null, special-needs lanes keep only
-    rating_areas/generated_at) and foundation-statement.pdf returns 403.
+  * A parent with an older concerning result gets the same reply as one with
+    nothing saved yet, with no safety flag (see test_align_safety_step.py).
   * Migration helper leaves an unlinked parent unlinked after restart.
   * Mediator email endpoint accepts include_answers and records it.
 """
@@ -176,7 +175,7 @@ class TestLinkFlowParent2:
         assert body["linked"] is True
         assert body["linked_at"] is not None
 
-        # Export returns 200 with redacted_for_safety False.
+        # Export returns 200 and never carries a safety flag.
         r4 = s.get(
             f"{API}/integrations/export-assessments",
             params={"email": PARENT2},
@@ -185,7 +184,7 @@ class TestLinkFlowParent2:
         )
         assert r4.status_code == 200, r4.text[:300]
         exp = r4.json()
-        assert exp["redacted_for_safety"] is False
+        assert "redacted_for_safety" not in exp
         assert exp["parent"]["email"].lower() == PARENT2
 
         # last_read_at should now be populated (align_access_log inserted on export).
@@ -210,9 +209,9 @@ class TestLinkFlowParent2:
         assert r2.json().get("detail") == "No linked parent found"
 
 
-# --- Safety redaction (parent1) ------------------------------------------
+# --- Held back for an older concerning result: same as nothing saved, no flag ---
 class TestSafetyRedaction:
-    def test_parent1_linked_export_redacted(self, s, tok_p1):
+    def test_parent1_linked_export_has_no_safety_flag(self, s, tok_p1):
         _ensure_parent1_linked(s, tok_p1)
         r = s.get(
             f"{API}/integrations/export-assessments",
@@ -222,47 +221,19 @@ class TestSafetyRedaction:
         )
         assert r.status_code == 200, r.text[:300]
         exp = r.json()
-        if exp["redacted_for_safety"] is not True:
-            pytest.skip("parent1 is not safety-flagged in this environment; redaction test N/A")
+        assert "redacted_for_safety" not in exp
+        assert "safety" not in r.text.lower()
 
-        snap = exp["situation_snapshot"]
-        # Only completed_sections + updated_at may be non-null.
-        for k, v in snap.items():
-            if k in ("completed_sections", "updated_at"):
-                continue
-            assert v is None, f"situation_snapshot.{k} should be redacted, got {v!r}"
-
-        fs = exp["foundation_statement"]
-        for k in ("child_lens", "my_part", "best_case", "coparent_lens"):
-            assert fs.get(k) is None, f"foundation_statement.{k} should be null"
-        for k, v in fs.get("canonical", {}).items():
-            assert v is None, f"canonical.{k} should be null"
-
-        for lane_name, lane in exp["special_needs"].items():
-            if lane is None:
-                continue
-            assert set(lane.keys()) == {"rating_areas", "generated_at"}, (
-                f"{lane_name} lane leaked keys: {list(lane.keys())}"
-            )
-
-    def test_parent1_foundation_pdf_403(self, s):
+    def test_parent1_foundation_pdf_never_says_why(self, s):
         r = s.get(
             f"{API}/integrations/foundation-statement.pdf",
             params={"email": PARENT1},
             headers={"X-Integration-Key": INTEGRATION_KEY},
             timeout=20,
         )
-        # Only meaningful if parent1 is safety-flagged + linked.
-        link_check = s.get(
-            f"{API}/integrations/export-assessments",
-            params={"email": PARENT1},
-            headers=_ik(),
-            timeout=20,
-        )
-        if link_check.status_code != 200 or not link_check.json().get("redacted_for_safety"):
-            pytest.skip("parent1 not safety-flagged + linked; PDF 403 N/A")
-        assert r.status_code == 403, (r.status_code, r.text[:200])
-        assert "Not available" in r.json().get("detail", "")
+        assert r.status_code in (200, 409), (r.status_code, r.text[:200])
+        if r.status_code == 409:
+            assert "safety" not in r.text.lower() and "not available" not in r.text.lower()
 
     def test_parent1_stays_linked_at_end(self, s, tok_p1):
         # Explicitly do NOT unlink parent1. Just verify state is linked.

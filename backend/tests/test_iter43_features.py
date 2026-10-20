@@ -15,6 +15,7 @@ import os
 import uuid
 import pytest
 import requests
+from legacy_safety import NOT_AVAILABLE, save_old_result  # noqa: E402
 
 BASE_URL = os.environ.get("REACT_APP_BACKEND_URL", "").rstrip("/")
 if not BASE_URL:
@@ -54,22 +55,7 @@ def p2_token():
 
 
 def _post_safety(client, level=4):
-    s1 = {f"s1_q{i}": "no" for i in range(1, 29)}
-    s2 = {f"s2_q{i}": "yes" for i in range(1, 9)}
-    s2["s2_q8"] = "no"
-    if level == 4:
-        payload = {"section_1": s1, "section_2": s2}
-    elif level == 2:
-        s1["s1_q3"] = "yes"
-        payload = {"section_1": s1, "section_2": s2}
-    elif level == 1:
-        s1["s1_q1"] = "yes"
-        payload = {"section_1": s1, "section_2": s2}
-    else:
-        payload = {"section_1": s1, "section_2": s2}
-    r = client.post(f"{BASE_URL}/api/safety-assessment", json=payload, timeout=30)
-    assert r.status_code == 200, r.text
-    return r.json()
+    return save_old_result(client, BASE_URL, level)
 
 
 @pytest.fixture(scope="module", autouse=True)
@@ -175,7 +161,7 @@ class TestDeepDiveCompareParity:
             json={"email": PARENT2["email"]},
         )
         assert r.status_code == 403, f"{prefix}: {r.status_code} {r.text}"
-        assert "safety" in r.json().get("detail", "").lower()
+        assert r.json().get("detail") == NOT_AVAILABLE
         # Restore to level 4 so subsequent tests can run.
         _post_safety(p1_client, level=4)
 
@@ -248,7 +234,7 @@ class TestDeepDiveCompareParity:
             json={"consent": True},
         )
         assert cr.status_code == 403, cr.text
-        assert "safety" in cr.json().get("detail", "").lower()
+        assert cr.json().get("detail") == NOT_AVAILABLE
 
         # Reset & revoke.
         _post_safety(p2_client, level=4)
@@ -262,41 +248,10 @@ class TestShareLinkNicknameRoundTrip:
     """The `label` field on share-link POSTs must be persisted and returned
     by GET /api/share/mine for every endpoint that mints share tokens."""
 
-    def test_safety_share_link_label_round_trip(self, p1_client):
-        _post_safety(p1_client, level=4)
-        sa = _post_safety(p1_client, level=4)
-        aid = sa["assessment_id"]
-        label = f"TEST_iter43_{uuid.uuid4().hex[:6]}"
-        r = p1_client.post(
-            f"{BASE_URL}/api/safety-assessment/{aid}/share-link",
-            json={"expire_days": 7, "label": label},
-        )
-        assert r.status_code == 200, r.text
-        jti = r.json()["jti"]
-
-        listing = p1_client.get(f"{BASE_URL}/api/share/mine").json()
-        row = next((r for r in listing.get("active", []) if r["jti"] == jti), None)
-        assert row is not None, "minted jti not in active"
-        assert row.get("label") == label, f"label round-trip broken: {row}"
-
-        # Cleanup: revoke.
-        p1_client.post(f"{BASE_URL}/api/share/revoke", json={"jti": jti})
-
-    def test_safety_share_link_label_optional(self, p1_client):
-        """Omitting label works (backward compat)."""
-        sa = _post_safety(p1_client, level=4)
-        aid = sa["assessment_id"]
-        r = p1_client.post(
-            f"{BASE_URL}/api/safety-assessment/{aid}/share-link",
-            json={"expire_days": 1},
-        )
-        assert r.status_code == 200, r.text
-        jti = r.json()["jti"]
-        listing = p1_client.get(f"{BASE_URL}/api/share/mine").json()
-        row = next((r for r in listing.get("active", []) if r["jti"] == jti), None)
-        assert row is not None
-        assert row.get("label") in (None, "")
-        p1_client.post(f"{BASE_URL}/api/share/revoke", json={"jti": jti})
+    def test_old_safety_share_link_mint_is_gone(self, p1_client):
+        aid = _post_safety(p1_client, level=4)["assessment_id"]
+        r = p1_client.post(f"{BASE_URL}/api/safety-assessment/{aid}/share-link", json={"expire_days": 7, "label": "x"})
+        assert r.status_code == 404, r.text
 
     def test_coparenting_report_share_link_label(self, p1_client):
         """Try coparenting report label round-trip; skip if no report exists."""

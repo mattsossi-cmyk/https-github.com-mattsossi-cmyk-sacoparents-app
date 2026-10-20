@@ -157,38 +157,14 @@ class TestSafetyPlanDelete:
         cls.tok = _login_or_register(PARENT1, "Sam Parent")
         assert cls.tok, "Could not obtain parent1 token"
 
-    def test_delete_round_trip(self):
-        # First save a plan
+    def test_old_safety_plan_is_never_written_or_returned(self):
+        # The in-app safety screen is off: the old plan stays as saved and portal state never writes or returns it.
         payload = _base_payload()
         payload["safety_plan"] = {"safe_place": "Aunt Mary's"}
-        r = requests.put(
-            f"{API}/portal/state", json=payload, headers=_headers(self.tok), timeout=15
-        )
+        r = requests.put(f"{API}/portal/state", json=payload, headers=_headers(self.tok), timeout=15)
         assert r.status_code == 200
-
         g = requests.get(f"{API}/portal/state", headers=_headers(self.tok), timeout=15)
-        assert g.status_code == 200
-        assert g.json()["state"]["safety_plan"] is not None
-
-        # Delete: PUT with safety_plan=None
-        payload2 = _base_payload()
-        payload2["safety_plan"] = None
-        r2 = requests.put(
-            f"{API}/portal/state", json=payload2, headers=_headers(self.tok), timeout=15
-        )
-        assert r2.status_code == 200
-
-        g2 = requests.get(f"{API}/portal/state", headers=_headers(self.tok), timeout=15)
-        assert g2.status_code == 200
-        assert g2.json()["state"]["safety_plan"] is None
-
-    def test_explicit_null_in_json(self):
-        # Explicit JSON null (rather than dict without the key) — same result.
-        payload = _base_payload()
+        assert g.status_code == 200 and "safety_plan" not in g.json()["state"]
         payload["safety_plan"] = None
-        r = requests.put(
-            f"{API}/portal/state", json=payload, headers=_headers(self.tok), timeout=15
-        )
-        assert r.status_code == 200
-        g = requests.get(f"{API}/portal/state", headers=_headers(self.tok), timeout=15)
-        assert g.json()["state"]["safety_plan"] is None
+        assert requests.put(f"{API}/portal/state", json=payload, headers=_headers(self.tok), timeout=15).status_code == 200
+        assert "safety_plan" not in requests.get(f"{API}/portal/state", headers=_headers(self.tok), timeout=15).json()["state"]

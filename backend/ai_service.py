@@ -140,18 +140,10 @@ _SECTION_LENSES = {
         "or Balanced). The `score` is 1-10 mediation-readiness. Their strengths "
         "and growth_areas are the parent's own listed traits."
     ),
-    "safety": (
-        "Section context: IPV / Safety Assessment pathway. The `level` is one of "
-        "Green (healthy communication ok), Yellow (structured co-parenting with "
-        "boundaries), Red (parallel parenting / safety-first / professional "
-        "support). NEVER encourage direct communication if level=Red. Prioritise "
-        "child safety over co-parenting harmony."
-    ),
     "overall": (
         "Section context: WHOLE-JOURNEY snapshot. The payload aggregates every "
         "module the parent has completed — child goals, issues, priorities, "
-        "communication style, foundation statement, readiness check, and safety "
-        "assessment. Zoom out and coach on the pattern across everything, not "
+        "communication style, foundation statement and readiness check. Zoom out and coach on the pattern across everything, not "
         "one section. `opener` should acknowledge the whole journey."
     ),
 }
@@ -607,7 +599,7 @@ async def draft_coparent_reply(
         "things they didn't agree to, or soften a legitimate boundary. If the "
         "original message contains threats, coercion, or abuse, you gently "
         "note that direct de-escalated replies may not be appropriate and "
-        "point them to the Safety page and hotlines. Output strict JSON only."
+        "point them to the Get help page and hotlines. Output strict JSON only."
     )
 
     intent_block = f"\n=== PARENT'S INTENT ===\n{intent.strip()}\n" if intent and intent.strip() else ""

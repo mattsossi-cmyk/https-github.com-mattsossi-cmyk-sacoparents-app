@@ -44,15 +44,13 @@ export default function PathwayReportUnlockHint({ shares = [], testidPrefix = "c
             The two-parent Dispute Resolution Pathway Report
           </div>
           <p className="text-sm text-[#4B4567] mt-2 leading-relaxed max-w-2xl">
-            Once both parents complete the Safety Screen + Companion and
+            Once both parents complete the Companion and
             consent to compare, this app can identify which dispute
             resolution pathway warrants professional consideration:
             <strong> Mediation</strong>,
             <strong> Child-Centered Relational Mediation</strong>,
             <strong> Collaborative Family Law</strong>, or
-            <strong> Litigation</strong>. Safety triggers always override
-            — mediation is never recommended when the data shows coercive
-            control or a physical-safety concern.
+            <strong> Litigation</strong>.
           </p>
           <div className="mt-3 flex flex-wrap items-center gap-3">
             <Link

@@ -25,7 +25,7 @@ const tipFor = ({ status, riskLabel, flagList, greyRock }) => {
   if (status !== "ai")
     return { label: "Welcome", text: "Write or paste your message, then tap Get suggested wording. AI will check the tone and suggest calmer, child-focused wording." };
   if (greyRock)
-    return { label: "Grey-rock tip", text: "Keep it to logistics only: no feelings, no apologies. Shorter is safer." };
+    return { label: "Grey-rock tip", text: "Keep it to logistics only: no feelings, no apologies. Shorter is better." };
   if (riskLabel === "Escalation Flag")
     return {
       label: "AI noticed possible friction in your draft. Here's a tip:",

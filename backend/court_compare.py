@@ -113,7 +113,7 @@ def _compare_child(me: Dict[str, Any], them: Dict[str, Any]) -> List[Dict[str, A
 async def _resolve(db: AsyncIOMotorDatabase, uid: str) -> Tuple[Dict[str, Any], str, Optional[str]]:
     """(base state, case key, co-parent id only when the comparison is ready)."""
     if await is_safety_flagged(db, uid):
-        return {"state": "safety_off", "shared": False}, "", None
+        return {"state": "not_available", "shared": False}, "", None
     key = await _case_key(db, uid)
     if not key:
         return {"state": "no_case", "shared": False}, "", None
@@ -174,7 +174,7 @@ async def set_share(
         return await build_compare(db, uid)
     if await is_safety_flagged(db, uid):
         await db[SHARES].delete_one({"user_id": uid})
-        return {"state": "safety_off", "shared": False}
+        return {"state": "not_available", "shared": False}
     key = await _case_key(db, uid)
     if not key:
         raise HTTPException(status_code=400, detail="Enter your case code first.")

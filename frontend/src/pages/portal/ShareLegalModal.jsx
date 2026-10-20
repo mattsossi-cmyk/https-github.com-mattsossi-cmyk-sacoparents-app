@@ -40,7 +40,7 @@ export function ShareLegalModal({
     ? "Share Complete Coparenting Report"
     : "Share Legal Report Link";
   const blurb = isComplete
-    ? "This bundle contains every artefact from your Coparenting Journey — Safety Check, Co-parenting Assessment, Individual + Joint Alignment, and Foundation Statement. Lock it behind a passphrase before you text it."
+    ? "This bundle contains every artefact from your Coparenting Journey — safety step status, Co-parenting Assessment, Individual + Joint Alignment, and Foundation Statement. Lock it behind a passphrase before you text it."
     : "Legal Reports carry signatures. A passphrase locks the link so only the person you text or email the passphrase to can open it.";
 
   return (

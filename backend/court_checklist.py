@@ -12,7 +12,7 @@ from motor.motor_asyncio import AsyncIOMotorDatabase
 from pydantic import BaseModel, Field
 
 from auth import UserPublic, get_current_user, get_db
-from case_safety import setup_complete_for
+from case_safety import SAFETY_STEP_DONE, SAFETY_STEP_TODO, setup_complete_for
 from court_summary import build_summary
 from pdf_base import _safe, render_pdf_copyright
 
@@ -104,7 +104,7 @@ async def _requested_items(db: AsyncIOMotorDatabase, uid: str, keys: List[str]) 
 async def build_checklist(db: AsyncIOMotorDatabase, user: UserPublic, requested: Optional[List[str]] = None) -> Dict[str, Any]:
     uid = user.user_id
     ps = await db.portal_state.find_one(
-        {"user_id": uid}, {"_id": 0, "court_key": 1, "court_legal_name": 1, "safety_ack": 1, "biff_logs": 1}
+        {"user_id": uid}, {"_id": 0, "court_key": 1, "court_legal_name": 1, "biff_logs": 1}
     ) or {}
     sa = await db.self_assessment_history.find({"user_id": uid}, {"_id": 0, "completed_at": 1}).sort("completed_at", -1).to_list(100)
     cp = await db.cp_report_history.find_one({"_id": uid}, {"snapshots.submitted_at": 1}) or {}
@@ -121,8 +121,6 @@ async def build_checklist(db: AsyncIOMotorDatabase, user: UserPublic, requested:
     items = [
         _item("case", "Case code verified", "done" if case else "todo", f"Case {case}" if case else "",
               "Enter the code from your court order on the Court page."),
-        _item("safety", "Safety check", "done" if ps.get("safety_ack") else "todo",
-              "Completed" if ps.get("safety_ack") else "", "Take the short, private safety check."),
     ]
     checkin = await setup_complete_for(db, uid)
     items.append(_item("family_checkin", "Family check-in", "done" if checkin else "todo", "Done" if checkin else "",
@@ -145,7 +143,7 @@ async def build_checklist(db: AsyncIOMotorDatabase, user: UserPublic, requested:
               "Rewrite a message in the Communication Builder and save it."),
     ]
     if requested:
-        items = items[:3] + await _requested_items(db, uid, requested)
+        items = items[:2] + await _requested_items(db, uid, requested)
     return {
         "items": items,
         "requested_only": bool(requested),
@@ -206,7 +204,7 @@ def _header(pdf: FPDF, data: Dict[str, Any]) -> None:
     if data.get("requested_only"):
         pdf.set_font("Helvetica", "I", 8.5)
         pdf.set_text_color(*MUTED)
-        pdf.cell(0, 4.6, "Showing your case, your safety check, your Family check-in and the assessments your professional asked for.",
+        pdf.cell(0, 4.6, "Showing your case, your safety step and the assessments your professional asked for.",
                  new_x="LMARGIN", new_y="NEXT")
     pdf.ln(2)
     pdf.set_font("Helvetica", "B", 11)
@@ -227,10 +225,13 @@ def _rows(pdf: FPDF, items: List[Dict[str, str]]) -> None:
         pdf.set_xy(pdf.l_margin + 8, y)
         pdf.set_font("Helvetica", "B", 10)
         pdf.set_text_color(*INK)
-        pdf.cell(95, 5.8, _safe(it["label"]))
+        # The Family check-in row is the safety step: one fixed line, nothing else.
+        step = it["key"] == "family_checkin"
+        label = (SAFETY_STEP_DONE if it["status"] == "done" else SAFETY_STEP_TODO) if step else it["label"]
+        pdf.cell(95, 5.8, _safe(label))
         pdf.set_font("Helvetica", "", 8.5)
         pdf.set_text_color(*(EMERALD if it["status"] == "done" else AMBER if it["status"] == "in_progress" else MUTED))
-        detail = it["detail"] or "Not started"
+        detail = "" if step else it["detail"] or "Not started"
         pdf.cell(0, 5.8, _safe(detail), align="R", new_x="LMARGIN", new_y="NEXT")
         pdf.set_draw_color(236, 232, 245)
         pdf.line(pdf.l_margin, pdf.get_y() + 1.2, pdf.w - pdf.r_margin, pdf.get_y() + 1.2)
@@ -260,7 +261,8 @@ def build_checklist_pdf(data: Dict[str, Any]) -> bytes:
     if not left:
         pdf.cell(0, 5, "Everything on this checklist is done. Bring it to your next meeting.", new_x="LMARGIN", new_y="NEXT")
     for it in left:
-        pdf.cell(0, 4.8, _safe(f"-  {it['label']}: {it['hint']}"), new_x="LMARGIN", new_y="NEXT")
+        label = "Safety step" if it["key"] == "family_checkin" else it["label"]
+        pdf.cell(0, 4.8, _safe(f"-  {label}: {it['hint']}"), new_x="LMARGIN", new_y="NEXT")
 
     _section(pdf, "Notes for my mediator meeting")
     pdf.set_draw_color(203, 196, 222)

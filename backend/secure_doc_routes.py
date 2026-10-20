@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import hmac
 import mimetypes
+import re
 import secrets
 from datetime import datetime, timedelta, timezone
 from typing import List, Optional
@@ -22,6 +23,12 @@ from secure_docs import (
 
 router = APIRouter(prefix="/secure-docs", tags=["secure-docs"])
 GRANT_MINUTES = 30
+# Old in-app safety assessment PDFs (the screen is off): kept in storage, never opened or listed.
+_OLD_SAFETY_PDF = re.compile(r"safety-assessment|tisfl-court-report|for-your-professional", re.I)
+
+
+def _is_old_safety_doc(doc: dict) -> bool:
+    return any(_OLD_SAFETY_PDF.search(f.get("name") or "") for f in doc.get("files") or [])
 
 
 class DocInfo(BaseModel):
@@ -71,7 +78,7 @@ def _mask(email: str) -> str:
 
 async def _by_token(db, token: str) -> dict:
     doc = await db.secure_documents.find_one({"token_hash": hash_value(token)}, {"_id": 0})
-    if not doc:
+    if not doc or _is_old_safety_doc(doc):
         raise HTTPException(404, "This link isn't valid.")
     return doc
 
@@ -183,9 +190,10 @@ async def download_file(token: str, index: int, x_doc_grant: str = Header(...), 
 async def sent_docs(user: UserPublic = Depends(get_current_user), db: AsyncIOMotorDatabase = Depends(get_db)):
     docs = await db.secure_documents.find(
         {"sender_user_id": user.user_id},
-        {"_id": 0, "files": 0, "token_hash": 0, "code_hash": 0},
+        {"_id": 0, "token_hash": 0, "code_hash": 0, "files.file_id": 0},
     ).sort("created_at", -1).to_list(100)
-    return [SentDoc(**{k: d.get(k) for k in SentDoc.model_fields if k != "status"}, status=_status(d)) for d in docs]
+    return [SentDoc(**{k: d.get(k) for k in SentDoc.model_fields if k != "status"}, status=_status(d))
+            for d in docs if not _is_old_safety_doc(d)]
 
 
 @router.post("/sent/{doc_id}/cancel")

@@ -8,12 +8,12 @@ import {
   Send,
   Loader2,
   ArrowRight,
-  ShieldAlert,
   Lock,
 } from "lucide-react";
 import { toast } from "sonner";
 
 import { api } from "../lib/api";
+import { NotAvailableNote } from "./NotAvailableNote";
 import { logError } from "../lib/logger";
 import {
   jointReportUrl,
@@ -215,58 +215,8 @@ export default function JointAlignmentPromoCard({
                   : "Invite sent. We'll unlock this card the moment they finish."}
               </span>
             </div>
-          ) : gate && !gate.clear && gate.code === "safety_screen_required" ? (
-            <div
-              className="mt-5 rounded-2xl border-2 border-[#F1D9B7] bg-[#FFF6EA] px-4 py-4"
-              data-testid={`${testidPrefix}-gate-required`}
-            >
-              <div className="flex items-start gap-3">
-                <ShieldAlert size={18} className="text-[#904B0E] shrink-0 mt-0.5" />
-                <div className="flex-1">
-                  <div className="text-sm text-[#5A3C10] leading-relaxed">
-                    Complete the short family-violence safety screen first
-                    (about 5 minutes). Your answers stay private.
-                  </div>
-                  <Link
-                    to="/safety"
-                    data-testid={`${testidPrefix}-take-safety-link`}
-                    className="mt-3 inline-flex items-center gap-2 px-4 py-2 rounded-full bg-[#B45F13] text-white text-sm font-semibold hover:brightness-110"
-                  >
-                    Take the safety screen
-                  </Link>
-                </div>
-              </div>
-            </div>
-          ) : gate && !gate.clear && gate.code === "safety_screen_blocked" ? (
-            <div
-              className="mt-5 rounded-2xl border-2 border-[#F1B7B7] bg-[#FDECEC] px-4 py-4"
-              data-testid={`${testidPrefix}-gate-blocked`}
-            >
-              <div className="flex items-start gap-3">
-                <ShieldAlert size={18} className="text-[#9A3A23] shrink-0 mt-0.5" />
-                <div className="flex-1">
-                  <div className="text-sm text-[#5B1F1F] leading-relaxed">
-                    Based on your safety screen, direct outreach to your co-parent
-                    through this app isn&rsquo;t recommended. A mediator or
-                    attorney can handle communication on your behalf.{" "}
-                    <a
-                      href="tel:18007997233"
-                      className="underline font-semibold whitespace-nowrap"
-                    >
-                      Hotline · 1-800-799-7233
-                    </a>
-                    .
-                  </div>
-                  <Link
-                    to="/professionals"
-                    data-testid={`${testidPrefix}-warm-handoff-cta`}
-                    className="mt-3 inline-flex items-center gap-2 rounded-full bg-[#9A3A23] text-white px-4 py-2 text-sm font-semibold hover:brightness-110"
-                  >
-                    Send my case to a mediator instead
-                  </Link>
-                </div>
-              </div>
-            </div>
+          ) : gate && !gate.clear ? (
+            <NotAvailableNote testid={`${testidPrefix}-not-available`} className="mt-5" />
           ) : (
             <div className="mt-5">
               <label className="eyebrow block mb-2">

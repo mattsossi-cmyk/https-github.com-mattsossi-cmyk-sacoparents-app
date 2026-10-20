@@ -65,17 +65,17 @@ def test_unauth_compare_401():
     assert r.status_code in (401, 403)
 
 
-def test_safety_flagged_parent_returns_safety_off(tokens):
+def test_safety_flagged_parent_returns_not_available(tokens):
     r = requests.get(f"{API}/court-path/compare", headers=_h(tokens["p1"]), timeout=20)
     assert r.status_code == 200
-    assert r.json().get("state") == "safety_off"
+    assert r.json().get("state") == "not_available"
 
 
-def test_safety_flagged_share_attempt_stays_safety_off(tokens):
+def test_safety_flagged_share_attempt_stays_not_available(tokens):
     r = requests.post(f"{API}/court-path/compare/share", headers=_h(tokens["p1"]),
                       json={"shared": True}, timeout=20)
     assert r.status_code == 200
-    assert r.json().get("state") == "safety_off"
+    assert r.json().get("state") == "not_available"
     assert r.json().get("shared") is False
 
 

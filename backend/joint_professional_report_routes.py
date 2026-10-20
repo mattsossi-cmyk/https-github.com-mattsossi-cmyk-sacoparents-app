@@ -14,8 +14,7 @@ Data pulled per parent:
   * Mediation prep (`prep_data` — child_goals + priority).
   * Dimension Companion latest assessment (communication + emotional-
     regulation tiers).
-  * TISFL Finding 3 ONLY (Parenting-Plan Implications). Findings 1 & 2
-    remain private to the parent that completed the safety screen.
+  * Safety: only the "Safety step: ..." line (Family check-in status); no safety results.
 """
 from __future__ import annotations
 
@@ -32,13 +31,13 @@ from auth import (
     UserPublic, get_current_user, get_db,
     create_share_token, decode_share_token,
 )
+from case_safety import safety_step_line
 from joint_professional_report import build_joint_report
 from share_link_common import (
     absolute_origin, is_link_preview_bot, render_preview_html, clean_note,
 )
 from share_routes import record_share_token, is_share_token_revoked
 from snc2_comparison import build_comparison
-from trauma_lens import redact_for_compare
 
 
 router = APIRouter(prefix="/joint-professional-report", tags=["joint-professional-report"])
@@ -49,8 +48,7 @@ router = APIRouter(prefix="/joint-professional-report", tags=["joint-professiona
 # ---------------------------------------------------------------------------
 #
 # Post-audit (SEC-003): the joint artefacts aggregate the FULL SNC2
-# comparison + mediation prep + dimension companion + Finding 3 of the
-# safety lens. That aggregation is broader than a single deep-dive
+# comparison + mediation prep + dimension companion. That aggregation is broader than a single deep-dive
 # share represents. So we only accept the two share types that
 # represent full-scope mutual consent between the two parents:
 #
@@ -136,20 +134,6 @@ async def _load_dim_companion(
     )
 
 
-async def _load_finding3(
-    db: AsyncIOMotorDatabase, user_id: str,
-) -> Optional[Dict[str, Any]]:
-    """Return Finding 3 (Parenting-Plan Implications) only. Never Findings 1/2."""
-    doc = await db["safety_assessments"].find_one(
-        {"user_id": user_id}, {"_id": 0}, sort=[("created_at", -1)],
-    )
-    if not doc:
-        return None
-    lens = (doc.get("result") or {}).get("lens") or {}
-    redacted = redact_for_compare(lens)
-    return (redacted.get("findings") or {}).get("parenting_plan_implications")
-
-
 async def _load_user_display_name(
     db: AsyncIOMotorDatabase, user_id: str, fallback: str,
 ) -> str:
@@ -182,8 +166,6 @@ async def _assemble_report(
     prep_b = await _load_prep(db, names["b_id"])
     dim_a = await _load_dim_companion(db, names["a_id"])
     dim_b = await _load_dim_companion(db, names["b_id"])
-    lens3_a = await _load_finding3(db, names["a_id"])
-    lens3_b = await _load_finding3(db, names["b_id"])
 
     # Build the SNC v2 comparison. If either parent has not completed the
     # SNC v2 assessment we still produce the report, but comparison-driven
@@ -218,8 +200,7 @@ async def _assemble_report(
         prep_b=prep_b,
         dim_a=dim_a,
         dim_b=dim_b,
-        lens_finding3_a=lens3_a,
-        lens_finding3_b=lens3_b,
+        safety_step=await safety_step_line(db, names["a_id"], names["b_id"]),
     )
 
 

@@ -44,8 +44,10 @@ export function PrivacyNoticeContent() {
         </p>
         <p>We call the medical, psychological and special-education information above Sensitive Family Information.</p>
         <p data-testid="privacy-notice-who-can-see">
-          <strong>Who can see your information.</strong> Your co-parent never sees your answers. Nothing you write in the safety questions is ever shown
-          to them. Texas law requires anyone who suspects child abuse or neglect to report it. Every question can be skipped, and you can stop at any time.
+          <strong>Who can see your information.</strong> Safety questions are answered privately on SACOparentsAlign, not in this app. On
+          SACOparentsAlign, your co-parent never sees your answers. The professionals assigned to your case and a small number of SA CoParents
+          administrators can, and every view is recorded. Nothing about your answers appears in this app&apos;s reports or documents. They show
+          only whether your safety step is completed or not started.
         </p>
       </section>
 

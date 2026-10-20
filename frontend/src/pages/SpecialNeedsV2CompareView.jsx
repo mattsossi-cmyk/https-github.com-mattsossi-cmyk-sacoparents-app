@@ -16,6 +16,7 @@ import ReportReviewNotice from "../components/ReportReviewNotice";
 import ReportProvenanceFooter from "../components/ReportProvenanceFooter";
 import SignDownloadToggle from "../components/SignDownloadToggle";
 import PathwayReportPrompt from "../components/PathwayReportPrompt";
+import { NotAvailableNote, isNotAvailable } from "../components/NotAvailableNote";
 
 const ALIGN_STYLES = {
   aligned:        "bg-[#E6F4EC] text-[#1F5C3B] border-[#B5DFC5]",
@@ -146,7 +147,7 @@ export default function SpecialNeedsV2CompareView() {
 
         {!loading && error && (
           <div className="mt-6 rounded-2xl border border-[#E5E0EE] bg-white p-5 text-sm text-[#B02A2A]" data-testid="snc2-compare-view-error">
-            {error}
+            {isNotAvailable(error) ? <NotAvailableNote testid="compare-not-available" /> : error}
           </div>
         )}
 

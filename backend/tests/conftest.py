@@ -1,4 +1,5 @@
 """Shared pytest fixtures for SA CoParents Mediation Prep backend tests."""
+import asyncio
 import os
 import uuid
 import pytest
@@ -80,3 +81,13 @@ def auth_client(test_user):
         "Authorization": f"Bearer {test_user['token']}",
     })
     return s
+
+
+@pytest.fixture(autouse=True)
+def _main_thread_event_loop():
+    """Tests that call asyncio.get_event_loop() still work after another test used asyncio.run()."""
+    try:
+        asyncio.get_event_loop_policy().get_event_loop()
+    except RuntimeError:
+        asyncio.set_event_loop(asyncio.new_event_loop())
+    yield

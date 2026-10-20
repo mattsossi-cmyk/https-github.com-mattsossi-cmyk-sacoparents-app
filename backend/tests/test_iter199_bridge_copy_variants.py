@@ -264,20 +264,6 @@ def test_analytics_requires_admin(client):
     assert r.status_code in (401, 403)
 
 
-# ---------------------------------------------------------------------------
-# Frontend contract: safety-level hook + bridge copy hook exist.
-# ---------------------------------------------------------------------------
-
-def test_frontend_hooks_present():
-    root = os.path.join(os.path.dirname(__file__), "..", "..", "frontend", "src", "hooks")
-    for name in ("useSafetyLevel.js", "useJointBridgeCopy.js"):
-        p = os.path.join(root, name)
-        assert os.path.exists(p), f"missing {p}"
-    safety_hook = open(os.path.join(root, "useSafetyLevel.js")).read()
-    # >= 3 branch = "cleared" — the client-side switch the personalisation depends on.
-    assert 'level >= 3' in safety_hook
-    assert '"cleared"' in safety_hook
-    assert '"concerned"' in safety_hook
 
 
 def test_safety_assessment_page_shows_both_variants():

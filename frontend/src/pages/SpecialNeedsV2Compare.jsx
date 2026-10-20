@@ -23,6 +23,7 @@ import {
 } from "lucide-react";
 import { logError } from "../lib/logger";
 import PathwayReportUnlockHint from "../components/PathwayReportUnlockHint";
+import { toastNotAvailable } from "../components/NotAvailableNote";
 
 function StatusBadge({ share }) {
   if (share.status === "revoked") {
@@ -84,7 +85,7 @@ export default function SpecialNeedsV2Compare() {
     } catch (err) {
       logError("snc2 compare link", err);
       const detail = err?.response?.data?.detail || "Could not create the comparison request.";
-      toast.error(detail);
+      if (!toastNotAvailable(detail)) toast.error(detail);
     } finally {
       setBusy(false);
     }
@@ -99,7 +100,7 @@ export default function SpecialNeedsV2Compare() {
     } catch (err) {
       logError("snc2 compare consent", err);
       const detail = err?.response?.data?.detail || "Could not update your consent.";
-      toast.error(detail);
+      if (!toastNotAvailable(detail)) toast.error(detail);
     } finally { setBusy(false); }
   };
 

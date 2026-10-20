@@ -45,6 +45,7 @@ from pydantic import BaseModel, Field
 from auth import get_current_user, get_db
 from models import UserPublic
 from ai_notice_routes import require_ai_notice
+from case_safety import safety_step_line
 import portal_ai
 import portal_pdf
 
@@ -175,8 +176,6 @@ def _empty_portal_state() -> Dict[str, Any]:
         "court_key": "",
         "court_legal_name": "",
         "reassessments": [],
-        "safety_ack": None,
-        "safety_plan": None,
         "grey_rock": False,
         "guided_drafts": None,
         "snapshot_history": None,
@@ -194,12 +193,7 @@ class PortalStatePayload(BaseModel):
     court_key: str = ""
     court_legal_name: str = ""
     reassessments: List[Dict[str, Any]] = Field(default_factory=list)
-    # Safety-first sync (iter212). Both are opaque JSON blobs the client
-    # owns — the server only enforces size + shape at write time so we
-    # can iterate on the client without a schema migration.
-    safety_ack: Optional[Dict[str, Any]] = None
-    safety_plan: Optional[Dict[str, Any]] = None
-    # Grey-rock tone: the parent's own on/off choice (also on when their Safety Check flagged concerns).
+    # Grey-rock tone: the parent's own on/off choice. (The old safety check fields are ignored.)
     grey_rock: Optional[bool] = None
     # Guided Journey draft sync (iter222). Map: topic -> snapshot the
     # frontend GuidedJourneyModal writes on every parent-send so a
@@ -214,63 +208,12 @@ class PortalStatePayload(BaseModel):
 @router.get("/state")
 async def get_state(user: UserPublic = Depends(get_current_user), db=Depends(get_db)) -> Dict[str, Any]:
     """Return the caller's portal state (creates an empty doc on first hit)."""
-    doc = await db[_PORTAL_COLLECTION].find_one({"user_id": user.user_id}, {"_id": 0})
+    # The old safety check / plan stay stored but are never returned.
+    doc = await db[_PORTAL_COLLECTION].find_one({"user_id": user.user_id}, {"_id": 0, "safety_ack": 0, "safety_plan": 0})
     if not doc:
         return {"exists": False, "state": _empty_portal_state()}
     doc.pop("user_id", None)
     return {"exists": True, "state": doc}
-
-
-def _sanitize_safety_ack(raw: Optional[Dict[str, Any]]) -> Optional[Dict[str, Any]]:
-    """Whitelist the small handful of safety-ack keys.
-
-    Kept intentionally opaque to the server — the ack is a client-owned
-    JSON blob. We enforce keys + types so a bad client can't push a
-    huge object into every parent's record.
-    """
-    if not isinstance(raw, dict):
-        return None
-    cleared = bool(raw.get("cleared"))
-    flagged = bool(raw.get("flagged"))
-    date = str(raw.get("date", ""))[:40]
-    if not date:
-        return None
-    out = {"cleared": cleared, "flagged": flagged, "date": date}
-    skipped = raw.get("skipped")
-    if isinstance(skipped, int) and not isinstance(skipped, bool) and 0 < skipped <= 3:
-        out["skipped"] = skipped
-    return out
-
-
-_SAFETY_PLAN_KEYS = (
-    "safe_place",
-    "trusted_contact",
-    "essentials",
-    "code_word",
-    "tech_notes",
-)
-
-
-def _sanitize_safety_plan(raw: Optional[Dict[str, Any]]) -> Optional[Dict[str, Any]]:
-    """Whitelist Safety Plan text fields and cap them at 500 chars each.
-
-    A parent's Safety Plan is private and NEVER surfaced to the co-parent
-    via joint reports or share links — the caller-scoped `portal_state`
-    endpoint is the only surface that reads it back.
-    """
-    if not isinstance(raw, dict):
-        return None
-    out: Dict[str, Any] = {}
-    for key in _SAFETY_PLAN_KEYS:
-        val = raw.get(key)
-        if isinstance(val, str) and val.strip():
-            out[key] = val[:500]
-    if not out:
-        return None
-    updated_at = raw.get("updated_at")
-    if isinstance(updated_at, str):
-        out["updated_at"] = updated_at[:40]
-    return out
 
 
 _GUIDED_TOPICS = {
@@ -418,9 +361,8 @@ async def put_state(
 
     Only fields explicitly present in the request body are written
     (`pydantic.model_dump(exclude_unset=True)`). A partial-update
-    client sending `{"safety_plan": null}` clears only that field
-    and leaves align_records / milestones / biff_logs / health_index
-    / etc. untouched.
+    client sending one field changes only that field and leaves
+    milestones / biff_logs / health_index / etc. untouched.
 
     A client that still sends the full state (the current Portal
     frontend) works exactly as before — every field is `set`, so
@@ -431,6 +373,9 @@ async def put_state(
         return list(seq or [])[:n]
 
     updates = payload.model_dump(exclude_unset=True)
+    # The old safety check / plan stay exactly as saved: the in-app screen is off, so they can't be changed or cleared.
+    updates.pop("safety_ack", None)
+    updates.pop("safety_plan", None)
     if "align_records" in updates:
         # Child record folders are switched off: never keep these records.
         updates["align_records"] = []
@@ -460,10 +405,6 @@ async def put_state(
             "s2": max(1, min(10, int(hi.get("s2", 5) or 5))),
             "s3": max(1, min(10, int(hi.get("s3", 5) or 5))),
         }
-    if "safety_ack" in updates:
-        updates["safety_ack"] = _sanitize_safety_ack(updates["safety_ack"])
-    if "safety_plan" in updates:
-        updates["safety_plan"] = _sanitize_safety_plan(updates["safety_plan"])
     if "grey_rock" in updates:
         updates["grey_rock"] = bool(updates["grey_rock"])
     if "guided_drafts" in updates:
@@ -645,9 +586,7 @@ async def biff_refine_endpoint(
 ) -> Dict[str, Any]:
     """Refine a draft into BIFF style via Claude. Rate limited; needs the AI notice acknowledged.
 
-    When `safety_flagged=true` (the parent's own Quick Safety Check
-    returned any risk signal), the coach switches to a grey-rock
-    variant so replies stay safer to send to a coercive co-parent.
+    `safety_flagged=true` means the parent turned grey-rock on: the coach uses the grey-rock variant.
     """
     ip = _client_ip(request)
     await _rate_guard(ip)
@@ -908,7 +847,7 @@ async def complete_report_pdf(
 
     try:
         pdf_bytes = portal_pdf.build_portal_complete_report_pdf(
-            safety_ack=body.safety_ack,
+            safety_step=await safety_step_line(request.app.state.db, user.user_id if user else None),
             cop_assessment=body.cop_assessment,
             align_records=[],
             joint_records=body.joint_records or [],
@@ -1018,7 +957,7 @@ async def create_share_link(
         {
             "share_id": share_id,
             "artefact_type": body.artefact_type,
-            "payload": {k: v for k, v in body.payload.items() if k != "align_records"},
+            "payload": {k: v for k, v in body.payload.items() if k not in ("align_records", "safety_ack")},
             "user_id": user.user_id if user else None,  # lets account deletion remove the link
             "created_at": now.isoformat(),
             "expires_at": expires_at.isoformat(),
@@ -1038,7 +977,7 @@ async def create_share_link(
     }
 
 
-def _regenerate_share_pdf(artefact_type: str, payload: Dict[str, Any]) -> bytes:
+def _regenerate_share_pdf(artefact_type: str, payload: Dict[str, Any], safety_step: Optional[str] = None) -> bytes:
     """Dispatch to the correct builder based on artefact type."""
     if artefact_type == "foundation":
         return portal_pdf.build_portal_foundation_pdf(
@@ -1066,7 +1005,7 @@ def _regenerate_share_pdf(artefact_type: str, payload: Dict[str, Any]) -> bytes:
         )
     if artefact_type == "complete":
         return portal_pdf.build_portal_complete_report_pdf(
-            safety_ack=payload.get("safety_ack"),
+            safety_step=safety_step,
             cop_assessment=payload.get("cop_assessment"),
             align_records=[],
             joint_records=payload.get("joint_records") or [],
@@ -1193,6 +1132,7 @@ async def fetch_share_pdf(
         pdf_bytes = _regenerate_share_pdf(
             doc.get("artefact_type") or "foundation",
             doc.get("payload") or {},
+            await safety_step_line(db, doc.get("user_id")),
         )
     except ValueError as exc:
         raise HTTPException(status_code=500, detail=str(exc))

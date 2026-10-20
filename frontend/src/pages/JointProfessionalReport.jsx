@@ -547,12 +547,9 @@ export default function JointProfessionalReport() {
           </div>
           <div
             className="rounded-2xl border border-[#E5E0EE] bg-white p-4 text-xs text-[#4B4567] leading-relaxed"
-            data-testid="joint-report-safety-note"
+            data-testid="joint-report-safety-step"
           >
-            <div className="text-[0.625rem] uppercase tracking-[0.2em] text-[#3D1A78] font-semibold mb-1">
-              Safety-screen privacy
-            </div>
-            {d.safety_privacy_note}
+            {d.safety_step || "Safety step: not started"}
           </div>
         </div>
 

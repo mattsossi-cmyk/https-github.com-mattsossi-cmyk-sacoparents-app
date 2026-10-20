@@ -1,4 +1,4 @@
-"""Runs with the webhook off: parent IDs are admin-run only, and the old in-app safety assessment works again."""
+"""Runs with the webhook off: parent IDs are admin-run only, and the old in-app safety assessment stays hidden."""
 import os
 import sys
 import uuid
@@ -73,17 +73,8 @@ def test_link_missing_align_ref_no_write_until_admin_backfill():
 
 
 # The old in-app safety assessment is back: questions load, answers save, results and the PDF read back.
-def test_old_safety_assessment_restored():
-    uid, h = _user()
-    from safety_assessment_routes import SECTION_1_QUESTIONS, SECTION_2_QUESTIONS
-    assert httpx.get(f"{API}/safety-assessment/questions", headers=h, timeout=20).status_code == 200
-    answers = {"section_1": {q["id"]: "no" for q in SECTION_1_QUESTIONS},
-               "section_2": {q["id"]: ("no" if q["id"] == "s2_q8" else "yes") for q in SECTION_2_QUESTIONS}}
-    r = httpx.post(f"{API}/safety-assessment", json=answers, headers=h, timeout=30)
-    assert r.status_code == 200, r.text
-    aid = r.json()["assessment_id"]
-    me = httpx.get(f"{API}/safety-assessment/me", headers=h, timeout=20).json()
-    assert me["assessment_id"] == aid and me["result"]["level"] == 4
-    pdf = httpx.get(f"{API}/safety-assessment/{aid}/pdf", headers=h, timeout=30)
-    assert pdf.status_code == 200 and pdf.content.startswith(b"%PDF")
-    db.safety_assessments.delete_many({"user_id": uid})
+def test_old_safety_assessment_is_hidden():
+    _, h = _user()
+    assert httpx.get(f"{API}/safety-assessment/questions", headers=h, timeout=20).status_code == 404
+    assert httpx.post(f"{API}/safety-assessment", json={}, headers=h, timeout=20).status_code in (404, 405)
+    assert httpx.get(f"{API}/safety-assessment/me", headers=h, timeout=20).status_code == 404

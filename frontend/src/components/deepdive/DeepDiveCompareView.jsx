@@ -14,6 +14,7 @@ import PathwayReportPrompt from "../PathwayReportPrompt";
 import ReportReviewNotice from "../ReportReviewNotice";
 import ReportProvenanceFooter from "../ReportProvenanceFooter";
 import SignDownloadToggle from "../SignDownloadToggle";
+import { NotAvailableNote, isNotAvailable } from "../NotAvailableNote";
 
 const ALIGN_STYLES = {
   aligned:        "bg-[#E6F4EC] text-[#1F5C3B] border-[#B5DFC5]",
@@ -299,7 +300,7 @@ export default function DeepDiveCompareView({ pathway }) {
 
         {!loading && error && (
           <div className="mt-6 rounded-2xl border border-[#E5E0EE] bg-white p-5 text-sm text-[#B02A2A]" data-testid={`${t}-view-error`}>
-            {error}
+            {isNotAvailable(error) ? <NotAvailableNote testid="compare-not-available" /> : error}
           </div>
         )}
 

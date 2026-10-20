@@ -13,7 +13,7 @@ Dimensions:
 
 Overall Readiness Score = weighted average of the four dimensions.
 """
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Tuple
 
 
 # ---- Weights ---------------------------------------------------------------
@@ -94,20 +94,9 @@ def _score_child_alignment(prep: Dict[str, Any]) -> Tuple[float, List[str]]:
 
 
 def _score_trust(prep: Dict[str, Any]) -> Tuple[float, List[str]]:
-    """0-100 — combines: (a) safety assessment flags (b) readiness sub-scores
-    around cooperation and co-parenting posture."""
+    """0-100 from readiness sub-scores around cooperation and co-parenting posture (no safety results)."""
     reasons: List[str] = []
     readiness = prep.get("readiness") or {}
-    safety = prep.get("safety_assessment") or {}
-
-    # Safety flags REDUCE trust — this is a hard signal.
-    safety_penalty = 0
-    if safety.get("high_risk"):
-        safety_penalty = 40
-        reasons.append("Safety concerns identified — trust score reduced")
-    elif safety.get("moderate_concern"):
-        safety_penalty = 15
-        reasons.append("Some safety concerns noted")
 
     # Readiness sub-scores relevant to trust: cooperation, hope, patience.
     readiness_scores = readiness.get("scores") or {}
@@ -124,7 +113,7 @@ def _score_trust(prep: Dict[str, Any]) -> Tuple[float, List[str]]:
         base = 55.0  # gentle neutral if not yet answered
         reasons.append("Readiness self-ratings incomplete")
 
-    score = _clamp(base - safety_penalty)
+    score = _clamp(base)
     if score >= 75 and not reasons:
         reasons.append("Strong foundation of co-parenting trust")
     return score, reasons
@@ -261,8 +250,7 @@ def compute_readiness(prep: Dict[str, Any]) -> Dict[str, Any]:
             "questions for an appropriate professional. In particular: "
             "this score reflects the completeness of your preparation, "
             "not your emotional readiness for mediation and not whether "
-            "mediation is safe for you. Read the four-domain profile "
-            "below alongside your safety-screen findings. If a coercive "
+            "mediation is safe for you. If a coercive "
             "pattern is present, highly structured or parallel "
             "arrangements — not mediation — are typically indicated "
             "regardless of how high this score is."
@@ -340,9 +328,8 @@ _DOMAIN_METADATA: Dict[str, Dict[str, Any]] = {
         "solid": {
             "headline": "There is enough foundational trust to build a plan on",
             "narrative": (
-                "Your ratings around cooperation and hope for agreement are solid, "
-                "and no serious safety concerns were flagged. That means the "
-                "conversation can be about the plan itself, not about basic safety."
+                "Your ratings around cooperation and hope for agreement are solid. "
+                "That means the conversation can be about the plan itself."
             ),
             "recs": [
                 "Bring one small win from the last month into the session — recent, concrete evidence anchors the conversation.",
@@ -365,13 +352,11 @@ _DOMAIN_METADATA: Dict[str, Dict[str, Any]] = {
         "emerging": {
             "headline": "Foundational trust is not yet there",
             "narrative": (
-                "The picture around trust and safety is thin, or safety concerns "
-                "have reduced it. Mediation without a structural safety layer is "
+                "The picture around trust is thin. Mediation without a clear structure is "
                 "unlikely to hold. This does not close the door — it just means "
                 "the structure has to do the work trust isn't yet doing."
             ),
             "recs": [
-                "Do the Trauma-Informed Safety and Functioning Lens screen first — Finding 3 will tell you whether mediation is even the right forum.",
                 "If mediation is still appropriate, insist on shuttle mediation (separate rooms) or written-only exchanges.",
                 "Bring a lawyer, DV advocate, or support person; do not do this alone.",
             ],
@@ -455,7 +440,7 @@ _DOMAIN_METADATA: Dict[str, Dict[str, Any]] = {
                 "Consider whether now is the right timing at all — a 30-day delay to consolidate the picture is often a net gain.",
                 "Bring only ONE agenda item to the first session. Save the rest for structured follow-ups.",
                 "Line up emotional support for the day OF and the day AFTER the session, not just before.",
-                "If safety concerns are present, mediation may not be the right forum — see Finding 3 of the Trauma-Informed Lens.",
+                "If you have safety concerns, talk with a family-violence advocate or attorney about whether mediation is the right forum.",
             ],
         },
     },
@@ -497,16 +482,6 @@ def _looks_positive(reason: str) -> bool:
 
 def _build_caveats(prep: Dict[str, Any], dims: Dict[str, Dict[str, Any]]) -> List[str]:
     caveats: List[str] = []
-    safety = prep.get("safety_assessment") or {}
-    if safety.get("high_risk") or safety.get("moderate_concern"):
-        caveats.append(
-            "Safety concerns are present in the Trauma-Informed Safety and "
-            "Functioning Lens screen. Do NOT let a high readiness score "
-            "advance you toward joint mediation without reading Finding 3 "
-            "and consulting a family-violence practitioner. A coercive "
-            "pattern makes ordinary mediation unsafe regardless of how "
-            "prepared either parent appears on paper."
-        )
     if dims["conflict"]["score"] < 40 and dims["communication"]["score"] >= 70:
         caveats.append(
             "Your communication score is strong but the conflict load is "

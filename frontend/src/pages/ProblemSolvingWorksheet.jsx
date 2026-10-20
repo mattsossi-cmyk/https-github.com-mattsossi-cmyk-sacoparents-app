@@ -234,11 +234,11 @@ export default function ProblemSolvingWorksheet() {
 
         <div className="flex flex-wrap gap-3 justify-between">
           <Link
-            to="/safety-assessment"
+            to="/safety"
             className="inline-flex items-center gap-2 rounded-full bg-white border border-[#E5E0EE] text-[#4B4567] px-5 py-2.5 text-sm font-semibold hover:bg-[#F8F7FC]"
-            data-testid="worksheet-to-assessment-link"
+            data-testid="worksheet-to-resources-link"
           >
-            <ArrowLeft size={14} /> Open Safety Screen
+            <ArrowLeft size={14} /> Back to resources
           </Link>
           <button
             type="button"

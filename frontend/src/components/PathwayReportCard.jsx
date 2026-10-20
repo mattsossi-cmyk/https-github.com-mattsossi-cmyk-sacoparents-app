@@ -28,7 +28,7 @@ import { logError } from "../lib/logger";
 // dashboard is not cluttered for first-time visitors.
 function hasAnyInputs(data) {
   const p = data?.data_inputs_present || {};
-  return !!(p.safety_screen || p.dimension_companion || p.nd_risk || p.compliance);
+  return !!(p.dimension_companion || p.nd_risk || p.compliance);
 }
 
 

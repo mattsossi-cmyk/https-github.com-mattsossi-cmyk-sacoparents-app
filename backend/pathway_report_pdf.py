@@ -355,7 +355,6 @@ def build_pathway_report_pdf(
     if data_inputs_present:
         _section_heading(pdf, "Data inputs used")
         pretty = {
-            "safety_screen":       "Safety Screen",
             "dimension_companion": "Dimension Companion (Dims 2, 3, 4)",
             "nd_risk":             "ND Risk Assessment",
             "compliance":          "Intervention Compliance Log",

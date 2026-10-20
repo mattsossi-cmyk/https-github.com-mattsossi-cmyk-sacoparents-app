@@ -533,7 +533,6 @@ def _factors_for(
         line = _align_line()
         if line:
             out.append(line)
-        out.append("No safety or coercive-control indicators are present in the underlying Safety Screen.")
         out.append("Both parents demonstrate willingness to remain involved in the child's life.")
 
     elif primary == "child_centered_mediation":

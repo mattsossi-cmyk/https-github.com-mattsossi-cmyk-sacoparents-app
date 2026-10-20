@@ -21,6 +21,8 @@ import uuid
 from datetime import datetime, timezone
 
 import pytest
+
+pytestmark = pytest.mark.skip(reason="Replaced by test_align_safety_step.py: the old screen is hidden, no-screen parents are not blocked, and the block note is neutral.")
 from fastapi.testclient import TestClient
 from motor.motor_asyncio import AsyncIOMotorClient
 from pymongo import MongoClient as SyncClient

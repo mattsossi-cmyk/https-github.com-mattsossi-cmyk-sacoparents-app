@@ -479,7 +479,7 @@ const PRIMARY_MODULES = [
     letter: "C",
     key: "safety",
     title: "Conflict Readiness",
-    body: "Prepare for conflict and spot safety concerns.",
+    body: "Prepare for tense moments, schedule changes and hand-offs.",
     topic: "safety",
   },
 ];
@@ -493,7 +493,6 @@ const ALIGN_SITE_URL =
 
 export function JourneyShell({
   user,
-  safetyAck,
   pathPickedAt,
   courtKey = null,
   verifiedMediator = null,
@@ -522,7 +521,8 @@ export function JourneyShell({
   void onEnterParent;
   void biffPairCount;
 
-  const safetyFlag = safetyFlagged || !!(safetyAck && safetyAck.flagged);
+  // Grey-rock only: the parent's own switch.
+  const safetyFlag = safetyFlagged;
 
   // "door" (landing), "court", "self". Lazy-init from localStorage
   // so returning parents land straight back in the door they last
@@ -1239,7 +1239,7 @@ export function JourneyShell({
           subtitle="Take the next step to build a safer, calmer, and more child-focused future."
         />
         <FamilyCheckinCard alignUrl={ALIGN_SITE_URL} testid="self-family-checkin" stacked />
-        <SafetyScreenLink done={!!safetyAck} onOpen={onOpenSafetyRetake} />
+        <SafetyScreenLink alignUrl={ALIGN_SITE_URL} />
 
         <GoalBanner
           testid="door-self-goal"

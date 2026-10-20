@@ -1,12 +1,12 @@
 import React from "react";
 
+import { NotAvailableNote } from "../../../components/NotAvailableNote";
 import { AgreeControls, AgreedList, AgreeProgress } from "./CourtAgreement";
 
 const COPY = {
   no_case: "Accept your court-ordered invite with your case code to compare side by side with your co-parent.",
   not_shared: "See your results side by side with your co-parent on the same case. Nothing is shared until you both turn this on, and you can turn it off anytime.",
   waiting: "You're sharing. The side-by-side view appears once your co-parent shares too.",
-  safety_off: "Side-by-side comparison is turned off to keep you safe. Your results stay private to you.",
 };
 const EMPTY = {
   alignment: "This appears once you and your co-parent both finish the Co-Parenting Assessment or Self-Assessment.",
@@ -183,6 +183,8 @@ export function CourtCompare({ pillar, compare, step4, onEnterCase }) {
         <p className="text-xs text-[#5f6368]"><i className="fa-solid fa-spinner fa-spin mr-2"></i>Checking…</p>
       ) : state === "ready" ? (
         <Ready pillar={pillar} compare={compare} step4={step4} />
+      ) : state === "not_available" ? (
+        <NotAvailableNote testid="court-compare-not-available" />
       ) : (
         <p data-testid="court-compare-message" className="text-xs text-[#5f6368] leading-relaxed">{COPY[state]}</p>
       )}

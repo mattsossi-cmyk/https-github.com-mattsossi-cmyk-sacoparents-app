@@ -27,8 +27,8 @@ export function useCourtCompare(active) {
     try {
       const { data: d } = await api.post("/court-path/compare/share", { shared });
       setData(d);
-      if (d.state === "safety_off") toast.message("Comparison stays off to keep you safe.");
-      else toast.success(shared ? "You're sharing your results for comparison." : "You've stopped sharing. Your results are private again.");
+      if (d.state !== "not_available")
+        toast.success(shared ? "You're sharing your results for comparison." : "You've stopped sharing. Your results are private again.");
     } catch (e) {
       const detail = e?.response?.data?.detail;
       toast.error(typeof detail === "string" ? detail : "Couldn't update sharing. Please try again.");

@@ -7,92 +7,33 @@ import { TrendSparkline } from "./TrendSparkline";
 import { AssessmentGuideChatInline } from "./AssessmentGuideChat";
 import { CpProgressTile } from "./CpProgressTile";
 
-/**
- * GreyRockToggleChip — iter243. Small amber chip shown on Alignment &
- * Tools when grey-rock mode is on, closing the loop on the
- * SafetyScreen modal's "you can turn it off from the Alignment &
- * Tools page any time" promise. Two-step confirm (soft confirm card)
- * so a single mis-tap can't disable the clinical guardrail. Also
- * offers a secondary link back into the full Safety Screen.
- */
-export function GreyRockToggleChip({ onClear = () => {}, onRetake = () => {} }) {
-  const [confirming, setConfirming] = React.useState(false);
-
-  if (confirming) {
-    return (
-      <div
-        data-testid="grey-rock-toggle-confirm"
-        className="rounded-xl border border-amber-300 bg-amber-50 p-3 text-[0.6875rem] text-amber-900 space-y-2"
-      >
-        <p className="font-semibold leading-snug">
-          Are you back on safe ground?
-        </p>
-        <p className="leading-snug text-amber-800">
-          Turning grey-rock off brings back full tool language and
-          lets you email the co-parent again from the Portal. You can
-          turn it back on any time by re-running the Safety Check.
-        </p>
-        <div className="flex gap-2 pt-1">
-          <button
-            type="button"
-            data-testid="grey-rock-toggle-confirm-yes"
-            onClick={() => {
-              onClear();
-              setConfirming(false);
-              toast.success(
-                "Grey-rock mode is off — full tool language is back.",
-                { duration: 4000 }
-              );
-            }}
-            className="flex-1 px-3 py-1.5 min-h-6 bg-amber-700 hover:bg-amber-800 text-white rounded-lg font-semibold text-[0.6875rem] transition-colors"
-          >
-            Yes, turn grey-rock off
-          </button>
-          <button
-            type="button"
-            data-testid="grey-rock-toggle-confirm-cancel"
-            onClick={() => setConfirming(false)}
-            className="px-3 py-1.5 border border-amber-400 text-amber-800 rounded-lg font-semibold text-[0.6875rem] min-h-6"
-          >
-            Not yet
-          </button>
-        </div>
-        <button
-          type="button"
-          data-testid="grey-rock-toggle-retake-link"
-          onClick={() => {
-            setConfirming(false);
-            onRetake();
-          }}
-          className="w-full text-left text-[0.625rem] text-amber-700 underline underline-offset-2 min-h-6"
-        >
-          Re-run the full safety check instead
-        </button>
-      </div>
-    );
-  }
-
+// Grey-rock tone: the parent's own on/off switch (shorter, more neutral wording). No reason is shown.
+export function GreyRockToggleChip({ on = false, onChange = () => {} }) {
+  const flip = () => {
+    onChange(!on);
+    toast.success(on ? "Grey-rock tone is off." : "Grey-rock tone is on: shorter, more neutral wording.", { duration: 3500 });
+  };
   return (
     <div
       data-testid="grey-rock-toggle-chip"
+      data-on={on ? "true" : "false"}
       className="flex items-center justify-between gap-2 rounded-xl border border-amber-300 bg-amber-50 px-3 py-2 text-[0.6875rem] text-amber-900"
     >
       <span className="flex items-center gap-2 leading-snug">
-        <i className="fa-solid fa-shield-halved text-amber-700" aria-hidden="true"></i>
+        <i className="fa-solid fa-sliders text-amber-700" aria-hidden="true"></i>
         <span>
-          <span className="font-semibold">Grey-rock mode is on.</span>{" "}
-          <span className="text-amber-800">
-            Tools and language are quietly adapted.
-          </span>
+          <span className="font-semibold">Grey-rock tone is {on ? "on" : "off"}.</span>{" "}
+          <span className="text-amber-800">Shorter, more neutral wording in the tools.</span>
         </span>
       </span>
       <button
         type="button"
-        data-testid="grey-rock-toggle-off-btn"
-        onClick={() => setConfirming(true)}
+        data-testid={on ? "grey-rock-toggle-off-btn" : "grey-rock-toggle-on-btn"}
+        onClick={flip}
+        aria-pressed={on}
         className="shrink-0 px-2.5 py-1 min-h-6 bg-amber-700 hover:bg-amber-800 text-white rounded-md font-semibold text-[0.625rem] transition-colors"
       >
-        Turn off
+        {on ? "Turn off" : "Turn on"}
       </button>
     </div>
   );
@@ -148,10 +89,7 @@ export function AlignmentHub({
   // Complete Coparenting Report bundle (iter218) — download + share.
   downloadCompleteReportPdf = () => {},
   onShareCompleteReport = () => {},
-  // Email Foundation Statement to co-parent (iter219). Gated by
-  // safetyFlagged: when the parent's Safety Check flagged coercion,
-  // we HIDE the CTA and surface a soft-block warning instead so we
-  // never help facilitate contact with an unsafe co-parent.
+  // Grey-rock tone: the parent's own on/off choice.
   safetyFlagged = false,
   onEmailFoundationToCoparent = () => {},
   // Guided-journey chat wizard (iter220). Toolkit tiles and the
@@ -170,13 +108,7 @@ export function AlignmentHub({
   // Routing target: same onStartAssessment used by the modal instance
   // in SacoparentsPortal, so both surfaces stay in exact lockstep.
   onStartAssessment = () => {},
-  // iter243 — Grey-rock toggle chip. SafetyScreen.jsx:332 promises
-  // the parent can "turn it off from the Alignment & Tools page any
-  // time"; this prop pair wires that promise. onClearGreyRock does
-  // the clear with no navigation side-effect; onOpenSafetyRetake
-  // routes the parent back through the full Safety Screen.
-  onClearGreyRock = () => {},
-  onOpenSafetyRetake = () => {},
+  onSetGreyRock = () => {},
 }) {
   return (
     <div className="space-y-4" data-testid="hub-section-alignment">
@@ -206,7 +138,7 @@ export function AlignmentHub({
           </div>
 
           <SnapshotStrip
-            history={snapshotHistory}
+            history={(snapshotHistory || []).filter((s) => s?.save_key !== "safety_ack")}
             onDownload={onSnapshotRedownload}
             onDelete={onSnapshotDelete}
             onRename={onSnapshotRename}
@@ -214,16 +146,7 @@ export function AlignmentHub({
             limit={3}
           />
 
-          {/* iter243 — Grey-rock toggle chip. Renders only when the
-              parent's Safety Check is currently flagged. Closes the
-              loop on the SafetyScreen modal's promise ("You can turn
-              it off from the Alignment & Tools page any time."). */}
-          {safetyFlagged && (
-            <GreyRockToggleChip
-              onClear={onClearGreyRock}
-              onRetake={onOpenSafetyRetake}
-            />
-          )}
+          <GreyRockToggleChip on={safetyFlagged} onChange={onSetGreyRock} />
 
           {/* iter233 — inline Assessment Guide chatbot. Same triage
               flow that used to open as a modal, now living directly
@@ -309,29 +232,16 @@ export function AlignmentHub({
               </div>
             </a>
 
-            <div className="relative">
-              <Link
-                to="/safety-assessment"
-                data-testid="toolkit-link-safety"
-                className="block p-3 pb-8 bg-rose-50 hover:bg-rose-100 border border-rose-200 rounded-xl text-slate-800 transition"
-              >
-                <i className="fa-solid fa-shield-heart text-rose-700 text-base"></i>
-                <div className="font-bold text-[0.6875rem] mt-1.5 leading-snug">
-                  Safety Screen
-                </div>
-                <div className="text-[0.625rem] text-slate-500 leading-snug">
-                  Full clinical Safety Assessment
-                </div>
-              </Link>
-              <button
-                type="button"
-                data-testid="toolkit-guided-safety"
-                onClick={() => openGuidedJourney("safety")}
-                className="absolute bottom-1.5 right-1.5 text-[0.5625rem] font-bold text-rose-700 bg-white/80 hover:bg-white px-2 py-0.5 rounded-full border border-rose-300"
-              >
-                <i className="fa-solid fa-comments mr-1"></i>Guided chat
-              </button>
-            </div>
+            <button
+              type="button"
+              data-testid="toolkit-guided-readiness"
+              onClick={() => openGuidedJourney("safety")}
+              className="block w-full text-left p-3 bg-rose-50 hover:bg-rose-100 border border-rose-200 rounded-xl text-slate-800 transition"
+            >
+              <i className="fa-solid fa-comments text-rose-700 text-base"></i>
+              <div className="font-bold text-[0.6875rem] mt-1.5 leading-snug">Conflict Readiness</div>
+              <div className="text-[0.625rem] text-slate-500 leading-snug">Three questions for calmer hand-offs</div>
+            </button>
 
             <div className="relative">
               <Link
@@ -931,32 +841,7 @@ export function AlignmentHub({
           </button>
         </div>
 
-        {/* Email to Co-parent — iter219 replaces the generic
-            "share with pediatrician" copy. Blocked when the parent's
-            Safety Check flagged coercion / device / physical-safety
-            risk (defense-in-depth: never facilitate outbound contact
-            when the parent's own signal says it isn't safe). */}
-        {safetyFlagged ? (
-          <div
-            data-testid="foundation-email-coparent-blocked"
-            className="p-3 bg-rose-50 border border-rose-200 rounded-xl text-[11px] no-print"
-          >
-            <div className="flex items-start gap-2">
-              <i className="fa-solid fa-shield-heart text-rose-700 mt-0.5"></i>
-              <div>
-                <div className="font-bold text-rose-900">
-                  Email to co-parent blocked
-                </div>
-                <p className="text-rose-800 leading-snug mt-0.5">
-                  You flagged safety concerns on your Quick Safety
-                  Check, so we won't help send your Foundation
-                  Statement directly to your co-parent. Route through
-                  your attorney or mediator instead.
-                </p>
-              </div>
-            </div>
-          </div>
-        ) : (
+        {/* Email to co-parent */}
           <button
             type="button"
             data-testid="email-foundation-coparent-btn"
@@ -969,7 +854,6 @@ export function AlignmentHub({
               ? "Preparing email…"
               : "Email my Foundation Statement to my co-parent"}
           </button>
-        )}
       </div>
     </div>
   );

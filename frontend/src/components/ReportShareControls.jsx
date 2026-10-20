@@ -155,7 +155,6 @@ export default function ReportShareControls({
       summary:    "the Mediation Prep Summary",
       agreement:  "the Co-Parenting Agreement",
       sn_report:  "the Special Needs Care Plan",
-      safety:     "the Family Violence & Communication Safety Screen",
     };
     const consentLabel = consentLabels[reportType] || "this report";
     const consented = await requestPreShareConsent(consentLabel);

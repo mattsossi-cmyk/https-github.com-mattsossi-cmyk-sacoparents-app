@@ -290,7 +290,7 @@ def _cover_page(pdf: _JointReportPDF, payload: Dict[str, Any]):
     pdf.set_font("Helvetica", "I", 8.5)
     pdf.set_text_color(*TEXT_MID)
     pdf.set_x(LEFT_M)
-    pdf.multi_cell(CONTENT_W, 4.2, payload.get("safety_privacy_note") or "")
+    pdf.multi_cell(CONTENT_W, 4.2, payload.get("safety_step") or "Safety step: not started")
     pdf.set_text_color(*TEXT_DARK)
 
     pdf._is_cover = False
