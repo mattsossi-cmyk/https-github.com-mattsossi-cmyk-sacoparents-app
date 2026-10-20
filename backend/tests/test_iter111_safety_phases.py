@@ -214,3 +214,13 @@ def test_combined_consent_accepts_privacy_and_access_notice_once():
     assert pa.post(f"{API}/privacy-notice/accept", json={"version": PRIVACY_NOTICE_VERSION, "acknowledged": True}).status_code == 200
     e = pa.get(f"{API}/me/safety-entry").json()
     assert e["needs_notice"] is False and e["notice_version"] == STEP_NOTICE_VERSION
+
+
+def test_responses_page_not_completed_state_instead_of_404():
+    # owner 2026-10-19: no check-in and no readiness answers → neutral "not completed" payload, not a 404
+    pro, pa, pb, rid = _case()
+    r = pro.get(f"{API}/joint/reports/{rid}/safety-screening/a/responses")
+    assert r.status_code == 200 and r.json()["not_completed"] is True and r.json()["communication"] == {"received": False} and r.json()["items"] == []
+    pa.put(f"{API}/joint/reports/{rid}/safety-screening", json={"responses": {**ALL_NO}, "safe_contact": None})
+    r = pro.get(f"{API}/joint/reports/{rid}/safety-screening/a/responses").json()
+    assert "not_completed" not in r and r["communication"] == {"received": False} and len(r["items"]) > 0

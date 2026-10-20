@@ -15,7 +15,7 @@ import SafetyHub from "@/pages/SafetyHub";
 import PrivacyNotice from "@/pages/PrivacyNotice";
 import ProfessionalNotice from "@/pages/ProfessionalNotice";
 import StartWithSafety, { SEEN_KEY as START_SAFETY_SEEN } from "@/pages/StartWithSafety";
-export const PRIVACY_NOTICE_VERSION = "2026-10-19.1";
+export const PRIVACY_NOTICE_VERSION = "2026-10-19.2";
 export const PROFESSIONAL_NOTICE_VERSION = "2026-10-19.1";
 import CommunicationReadiness from "@/pages/CommunicationReadiness";
 import SafetyResponses from "@/pages/SafetyResponses";

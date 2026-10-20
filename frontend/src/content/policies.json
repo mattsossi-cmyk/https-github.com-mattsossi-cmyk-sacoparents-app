@@ -11,7 +11,7 @@
       ] },
       { "heading": "What we collect", "bullets": [
         "Account information (name, email address, and the role you choose, parent or professional).",
-        "Your preparation (reflections, assessments, the safety screening, communication readiness answers, and agreement drafts).",
+        "Your preparation (assessments, your Foundation Statement, the safety check-in, communication readiness answers, and agreement drafts).",
         "Safety check-in (your answers, which questions you skipped, the date, and an internal concern level visible only to professionals assigned to your case; we never ask for or store your sexual orientation).",
         "Records of use (when you accepted this notice, and when assigned professionals view your information)."
       ] },
@@ -53,7 +53,8 @@
       { "heading": "Private by default", "bullets": [
         "Each parent's answers, reflections, and safety screening are stored under that parent's own record and are never returned to the co-parent by any screen, report, PDF, or email.",
         "Joint reports show the generated comparison only. Family-violence screenings are never compared or shared with the other parent.",
-        "Court and professional documents show only that a safety check-in was received, not started, or declined, and a neutral pathway label confirmed by the professionals assigned to your case. They never show a tier, flag, or answer."
+        "Court and professional documents show only that a safety check-in was received, not started, or declined, and a neutral pathway label confirmed by the professionals assigned to your case. They never show a tier, flag, or answer.",
+        "Communication readiness answers you give in the SA CoParents app are sent to Align and shown only to the professionals assigned to your case and, when needed, SA CoParents administrators, as a flag for their judgment. They never appear to your co-parent, the court, or in any report."
       ] },
       { "heading": "Who can see what", "bullets": [
         "Parents see their own information.",
@@ -95,7 +96,7 @@
     "title": "Confidentiality",
     "sections": [
       { "heading": "Private by default", "paragraphs": [
-        "Your answers, reflections, and journal entries belong to you. Your co-parent does not see them."
+        "Your answers, your Foundation Statement, and your journal entries belong to you. Your co-parent does not see them."
       ] },
       { "heading": "Safety first", "paragraphs": [
         "If you report family violence concerns, we limit what appears in joint reports, invitations, and email. Reports show only that your safety check-in was received, not started, or declined, and a neutral pathway label. They never show your answers, a tier or flag, your narrative, or your locations."

@@ -4,7 +4,7 @@ from datetime import datetime, timezone
 from fastapi import APIRouter, Depends, HTTPException, Response
 from pydantic import BaseModel
 
-PRIVACY_NOTICE_VERSION = "2026-10-19.1"  # bumped: no-tier wording, Claude drafting disclosure, "professionals assigned to your case" (owner 2026-10-19)
+PRIVACY_NOTICE_VERSION = "2026-10-19.2"  # bumped: communication-readiness import bullet, Foundation Statement instead of reflections (owner 2026-10-19)
 SUBHEAD = "Private by default. Shared with your consent, or as the law requires."
 # Reusable legal-notice sentences (also for the future privacy policy). Edit here only.
 LEGAL_NOTICE_SENTENCES = [

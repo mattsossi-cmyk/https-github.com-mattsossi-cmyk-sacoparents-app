@@ -607,7 +607,8 @@ def build_router(db, get_current_user, get_joint_report_doc, report_role, log_ac
         await require_training(db, user)
         scr = (doc.get("safety_screenings") or {}).get(role) if role in ("a", "b") else None
         if not scr and not (doc.get("communication_readiness") or {}).get(role):
-            raise HTTPException(status_code=404, detail="No safety screening on file for this parent")
+            return {"status": {**_status(doc)[role], "version_label": None}, "items": [], "pathway": None, "scale_note": SCALE_NOTE, "source_credit": "", "not_completed": True,
+                    "communication": {"received": False}, "notice": "This parent has not completed the Family check-in yet. Nothing has been recorded; there is nothing to review."}
         await log_access(doc, user, f"Viewed Parent {role.upper()} safety screening responses (professional-only)", "safety_screening")
         if not scr:
             comm = (doc.get("communication_readiness") or {}).get(role)

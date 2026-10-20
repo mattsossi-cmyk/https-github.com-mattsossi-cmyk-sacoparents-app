@@ -29,13 +29,16 @@ export default function SafetyResponses() {
               <p className="mt-2 rounded-md border-l-4 border-amber-500 bg-amber-50 p-2 text-xs" data-testid="screening-responses-notice">{d.notice}</p>
             </div>
             {d.pathway && <PathwayDecision rid={id} role={role} pathway={d.pathway} onChange={(dec) => setD((x) => ({ ...x, pathway: { ...x.pathway, decision: dec } }))} />}
-            {d.communication?.received && (
+            {d.communication?.received ? (
               <div className={`rounded-lg border p-4 ${d.communication.flag_for_professional ? "border-amber-300 bg-amber-50" : "border-border bg-white"}`} data-testid="comm-responses">
                 <p className="text-xs font-bold uppercase tracking-widest text-brand-purple">Communication readiness — private flag input</p>
                 <p className="mt-1 text-xs text-muted-foreground">{d.communication.note} Completed {(d.communication.completed_at || "").slice(0, 10)} · {d.communication.source}{d.communication.flag_for_professional ? " · flagged for your attention" : ""}</p>
                 <ul className="mt-2 space-y-1.5 text-sm">{d.communication.items.map((it) => <li key={it.id} data-testid={`comm-response-${it.id}`}><span className="font-medium">{it.question}</span> <span className="text-brand-purple" data-testid={`comm-response-${it.id}-answer`}>{it.answer}</span></li>)}</ul>
               </div>
+            ) : (
+              <p className="rounded-lg border border-dashed border-border bg-white p-3 text-sm text-muted-foreground" data-testid="comm-not-completed">Communication readiness: not completed by this parent.</p>
             )}
+            {d.not_completed && <p className="rounded-lg border border-dashed border-border bg-white p-4 text-sm text-muted-foreground" data-testid="screening-not-completed">Family check-in: not completed by this parent. There are no answers to review.</p>}
             <ul className="space-y-2" data-testid="screening-responses-list">
               {d.items.map((it, i) => <li key={it.id || i} className={`rounded-md border p-3 text-sm ${it.flag ? "border-amber-300 bg-amber-50" : "border-border bg-white"}`} data-testid={`screening-response-${it.id || i}`}>{it.part && <p className="text-[10px] uppercase tracking-wide text-muted-foreground">{it.part}</p>}<p className="font-medium">{it.question}</p><p className="mt-1 text-brand-purple" data-testid={`screening-response-${it.id || i}-answer`}>{it.answer}</p></li>)}
             </ul>

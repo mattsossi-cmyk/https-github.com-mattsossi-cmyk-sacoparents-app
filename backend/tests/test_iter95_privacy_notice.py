@@ -28,7 +28,7 @@ def test_text_matches_spec():
     assert NOTICE["checkbox"] == "I have read and understand this privacy notification." and NOTICE["continue"] == "Continue to SA CoParents"
     low = str(NOTICE).lower()
     assert "responces" not in low and "encrypt" not in low and "my journey" not in low and "privacy policy" not in low
-    assert PRIVACY_NOTICE_VERSION == "2026-10-19.1" and NOTICE["footer_links"] == []
+    assert PRIVACY_NOTICE_VERSION == "2026-10-19.2" and NOTICE["footer_links"] == []
     legal = open("/app/frontend/src/pages/Legal.jsx", encoding="utf-8").read()
     assert "confidentiality: {" not in legal and '"sharing-consent": {' not in legal
 
