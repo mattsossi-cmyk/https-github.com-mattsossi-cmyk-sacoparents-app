@@ -273,14 +273,19 @@ async def setup_complete_for(db, user_id: str) -> bool:
 
 
 SAFETY_STEP_DONE = "Safety step: completed on SACOparentsAlign"
-SAFETY_STEP_TODO = "Safety step: not started"
+SAFETY_STEP_SEE = "Safety step: see SACOparentsAlign"
+
+
+def safety_step_text(done: bool) -> str:
+    """Completed only when SACOparentsAlign has told this app so; otherwise this app can't know."""
+    return SAFETY_STEP_DONE if done else SAFETY_STEP_SEE
 
 
 async def safety_step_line(db, *user_ids: Optional[str]) -> str:
     """The only safety wording documents may carry, from the same status as the Family check-in card."""
     ids = [u for u in user_ids if u]
     done = bool(ids) and all([await setup_complete_for(db, u) for u in ids])
-    return SAFETY_STEP_DONE if done else SAFETY_STEP_TODO
+    return safety_step_text(done)
 
 
 def as_utc(v):

@@ -37,8 +37,8 @@ export function ProfessionalAccessNotice({ testid = "professional-access-notice"
         administrators can, and every view is recorded.
       </p>
       <p>
-        Nothing about your answers appears in this app&apos;s reports or documents. They show only whether your safety step is completed or not
-        started.
+        Nothing about your answers appears in this app&apos;s reports or documents. They show only &ldquo;Safety step: completed on
+        SACOparentsAlign&rdquo; or, when this app can&apos;t know, &ldquo;Safety step: see SACOparentsAlign&rdquo;.
       </p>
       <AlignNoticeLink testid={`${testid}-align-link`} />
     </section>

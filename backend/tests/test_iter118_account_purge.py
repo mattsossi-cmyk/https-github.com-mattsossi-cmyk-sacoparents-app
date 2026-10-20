@@ -301,7 +301,7 @@ class TestChecklistPDF:
         assert r.headers.get("content-type", "").startswith("application/pdf")
         text = self._pdftext(r.content)
         assert "Case code verified" in text
-        assert "Family check-in" in text
+        assert "Safety step: see SACOparentsAlign" in text and "Safety step: not started" not in text
         assert "asked for" in text  # from the italic note
         assert "Module A" not in text and "Module B" not in text and "Module C" not in text
         assert "BIFF" not in text
@@ -318,7 +318,7 @@ class TestChecklistPDF:
         r = requests.post(f"{API}/court-path/checklist/pdf", headers=_auth(user), json={})
         assert r.status_code == 200
         text = self._pdftext(r.content)
-        assert "Family check-in" in text
+        assert "Safety step: see SACOparentsAlign" in text and "Safety step: not started" not in text
         assert "Module A" not in text
         assert "Self-Assessment" in text
         assert "BIFF" in text

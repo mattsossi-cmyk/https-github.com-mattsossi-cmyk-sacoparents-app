@@ -33,3 +33,11 @@ export function useCheckinLink(alignUrl) {
   if (code === undefined) return null;
   return fill(TEMPLATE, code) || alignUrl;
 }
+
+// Align's "Who has looked at my information" list (address pending from Align): only for parents linked to a case.
+const ACCESS_LOG_TEMPLATE = process.env.REACT_APP_ALIGN_ACCESS_LOG_URL || "";
+
+export function useAccessLogLink() {
+  const code = useCaseCode(Boolean(ACCESS_LOG_TEMPLATE));
+  return code ? fill(ACCESS_LOG_TEMPLATE, code) : null;
+}

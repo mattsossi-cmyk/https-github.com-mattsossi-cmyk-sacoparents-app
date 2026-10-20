@@ -12,7 +12,7 @@ from motor.motor_asyncio import AsyncIOMotorDatabase
 from pydantic import BaseModel, Field
 
 from auth import UserPublic, get_current_user, get_db
-from case_safety import SAFETY_STEP_DONE, SAFETY_STEP_TODO, setup_complete_for
+from case_safety import safety_step_text, setup_complete_for
 from court_summary import build_summary
 from pdf_base import _safe, render_pdf_copyright
 
@@ -227,7 +227,7 @@ def _rows(pdf: FPDF, items: List[Dict[str, str]]) -> None:
         pdf.set_text_color(*INK)
         # The Family check-in row is the safety step: one fixed line, nothing else.
         step = it["key"] == "family_checkin"
-        label = (SAFETY_STEP_DONE if it["status"] == "done" else SAFETY_STEP_TODO) if step else it["label"]
+        label = safety_step_text(it["status"] == "done") if step else it["label"]
         pdf.cell(95, 5.8, _safe(label))
         pdf.set_font("Helvetica", "", 8.5)
         pdf.set_text_color(*(EMERALD if it["status"] == "done" else AMBER if it["status"] == "in_progress" else MUTED))
@@ -254,15 +254,15 @@ def build_checklist_pdf(data: Dict[str, Any]) -> bytes:
     _header(pdf, data)
     _rows(pdf, data["items"])
 
-    left = [i for i in data["items"] if i["status"] != "done"]
+    # This app can't know whether the safety step is left (only SACOparentsAlign can), so it isn't listed.
+    left = [i for i in data["items"] if i["status"] != "done" and i["key"] != "family_checkin"]
     _section(pdf, "What's left")
     pdf.set_font("Helvetica", "", 9)
     pdf.set_text_color(*INK)
     if not left:
         pdf.cell(0, 5, "Everything on this checklist is done. Bring it to your next meeting.", new_x="LMARGIN", new_y="NEXT")
     for it in left:
-        label = "Safety step" if it["key"] == "family_checkin" else it["label"]
-        pdf.cell(0, 4.8, _safe(f"-  {label}: {it['hint']}"), new_x="LMARGIN", new_y="NEXT")
+        pdf.cell(0, 4.8, _safe(f"-  {it['label']}: {it['hint']}"), new_x="LMARGIN", new_y="NEXT")
 
     _section(pdf, "Notes for my mediator meeting")
     pdf.set_draw_color(203, 196, 222)

@@ -19,6 +19,8 @@ import time
 import pytest
 import requests
 
+from ai_ready import ai_headers
+
 BASE_URL = os.environ.get("REACT_APP_BACKEND_URL", "").rstrip("/")
 if not BASE_URL:
     with open("/app/frontend/.env") as _f:
@@ -39,7 +41,7 @@ TOPIC_TOTALS = {
 
 TOPIC_SAVE_KEYS = {
     "foundation": "foundation_text",
-    "safety": "safety_ack",
+    "safety": "readiness_note",
     "coparenting": "cop_assessment_note",
     "medical": "align_record",
     "educational": "align_record",
@@ -56,7 +58,7 @@ ALIGN_CATEGORIES = {
 @pytest.fixture(scope="module")
 def s():
     sess = requests.Session()
-    sess.headers.update({"Content-Type": "application/json"})
+    sess.headers.update({"Content-Type": "application/json", **ai_headers(API)})
     return sess
 
 

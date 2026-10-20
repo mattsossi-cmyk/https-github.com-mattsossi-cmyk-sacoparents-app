@@ -13,6 +13,8 @@ import time
 import pytest
 import requests
 
+from ai_ready import ai_headers
+
 def _load_backend_url() -> str:
     v = os.environ.get("REACT_APP_BACKEND_URL")
     if not v:
@@ -162,12 +164,12 @@ class TestGreyRockBiff:
             "the doctor's appointment. This keeps happening and I'm sick of it."
         )
         r_normal = requests.post(
-            f"{BASE_URL}/api/portal/biff-refine",
+            f"{BASE_URL}/api/portal/biff-refine", headers=(h := ai_headers(f"{BASE_URL}/api")),
             json={"raw": raw, "safety_flagged": False},
             timeout=60,
         )
         r_gr = requests.post(
-            f"{BASE_URL}/api/portal/biff-refine",
+            f"{BASE_URL}/api/portal/biff-refine", headers=h,
             json={"raw": raw, "safety_flagged": True},
             timeout=60,
         )

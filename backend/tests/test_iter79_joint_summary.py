@@ -163,6 +163,7 @@ def test_complete_report_auth_with_seeded_agreement_renders_sections(
         ],
         "open_for_discussion": ["Holiday travel split"],
         "closing_note": "We commit to review this in 90 days.",
+        "clean_inputs": True,  # made after the privacy update (older drafts show only goals + priorities)
     }
     mongo_db.agreements.insert_one(dict(seed))
     try:

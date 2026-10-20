@@ -23,12 +23,19 @@ from secure_docs import (
 
 router = APIRouter(prefix="/secure-docs", tags=["secure-docs"])
 GRANT_MINUTES = 30
-# Old in-app safety assessment PDFs (the screen is off): kept in storage, never opened or listed.
+# Kept in storage, never opened or listed: old in-app safety assessment PDFs (the screen is off) and Summary /
+# Agreement PDFs emailed before the privacy update (they may carry the readiness score or safety text).
 _OLD_SAFETY_PDF = re.compile(r"safety-assessment|tisfl-court-report|for-your-professional", re.I)
+_PRE_UPDATE_PDF = re.compile(r"^(mediation_summary_|coparenting_agreement_)")
+PRE_UPDATE_MSG = "This was made before a privacy update. Please ask the sender for a new copy."
+
+
+def _files(doc: dict) -> list:
+    return [f.get("name") or "" for f in doc.get("files") or []]
 
 
 def _is_old_safety_doc(doc: dict) -> bool:
-    return any(_OLD_SAFETY_PDF.search(f.get("name") or "") for f in doc.get("files") or [])
+    return any(_OLD_SAFETY_PDF.search(n) or _PRE_UPDATE_PDF.search(n) for n in _files(doc))
 
 
 class DocInfo(BaseModel):
@@ -78,8 +85,10 @@ def _mask(email: str) -> str:
 
 async def _by_token(db, token: str) -> dict:
     doc = await db.secure_documents.find_one({"token_hash": hash_value(token)}, {"_id": 0})
-    if not doc or _is_old_safety_doc(doc):
+    if not doc or any(_OLD_SAFETY_PDF.search(n) for n in _files(doc)):
         raise HTTPException(404, "This link isn't valid.")
+    if any(_PRE_UPDATE_PDF.search(n) for n in _files(doc)):
+        raise HTTPException(410, PRE_UPDATE_MSG)
     return doc
 
 

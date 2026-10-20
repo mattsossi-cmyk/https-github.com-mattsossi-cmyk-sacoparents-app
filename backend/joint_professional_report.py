@@ -25,6 +25,7 @@ from typing import Any, Dict, List, Optional, Tuple
 
 from snc2_comparison import ALIGNMENT_LABELS
 from snc2_questions import PATHWAYS
+from case_safety import SAFETY_STEP_SEE
 
 
 # ---------------------------------------------------------------------------
@@ -860,7 +861,7 @@ def build_joint_report(
     prep_b: Dict[str, Any],
     dim_a: Optional[Dict[str, Any]] = None,
     dim_b: Optional[Dict[str, Any]] = None,
-    safety_step: str = "Safety step: not started",
+    safety_step: str = SAFETY_STEP_SEE,
 ) -> Dict[str, Any]:
     """Assemble the neutral joint report. `safety_step` is its only safety wording."""
     shared_pri = _section_shared_priorities(prep_a, prep_b)

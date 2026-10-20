@@ -19,13 +19,13 @@ from pydantic import BaseModel, EmailStr
 from pymongo.errors import DuplicateKeyError
 
 from auth import UserPublic, get_current_user, get_db
+import safety_gate
 from safety_gate import NOT_AVAILABLE
 from email_service import send_compare_invite
 
 
 SAFETY = "safety_assessments"
 SNAPSHOTS = "deep_dive_compare_snapshots"
-BLOCKING_SAFETY_LEVELS = {1, 2}
 # Milestone thresholds (aligned_pct). Each has a matching copy block in
 # DeepDiveCompareView so tweak both together.
 MILESTONE_THRESHOLDS = [50, 75, 90]
@@ -43,16 +43,6 @@ def _safe_filename(name: str) -> str:
 def _normalize_email(email: str) -> str:
     return (email or "").strip().lower()
 
-
-async def _latest_safety_level(db: AsyncIOMotorDatabase, user_id: str) -> Optional[int]:
-    doc = await db[SAFETY].find_one(
-        {"user_id": user_id}, {"_id": 0, "result": 1},
-        sort=[("created_at", -1)],
-    )
-    if not doc:
-        return None
-    lvl = (doc.get("result") or {}).get("level")
-    return lvl if isinstance(lvl, int) else None
 
 
 async def _load_user_by_email(db: AsyncIOMotorDatabase, email: str) -> Optional[Dict[str, Any]]:
@@ -157,8 +147,7 @@ def make_deep_dive_compare_router(
 
         # Safety guardrail applies before returning either an existing or new
         # share so a parent whose safety level drops later can't slip back in.
-        level = await _latest_safety_level(db, me.user_id)
-        if level in BLOCKING_SAFETY_LEVELS:
+        if await safety_gate.is_blocked(db, me.user_id):
             raise HTTPException(status_code=403, detail=_safety_message())
 
         if existing:
@@ -259,8 +248,7 @@ def make_deep_dive_compare_router(
         if share.get("status") == "revoked":
             raise HTTPException(status_code=409, detail="This comparison request was revoked.")
         if body.consent:
-            level = await _latest_safety_level(db, me.user_id)
-            if level in BLOCKING_SAFETY_LEVELS:
+            if await safety_gate.is_blocked(db, me.user_id):
                 raise HTTPException(status_code=403, detail=NOT_AVAILABLE)
 
         is_creator = share["creator_user_id"] == me.user_id
@@ -319,8 +307,7 @@ def make_deep_dive_compare_router(
             raise HTTPException(status_code=409, detail="This comparison has been revoked.")
         if not (share.get("creator_consent") and share.get("partner_consent")):
             raise HTTPException(status_code=409, detail="Both parents must consent before the comparison is visible.")
-        my_level = await _latest_safety_level(db, me_id)
-        if my_level in BLOCKING_SAFETY_LEVELS:
+        if await safety_gate.is_blocked(db, me_id):
             raise HTTPException(status_code=403, detail=NOT_AVAILABLE)
         creator_a = await db[assessments_collection].find_one({"user_id": share["creator_user_id"]})
         partner_a = await db[assessments_collection].find_one({"user_id": share["partner_user_id"]})

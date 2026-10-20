@@ -549,7 +549,7 @@ export default function JointProfessionalReport() {
             className="rounded-2xl border border-[#E5E0EE] bg-white p-4 text-xs text-[#4B4567] leading-relaxed"
             data-testid="joint-report-safety-step"
           >
-            {d.safety_step || "Safety step: not started"}
+            {d.safety_step || "Safety step: see SACOparentsAlign"}
           </div>
         </div>
 

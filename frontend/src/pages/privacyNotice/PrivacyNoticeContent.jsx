@@ -47,12 +47,12 @@ export function PrivacyNoticeContent() {
           <strong>Who can see your information.</strong> Safety questions are answered privately on SACOparentsAlign, not in this app. On
           SACOparentsAlign, your co-parent never sees your answers. The professionals assigned to your case and a small number of SA CoParents
           administrators can, and every view is recorded. Nothing about your answers appears in this app&apos;s reports or documents. They show
-          only whether your safety step is completed or not started.
+          only &ldquo;Safety step: completed on SACOparentsAlign&rdquo; or, when this app can&apos;t know, &ldquo;Safety step: see SACOparentsAlign&rdquo;.
         </p>
       </section>
 
       <section id="ai" data-testid="privacy-notice-ai" className="scroll-mt-6 space-y-4">
-        <h2 className={H2}>7. AI Communication Builder</h2>
+        <h2 className={H2}>3. AI Communication Builder</h2>
         <p>
           The AI Communication Builder helps you draft messages, for example to your child&apos;s school. When you use it, the text you type is sent to
           our AI service providers, OpenAI and Anthropic (Claude), to generate a draft.
@@ -66,7 +66,7 @@ export function PrivacyNoticeContent() {
       </section>
 
       <section id="contact" data-testid="privacy-notice-contact" className="scroll-mt-6 space-y-4">
-        <h2 className={H2}>12. Questions or complaints</h2>
+        <h2 className={H2}>4. Questions or complaints</h2>
         <p>
           Contact our Privacy Officer, Matt Sossi, at{" "}
           <a href="mailto:mattsossi@bsossi.com" data-testid="privacy-notice-email" className="text-[#3D1A78] font-semibold underline underline-offset-2">

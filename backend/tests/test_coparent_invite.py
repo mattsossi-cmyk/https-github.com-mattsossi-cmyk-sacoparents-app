@@ -115,7 +115,8 @@ def test_full_invite_and_accept_cycle(base_url, api_client, cleanup_invites):
     cleanup_invites(inviter_email)
     auth = {"Authorization": f"Bearer {token}"}
 
-    target_email = cleanup_invites(f"cop_{uuid.uuid4().hex[:10]}@example.com")
+    # Resend only accepts its own test inbox from the preview.
+    target_email = cleanup_invites(f"delivered+cop{uuid.uuid4().hex[:10]}@resend.dev")
 
     # Send invite
     r = api_client.post(

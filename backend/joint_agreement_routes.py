@@ -31,6 +31,7 @@ from auth import (
     create_share_token, decode_share_token,
 )
 from joint_agreement import build_joint_agreement, regenerate_individual_from_joint
+import mediation_sharing
 from joint_professional_report_routes import (
     _find_active_share, _load_user_display_name,
 )
@@ -99,8 +100,9 @@ async def _assemble_joint_agreement(
     parent_a_name = await _load_user_display_name(db, caller_id, "Parent A")
     parent_b_name = await _load_user_display_name(db, other_id, "Parent B")
 
-    agr_a = await _load_latest_agreement(db, caller_id)
-    agr_b = await _load_latest_agreement(db, other_id)
+    # Each parent's draft as the shared copy: no safety text, reflection answers or readiness score.
+    agr_a = mediation_sharing.shared_agreement(await _load_latest_agreement(db, caller_id))
+    agr_b = mediation_sharing.shared_agreement(await _load_latest_agreement(db, other_id))
 
     if not agr_a:
         raise HTTPException(

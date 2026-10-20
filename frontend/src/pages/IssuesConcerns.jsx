@@ -9,6 +9,9 @@ import { logError } from "../lib/logger";
 import WatchFirstVideo from "../components/WatchFirstVideo";
 import { detectSafetyConcern } from "../lib/safety";
 import { ShieldAlert } from "lucide-react";
+import { useCheckinLink } from "../lib/useCheckinLink";
+
+const ALIGN_SITE = process.env.REACT_APP_ALIGN_SITE_URL;
 
 // The fixed list of concerns shown to every parent. Add new items here and the
 // Issues page + Priority page auto-pick them up.
@@ -58,41 +61,43 @@ export const ISSUE_TYPES = [
     label: "Emotional manipulation or alienating behaviors",
     placeholder: "What manipulative or alienating behaviors are you seeing?",
   },
-  {
-    id: "safety_concerns",
-    label: "Concerns about the child's emotional or physical safety",
-    placeholder: "What is happening that feels unsafe for your child?",
-    safetyFlag: true,
-  },
 ];
 
-function IssueRow({ id, label, placeholder, safetyFlag, value, onChange }) {
+// Safety concerns are no longer typed here: the safety step is the Family check-in on SACOparentsAlign.
+function SafetyStepCard() {
+  const checkin = useCheckinLink(ALIGN_SITE);
   return (
-    <div
-      className={`rounded-2xl border p-5 transition-colors ${
-        safetyFlag
-          ? "border-[#C28771]/30 bg-[#C28771]/5"
-          : "border-transparent bg-[#EFE9F9]"
-      }`}
-      data-testid={`issue-${id}`}
-    >
+    <div className="rounded-2xl border border-[#C28771]/30 bg-[#C28771]/5 p-5" data-testid="issue-safety-step-card">
       <div className="flex items-start gap-3 mb-2">
-        {safetyFlag && (
-          <div className="w-7 h-7 rounded-full bg-[#C28771]/15 text-[#9A5D47] grid place-items-center mt-0.5 shrink-0">
-            <ShieldAlert size={14} />
-          </div>
-        )}
+        <div className="w-7 h-7 rounded-full bg-[#C28771]/15 text-[#9A5D47] grid place-items-center mt-0.5 shrink-0">
+          <ShieldAlert size={14} />
+        </div>
+        <div className="font-serif text-lg text-[#1A1330] leading-snug">Concerns about your child&apos;s emotional or physical safety</div>
+      </div>
+      <p className="text-sm text-[#4B4567] mb-3">
+        Safety questions are answered privately on SACOparentsAlign, not in this app. Please don&apos;t type safety details here.
+        If your child is in immediate danger, call 911.
+      </p>
+      <div className="flex flex-wrap gap-2">
+        <a href={checkin || ALIGN_SITE} target="_blank" rel="noopener noreferrer" data-testid="issue-safety-checkin-link"
+           className="inline-flex items-center rounded-full bg-[#3D1A78] px-4 py-2 text-sm font-semibold text-white hover:bg-[#2A0F5F]">
+          Open the Family check-in<span className="sr-only"> (opens in a new tab)</span>
+        </a>
+        <Link to="/help" data-testid="issue-safety-help-link"
+              className="inline-flex items-center rounded-full border border-[#3D1A78]/30 px-4 py-2 text-sm font-semibold text-[#3D1A78] hover:bg-white">
+          Get help
+        </Link>
+      </div>
+    </div>
+  );
+}
+
+function IssueRow({ id, label, placeholder, value, onChange }) {
+  return (
+    <div className="rounded-2xl border border-transparent bg-[#EFE9F9] p-5 transition-colors" data-testid={`issue-${id}`}>
+      <div className="flex items-start gap-3 mb-2">
         <div className="font-serif text-lg text-[#1A1330] leading-snug">{label}</div>
       </div>
-      {safetyFlag && (
-        <p className="text-xs text-[#4B4567] mb-3">
-          If your child is in immediate danger, please call 911 or visit our{" "}
-          <Link to="/safety" className="underline text-[#9A5D47]" data-testid={`issue-${id}-safety-link`}>
-            safety resources
-          </Link>
-          .
-        </p>
-      )}
       <textarea
         rows={3}
         className="input-soft resize-none"
@@ -194,6 +199,7 @@ export default function IssuesConcerns() {
               onChange={(v) => updateItem(it.id, v)}
             />
           ))}
+          <SafetyStepCard />
 
           <div className="rounded-2xl bg-[#EFE9F9] p-5">
             <div className="font-serif text-lg text-[#1A1330] mb-2">

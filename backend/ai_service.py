@@ -14,6 +14,7 @@ from typing import Any, Dict, List, Optional
 from emergentintegrations.llm.chat import LlmChat, UserMessage
 
 from ai_models import resolve_model
+from prep_privacy import for_document_ai
 
 
 # ============ Universal safety + scope guardrail ============
@@ -87,7 +88,7 @@ def _previous_context_block(previous: Optional[Dict[str, Any]], scope: str) -> s
     """
     if not previous or not previous.get("prep_snapshot"):
         return ""
-    snap = previous["prep_snapshot"]
+    snap = for_document_ai(previous["prep_snapshot"])
     if scope == "agreement":
         snap = {k: snap.get(k) for k in ("child_goals", "issues", "priority")}
     elif scope == "improvement":
@@ -246,6 +247,7 @@ async def generate_summary(
     from readiness_scoring.compute_readiness() — the AI interprets those
     numbers into narrative but does not invent them.
     """
+    prep = for_document_ai(prep)
     chat = _make_chat(SUMMARY_SYSTEM)
     prev_block = _previous_context_block(previous, scope="full")
     changes_instruction = _CHANGES_INSTRUCTION if previous else ""
@@ -276,7 +278,7 @@ Return strict JSON only with these exact keys:
 {{
   "executive_summary": "2-3 sentences setting the scene: who is preparing, for what, and how they arrive at this moment. Neutral, dignified tone.",
   "child_priorities": ["3-6 short phrases describing what this parent is prioritising for their child — pulled from child_goals and priority answers"],
-  "parent_strengths": ["3-5 short phrases naming the parent's demonstrated strengths (from goals articulated, communication self-awareness, safety awareness, willingness to prepare, etc.)"],
+  "parent_strengths": ["3-5 short phrases naming the parent's demonstrated strengths (from goals articulated, communication self-awareness, willingness to prepare, etc.)"],
   "areas_of_concern": ["2-4 short phrases naming the areas the parent themselves has flagged as difficult or requiring support — never diagnostic, always in the parent's own frame"],
   "readiness_narrative": "2-3 sentence interpretation of the OVERALL readiness score in plain, warm language. Do NOT restate the number — describe what it means for how mediation might go.",
   "dimension_narratives": {{
@@ -291,7 +293,7 @@ Return strict JSON only with these exact keys:
     "long_term": ["1-2 growth intentions to keep in view over the next 3 months"]
   }},
   "notes_for_mediator": "2-3 sentences of context a mediator should know — neutral, respectful, does not disparage the co-parent",
-  "top_concerns": ["2-4 top logistical concerns to raise in session (schedule/communication/finances/safety) — legacy field, keep populated"],
+  "top_concerns": ["2-4 top logistical concerns to raise in session (schedule/communication/finances) — legacy field, keep populated"],
   "priority_agenda": [
     {{"rank": 1, "topic": "...", "category": "urgent|difficult|easy|compromise"}}
   ],
@@ -445,6 +447,7 @@ async def generate_agreement_draft(
     previous: Optional[Dict[str, Any]] = None,
     readiness: Optional[Dict[str, Any]] = None,
 ) -> Dict[str, Any]:
+    prep = for_document_ai(prep)
     chat = _make_chat(AGREEMENT_SYSTEM)
     prev_block = _previous_context_block(previous, scope="agreement")
     changes_instruction = _CHANGES_INSTRUCTION if previous else ""

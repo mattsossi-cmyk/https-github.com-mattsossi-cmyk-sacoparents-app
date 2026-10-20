@@ -25,7 +25,7 @@ export function ProfessionalAccessCard() {
       </h2>
       <p className="mt-1">
         Safety questions are answered privately on SACOparentsAlign, not in this app. Your co-parent never sees your answers. This
-        app&apos;s reports show only whether your safety step is completed or not started.
+        app&apos;s reports show only &ldquo;Safety step: completed on SACOparentsAlign&rdquo; or &ldquo;Safety step: see SACOparentsAlign&rdquo;.
       </p>
       <Link
         to="/who-can-see-my-information"

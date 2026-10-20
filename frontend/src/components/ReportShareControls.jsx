@@ -220,6 +220,9 @@ export default function ReportShareControls({
             Some readers only need the highlights. Hide any section before you
             download the PDF or generate a share link.
           </p>
+          <p className="text-[0.8125rem] text-[#4B4567] mt-1 max-w-2xl" data-testid={`${testIdPrefix}-shared-rule`}>
+            Shared links and emails never include your readiness score, safety notes or reflection answers.
+          </p>
           <ProSeeLink testid={`${testIdPrefix}-pros-see-link`} className="text-[0.8125rem] mt-1.5" />
         </div>
         <div className="text-right">
@@ -275,6 +278,11 @@ export default function ReportShareControls({
                         </span>
                       )}
                     </div>
+                    {(s.own_only === "true" || s.own_only === true) && (
+                      <div className="text-[0.6875rem] font-semibold text-[#9A5D47] mt-0.5" data-testid={`${testIdPrefix}-own-only-${s.key}`}>
+                        Only in your own download, never in a shared link or email.
+                      </div>
+                    )}
                     {s.description && (
                       <div className="text-xs text-[#4B4567] mt-0.5">{s.description}</div>
                     )}

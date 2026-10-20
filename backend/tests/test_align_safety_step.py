@@ -3,6 +3,7 @@ the Family check-in status is set through the signed-body handler directly, afte
 import asyncio
 import io
 import json
+import re
 import os
 import sys
 import time
@@ -27,7 +28,7 @@ from case_safety_routes import handle_signed  # noqa: E402
 API = "http://localhost:8001/api"
 CONSENT = {"ack_privacy_notice": True, "consent_sensitive_info": True}
 NOT_AVAILABLE = "This isn't available right now. Your Family check-in on SACOparentsAlign is the next step."
-DONE, TODO = "Safety step: completed on SACOparentsAlign", "Safety step: not started"
+DONE, TODO = "Safety step: completed on SACOparentsAlign", "Safety step: see SACOparentsAlign"
 BANNED = ("flagged for safety", "safety screen", "safety assessment", "level 1", "finding 3", "trauma", "redacted")
 db = MongoClient(os.environ["MONGO_URL"])[os.environ["DB_NAME"]]
 _emails, _cases, _uids = [], [], []
@@ -371,12 +372,15 @@ def test_privacy_notice_short_true_text():
     for s in ("Safety questions are answered privately on SACOparentsAlign, not in this app.",
               "On SACOparentsAlign, your co-parent never sees your answers. The professionals assigned to your case and a small number of "
               "SA CoParents administrators can, and every view is recorded.",
-              "Nothing about your answers appears in this app&apos;s reports or documents. They show only whether your safety step is "
-              "completed or not started."):
+              "Nothing about your answers appears in this app&apos;s reports or documents. They show only &ldquo;Safety step: completed on "
+              "SACOparentsAlign&rdquo; or, when this app can&apos;t know, &ldquo;Safety step: see SACOparentsAlign&rdquo;."):
         assert s in " ".join(notice.split()) and s in page, s
+    assert "not started" not in page and "not started" not in notice
     assert "your professional" not in page.lower() and "the professional linked" not in page.lower()
     assert "six points" not in (fe / "components/PreShareConsentDialog.jsx").read_text()
-    assert PRIVACY_NOTICE_VERSION == "2026-10-19-v6"
+    assert PRIVACY_NOTICE_VERSION == "2026-10-19-v7"
+    heads = re.findall(r"<h2[^>]*>(\d+)\. ", page)
+    assert heads == [str(i) for i in range(1, len(heads) + 1)], heads
 
 
 def test_saved_quick_check_cannot_be_changed_or_read():

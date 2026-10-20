@@ -126,7 +126,7 @@ class TestChecklist:
 class TestPdf:
     def test_pdf_full(self):
         t = pdf_text(ST["a"])
-        assert "Safety step: not started" in t and "Family check-in" in t
+        assert "Safety step: see SACOparentsAlign" in t and "Safety step: not started" not in t
         for w in ("Module A", "Module B", "Module C", "Child Needs & Priorities", "Co-Parenting Dynamics", "Conflict Readiness"):
             assert w not in t
         for w in BANNED:

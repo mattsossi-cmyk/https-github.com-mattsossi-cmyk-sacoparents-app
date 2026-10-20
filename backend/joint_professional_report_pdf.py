@@ -24,6 +24,7 @@ from safety_assessment_pdf import (
 )
 from court_report_disclaimer import draw_court_report_disclaimer
 from pdf_base import render_pdf_copyright
+from case_safety import SAFETY_STEP_SEE
 
 
 PAGE_W = 210
@@ -290,7 +291,7 @@ def _cover_page(pdf: _JointReportPDF, payload: Dict[str, Any]):
     pdf.set_font("Helvetica", "I", 8.5)
     pdf.set_text_color(*TEXT_MID)
     pdf.set_x(LEFT_M)
-    pdf.multi_cell(CONTENT_W, 4.2, payload.get("safety_step") or "Safety step: not started")
+    pdf.multi_cell(CONTENT_W, 4.2, payload.get("safety_step") or SAFETY_STEP_SEE)
     pdf.set_text_color(*TEXT_DARK)
 
     pdf._is_cover = False

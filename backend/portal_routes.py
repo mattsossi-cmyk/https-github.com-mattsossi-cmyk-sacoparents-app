@@ -46,6 +46,7 @@ from auth import get_current_user, get_db
 from models import UserPublic
 from ai_notice_routes import require_ai_notice
 from case_safety import safety_step_line
+import mediation_sharing
 import portal_ai
 import portal_pdf
 
@@ -835,11 +836,11 @@ async def complete_report_pdf(
     if user is not None:
         try:
             db = request.app.state.db
-            joint_summary = await db["agreements"].find_one(
+            joint_summary = mediation_sharing.shared_agreement(await db["agreements"].find_one(
                 {"user_id": user.user_id},
                 {"_id": 0},
                 sort=[("generated_at", -1)],
-            )
+            ))
         except Exception:
             # Non-fatal — degrade to the empty-state stub so a Mongo
             # blip never blocks a PDF.

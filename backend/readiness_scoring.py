@@ -131,7 +131,7 @@ def _score_conflict(prep: Dict[str, Any]) -> Tuple[float, List[str]]:
 
     # Count how many issue categories have content.
     issue_categories_with_content = 0
-    for key in ("schedule", "communication", "finances", "safety", "other"):
+    for key in ("schedule", "communication", "finances", "other"):
         v = issues.get(key)
         if v and str(v).strip():
             issue_categories_with_content += 1

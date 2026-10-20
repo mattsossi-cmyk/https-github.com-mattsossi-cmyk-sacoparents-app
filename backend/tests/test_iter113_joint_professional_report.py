@@ -183,7 +183,7 @@ class TestPayloadShape:
         r = parent1.get(f"{BASE_URL}/api/joint-professional-report/{active_share}")
         body = r.json()
         # Only the safety-step line; no safety-lens finding or note.
-        assert body["safety_step"] == "Safety step: not started"
+        assert body["safety_step"] == "Safety step: see SACOparentsAlign"
         assert "safety_privacy_note" not in body and "finding 3" not in str(body).lower()
         # No leaked Finding 1/2 language anywhere in the payload.
         text = str(body).lower()

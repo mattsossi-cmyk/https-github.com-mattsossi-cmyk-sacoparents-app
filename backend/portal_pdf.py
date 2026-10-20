@@ -13,6 +13,7 @@ from typing import Any, Dict, List, Optional
 from fpdf import FPDF
 
 from pdf_base import _safe
+from case_safety import SAFETY_STEP_SEE
 
 
 # Brand palette matches the SacoparentsPortal.jsx mockup:
@@ -842,7 +843,7 @@ def build_portal_complete_report_pdf(
         _draw_meta_row(pdf, "Parent", author_name)
     pdf.set_font("Helvetica", "B", 9)
     pdf.set_text_color(*_SLATE_INK)
-    pdf.cell(0, 6, _safe(safety_step or "Safety step: not started"), ln=1)
+    pdf.cell(0, 6, _safe(safety_step or SAFETY_STEP_SEE), ln=1)
     pdf.ln(3)
 
     # ---- 2. Co-parenting Assessment (Health Index for now) ----

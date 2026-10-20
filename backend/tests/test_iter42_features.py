@@ -81,6 +81,11 @@ def p1_client(p1_token):
     return s
 
 
+def _ack_ai(headers):
+    from ai_ready import accept_ai_notice
+    accept_ai_notice(f"{BASE_URL}/api", dict(headers))
+
+
 @pytest.fixture
 def guest_client():
     r = requests.post(f"{BASE_URL}/api/auth/guest", timeout=30)
@@ -101,6 +106,7 @@ class TestRegenSummaryLengthToggle:
 
     @pytest.mark.parametrize("prefix", ["edu-deep", "psych-deep", "med-deep"])
     def test_regen_summary_guest_forbidden(self, guest_client, prefix):
+        _ack_ai(guest_client.headers)
         r = guest_client.post(f"{BASE_URL}/api/{prefix}/report/regen-summary",
                               json={"length": "short"})
         assert r.status_code == 403, f"{prefix}: {r.status_code} {r.text}"

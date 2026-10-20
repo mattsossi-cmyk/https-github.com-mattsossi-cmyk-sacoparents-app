@@ -35,6 +35,8 @@ import journal_routes
 import report_visibility
 from pydantic import BaseModel, EmailStr, Field
 from typing import List
+import mediation_sharing  # noqa: E402
+import prep_privacy  # noqa: E402
 
 
 router = APIRouter(prefix="/mediation", tags=["mediation"])
@@ -69,10 +71,10 @@ async def _load_prep(db, user_id: str) -> Dict[str, Any]:
 
 
 def _snapshot_prep(prep: Dict[str, Any]) -> Dict[str, Any]:
-    """Freeze the parts of prep we want to compare across summaries."""
+    """Freeze the parts of prep we want to compare across summaries (never the Issues safety text)."""
     return {
         "child_goals": prep.get("child_goals"),
-        "issues": prep.get("issues"),
+        "issues": prep_privacy.clean_issues(prep.get("issues")),
         "priority": prep.get("priority"),
         "comm_style": prep.get("comm_style"),
         "readiness": prep.get("readiness"),
@@ -105,7 +107,13 @@ async def save_issues(
     request: Request,
     current: UserPublic = Depends(get_current_user),
 ):
-    await _save_section(request.app.state.db, current.user_id, "issues", body.dict())
+    db = request.app.state.db
+    # The safety box is now the Family check-in card: new safety text is dropped, text already saved is kept as is.
+    payload = prep_privacy.clean_issues(body.dict())
+    saved = prep_privacy.saved_safety_text(((await db.prep_data.find_one({"user_id": current.user_id}, {"_id": 0, "issues": 1})) or {}).get("issues"))
+    if saved:
+        payload.setdefault("items", {})[prep_privacy.SAFETY_ISSUE] = saved
+    await _save_section(db, current.user_id, "issues", payload)
     return {"ok": True}
 
 
@@ -158,7 +166,7 @@ async def get_prep(
     request: Request,
     current: UserPublic = Depends(get_current_user),
 ):
-    return await _load_prep(request.app.state.db, current.user_id)
+    return prep_privacy.without_safety_text(await _load_prep(request.app.state.db, current.user_id))
 
 
 
@@ -1142,6 +1150,7 @@ async def generate_summary(
     summary_id = f"sum_{uuid.uuid4().hex[:12]}"
     doc = {
         **summary,
+        mediation_sharing.CLEAN: True,
         "summary_id": summary_id,
         "user_id": current.user_id,
         "generated_at": _now(),
@@ -1189,7 +1198,7 @@ async def list_summaries(
     current: UserPublic = Depends(get_current_user),
 ):
     cursor = request.app.state.db.summaries.find(
-        {"user_id": current.user_id}, {"_id": 0}
+        {"user_id": current.user_id}, {"_id": 0, "prep_snapshot": 0, "share_copy": 0}
     ).sort("generated_at", -1).limit(20)
     return await cursor.to_list(20)
 
@@ -1371,6 +1380,7 @@ async def generate_agreement(
     agreement_id = f"agr_{uuid.uuid4().hex[:12]}"
     doc = {
         **agreement,
+        mediation_sharing.CLEAN: True,
         "agreement_id": agreement_id,
         "user_id": current.user_id,
         "generated_at": _now(),
@@ -1388,7 +1398,7 @@ async def list_agreements(
     current: UserPublic = Depends(get_current_user),
 ):
     cursor = request.app.state.db.agreements.find(
-        {"user_id": current.user_id}, {"_id": 0}
+        {"user_id": current.user_id}, {"_id": 0, "prep_snapshot": 0, "share_copy": 0}
     ).sort("generated_at", -1).limit(20)
     return await cursor.to_list(20)
 
@@ -1518,8 +1528,9 @@ async def create_summary_share_link(
         incoming = (summary.get("visibility") or {}).get("excluded") or []
     ex = report_visibility.clean_excluded("summary", incoming)
     expire_days = body.expire_days if body else 7
+    await mediation_sharing.prepare(db, "summary", summary, current)
     token = create_share_token("summary", summary_id, current.user_id,
-                               excluded_sections=ex, expire_days=expire_days)
+                               excluded_sections=ex, expire_days=expire_days, extra_claims={"clean": 1})
     payload = decode_share_token(token) or {}
     expires_at = datetime.fromtimestamp(payload["exp"], tz=timezone.utc) if payload.get("exp") else None
     await record_share_token(db, jti=payload.get("jti"), user_id=current.user_id,
@@ -1549,8 +1560,9 @@ async def create_agreement_share_link(
         incoming = (agreement.get("visibility") or {}).get("excluded") or []
     ex = report_visibility.clean_excluded("agreement", incoming)
     expire_days = body.expire_days if body else 7
+    await mediation_sharing.prepare(db, "agreement", agreement, current)
     token = create_share_token("agreement", agreement_id, current.user_id,
-                               excluded_sections=ex, expire_days=expire_days)
+                               excluded_sections=ex, expire_days=expire_days, extra_claims={"clean": 1})
     payload = decode_share_token(token) or {}
     expires_at = datetime.fromtimestamp(payload["exp"], tz=timezone.utc) if payload.get("exp") else None
     await record_share_token(db, jti=payload.get("jti"), user_id=current.user_id,
@@ -1560,6 +1572,16 @@ async def create_agreement_share_link(
     return {"token": token, "jti": payload.get("jti"),
             "path": f"/api/mediation/shared/{token}", "excluded": ex,
             "expires_at": expires_at.isoformat() if expires_at else None}
+
+
+async def _shared_pdf(db, kind: str, doc: Dict[str, Any], user_name: str, mediation_date, excluded) -> bytes:
+    view, ex = mediation_sharing.shared_view(kind, doc, excluded)
+    if kind == "summary":
+        prep = await _load_prep(db, doc["user_id"])
+        return pdf_service.build_summary_pdf(user_name=user_name or "", summary=view, child_goals=prep.get("child_goals"),
+                                             mediation_date=mediation_date, excluded_sections=ex)
+    return pdf_service.build_agreement_pdf(user_name=user_name or "", agreement=view, mediation_date=mediation_date,
+                                           excluded_sections=ex)
 
 
 @router.get("/shared/{token}")
@@ -1580,37 +1602,17 @@ async def download_shared_pdf(
 
     doc_type = payload["doc_type"]
     doc_id = payload["doc_id"]
-    token_excluded = payload.get("ex") or []
-    if doc_type == "summary":
-        doc = await db.summaries.find_one(
-            {"summary_id": doc_id, "user_id": user["user_id"]}, {"_id": 0}
-        )
-        if not doc:
-            raise HTTPException(status_code=404, detail="Summary not found")
-        prep = await _load_prep(db, user["user_id"])
-        pdf_bytes = pdf_service.build_summary_pdf(
-            user_name=user.get("name", ""),
-            summary=doc,
-            child_goals=prep.get("child_goals"),
-            mediation_date=user.get("mediation_date"),
-            excluded_sections=report_visibility.clean_excluded("summary", token_excluded),
-        )
-        filename = f"mediation_summary_{doc_id}.pdf"
-    elif doc_type == "agreement":
-        doc = await db.agreements.find_one(
-            {"agreement_id": doc_id, "user_id": user["user_id"]}, {"_id": 0}
-        )
-        if not doc:
-            raise HTTPException(status_code=404, detail="Agreement not found")
-        pdf_bytes = pdf_service.build_agreement_pdf(
-            user_name=user.get("name", ""),
-            agreement=doc,
-            mediation_date=user.get("mediation_date"),
-            excluded_sections=report_visibility.clean_excluded("agreement", token_excluded),
-        )
-        filename = f"coparenting_agreement_{doc_id}.pdf"
-    else:
+    if doc_type not in mediation_sharing.COLL:
         raise HTTPException(status_code=404, detail="Unknown document type")
+    # Links made before the privacy update can't be cleaned: the parent can make a new one.
+    if not payload.get("clean"):
+        raise HTTPException(status_code=410, detail=mediation_sharing.OLD_LINK)
+    coll, key = mediation_sharing.COLL[doc_type]
+    doc = await db[coll].find_one({key: doc_id, "user_id": user["user_id"]}, {"_id": 0})
+    if not doc:
+        raise HTTPException(status_code=404, detail="Document not found")
+    pdf_bytes = await _shared_pdf(db, doc_type, doc, user.get("name", ""), user.get("mediation_date"), payload.get("ex"))
+    filename = mediation_sharing.FILENAME[doc_type]
 
     return StreamingResponse(
         BytesIO(pdf_bytes),
@@ -1747,41 +1749,20 @@ async def email_mediator(
     attachments: list = []
     doc_labels: list = []
 
-    if body.summary_id:
-        summary = await db.summaries.find_one(
-            {"summary_id": body.summary_id, "user_id": current.user_id},
-            {"_id": 0},
-        )
-        if not summary:
-            raise HTTPException(status_code=404, detail="Summary not found")
-        prep = await _load_prep(db, current.user_id)
-        pdf_bytes = pdf_service.build_summary_pdf(
-            user_name=current.name,
-            summary=summary,
-            child_goals=prep.get("child_goals"),
-            mediation_date=current.mediation_date,
-        )
-        attachments.append(
-            (f"mediation_summary_{body.summary_id}.pdf", pdf_bytes)
-        )
-        doc_labels.append("Mediation Summary")
-
-    if body.agreement_id:
-        agreement = await db.agreements.find_one(
-            {"agreement_id": body.agreement_id, "user_id": current.user_id},
-            {"_id": 0},
-        )
-        if not agreement:
-            raise HTTPException(status_code=404, detail="Agreement draft not found")
-        pdf_bytes = pdf_service.build_agreement_pdf(
-            user_name=current.name,
-            agreement=agreement,
-            mediation_date=current.mediation_date,
-        )
-        attachments.append(
-            (f"coparenting_agreement_{body.agreement_id}.pdf", pdf_bytes)
-        )
-        doc_labels.append("Co-Parenting Agreement Draft")
+    # The mediator gets the shared copy: no safety text, reflection answers or readiness score.
+    for kind, doc_id, label, missing in (("summary", body.summary_id, "Mediation Summary", "Summary not found"),
+                                         ("agreement", body.agreement_id, "Co-Parenting Agreement Draft", "Agreement draft not found")):
+        if not doc_id:
+            continue
+        coll, key = mediation_sharing.COLL[kind]
+        doc = await db[coll].find_one({key: doc_id, "user_id": current.user_id}, {"_id": 0})
+        if not doc:
+            raise HTTPException(status_code=404, detail=missing)
+        await mediation_sharing.prepare(db, kind, doc, current)
+        excluded = (doc.get("visibility") or {}).get("excluded")
+        attachments.append((mediation_sharing.FILENAME[kind],
+                            await _shared_pdf(db, kind, doc, current.name, current.mediation_date, excluded)))
+        doc_labels.append(label)
 
     try:
         email_service.send_mediator_email(

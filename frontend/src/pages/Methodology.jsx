@@ -77,8 +77,9 @@ export default function Methodology() {
           <p data-testid="methodology-safety-step">
             Safety questions are answered privately on SACOparentsAlign, not in
             this app. This app does not score safety answers, and its reports
-            show only &ldquo;Safety step: completed on SACOparentsAlign&rdquo; or
-            &ldquo;Safety step: not started&rdquo;. If you are in danger, call 911
+            show only &ldquo;Safety step: completed on SACOparentsAlign&rdquo; or,
+            when this app can&apos;t know, &ldquo;Safety step: see SACOparentsAlign&rdquo;.
+            If you are in danger, call 911
             or the National DV Hotline at 1-800-799-7233.
           </p>
 

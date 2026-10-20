@@ -32,9 +32,16 @@ def guest_token():
     return tok
 
 
+def _ack_ai(headers):
+    from ai_ready import accept_ai_notice
+    accept_ai_notice(f"{BASE_URL}/api", dict(headers))
+
+
 @pytest.fixture(scope="module")
 def auth_headers(guest_token):
-    return {"Authorization": f"Bearer {guest_token}", "Content-Type": "application/json"}
+    h = {"Authorization": f"Bearer {guest_token}", "Content-Type": "application/json"}
+    _ack_ai(h)
+    return h
 
 
 # ------------------------------------------------------------------

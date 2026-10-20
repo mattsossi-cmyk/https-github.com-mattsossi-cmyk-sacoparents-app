@@ -23,8 +23,8 @@ from typing import Any, Dict, Iterable, List, Set
 # ---- Catalog ---------------------------------------------------------------
 REPORT_SECTIONS: Dict[str, List[Dict[str, str]]] = {
     "summary": [
-        {"key": "readiness",         "label": "Readiness banner",               "description": "Your overall readiness score and the four dimension bars."},
-        {"key": "changes_since_last","label": "What's changed since last time", "description": "Coach narrative comparing this run to your previous summary."},
+        {"key": "readiness",         "label": "Readiness banner",               "description": "Your overall readiness score and the four dimension bars.", "own_only": "true"},
+        {"key": "changes_since_last","label": "What's changed since last time", "description": "Coach narrative comparing this run to your previous summary.", "own_only": "true"},
         {"key": "child_goals",       "label": "Child-Centered Goals",           "description": "The goals you named for your child."},
         {"key": "top_concerns",      "label": "Top concerns",                   "description": "The concerns you flagged during prep."},
         {"key": "priority_agenda",   "label": "Priority agenda",                "description": "Your ranked mediation topics."},
@@ -33,7 +33,7 @@ REPORT_SECTIONS: Dict[str, List[Dict[str, str]]] = {
         {"key": "notes_for_mediator","label": "Notes for the mediator",         "description": "Free-text context you want the mediator to see."},
     ],
     "agreement": [
-        {"key": "changes_since_last","label": "Updates from the previous draft","description": "What changed between this version and the last."},
+        {"key": "changes_since_last","label": "Updates from the previous draft","description": "What changed between this version and the last.", "own_only": "true"},
         {"key": "shared_goals",      "label": "Shared goals for our child",     "description": "Common ground goals."},
         {"key": "communication",     "label": "Communication clauses",          "description": "Proposed communication ground rules."},
         {"key": "child_needs",       "label": "Child needs clauses",            "description": "Proposed care and support arrangements."},

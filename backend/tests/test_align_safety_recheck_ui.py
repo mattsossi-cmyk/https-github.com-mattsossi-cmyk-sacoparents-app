@@ -64,5 +64,5 @@ def test_complete_report_pdf_step_line(h):
     assert r.status_code == 200, r.text[:300]
     from pypdf import PdfReader
     text = "".join(p.extract_text() or "" for p in PdfReader(io.BytesIO(r.content)).pages)
-    assert "Safety step: not started" in text
+    assert "Safety step: see SACOparentsAlign" in text and "Safety step: not started" not in text
     assert "Flagged" not in text

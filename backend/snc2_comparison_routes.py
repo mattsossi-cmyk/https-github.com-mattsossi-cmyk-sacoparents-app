@@ -41,6 +41,7 @@ from motor.motor_asyncio import AsyncIOMotorDatabase
 from pydantic import BaseModel, EmailStr
 
 from auth import UserPublic, get_current_user, get_db
+import safety_gate
 from safety_gate import NOT_AVAILABLE
 from snc2_comparison import build_comparison
 from snc2_comparison_pdf import build_comparison_pdf
@@ -53,7 +54,6 @@ SHARES = "snc2_shares"
 ASSESSMENTS = "snc2_assessments"
 SAFETY = "safety_assessments"
 
-BLOCKING_SAFETY_LEVELS = {1, 2}
 
 
 def _now_iso() -> str:
@@ -67,16 +67,6 @@ def _safe_filename(name: str) -> str:
 def _normalize_email(email: str) -> str:
     return (email or "").strip().lower()
 
-
-async def _latest_safety_level(db: AsyncIOMotorDatabase, user_id: str) -> Optional[int]:
-    doc = await db[SAFETY].find_one(
-        {"user_id": user_id}, {"_id": 0, "result": 1},
-        sort=[("created_at", -1)],
-    )
-    if not doc:
-        return None
-    lvl = (doc.get("result") or {}).get("level")
-    return lvl if isinstance(lvl, int) else None
 
 
 async def _load_user(db: AsyncIOMotorDatabase, user_id: str) -> Optional[Dict[str, Any]]:
@@ -194,8 +184,7 @@ async def link_partner(
 
     # Safety guardrail on creation — the creator implicitly consents, so we
     # apply the block up front.
-    level = await _latest_safety_level(db, me.user_id)
-    if level in BLOCKING_SAFETY_LEVELS:
+    if await safety_gate.is_blocked(db, me.user_id):
         raise HTTPException(
             status_code=403,
             detail=NOT_AVAILABLE,
@@ -255,8 +244,7 @@ async def consent(
         raise HTTPException(status_code=409, detail="This comparison request was revoked.")
 
     if body.consent:
-        level = await _latest_safety_level(db, me.user_id)
-        if level in BLOCKING_SAFETY_LEVELS:
+        if await safety_gate.is_blocked(db, me.user_id):
             raise HTTPException(
                 status_code=403,
                 detail=NOT_AVAILABLE,
@@ -323,8 +311,7 @@ async def _load_comparison(
             detail="Both parents must consent before the comparison is visible.",
         )
     # Real-time safety check for the viewer.
-    my_level = await _latest_safety_level(db, me_id)
-    if my_level in BLOCKING_SAFETY_LEVELS:
+    if await safety_gate.is_blocked(db, me_id):
         raise HTTPException(
             status_code=403,
             detail=NOT_AVAILABLE,
@@ -410,8 +397,7 @@ async def dashboard_highlights(
              "total_items": 0, "aligned_pct": 0, "highlights": []}
 
     # Safety guardrail — never expose comparison data if the viewer is safety-blocked.
-    my_level = await _latest_safety_level(db, me.user_id)
-    if my_level in BLOCKING_SAFETY_LEVELS:
+    if await safety_gate.is_blocked(db, me.user_id):
         return empty
 
     cursor = db[SHARES].find(

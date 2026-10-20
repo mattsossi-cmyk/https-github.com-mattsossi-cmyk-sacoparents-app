@@ -208,8 +208,8 @@ class TestEmailTemplate:
             unsubscribe_url="https://api.example.com/api/self-journey/weekly-note/unsubscribe?token=abc",
         )
         assert captured["subject"] == "Your weekly note"
-        # HTML-escaped highlight
-        assert "Worked on your &lt;Foundation&gt; Statement" in captured["html"]
+        # The note no longer lists the week's steps (they stay in the app).
+        assert "Foundation" not in captured["html"] and "Self-Assessment" not in captured["text"]
         assert "Open my Self Journey" in captured["html"]
         assert "Unsubscribe" in captured["html"]
         assert "https://api.example.com/api/self-journey/weekly-note/unsubscribe?token=abc" in captured["text"]

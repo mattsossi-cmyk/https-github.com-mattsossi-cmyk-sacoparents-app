@@ -534,15 +534,8 @@ async def _coparenting_payload(
             if snc_doc
             else None
         ),
-        "foundation_statement": {
-            "child_lens": _clean(reflection.get("child_lens")),
-            "my_part": _clean(reflection.get("my_part")),
-            "best_case": _clean(reflection.get("best_case")),
-            "coparent_lens": _clean(reflection.get("coparent_lens")),
-            "updated_at": _iso(reflection.get("updated_at") or prep.get("updated_at")),
-        }
-        if reflection
-        else None,
+        # Reflection answers stay with the parent (shared only when the parent sends the Foundation Statement).
+        "foundation_statement": None,
         "mediation_statement": (
             {
                 "text": mediation_statement_doc.get("text"),
@@ -555,7 +548,6 @@ async def _coparenting_payload(
             "child_goals": _pick_prep(prep.get("child_goals"), ("focus", "topics", "notes")),
             "issues": _pick_prep(prep.get("issues"), ("selected", "notes", "priority")),
             "priority": _pick_prep(prep.get("priority"), ("issue", "why", "outcome")),
-            "readiness": _pick_prep(prep.get("readiness"), ("score", "reflection")),
             "completed_sections": [k for k, v in completed.items() if v],
             "updated_at": _iso(prep.get("updated_at")),
         },

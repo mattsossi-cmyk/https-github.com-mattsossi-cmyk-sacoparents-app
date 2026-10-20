@@ -9,8 +9,17 @@ import wave
 import pytest
 import requests
 
+from ai_ready import ai_headers
+
 BASE_URL = os.environ.get("REACT_APP_BACKEND_URL", "").rstrip("/")
 API = f"{BASE_URL}/api"
+_AI = {}
+
+
+def _ai():
+    if not _AI:
+        _AI.update(ai_headers(API))
+    return _AI
 
 TOPICS = ["foundation", "coparenting", "safety", "medical", "educational", "psychological"]
 
@@ -151,7 +160,7 @@ class TestVoiceTranscribe:
     def test_valid_wav_returns_text(self):
         wav = _tiny_wav_bytes()
         files = {"audio": ("voice.wav", wav, "audio/wav")}
-        r = requests.post(f"{API}/portal/voice-transcribe", files=files, timeout=60)
+        r = requests.post(f"{API}/portal/voice-transcribe", files=files, headers=_ai(), timeout=60)
         assert r.status_code == 200, f"{r.status_code} {r.text[:300]}"
         data = r.json()
         assert "text" in data
@@ -159,13 +168,13 @@ class TestVoiceTranscribe:
 
     def test_empty_payload_returns_400(self):
         files = {"audio": ("voice.wav", b"", "audio/wav")}
-        r = requests.post(f"{API}/portal/voice-transcribe", files=files, timeout=15)
+        r = requests.post(f"{API}/portal/voice-transcribe", files=files, headers=_ai(), timeout=15)
         assert r.status_code == 400
         assert "empty" in r.text.lower()
 
     def test_text_plain_content_type_returns_415(self):
         files = {"audio": ("note.txt", b"hello world", "text/plain")}
-        r = requests.post(f"{API}/portal/voice-transcribe", files=files, timeout=15)
+        r = requests.post(f"{API}/portal/voice-transcribe", files=files, headers=_ai(), timeout=15)
         assert r.status_code == 415
 
     def test_audio_webm_accepted(self):
@@ -173,16 +182,16 @@ class TestVoiceTranscribe:
         # a valid content-type + non-empty bytes gets past the 415 guard.
         # Whisper may 502, but the accept check is what we're testing.
         files = {"audio": ("voice.webm", b"\x1a\x45\xdf\xa3" + b"\x00" * 128, "audio/webm;codecs=opus")}
-        r = requests.post(f"{API}/portal/voice-transcribe", files=files, timeout=30)
+        r = requests.post(f"{API}/portal/voice-transcribe", files=files, headers=_ai(), timeout=30)
         assert r.status_code != 415, "audio/webm;codecs=opus should be accepted"
 
     def test_rate_limit_returns_429(self):
         # Shared bucket. Push past 40/hr from same IP → expect 429.
-        wav = _tiny_wav_bytes(seconds=0.1)
+        # Wrong-type uploads still count against the quota but never reach Whisper.
         saw_429 = False
         for _ in range(50):
-            files = {"audio": ("v.wav", wav, "audio/wav")}
-            r = requests.post(f"{API}/portal/voice-transcribe", files=files, timeout=15)
+            files = {"audio": ("v.txt", b"x", "text/plain")}
+            r = requests.post(f"{API}/portal/voice-transcribe", files=files, headers=_ai(), timeout=15)
             if r.status_code == 429:
                 saw_429 = True
                 break
@@ -283,7 +292,7 @@ class TestRegressionEndpoints:
 
     def test_biff_refine_200(self):
         r = requests.post(
-            f"{API}/portal/biff-refine",
+            f"{API}/portal/biff-refine", headers=_ai(),
             json={"raw": "You never respond on time and it makes me angry.", "safety_flagged": False},
             timeout=45,
         )
@@ -309,4 +318,5 @@ class TestRegressionEndpoints:
         assert st.get("foundation_text") == "Roundtrip test foundation."
         assert st.get("court_key") == "TEST-CT-1"
         assert st.get("health_index", {}).get("s1") == 8
-        assert (st.get("safety_ack") or {}).get("cleared") is True
+        # The in-app quick safety check is retired: a client can't write its result any more.
+        assert (st.get("safety_ack") or {}).get("date") != "2026-01-15"

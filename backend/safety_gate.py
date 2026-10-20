@@ -3,6 +3,7 @@
 The in-app safety screen is off (the safety step is the Family check-in on SACOparentsAlign). A parent with
 no saved result is never blocked. A parent whose latest saved result is level 1 or 2 still can't invite or
 nudge the co-parent; they see only the neutral NOT_AVAILABLE note, never a level or a safety reason.
+A named professional's case settings sent from SACOparentsAlign lift the hold.
 Invitations to professionals are never gated here.
 """
 from __future__ import annotations
@@ -37,9 +38,21 @@ async def _latest_safety_level(db: AsyncIOMotorDatabase, user_id: str) -> Option
     return int(level) if isinstance(level, (int, float)) else None
 
 
+async def lifted_by_professional(db: AsyncIOMotorDatabase, user_id: str) -> bool:
+    """A named professional's case settings (signed, from SACOparentsAlign) replace the old-result hold."""
+    import case_safety
+    for case_id in await case_safety.case_ids_for(db, user_id):
+        rec = await case_safety.read_record(db, case_id, "system", "old_result_hold")
+        if rec and rec.get("set_by") == "professional":
+            return True
+    return False
+
+
 async def is_blocked(db: AsyncIOMotorDatabase, user_id: str) -> bool:
     level = await _latest_safety_level(db, user_id)
-    return level is not None and level <= BLOCKED_LEVEL_CEILING
+    if level is None or level > BLOCKED_LEVEL_CEILING:
+        return False
+    return not await lifted_by_professional(db, user_id)
 
 
 async def require_ipv_clearance(db: AsyncIOMotorDatabase, user_id: str) -> None:

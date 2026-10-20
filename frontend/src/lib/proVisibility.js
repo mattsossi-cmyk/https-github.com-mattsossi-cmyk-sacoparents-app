@@ -60,7 +60,7 @@ export const METHODS = [
     lead: "Comparisons and joint reports.",
     points: [
       "A joint report only exists after both parents agree to compare.",
-      "It never includes either parent's safety answers or results. Its only safety line says whether the safety step on SACOparentsAlign is completed or not started.",
+      "It never includes either parent's safety answers or results. Its only safety line is \"Safety step: completed on SACOparentsAlign\" or, when this app can't know, \"Safety step: see SACOparentsAlign\".",
     ],
   },
   {
@@ -91,7 +91,7 @@ export const METHODS = [
 
 export const COURT_POINTS = [
   "SA CoParents does not file or send anything to a court. A court only sees a document if you, your attorney or someone you gave it to files it.",
-  "The Complete Coparenting Report, the court checklist and joint reports carry only one safety line: \"Safety step: completed on SACOparentsAlign\" or \"Safety step: not started\".",
+  "The Complete Coparenting Report, the court checklist and joint reports carry only one safety line: \"Safety step: completed on SACOparentsAlign\" or, when this app can't know, \"Safety step: see SACOparentsAlign\".",
   "Parallel Parenting Court-Order Notes list the choices you made so you can compare them with your own court order. You download them yourself.",
   "Court-facing PDFs carry a notice that they are a parent's own reflection, not an evaluation and not legal advice.",
 ];
@@ -125,7 +125,7 @@ export const SHARING_NOTICES = {
   "safety-check": {
     title: "Safety step",
     stays: "Safety questions are now answered on SACOparentsAlign. Older safety answers saved in this app stay in your account and in your own data download.",
-    leaves: "Older safety answers are never shown, shared or emailed. Reports say only whether the safety step on SACOparentsAlign is completed or not started.",
+    leaves: "Older safety answers are never shown, shared or emailed. Reports say only \"Safety step: completed on SACOparentsAlign\" or \"Safety step: see SACOparentsAlign\".",
     ai: "Older safety answers are never sent to our AI provider.",
   },
   "foundation-statement": {

@@ -187,6 +187,7 @@ def create_share_token(
     user_id: str,
     excluded_sections: Optional[list] = None,
     expire_days: Optional[int] = SHARE_TOKEN_EXPIRE_DAYS,
+    extra_claims: Optional[dict] = None,
 ) -> str:
     """Issue a signed token that lets anyone with the link download a PDF.
 
@@ -209,6 +210,7 @@ def create_share_token(
         "sub": user_id,
         "jti": uuid.uuid4().hex,
         "iat": now,
+        **(extra_claims or {}),
     }
     if expire_days is not None:
         payload["exp"] = now + timedelta(days=int(expire_days))

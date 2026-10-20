@@ -16,7 +16,7 @@ import jwt
 from motor.motor_asyncio import AsyncIOMotorDatabase
 
 from auth import JWT_ALGO, JWT_SECRET
-from safety_gate import BLOCKED_LEVEL_CEILING, _latest_safety_level
+from safety_gate import BLOCKED_LEVEL_CEILING, _latest_safety_level, lifted_by_professional
 
 logger = logging.getLogger(__name__)
 
@@ -40,10 +40,9 @@ def read_unsubscribe_token(token: str) -> Optional[str]:
 
 async def is_safety_flagged(db: AsyncIOMotorDatabase, user_id: str) -> bool:
     ps = await db.portal_state.find_one({"user_id": user_id}, {"_id": 0, "safety_ack": 1})
-    if ((ps or {}).get("safety_ack") or {}).get("flagged"):
-        return True
     level = await _latest_safety_level(db, user_id)
-    return level is not None and level <= BLOCKED_LEVEL_CEILING
+    flagged = bool(((ps or {}).get("safety_ack") or {}).get("flagged")) or (level is not None and level <= BLOCKED_LEVEL_CEILING)
+    return flagged and not await lifted_by_professional(db, user_id)
 
 
 def _due_kind(completed_at: datetime, sent: Dict[str, datetime], now: datetime) -> Optional[str]:

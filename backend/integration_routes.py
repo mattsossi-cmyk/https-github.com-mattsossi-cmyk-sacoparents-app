@@ -43,12 +43,10 @@ import os
 import secrets
 import string
 from datetime import datetime, timezone, timedelta
-from io import BytesIO
 from typing import Any, Dict, List, Literal, Optional
 
 import bcrypt
 from fastapi import APIRouter, Depends, Header, HTTPException, Request
-from fastapi.responses import StreamingResponse
 from motor.motor_asyncio import AsyncIOMotorDatabase
 from pydantic import BaseModel, EmailStr, Field
 
@@ -325,40 +323,15 @@ async def export_assessments(
         "issues": _pick(prep.get("issues"), keep=("selected", "notes", "priority")),
         "priority": _pick(prep.get("priority"), keep=("issue", "why", "outcome")),
         "comm_style": _pick(prep.get("comm_style"), keep=("style", "notes")),
-        "readiness": _pick(prep.get("readiness"), keep=("score", "reflection")),
+        "readiness": None,  # readiness answers stay with the parent
         "completed_sections": [k for k, v in completed.items() if v],
         "updated_at": _iso(prep.get("updated_at")),
     }
 
-    # Foundation Statement — the four reflective prompts saved via
-    # /api/mediation/reflection. Canonical keys are the ones the
-    # frontend writes (child_lens / own_part / best_outcome /
-    # coparent_feedback — see models.ReflectionPayload). The
-    # historical export shape used different names (my_part /
-    # best_case / coparent_lens) that no writer ever populated, so
-    # 3 of 4 fields silently came back null for every parent.
-    # We now read canonical keys but keep the historical output field
-    # names AND populate a `canonical` block so Align can migrate off
-    # the legacy names on its own timeline.
-    reflection = prep.get("reflection") or {}
-    canonical = {
-        "child_lens": _clean(reflection.get("child_lens")),
-        "own_part": _clean(reflection.get("own_part")),
-        "best_outcome": _clean(reflection.get("best_outcome")),
-        "coparent_feedback": _clean(reflection.get("coparent_feedback")),
-    }
-    foundation_statement = {
-        # Historical field names — kept populated so any existing
-        # Align integration that still reads them starts receiving
-        # real data immediately.
-        "child_lens": canonical["child_lens"],
-        "my_part": canonical["own_part"],
-        "best_case": canonical["best_outcome"],
-        "coparent_lens": canonical["coparent_feedback"],
-        # Canonical block — the shape Align should adopt going forward.
-        "canonical": canonical,
-        "updated_at": _iso(reflection.get("updated_at") or prep.get("updated_at")),
-    }
+    # Foundation Statement answers stay with the parent (shared only when the parent sends it). Shape kept, values empty.
+    canonical = {"child_lens": None, "own_part": None, "best_outcome": None, "coparent_feedback": None}
+    foundation_statement = {"child_lens": None, "my_part": None, "best_case": None, "coparent_lens": None,
+                            "canonical": canonical, "updated_at": None}
 
     # Three-pronged Special Needs — pull the parent's latest report
     # payload from each deep-dive collection. If the parent hasn't
@@ -592,63 +565,18 @@ def _iso(value) -> Optional[str]:
 # `build_foundation_statement_pdf` directly rather than re-implementing
 # them here.
 # --------------------------------------------------------------------- #
+FOUNDATION_NOT_SHARED = "The Foundation Statement isn't shared with SACOparentsAlign."
+
+
 @router.get("/integrations/foundation-statement.pdf")
 async def integrations_foundation_statement_pdf(
     email: str,
     x_integration_key: Optional[str] = Header(default=None, alias="X-Integration-Key"),
     db: AsyncIOMotorDatabase = Depends(get_db),
 ):
-    """Stream the parent's Foundation Statement PDF (server-to-server).
-
-    * Gate: `X-Integration-Key` header must match
-      `INTEGRATION_SHARED_SECRET` (constant-time compare).
-    * 400 if `email` query param missing.
-    * 404 if no parent is linked to that email (same generic body as
-      `export-assessments` so we don't leak account existence).
-    * 409 when the parent has completed no reflection prompts yet —
-      Align's UI can then show its own empty-state instead of
-      embedding a hollow PDF.
-    * 200 with `application/pdf` bytes rendered by the exact same
-      `build_foundation_statement_pdf` builder the parent-facing route
-      calls.
-    """
+    """Server-to-server. Reflection answers stay with the parent (shared only when the parent sends the
+    Foundation Statement), so every linked parent gets the same 409."""
     _verify_integration_key(x_integration_key)
     user = await _linked_user(db, email)
-    held = await is_safety_flagged(db, user["user_id"])
-    await _log_read(db, user["user_id"], "foundation-statement.pdf", held)
-
-    prep = {} if held else (await db.prep_data.find_one({"user_id": user["user_id"]}, {"_id": 0}) or {})
-    reflection = prep.get("reflection") or {}
-
-    # Reuse the parent-facing builder so future visual updates flow
-    # through Align automatically. Lazy import — keeps a heavy PDF
-    # module out of the integrations hot path when only JSON lookups
-    # are being served.
-    from foundation_statement_pdf import (
-        build_foundation_statement_pdf,
-        foundation_statement_has_content,
-    )
-    if not foundation_statement_has_content(reflection):
-        raise HTTPException(
-            status_code=409,
-            detail=(
-                "This parent hasn't completed a Foundation Statement yet."
-            ),
-        )
-
-    author_name = (user.get("name") or (user.get("email") or "").split("@", 1)[0]).strip()
-    pdf_bytes = build_foundation_statement_pdf(
-        author_name=author_name or "A co-parent",
-        reflection=reflection,
-    )
-    return StreamingResponse(
-        BytesIO(pdf_bytes),
-        media_type="application/pdf",
-        headers={
-            "Content-Disposition": 'inline; filename="foundation-statement.pdf"',
-            # Bundle metadata for Align diagnostics — never contains
-            # PHI, just render info.
-            "X-Report-Type": "foundation_statement",
-            "X-Report-Version": "iter208",
-        },
-    )
+    await _log_read(db, user["user_id"], "foundation-statement.pdf", await is_safety_flagged(db, user["user_id"]))
+    raise HTTPException(status_code=409, detail=FOUNDATION_NOT_SHARED)
