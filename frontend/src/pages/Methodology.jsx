@@ -1,8 +1,6 @@
 import React from "react";
 import { Link } from "react-router-dom";
 import { ArrowLeft, FlaskConical, TriangleAlert, Info } from "lucide-react";
-import MasicComparison from "../components/MasicComparison";
-import ReviewerPanelCard from "../components/ReviewerPanelCard";
 
 const LAST_UPDATED = "February 26, 2026";
 
@@ -75,54 +73,14 @@ export default function Methodology() {
             specific family.
           </p>
 
-          <H2>2. Family Violence and Communication Safety Screen</H2>
-          <p>
-            <strong>Source instruments.</strong> The Section-1 immediate-safety
-            screen is adapted from the widely-used <em>Danger Assessment</em>{" "}
-            (Campbell, 1986) and the <em>HITS</em> screening tool (Sherin
-            et&nbsp;al., 1998), with wording tailored for co-parenting contexts.
-            Section 2 (communication readiness) is original but reviewed
-            against the WEB Scale and the ODARA framework.
+          <H2>2. Safety step</H2>
+          <p data-testid="methodology-safety-step">
+            Safety questions are answered privately on SACOparentsAlign, not in
+            this app. This app does not score safety answers, and its reports
+            show only &ldquo;Safety step: completed on SACOparentsAlign&rdquo; or
+            &ldquo;Safety step: not started&rdquo;. If you are in danger, call 911
+            or the National DV Hotline at 1-800-799-7233.
           </p>
-          <p>
-            <strong>Output.</strong> A four-level communication pathway —
-            <em> No-direct contact · Structured written · Assisted · Cooperative</em>{" "}
-            — with an explanation of why. Any single "yes" in the Section-1
-            immediate-safety questions triggers the No-direct-contact pathway.
-          </p>
-          <p>
-            <strong>Important limits.</strong> This is a{" "}
-            <strong>screening tool, not a validated clinical assessment</strong>.
-            It is <strong>not</strong> the Danger Assessment, MASIC-S, or
-            HITS. The Danger Assessment estimates lethal / near-lethal
-            risk in abusive intimate relationships and its scoring is tied
-            to specialized training; HITS was validated in family-practice
-            settings, not in divorce, custody, or mediation populations.
-            This screen has <strong>not been independently validated</strong>{" "}
-            in custody or mediation populations, and its scoring is
-            heuristic. It should not be used in court proceedings without
-            accompanying professional evaluation. Texas crisis hotlines are
-            surfaced in every result regardless of level, and the "pathway"
-            and "Texas resources" sections of the PDF cannot be hidden by
-            the user when sharing.
-          </p>
-          <p>
-            <strong>What this screen decides — and what it does not.</strong>{" "}
-            The screen recommends a <em>communication structure</em> for the
-            parent to consider. It does <strong>not</strong> decide
-            mediation suitability, visitation, custody, protective orders,
-            or any other legal or clinical outcome. Decisions of that
-            weight require a qualified human assessment (family-law
-            attorney, licensed clinician or forensic evaluator, DV
-            advocate). For Level 1 &amp; 2 results the app suppresses AI
-            communication coaching, because coaching a survivor to
-            communicate "better" with a coercive co-parent shifts
-            responsibility onto the person experiencing harm.
-          </p>
-
-          <MasicComparison />
-
-          <ReviewerPanelCard />
 
           <H2>3. AI Coach responses</H2>
           <p>
@@ -130,7 +88,7 @@ export default function Methodology() {
             LLM key. Prompts are constrained by a system instruction that
             forbids diagnosis, dosage advice, legal advice, or crisis triage.
             When triggered by risk keywords, the coach immediately surfaces
-            local hotlines and offers to switch to the Safety Screen.
+            hotlines and the Get help page.
             AI responses are <strong>not stored on Anthropic's servers</strong>{" "}
             for training. See our <Link to="/privacy" className="text-[#2A0F5F] underline">Privacy Policy</Link> for details.
           </p>

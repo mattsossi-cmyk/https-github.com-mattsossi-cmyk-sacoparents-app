@@ -8,7 +8,7 @@
  * continue", `false` on Cancel or Esc.
  *
  * Deliberately NOT cached in localStorage: the whole point is to make
- * the parent read the six bullets *every* time they share. Two clicks
+ * the parent read the points above *every* time they share. Two clicks
  * is not friction, it's a legal-strength consent gate.
  */
 import { useEffect, useState } from "react";

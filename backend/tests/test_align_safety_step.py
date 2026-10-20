@@ -390,3 +390,11 @@ def test_saved_quick_check_cannot_be_changed_or_read():
     assert saved["safety_ack"]["flagged"] is True and saved["safety_plan"] == {"safe_place": "x"} and saved["foundation_text"] == "ours"
     state = httpx.get(f"{API}/portal/state", headers=h, timeout=20).json()["state"]
     assert "safety_ack" not in state and "safety_plan" not in state
+
+
+def test_public_pages_no_longer_describe_the_old_screen():
+    fe = ROOT.parent / "frontend/src/pages"
+    for f in ("Methodology.jsx", "Accessibility.jsx"):
+        src = (fe / f).read_text()
+        assert "Safety Screen" not in src and "MasicComparison" not in src, f
+    assert "Safety step: completed on SACOparentsAlign" in (fe / "Methodology.jsx").read_text().replace("&ldquo;", "").replace("&rdquo;", "")

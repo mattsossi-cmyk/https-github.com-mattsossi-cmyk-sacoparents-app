@@ -9359,3 +9359,22 @@ dashboard for sharing SELECTED completed reports with any professional.
 - Old vs new detail: memory/step4_old_vs_new.md. Tests: tests/test_step4_skip_scoring.py, tests/test_iter150_skip_answer_public.py.
 - OPEN: older copy still says professionals never see answers (LegalAcknowledgment.jsx, LoginPrivacyBox.jsx, lib/proVisibility.js); notice promises this app doesn't deliver (view log, professional check-in on skip, reports without level).
 - 2026-10-19 round 2: notice cut to the sentences true for this app (see step4_old_vs_new.md); Amber skip floor removed; skip = "Skipped", never flags (full + quick); Self Journey link "Quick check-in"; global footer link on every page; Privacy Notice v4. Untrue-for-this-app claims (professional access to answers, view log, court docs, professional check-in on skip) NOT built — awaiting user decision.
+
+## 2026-10-20 — Align safety step replaces the old in-app Safety Assessment (PREVIEW ONLY, not published, no secrets)
+- Q5 answer (from the 10-17 code, live not inspected): co-parent NO, public check page NO, share links NO. Exception: Safety
+  Assessment PDFs emailed before 10-17 as "document waiting" links (recipient + one-time code, 7-day expiry) — now blocked in preview.
+- Hidden from parents: /safety-assessment → /help, /next-steps/safety → /, all old assessment/screen API routes 404 (only /problem-solving kept),
+  public court-report check API unmounted. Saved answers kept in DB + parent's own data export. Portal state never returns or writes
+  safety_ack/safety_plan. Old safety share links not listed (/share/mine); old emailed safety PDFs (secure-docs) 404 + not listed.
+- Egress: no lens/Finding 3/levels/flags in joint report (plumbing removed), Complete Report, court checklist, one-pager, readiness profile
+  (prep.safety_assessment ignored), professional intro PDF, emails, AI prompts ("safety" coaching section removed). Docs carry only
+  "Safety step: completed on SACOparentsAlign" / "Safety step: not started" (case_safety.safety_step_line; no "declined" exists).
+- Kept internally: old level 1-2 / quick-check flag → invites + comparisons blocked with neutral NOT_AVAILABLE note + check-in link;
+  reminders/nudges/weekly notes skipped; Align export held back with no flag. Grey-rock = parent toggle only.
+- Notice (user-approved text): ProfessionalAccessNotice (WhoCanSee, PreShare, JoinInvitation, CourtAcceptDialog), short card,
+  /privacy-notice §2 → PRIVACY_NOTICE_VERSION 2026-10-19-v6. "Who has looked" link OFF until Align gives the address (then linked parents only).
+  /what-professionals-see (lib/proVisibility.js), /methodology §2, /accessibility no longer describe the old screen.
+- Privacy Notice has only sections 1, 2, 7, 12 (never had 3-6, 8-11 in code history) — user will paste missing text; do NOT publish with gaps.
+- Tests: tests/test_align_safety_step.py (23), tests/legacy_safety.py helper (old results written to Mongo), obsolete legacy tests
+  deleted/replaced; iteration_152 (frontend 100%). Remaining suite failures are pre-existing (sign-in now required on guided/voice/BIFF
+  routes, AI-notice 428, Resend 502 in preview, weekly-note html escape, daily-cap counters).

@@ -148,7 +148,7 @@ export default function ReportShareControls({
   }, [pdfUrl, excluded, filename, reportType, totalVisible]);
 
   const copyShareLink = useCallback(async () => {
-    // HB 300 + Privacy Policy pre-share consent gate. Show the six
+    // HB 300 + Privacy Policy pre-share consent gate. Show the
     // "YOU CONTROL THIS REPORT" bullets before the share link is minted.
     // Fail closed on cancel — no link is created and no toast fires.
     const consentLabels = {

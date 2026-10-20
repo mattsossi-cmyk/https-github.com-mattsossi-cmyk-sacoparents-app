@@ -1,0 +1,30 @@
+{
+  "summary": "Checked the change that replaces the in-app Safety Assessment with the SACOparentsAlign Family check-in. Backend quick recheck: 17/17 pytest passed. Every old /api/safety-assessment/* route returns 404/405. /api/next-steps/safety and /api/verify/court-report/x return 404. /share/mine and /secure-docs/sent list no safety documents. The complete-report PDF says 'Safety step: not started' and never 'Flagged'. Frontend: all requested flows pass. Redirects work (/safety-assessment->/help; /next-steps/safety, /case-settings, /plan-options->/). Consent screen and login work. There is no Safety Assessment/Screen entry on the portal home, Self Journey, Court Ordered page, /summary, /readiness or /progress (with the Main menu open). Family check-in card and 'Quick check-in' point to the same address: SA-DEMOCK -> https://sacoparentsalign.com/check-in?case=SA-DEMOCK, a fresh unlinked user -> https://sacoparentsalign.com, target=_blank, no align_ref and no .online host. Dashboard card text is exact; hide works and survives a reload; its link goes to /who-can-see-my-information. /who-can-see-my-information shows the three approved sentences exactly, the Align link opens in a new tab, and there is no 'Who has looked' link. /privacy-notice shows sections 1, 2, 7, 12; section 2 holds the three sentences; no 'your professional' wording. The footer link is on public and signed-in pages. The pre-share dialog (Summary share) shows the approved notice and its checkbox does not mention 'six points'. /what-professionals-see has no old claims and carries only the two step lines. Neutral block: a fresh user with a legacy level-1 row sees the exact neutral note plus an 'Open Family check-in' link on the invite card; there is no email input and no safety/flag/hotline words. Mobile 390px: no horizontal overflow on the portal journey, /who-can-see-my-information or /privacy-notice. Remaining issue: the old 'Safety Screen' is still described on two public pages linked from the footer, /methodology and /accessibility.",
+  "backend_issues": {"critical": [], "minor": []},
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": [
+      {"screen": "/methodology (footer 'Methodology' link, reachable by parents)", "issues": ["Section heading '2. Family Violence and Communication Safety Screen' still describes the old in-app screen (Danger Assessment/HITS items, four-level pathway output, any 'yes' triggers No-direct-contact) as if it is active", "The AI section says the coach 'surfaces local hotlines and offers to switch to the Safety Screen' — the Safety Screen no longer exists in the app"]},
+      {"screen": "/accessibility (footer link)", "issues": ["Lists 'Safety Screen' among the PDFs the app produces ('...Special Needs Care Plan, Safety Screen) is produced with structured headings')"]}
+    ]
+  },
+  "test_report_links": ["/app/backend/tests/test_align_safety_recheck_ui.py", "/app/backend/tests/_seed_neutral_block_user.py", "/app/test_reports/pytest/align_recheck_ui.xml"],
+  "action_items": [
+    "MEDIUM: Update /app/frontend/src/pages/Methodology.jsx. Remove or rewrite section 2 'Family Violence and Communication Safety Screen' (the safety step is now the Family check-in on SACOparentsAlign), and remove 'offers to switch to the Safety Screen' from the AI section. Also check whether the AI coach prompt still offers a Safety Screen.",
+    "LOW: Remove 'Safety Screen' from the PDF list on /accessibility (pages/Accessibility.jsx)."
+  ],
+  "critical_code_review_comments": [
+    "Dead code still links to /safety-assessment: pages/Dashboard.jsx (not routed in App.js), components/FivePillarJourney.jsx, PickerChoicePill.jsx, dashboard/SituationPickerHero.jsx (all used only by the unrouted Dashboard.jsx), pages/portal/SafetyScreen.jsx. None of these are reachable now; if Dashboard.jsx is ever routed again, the old entries come back. Consider removing them or adding a guard.",
+    "Code comments in PreShareConsentDialog.jsx (line ~11) and ReportShareControls.jsx (line ~151) still mention 'six bullets'. Comments only; the UI is fine.",
+    "Backend email_service.py still has a send_safety_assessment-style email ('Your Family Violence and Communication Safety Screen'). It should be unreachable since the routes return 404; consider removing it.",
+    "parent1@test.com is NOT unlinked: GET /api/family-checkin/link returns case SA-783115, so parent1's check-in links go to /check-in?case=SA-783115. That behaviour is correct, but the review note's assumption was wrong. A fresh user was used to verify the unlinked root link."
+  ],
+  "updated_files": ["/app/backend/tests/test_align_safety_recheck_ui.py", "/app/backend/tests/_seed_neutral_block_user.py"],
+  "success_rate": {"backend": "100% (17/17)", "frontend": "100% of requested checks; 2 copy issues on related public pages (/methodology, /accessibility)"},
+  "test_credentials": "parent1@test.com, demo.checkin.a@example.com / TestPass123! worked",
+  "seed_data_creation": "Created a temporary user test_neutral_*@example.com plus a db.safety_assessments row (legacy level 1); both cleaned up afterwards with tests/_seed_neutral_block_user.py cleanup.",
+  "retest_needed": false,
+  "should_main_agent_self_test": true,
+  "context_for_next_testing_agent": "Login page opens in demo mode; click the text 'Sign in with email' to show login-email-input. parent1 is linked to case SA-783115. The neutral-block helper is: python tests/_seed_neutral_block_user.py create|cleanup; the InviteCoparentCard is easiest to reach at /summary. The Self Journey page is reached by clicking the door-self button on /dashboard; the Court Ordered page via 'Switch to Court Ordered'."
+}
