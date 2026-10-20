@@ -1,0 +1,27 @@
+{
+  "summary": "Frontend-only test of the 5 changes (preview). Everything requested works. (1) The WhoCanSee link at /who-can-see-my-information: parent1 (linked, SA-783115) gets href=https://sacoparentsalign.com/who-can-see?case=SA-783115 with target=_blank; parent2 (not linked, even though it has a case code SA-DEMO01) and signed-out users get no link. (3) /prep/communication on fresh accounts: the dialog appears after saving with the exact question and yes/no/skip buttons. Yes: toast, goes to /next-steps/comm_style, API returns 'yes'. No: toast, API returns 'no'. Skip: API stays null and the dialog comes back on the next save. After yes or no, saving again goes straight on with no dialog. Account /account: comm-share-switch is off with the 'Not chosen yet' text for an undecided parent. Turning it on shows a toast and the API returns 'yes'; turning it off returns 'no'; both stay after reload. (4) /admin/audit-log as admin: the held-emails card shows total 5 and 6 rows (reassess 0, weekly_note 'fewer than 5', requested 0, pro_nudge 0, compare_alert 0, draft_nudge 'fewer than 5'), with no emails or case codes. parent1 gets 403 from the API and the 'Admin only' page gate. Mobile 390px: the dialog, comm-share-row and admin page have no horizontal overflow (scrollWidth 390).",
+  "backend_issues": {"critical": [], "minor": []},
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": [
+      {"screen": "Account > Align link card (parent1)", "issues": ["The card's main text no longer mentions Foundation Statement. But the 'Recent reads by Align' history still shows an old entry 'Your Foundation Statement PDF - Not shared'. It comes from the backend _READ_LABELS['foundation-statement.pdf'] in integration_routes.py. It is history, not a promise, but the card text as a whole still contains 'Foundation'. Keep it or relabel it, as the user prefers."]},
+      {"screen": "CommStyle share dialog", "issues": ["Parents NOT linked to Align (fresh accounts) also get the question 'Share with your assigned professional on Align?', and the Account switch shows for unlinked parents too. The spec didn't say to limit this, but it may confuse parents who have no Align professional.", "The dialog text says '...and the message you pasted' even when the optional sample is empty."]}
+    ]
+  },
+  "test_report_links": [],
+  "action_items": [
+    "Optional: relabel or hide the old 'Your Foundation Statement PDF' entries in Align recent reads if the card should never mention Foundation Statement",
+    "Optional: decide whether the comm-share dialog and switch should show only to Align-linked parents"
+  ],
+  "critical_code_review_comments": [
+    "accessLogHref/fillCaseCode work correctly: no link when unlinked, the general URL when there is no valid SA- code, never an empty ?case=",
+    "If getCommShare fails, the code uses 'unknown' and moves on without asking, which is a safe default"
+  ],
+  "updated_files": ["/app/test_reports/iteration_154.json"],
+  "success_rate": {"backend": "N/A (not requested)", "frontend": "100%"},
+  "seed_data_creation": "Fresh accounts test_commshare_*@example.com, test_commshare_y_*@example.com, test_acctsw_*@example.com, test_mob_*@example.com (TestPass123!). parent1/parent2 share choices and link state were not changed.",
+  "retest_needed": false,
+  "should_main_agent_self_test": false,
+  "context_for_next_testing_agent": "WhoCanSee route is /who-can-see-my-information; Communication Style is /prep/communication (wizard-next-button saves). Log in via page.request.post /api/auth/login (cookie auth). Accounts registered via the API with ack_privacy_notice and consent_sensitive_info did not get the consent screen."
+}

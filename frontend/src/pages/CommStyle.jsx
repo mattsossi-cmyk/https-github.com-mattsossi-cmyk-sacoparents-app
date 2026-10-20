@@ -257,7 +257,7 @@ export default function CommStyle() {
           />
         </div>
       </WizardLayout>
-      <CommShareCard open={askShare} onDone={() => navigate("/next-steps/comm_style")} />
+      <CommShareCard open={askShare} hasSample={Boolean(sample.trim())} onDone={() => navigate("/next-steps/comm_style")} />
     </AppShell>
   );
 }

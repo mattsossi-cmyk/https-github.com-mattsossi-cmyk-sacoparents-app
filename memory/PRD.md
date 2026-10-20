@@ -9406,3 +9406,19 @@ dashboard for sharing SELECTED completed reports with any professional.
   (components/caseSettings/HeldEmailsCount.jsx, testids held-emails-card/-total/-list/-{kind}). Preview numbers include test runs.
 - Webhook run: temporary secret in preview only, 8 webhook files → 84 passed / 0 failed after 9 outdated tests were updated; secret removed,
   webhook back OFF (503). Tests: tests/test_held_emails.py (7).
+
+## 2026-10-20 — User's 5-item spec (PREVIEW ONLY; don't deploy until Align's notice 2026-10-19.2 is ready, ship together)
+1. "Who has looked at my information" (WhoCanSee page): shown ONLY to parents linked to Align (GET /api/integrations/align-link linked).
+   frontend/.env REACT_APP_ALIGN_ACCESS_LOG_URL=https://sacoparentsalign.com/who-can-see?case={case_id},
+   REACT_APP_ALIGN_ACCESS_LOG_GENERAL_URL=https://sacoparentsalign.com/who-can-see. Pure logic lib/accessLogHref.js (+ jest test, 5 passed):
+   valid SA- code -> ?case=, otherwise plain page, never empty ?case=. Unlinked/signed-out -> hidden.
+2. Reflection answers never sent to Align: export-assessments no longer has a foundation_statement block at all; test deep-scans keys/values
+   (tests/test_align_share.py::test_no_reflection_field_is_ever_sent). foundation-statement.pdf stays 409.
+3. Communication readiness = Communication Style page's 3 choices + sample message (4 answers). New backend/align_share.py:
+   GET/PUT /api/integrations/align-share/communication-readiness {share: bool} -> choice yes|no|null (collection align_share_choices).
+   Export adds top-level communication_readiness {answers:[{question, answer}×4 plain words], answered_at (comm_style.saved_at)} ONLY when
+   choice == yes, answers exist and no old safety hold; otherwise the key is absent. Asked once after saving Comm Style
+   (components/commStyle/CommShareCard.jsx: yes / no / skip); changed later via switch on Account Align card (components/account/CommShareSwitch.jsx).
+   Align read history label shows "…and Communication Style answers" when included. Copy no longer says Align reads the Foundation Statement.
+4. Admin held-back reminder card (see earlier entry). 5. Supervised webhook run (see earlier entry).
+- Open: PrivacyNoticeContent.jsx (hashed, v7) doesn't describe the optional Communication Style sharing — needs user's wording + version bump.

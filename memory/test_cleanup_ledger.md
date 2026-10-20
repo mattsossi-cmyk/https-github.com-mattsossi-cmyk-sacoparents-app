@@ -58,3 +58,9 @@ Command: `cd /app/backend && REACT_APP_BACKEND_URL=<preview> python -m pytest te
   actor_type "professional"; check-in link returns the shared case_id (never align_ref); bad-signature check compares flags to before.
 - Second pass: 84 passed, 0 failed, 44 skipped (auto_red tests, rule removed 2026-10-19; covered by test_safety_gate_correction.py).
 - With the webhook off again these 8 files skip themselves (by design).
+
+## Final full run after the 5-item spec (2026-10-20)
+- 2230 tests: 2215 passed, 26 skipped, 1 failed. The failure was a 30 s network timeout through the preview proxy
+  (test_iter161 bot/human opens); the file passed 11/11 on rerun. Earlier transient timeouts (test_align_safety_step x2) also pass on rerun.
+- test_password_reset rate-limit test now uses one fixed client address (was flaky when proxy addresses varied).
+- New: tests/test_align_share.py (7), tests/test_held_emails.py (7), frontend src/lib/accessLogHref.test.js (5).

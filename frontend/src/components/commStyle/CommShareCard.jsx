@@ -14,7 +14,7 @@ import {
 const BTN = "rounded-full px-4 py-2 text-sm font-bold disabled:opacity-60";
 
 // Asked once after Communication Style is saved. Skip = nothing sent; the Account page switch changes it later.
-export function CommShareCard({ open, onDone }) {
+export function CommShareCard({ open, hasSample, onDone }) {
   const [busy, setBusy] = useState(false);
   const choose = async (share) => {
     setBusy(true);
@@ -33,8 +33,9 @@ export function CommShareCard({ open, onDone }) {
       <AlertDialogContent data-testid="comm-share-card">
         <AlertDialogHeader>
           <AlertDialogTitle data-testid="comm-share-question">{COMM_SHARE_QUESTION}</AlertDialogTitle>
-          <AlertDialogDescription>
-            The 4 answers are your 3 choices above and the message you pasted. You can change this any time on your Account page.
+          <AlertDialogDescription data-testid="comm-share-what">
+            The 4 answers are your 3 choices above and {hasSample ? "the message you pasted" : "the optional message box, which you left empty"}.
+            You can change this any time on your Account page.
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter className="gap-2">
