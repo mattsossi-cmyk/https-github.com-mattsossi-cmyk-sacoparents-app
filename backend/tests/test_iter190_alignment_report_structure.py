@@ -77,8 +77,8 @@ def test_payload_reports_alignment_report_type():
     `report_type` so this string is a hard contract."""
     payload = _fixture_payload()
     assert payload["report_type"] == "joint_alignment_report"
-    assert payload["report_title"] == "Step One - Alignment Before Agreement"
-    assert payload["report_subtitle"] == "Co-Parenting Agreement"
+    assert payload["report_title"] == "Co-Parenting Agreement"
+    assert payload["report_subtitle"] == "Step One - Alignment Before Agreement"
     assert "neutral map" in payload["report_tagline"].lower()
 
 

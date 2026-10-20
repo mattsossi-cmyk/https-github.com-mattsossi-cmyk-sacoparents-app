@@ -34,10 +34,13 @@ export function useCheckinLink(alignUrl) {
   return fill(TEMPLATE, code) || alignUrl;
 }
 
-// Align's "Who has looked at my information" list (address pending from Align): only for parents linked to a case.
+// Align's "Who has looked at my information" page (addresses pending from Align). A parent linked to a case
+// gets their own case page; everyone else gets the general page. Hidden while neither address is set.
 const ACCESS_LOG_TEMPLATE = process.env.REACT_APP_ALIGN_ACCESS_LOG_URL || "";
+const ACCESS_LOG_GENERAL = process.env.REACT_APP_ALIGN_ACCESS_LOG_GENERAL_URL || "";
 
 export function useAccessLogLink() {
   const code = useCaseCode(Boolean(ACCESS_LOG_TEMPLATE));
-  return code ? fill(ACCESS_LOG_TEMPLATE, code) : null;
+  if (code === undefined) return null;
+  return fill(ACCESS_LOG_TEMPLATE, code) || ACCESS_LOG_GENERAL || null;
 }

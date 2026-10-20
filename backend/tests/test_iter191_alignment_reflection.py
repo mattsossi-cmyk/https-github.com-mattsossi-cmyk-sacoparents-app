@@ -220,7 +220,7 @@ def _register(client: TestClient, email: str, name: str, password: str = "TestPa
     """Register (or log in if exists) and return the auth cookie jar."""
     r = client.post(
         f"{BASE_URL}/api/auth/register",
-        json={"email": email, "password": password, "name": name},
+        json={"ack_privacy_notice": True, "consent_sensitive_info": True, "email": email, "password": password, "name": name},
     )
     if r.status_code == 400:  # already registered
         r = client.post(

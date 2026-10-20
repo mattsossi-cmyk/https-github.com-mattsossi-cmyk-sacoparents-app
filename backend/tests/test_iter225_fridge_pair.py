@@ -12,6 +12,17 @@ BASE_URL = os.environ.get("REACT_APP_BACKEND_URL", "").rstrip("/")
 if not BASE_URL:
     raise RuntimeError("REACT_APP_BACKEND_URL must be set")
 
+from ai_ready import ai_headers  # noqa: E402
+
+_AI = {}
+
+
+def _ai():
+    """Signed in with the AI notice accepted (AI endpoints need both)."""
+    if not _AI:
+        _AI.update(ai_headers(f"{BASE_URL}/api"))
+    return _AI
+
 SNAPSHOT_URL = f"{BASE_URL}/api/portal/guided-snapshot-pdf"
 
 TOPICS = [
@@ -159,6 +170,6 @@ def test_portal_state_requires_auth():
 
 # --- Regression: /api/portal/voice-transcribe still exists (no file -> 422) --- #
 def test_voice_transcribe_endpoint_alive():
-    resp = requests.post(f"{BASE_URL}/api/portal/voice-transcribe", timeout=15)
+    resp = requests.post(f"{BASE_URL}/api/portal/voice-transcribe", headers=_ai(), timeout=15)
     # Missing 'audio' field -> FastAPI validation error 422
     assert resp.status_code in (400, 422)

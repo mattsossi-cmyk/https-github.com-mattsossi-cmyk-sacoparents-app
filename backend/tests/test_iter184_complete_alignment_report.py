@@ -25,6 +25,7 @@ from __future__ import annotations
 import os
 import sys
 
+import pytest
 import requests
 
 sys.path.insert(0, "/app/backend")
@@ -74,12 +75,13 @@ def test_mine_json_returns_seven_lanes_in_canonical_order():
     lane_ids = [ln["id"] for ln in data["lanes"]]
     # Canonical order matters — the frontend + PDF renderer both
     # rely on it. Match `complete_alignment_aggregator.LANES` exactly.
+    # The old Safety Reflection lane is gone (safety questions are answered on SACOparentsAlign).
     assert lane_ids == [
         "foundation", "communication", "activities", "schedule",
-        "child_needs", "safety", "coparenting",
+        "child_needs", "coparenting",
     ], lane_ids
     counts = data.get("counts") or {}
-    assert counts.get("total") == 7
+    assert counts.get("total") == 6
     assert isinstance(counts.get("completed"), int)
 
 
@@ -119,7 +121,19 @@ def test_joint_endpoint_rejects_bad_case_id_format():
     assert r.status_code == 422, r.text
 
 
-def test_joint_seeded_demo_case_never_leaks_foundation_prompts_to_other_parent():
+@pytest.fixture
+def demo_case():
+    """Other test files edit parent1's reflection, so put the SA-DEMO01 seed back first."""
+    import asyncio
+    import sys
+    sys.path.insert(0, "/app/backend")
+    from dotenv import load_dotenv
+    load_dotenv("/app/backend/.env")
+    from seed_joint_sample_case import run
+    asyncio.new_event_loop().run_until_complete(run())
+
+
+def test_joint_seeded_demo_case_never_leaks_foundation_prompts_to_other_parent(demo_case):
     """SECURITY REGRESSION (iter185 code review):
     The joint JSON view must NOT echo either parent's Foundation
     Statement free-text answers under `parent_a` or `parent_b`. Those
@@ -342,7 +356,7 @@ def test_joint_endpoint_returns_404_for_unknown_case():
     assert r.status_code == 404, r.text
 
 
-def test_joint_seeded_demo_case_is_reachable_by_member():
+def test_joint_seeded_demo_case_is_reachable_by_member(demo_case):
     """`SA-DEMO01` is seeded by `seed_joint_sample_case.py` — parent1@test.com
     is on the case as parent A. This test asserts the joint JSON view
     lists both parents by name and returns the neutral tri-state
@@ -384,7 +398,7 @@ def test_aggregator_lanes_are_deterministic_and_have_metadata():
     ids = [ln["id"] for ln in LANES]
     assert ids == [
         "foundation", "communication", "activities", "schedule",
-        "child_needs", "safety", "coparenting",
+        "child_needs", "coparenting",
     ]
     for meta in LANES:
         assert meta["title"], f"Missing title on lane {meta['id']}"

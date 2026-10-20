@@ -32,7 +32,11 @@ PWD = "TestPass123!"
 def _login(email):
     r = requests.post(f"{API}/auth/login", json={"email": email, "password": PWD}, timeout=20)
     assert r.status_code == 200, f"{email}: {r.text}"
-    return r.json()["access_token"]
+    tok = r.json()["access_token"]
+    # AI features (foundation split, talking points) need the current notices accepted.
+    from ai_ready import accept_ai_notice
+    accept_ai_notice(API, {"Authorization": f"Bearer {tok}"})
+    return tok
 
 
 def _h(tok):

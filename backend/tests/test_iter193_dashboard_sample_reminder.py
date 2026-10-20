@@ -85,7 +85,7 @@ def _wipe_rows():
 def _register(client, email, name):
     r = client.post(
         "/api/auth/register",
-        json={"email": email, "password": "TestPass193!", "name": name},
+        json={"ack_privacy_notice": True, "consent_sensitive_info": True, "email": email, "password": "TestPass193!", "name": name},
     )
     if r.status_code == 400:
         r = client.post(
@@ -227,7 +227,8 @@ def test_reminder_sweep_finds_stale_reflection_and_skips_safety(client):
     loop.close()
 
     # Exactly one candidate email — co_parenting for parent B.
-    sent_targets = [s for s in result["sent"] if s.get("subject") == "co_parenting"]
+    # Other seeded test pairs may also be due: look only at this test's pair.
+    sent_targets = [s for s in result["sent"] if s.get("subject") == "co_parenting" and s.get("coparent_id") in (a_id, b_id)]
     assert len(sent_targets) == 1
     assert sent_targets[0]["to"] == "iter193_b@test.com"
     assert sent_targets[0]["coparent_id"] == b_id
@@ -281,7 +282,7 @@ def test_reminder_sweep_skips_when_coparent_already_started(client):
     )
     # No email sent for that subject.
     assert not any(
-        s for s in result["sent"] if s.get("subject") == "co_parenting"
+        s for s in result["sent"] if s.get("subject") == "co_parenting" and s.get("to") == "iter193_b@test.com"
     )
 
 

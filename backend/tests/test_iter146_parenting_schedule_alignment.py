@@ -41,7 +41,7 @@ def _register(client: TestClient) -> tuple[str, str]:
     email = f"iter146_{uuid.uuid4().hex[:8]}@example.com"
     r = client.post(
         "/api/auth/register",
-        json={"email": email, "password": "TestPass123!", "name": "Iter146 Parent"},
+        json={"ack_privacy_notice": True, "consent_sensitive_info": True, "email": email, "password": "TestPass123!", "name": "Iter146 Parent"},
     )
     assert r.status_code in (200, 201), r.text
     return email, r.json()["access_token"]

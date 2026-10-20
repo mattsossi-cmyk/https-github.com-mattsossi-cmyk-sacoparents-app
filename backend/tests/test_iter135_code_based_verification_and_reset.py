@@ -75,7 +75,7 @@ def _clear_ip_rate_limit():
 def _register(client: TestClient, email: str, password: str = "OrigPass123!") -> None:
     r = client.post(
         "/api/auth/register",
-        json={"email": email, "password": password, "name": "Iter135 User"},
+        json={"ack_privacy_notice": True, "consent_sensitive_info": True, "email": email, "password": password, "name": "Iter135 User"},
     )
     assert r.status_code in (200, 201), r.text
 

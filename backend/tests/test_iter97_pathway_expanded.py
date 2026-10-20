@@ -167,7 +167,8 @@ def test_mediation_factors_mention_safety_screen_and_child_involvement():
     factors = " ".join(d["factors_supporting_primary"])
     # This is the safest possible parent — Mediation should win.
     assert d["primary_pathway_key"] == "mediation"
-    assert "No safety or coercive-control indicators" in factors
+    # This app no longer reads safety answers, so it never claims anything about safety.
+    assert "safety" not in factors.lower()
     assert "willingness to remain involved in the child" in factors
 
 

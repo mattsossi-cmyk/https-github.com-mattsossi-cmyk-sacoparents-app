@@ -85,6 +85,7 @@ async def send_guided_draft_nudges(
     # Late import so this module stays test-friendly even when the
     # email service is misconfigured (Resend key missing in preview).
     from email_service import send_guided_draft_nudge as _email
+    from self_assessment_reminders import is_safety_flagged
 
     portal_url = portal_url or "https://sacoparentsapp.online/"
     now = _now()
@@ -111,6 +112,9 @@ async def send_guided_draft_nudges(
         if user_id:
             user_doc = await db[USERS_COLL].find_one({"user_id": user_id})
         if not user_doc or not user_doc.get("email"):
+            continue
+        # Same hold as every other reminder: no emails to a parent with an old safety result.
+        if await is_safety_flagged(db, user_id):
             continue
 
         for topic, snapshot in drafts.items():

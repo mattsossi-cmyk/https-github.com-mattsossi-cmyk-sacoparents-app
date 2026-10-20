@@ -47,10 +47,12 @@ def _pdf_text(blob: bytes) -> str:
 @pytest.fixture(scope="module")
 def fresh_user():
     email = f"TEST_i111_{uuid.uuid4().hex[:10]}@test.com"
-    r = requests.post(f"{API}/auth/register", json={"email": email, "password": "TestPass123!", "name": "Iter 111"}, timeout=TIMEOUT)
+    r = requests.post(f"{API}/auth/register", json={"ack_privacy_notice": True, "consent_sensitive_info": True, "email": email, "password": "TestPass123!", "name": "Iter 111"}, timeout=TIMEOUT)
     assert r.status_code in (200, 201), r.text
     token = r.json().get("token") or r.json().get("access_token")
     assert token, r.text
+    from ai_ready import accept_ai_notice
+    accept_ai_notice(API, {"Authorization": f"Bearer {token}"})
     return {"email": email, "token": token}
 
 
@@ -91,7 +93,7 @@ class TestCourtOrderNotesPdf:
     def test_court_notes_pdf_empty_plan_still_renders(self):
         # Fresh user with no plan: endpoint should still return a PDF with "None ticked yet."-style content
         email = f"TEST_i111_empty_{uuid.uuid4().hex[:8]}@test.com"
-        r = requests.post(f"{API}/auth/register", json={"email": email, "password": "TestPass123!", "name": "Empty"}, timeout=TIMEOUT)
+        r = requests.post(f"{API}/auth/register", json={"ack_privacy_notice": True, "consent_sensitive_info": True, "email": email, "password": "TestPass123!", "name": "Empty"}, timeout=TIMEOUT)
         assert r.status_code in (200, 201)
         tok = r.json().get("token") or r.json().get("access_token")
         headers = {"Authorization": f"Bearer {tok}"}
@@ -106,7 +108,7 @@ class TestCourtOrderNotesPdf:
 class TestChildNeedsAck:
     def test_put_without_ack_returns_422_for_fresh_user(self):
         email = f"TEST_i111_cn_{uuid.uuid4().hex[:8]}@test.com"
-        r = requests.post(f"{API}/auth/register", json={"email": email, "password": "TestPass123!", "name": "CN"}, timeout=TIMEOUT)
+        r = requests.post(f"{API}/auth/register", json={"ack_privacy_notice": True, "consent_sensitive_info": True, "email": email, "password": "TestPass123!", "name": "CN"}, timeout=TIMEOUT)
         tok = r.json().get("token") or r.json().get("access_token")
         headers = {"Authorization": f"Bearer {tok}"}
 

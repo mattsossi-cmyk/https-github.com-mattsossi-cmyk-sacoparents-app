@@ -274,14 +274,13 @@ class TestEmailReport:
             assert body.get("sent_to")
 
 
-# ---------------- Safety override ----------------
+# ---------------- Old safety result never feeds the report ----------------
 class TestSafetyOverride:
-    def test_level1_forces_parallel(self):
-        # Register fresh TEST_ user
+    def test_old_level1_result_does_not_change_report(self):
+        from legacy_safety import _db, save_old_result
         suffix = uuid.uuid4().hex[:8]
-        email = f"TEST_iter38_{suffix}@test.com"
         payload = {
-            "email": email,
+            "email": f"TEST_iter38_{suffix}@test.com",
             "password": "TestPass123!",
             "name": "TEST Iter38",
             "children": [{"name": "K", "age": 8}],
@@ -290,69 +289,24 @@ class TestSafetyOverride:
         }
         rr = requests.post(f"{API}/auth/register", json=payload, timeout=30)
         assert rr.status_code == 200, rr.text
-        tok = rr.json()["access_token"]
-        h = _auth(tok)
-
-        # Discover safety schema; if unknown, skip
-        sa_schema = requests.get(f"{API}/safety-assessment/schema", timeout=15)
-        if sa_schema.status_code != 200:
-            pytest.skip(f"no safety schema: {sa_schema.status_code}")
-        qs = sa_schema.json().get("questions") or []
-        # Fill highest-severity option per question
-        answers = {}
-        for q in qs:
-            opts = q.get("options") or []
-            if opts:
-                last = opts[-1]
-                answers[q["id"]] = last.get("value", last) if isinstance(last, dict) else last
-        sub = requests.post(f"{API}/safety-assessment/submit",
-                            json={"answers": answers}, headers=h, timeout=30)
-        if sub.status_code != 200:
-            pytest.skip(f"safety submit shape unknown: {sub.status_code} {sub.text[:150]}")
-
-        # Setup minimal SNC v2 medical assessment
-        requests.post(f"{API}/snc2/select",
-                      json={"pathways": ["medical"], "child_name": "Kid"},
-                      headers=h, timeout=20)
-        schema = requests.get(f"{API}/snc2/schema",
-                              params={"pathways": "medical"}, timeout=20).json()
-        by = _step_items_for_pathway(schema, "medical")
-        for step_id in ("step1", "step4"):
-            for it in by.get(step_id, []):
-                t = it["type"]
-                if t == "likert":
-                    v = 4
-                elif t == "single":
-                    v = (it.get("options") or ["Yes"])[0]
-                elif t == "multi":
-                    v = [(it.get("options") or ["Other"])[0]]
-                else:
-                    v = "n/a"
-                requests.post(f"{API}/snc2/answer",
-                              json={"question_id": f"{step_id}_medical_{it['id']}", "value": v},
-                              headers=h, timeout=15)
-
-        gen = requests.post(f"{API}/snc2/report/generate", headers=h, timeout=60)
-        assert gen.status_code == 200, gen.text
-        rep = gen.json().get("report") or gen.json()
-        # Look for structure_id
-        struct = ((rep.get("recommended_structure") or {}).get("structure_id")
-                  or rep.get("structure_id"))
-        assert struct == "parallel_or_supported", f"expected parallel_or_supported got {struct}"
-
-        # Cleanup safety doc via mongodb
+        h = _auth(rr.json()["access_token"])
+        sess = requests.Session()
+        sess.headers.update(h)
+        saved = save_old_result(sess, BASE, level=1)
         try:
-            from motor.motor_asyncio import AsyncIOMotorClient
-            import asyncio
-            mongo_url = os.environ.get("MONGO_URL", "mongodb://localhost:27017")
-            db_name = os.environ.get("DB_NAME", "test_database")
-
-            async def _cleanup():
-                cli = AsyncIOMotorClient(mongo_url)
-                db = cli[db_name]
-                await db["safety_assessments"].delete_many({"user_email": email})
-                await db["safety_assessments"].delete_many({"email": email})
-                cli.close()
-            asyncio.get_event_loop().run_until_complete(_cleanup())
-        except Exception:
-            pass
+            requests.post(f"{API}/snc2/select", json={"pathways": ["medical"], "child_name": "Kid"}, headers=h, timeout=20)
+            schema = requests.get(f"{API}/snc2/schema", params={"pathways": "medical"}, timeout=20).json()
+            for step_id in ("step1", "step4"):
+                for it in _step_items_for_pathway(schema, "medical").get(step_id, []):
+                    t = it["type"]
+                    v = 4 if t == "likert" else (it.get("options") or ["Yes"])[0] if t == "single" else \
+                        [(it.get("options") or ["Other"])[0]] if t == "multi" else "n/a"
+                    requests.post(f"{API}/snc2/answer", json={"question_id": f"{step_id}_medical_{it['id']}", "value": v},
+                                  headers=h, timeout=15)
+            gen = requests.post(f"{API}/snc2/report/generate", headers=h, timeout=60)
+            assert gen.status_code == 200, gen.text
+            body = gen.json()
+            # The retired in-app safety screen never feeds this report.
+            assert body.get("safety_level_at_generation") is None
+        finally:
+            _db.safety_assessments.delete_one({"assessment_id": saved["assessment_id"]})

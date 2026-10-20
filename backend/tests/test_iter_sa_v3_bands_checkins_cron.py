@@ -229,6 +229,6 @@ class TestCronsYaml:
         assert len(crons) <= 5
         match = next((c for c in crons if c.get("name") == "sa-reassess-reminder"), None)
         assert match is not None
-        assert match["cron"] == "0 15 * * *"
+        assert match["cron"] == "0 9 * * *"  # 9am Central since the Oct 11 schedule change
         assert match["method"] == "POST"
         assert "/api/cron/self-assessment-reminders" in match["endpoint"]

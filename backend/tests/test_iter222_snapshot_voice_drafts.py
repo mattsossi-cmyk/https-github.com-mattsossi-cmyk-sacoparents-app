@@ -291,14 +291,13 @@ class TestRegressionEndpoints:
         assert r.content[:4] == b"%PDF"
 
     def test_biff_refine_200(self):
+        from ai_ready import client_address
+        # Own client address: the per-address AI quota is shared with the earlier tests in this file.
         r = requests.post(
-            f"{API}/portal/biff-refine", headers=_ai(),
+            f"{API}/portal/biff-refine", headers={**_ai(), **client_address()},
             json={"raw": "You never respond on time and it makes me angry.", "safety_flagged": False},
             timeout=45,
         )
-        # May 429 if rate limit consumed
-        if r.status_code == 429:
-            pytest.skip("Rate limit consumed by prior tests")
         assert r.status_code == 200, f"{r.status_code} {r.text[:200]}"
         data = r.json()
         for k in ("biff", "flags", "risk"):

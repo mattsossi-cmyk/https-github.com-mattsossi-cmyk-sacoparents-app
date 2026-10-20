@@ -38,7 +38,7 @@ def _register(prefix: str, email: str = None) -> Tuple[str, str, str]:
     email = email or f"TEST_{prefix}_{uuid.uuid4().hex[:8]}@test.com"
     r = requests.post(
         f"{BASE_URL}/api/auth/register",
-        json={"email": email, "password": "TestPass123!", "name": f"P {prefix}"},
+        json={"ack_privacy_notice": True, "consent_sensitive_info": True, "email": email, "password": "TestPass123!", "name": f"P {prefix}"},
         timeout=30,
     )
     assert r.status_code == 200, r.text
@@ -256,9 +256,8 @@ def test_preview_happy_path_agree_when_data_identical():
         (t for t in body["topics"] if t["topic_key"] == "foundation_statement"),
         None,
     )
-    assert foundation is not None
-    assert foundation["alignment"] == "agree"
-    assert foundation["parent_a_completed"] and foundation["parent_b_completed"]
+    # Foundation Statement answers stay with each parent (shared only when the parent sends it), so they aren't compared.
+    assert foundation is None
 
 
 def test_preview_happy_path_differ_when_data_differs():
@@ -284,8 +283,7 @@ def test_preview_happy_path_differ_when_data_differs():
         (t for t in body["topics"] if t["topic_key"] == "foundation_statement"),
         None,
     )
-    assert foundation is not None
-    assert foundation["alignment"] == "differ"
+    assert foundation is None  # Foundation Statement answers are never compared
 
 
 def test_preview_response_never_leaks_raw_content():

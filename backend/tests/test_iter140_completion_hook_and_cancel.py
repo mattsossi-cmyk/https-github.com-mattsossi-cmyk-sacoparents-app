@@ -70,7 +70,7 @@ def _register(client: TestClient) -> tuple[str, str, str]:
     email = f"iter140_{uuid.uuid4().hex[:8]}@example.com"
     r = client.post(
         "/api/auth/register",
-        json={"email": email, "password": "TestPass123!", "name": "Iter140 Parent"},
+        json={"ack_privacy_notice": True, "consent_sensitive_info": True, "email": email, "password": "TestPass123!", "name": "Iter140 Parent"},
     )
     assert r.status_code in (200, 201), r.text
     body = r.json()
@@ -82,7 +82,7 @@ def _register(client: TestClient) -> tuple[str, str, str]:
     email = f"iter140_{uuid.uuid4().hex[:8]}@example.com"
     r = client.post(
         "/api/auth/register",
-        json={"email": email, "password": "TestPass123!", "name": "Iter140 Parent"},
+        json={"ack_privacy_notice": True, "consent_sensitive_info": True, "email": email, "password": "TestPass123!", "name": "Iter140 Parent"},
     )
     assert r.status_code in (200, 201), r.text
     body = r.json()

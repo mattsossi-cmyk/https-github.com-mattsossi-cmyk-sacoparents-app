@@ -91,6 +91,8 @@ def test_preview_returns_card_contract():
     # `hasAnyInputs()` helper checks. Missing any of them would silently
     # break the self-hide behaviour for real users.
     inputs = body["data_inputs_present"]
-    for k in ("safety_screen", "dimension_companion", "nd_risk", "compliance"):
+    # Old safety answers no longer feed this card (the safety step is on SACOparentsAlign).
+    assert "safety_screen" not in inputs
+    for k in ("dimension_companion", "nd_risk", "compliance"):
         assert k in inputs, f"data_inputs_present missing {k}: {list(inputs.keys())}"
         assert isinstance(inputs[k], bool)

@@ -30,6 +30,7 @@ def make_client(monkeypatch):
         user_id="uA", email="a@x.com", name="Alex",
         is_guest=False, is_admin=False,
         created_at=datetime.now(timezone.utc).isoformat(),
+        consent_current=True, ai_notice_current=True,
     )
     app.dependency_overrides[get_current_user] = lambda: fake_user
 

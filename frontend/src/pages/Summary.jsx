@@ -11,7 +11,7 @@ import ReportReviewNotice from "../components/ReportReviewNotice";
 import ReportProvenanceFooter from "../components/ReportProvenanceFooter";
 import SignDownloadToggle from "../components/SignDownloadToggle";
 import { api, API } from "../lib/api";
-import { shareViaText } from "../lib/share";
+import { shareViaText, withPreparingNote } from "../lib/share";
 import { toast } from "sonner";
 import { logError } from "../lib/logger";
 import { useAuth } from "../context/AuthContext";
@@ -1092,7 +1092,7 @@ function EmailMediatorDialog({ open, onClose, summaryId, agreementId, defaultDoc
       if (mediatorName.trim()) payload.mediator_name = mediatorName.trim();
       if (includeSummary && summaryId) payload.summary_id = summaryId;
       if (includeAgreement && agreementId) payload.agreement_id = agreementId;
-      const r = await api.post("/mediation/email-mediator", payload);
+      const r = await withPreparingNote(() => api.post("/mediation/email-mediator", payload));
       toast.success(`Sent to ${r.data.sent_to}.`);
       onClose();
     } catch (err) {

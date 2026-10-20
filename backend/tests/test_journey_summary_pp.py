@@ -24,11 +24,13 @@ PASS = "TestPass123!"
 def _register_fresh():
     email = f"TEST_j110_{uuid.uuid4().hex[:10]}@test.com"
     name = f"Test {email[:14]}"
-    r = requests.post(f"{API}/auth/register", json={"email": email, "password": PASS, "name": name}, timeout=20)
+    r = requests.post(f"{API}/auth/register", json={"ack_privacy_notice": True, "consent_sensitive_info": True, "email": email, "password": PASS, "name": name}, timeout=20)
     assert r.status_code in (200, 201), f"register failed: {r.status_code} {r.text}"
     data = r.json()
     tok = data.get("access_token") or data.get("token")
     assert tok, f"no token in register: {data}"
+    from ai_ready import accept_ai_notice
+    accept_ai_notice(API, {"Authorization": f"Bearer {tok}"})
     return email, tok
 
 
@@ -206,7 +208,7 @@ class TestCelebrationFlow:
                     answers_cat[f["id"]] = f["options"][0]
                 else:
                     answers_cat[f["id"]] = "Test content"
-            r = requests.put(f"{API}/child-needs/me/{cat}", headers=H, json={"answers": answers_cat}, timeout=20)
+            r = requests.put(f"{API}/child-needs/me/{cat}", headers=H, json={"answers": answers_cat, "acknowledged": True}, timeout=20)
             assert r.status_code == 200, f"{cat}: {r.status_code} {r.text}"
 
         # 4) Verify PDF now does NOT say "Not completed yet" (loose check)

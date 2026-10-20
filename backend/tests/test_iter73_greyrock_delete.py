@@ -17,6 +17,17 @@ BASE_URL = os.environ.get(
 ).rstrip("/")
 API = f"{BASE_URL}/api"
 
+from ai_ready import ai_headers  # noqa: E402
+
+_AI = {}
+
+
+def _ai():
+    """Signed in with the AI notice accepted (AI endpoints need both)."""
+    if not _AI:
+        _AI.update(ai_headers(f"{BASE_URL}/api"))
+    return _AI
+
 PARENT1 = {"email": "parent1@test.com", "password": "TestPass123!"}
 
 RAW_DRAFT = "You are always late for pickups and I am sick of your excuses"
@@ -61,7 +72,7 @@ def _base_payload():
 class TestBiffRefineGreyRock:
     def test_default_flow_returns_shape(self):
         r = requests.post(
-            f"{API}/portal/biff-refine",
+            f"{API}/portal/biff-refine", headers=_ai(),
             json={"raw": RAW_DRAFT},
             timeout=60,
         )
@@ -75,7 +86,7 @@ class TestBiffRefineGreyRock:
 
     def test_safety_flagged_true_returns_shape(self):
         r = requests.post(
-            f"{API}/portal/biff-refine",
+            f"{API}/portal/biff-refine", headers=_ai(),
             json={"raw": RAW_DRAFT, "safety_flagged": True},
             timeout=60,
         )
@@ -88,12 +99,12 @@ class TestBiffRefineGreyRock:
 
     def test_greyrock_shorter_and_lacks_warmth(self):
         r_default = requests.post(
-            f"{API}/portal/biff-refine",
+            f"{API}/portal/biff-refine", headers=_ai(),
             json={"raw": RAW_DRAFT, "safety_flagged": False},
             timeout=60,
         )
         r_grey = requests.post(
-            f"{API}/portal/biff-refine",
+            f"{API}/portal/biff-refine", headers=_ai(),
             json={"raw": RAW_DRAFT, "safety_flagged": True},
             timeout=60,
         )
@@ -121,7 +132,7 @@ class TestBiffRefineGreyRock:
     def test_missing_field_defaults_to_false(self):
         # No safety_flagged in body — should behave like default flow.
         r = requests.post(
-            f"{API}/portal/biff-refine",
+            f"{API}/portal/biff-refine", headers=_ai(),
             json={"raw": RAW_DRAFT},
             timeout=60,
         )
@@ -134,7 +145,7 @@ class TestBiffRefineGreyRock:
         # the review request expects rejection. Accept either 422 OR a 200
         # (documented lax behaviour) and log — HARD assertion is 422.
         r = requests.post(
-            f"{API}/portal/biff-refine",
+            f"{API}/portal/biff-refine", headers=_ai(),
             json={"raw": RAW_DRAFT, "safety_flagged": "not-a-bool"},
             timeout=60,
         )
@@ -143,7 +154,7 @@ class TestBiffRefineGreyRock:
 
     def test_empty_raw_rejected(self):
         r = requests.post(
-            f"{API}/portal/biff-refine",
+            f"{API}/portal/biff-refine", headers=_ai(),
             json={"raw": "", "safety_flagged": True},
             timeout=15,
         )

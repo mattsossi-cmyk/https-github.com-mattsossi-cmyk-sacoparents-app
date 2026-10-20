@@ -45,7 +45,10 @@ from test_iter48_features import (  # noqa: E402
 # ---------------------------------------------------------------------------
 @pytest.fixture(scope="module")
 def p1_token():
-    return _ensure_account(PARENT1)
+    tok = _ensure_account(PARENT1)
+    from ai_ready import accept_ai_notice
+    accept_ai_notice(f"{BASE_URL}/api", {"Authorization": f"Bearer {tok}"})
+    return tok
 
 
 @pytest.fixture(scope="module")
@@ -161,15 +164,17 @@ class TestSectionCoach:
         r = p1_client.get(f"{BASE_URL}/api/{prefix}/schema", timeout=20)
         assert r.status_code == 200
         schema = r.json()
+        # Educational / Psychological now use p1..p5 sections with 0-4 alignment items; Medical keeps s1.
+        sid = schema["sections"][0]["id"]
         s1 = {}
         for s in schema.get("sections", []):
-            if s.get("id") != "s1":
+            if s.get("id") != sid:
                 continue
             for item in s.get("items", []):
-                key = f"s1_{item['id']}"
+                key = f"{sid}_{item['id']}"
                 t = item.get("type")
-                if t == "likert":
-                    s1[key] = 5
+                if t in ("likert", "alignment"):
+                    s1[key] = max(item.get("scale") or [5])
                 elif t == "single":
                     opts = item.get("options") or []
                     if opts: s1[key] = opts[0]
@@ -181,12 +186,12 @@ class TestSectionCoach:
         assert s1, f"{prefix}: no s1 answers seeded"
         _bulk_and_complete(p1_client, prefix, s1)
         r = p1_client.post(
-            f"{BASE_URL}/api/{prefix}/section/s1/coach", json={}, timeout=120,
+            f"{BASE_URL}/api/{prefix}/section/{sid}/coach", json={}, timeout=120,
         )
         assert r.status_code == 200, r.text
         body = r.json()
         assert body.get("ok") is True
-        assert body.get("section_id") == "s1"
+        assert body.get("section_id") == sid
         coach = body.get("coach") or {}
         for key in ("doing_well", "coordination_gaps", "next_steps", "resources"):
             assert key in coach, f"{prefix}: missing {key}"
@@ -200,11 +205,11 @@ class TestSectionCoach:
 
     def test_cache_hits_on_second_call(self, p1_client):
         r1 = p1_client.post(
-            f"{BASE_URL}/api/edu-deep/section/s1/coach", json={}, timeout=120,
+            f"{BASE_URL}/api/edu-deep/section/p1/coach", json={}, timeout=120,
         )
         assert r1.status_code == 200
         r2 = p1_client.post(
-            f"{BASE_URL}/api/edu-deep/section/s1/coach", json={}, timeout=30,
+            f"{BASE_URL}/api/edu-deep/section/p1/coach", json={}, timeout=30,
         )
         assert r2.status_code == 200
         assert r2.json().get("cached") is True, (
@@ -215,11 +220,11 @@ class TestSectionCoach:
 
     def test_force_true_bypasses_cache(self, p1_client):
         r_cached = p1_client.post(
-            f"{BASE_URL}/api/edu-deep/section/s1/coach", json={}, timeout=30,
+            f"{BASE_URL}/api/edu-deep/section/p1/coach", json={}, timeout=30,
         )
         assert r_cached.status_code == 200
         r_forced = p1_client.post(
-            f"{BASE_URL}/api/edu-deep/section/s1/coach",
+            f"{BASE_URL}/api/edu-deep/section/p1/coach",
             json={"force": True}, timeout=120,
         )
         assert r_forced.status_code == 200

@@ -26,7 +26,7 @@ if not BASE_URL:
 def _register(email: str, name: str, password: str = "TestPass123!") -> requests.Session:
     r = requests.post(
         f"{BASE_URL}/api/auth/register",
-        json={"email": email, "password": password, "name": name},
+        json={"ack_privacy_notice": True, "consent_sensitive_info": True, "email": email, "password": password, "name": name},
         timeout=30,
     )
     if r.status_code == 400:
@@ -74,6 +74,7 @@ def _seed_agreement(user_id: str, *, communication, child_needs, shared_goals, o
         "priority_items":     [],
         "open_for_discussion": open_for_discussion or [],
         "closing_note":       "A living document.",
+        "clean_inputs":       True,  # made after the privacy update (older drafts share only goals + priorities)
     }
     db.agreements.insert_one(doc.copy())
     return doc
@@ -251,7 +252,7 @@ class TestMergerShape:
         # disclaimer now leads with "neutral map" rather than "draft for
         # discussion", but the same three legal caveats are preserved.
         assert "neutral map" in d
-        assert "not a signed agreement" in d
+        assert "not a legally binding agreement" in d
         assert "custody" in d  # "not a custody recommendation"
 
     def test_summary_convergence_math(self, parent1, active_share, seeded_agreements):

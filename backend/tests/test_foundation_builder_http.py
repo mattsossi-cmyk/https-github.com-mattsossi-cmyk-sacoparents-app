@@ -111,7 +111,7 @@ def test_pdf_valid_public():
             text_blob += zlib.decompress(m.group(1))
         except Exception:
             pass
-    for needle in [b"Foundation Statement", b"Parent signature", b"Date", b"Brighter Future"]:
+    for needle in [b"Foundation Statement", b"Signature", b"Date", b"Brighter Future"]:  # signing page (Oct 2026): one Signature + Date line per parent
         assert needle in text_blob, f"missing {needle!r} in PDF text"
     # Numbered labels
     for n in [b"1.", b"2.", b"3.", b"4."]:

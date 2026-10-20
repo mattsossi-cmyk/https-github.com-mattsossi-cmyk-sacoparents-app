@@ -115,9 +115,10 @@ def test_child_needs_pdf_only_filled_category_present():
     assert r.headers.get("content-type", "").startswith("application/pdf")
     assert r.content[:4] == b"%PDF"
     text = "\n".join((p.extract_text() or "") for p in PdfReader(io.BytesIO(r.content)).pages)
-    assert "Child Medical Needs Assessment" in text
-    assert "Child Educational Needs Assessment" not in text
-    assert "Child Psychological Needs Assessment" not in text
+    # Section titles since the "Your Child's Specific Needs" restyle.
+    assert "Medical Assessment Form" in text
+    assert "Educational Assessment Form" not in text
+    assert "Psychological Assessment Form" not in text
 
 
 # ------------------- MEDIATOR PROGRESS PDF EXTRAS -------------------

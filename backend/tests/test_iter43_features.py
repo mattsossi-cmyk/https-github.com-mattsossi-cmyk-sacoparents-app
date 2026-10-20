@@ -254,16 +254,10 @@ class TestShareLinkNicknameRoundTrip:
         assert r.status_code == 404, r.text
 
     def test_coparenting_report_share_link_label(self, p1_client):
-        """Try coparenting report label round-trip; skip if no report exists."""
-        reports = p1_client.get(f"{BASE_URL}/api/coparenting/reports")
-        if reports.status_code != 200:
-            pytest.skip(f"coparenting reports listing unavailable: {reports.status_code}")
-        rlist = reports.json().get("reports", []) or reports.json() if isinstance(reports.json(), dict) else []
-        if not rlist:
-            pytest.skip("parent1 has no coparenting report to share")
-        report_id = rlist[0].get("report_id") or rlist[0].get("id")
-        if not report_id:
-            pytest.skip("could not extract report_id")
+        """parent1 has a saved Co-Parenting report (seeded test account)."""
+        doc = p1_client.get(f"{BASE_URL}/api/coparenting/report").json()
+        report_id = doc.get("report_id")
+        assert report_id, "parent1 has no Co-Parenting report to share"
         label = f"TEST_cp_{uuid.uuid4().hex[:6]}"
         r = p1_client.post(
             f"{BASE_URL}/api/coparenting/report/{report_id}/share-link",

@@ -45,8 +45,8 @@ def test_pdf_builder_composes_four_prompts(tmp_path: Path) -> None:
     r = subprocess.run(["pdftotext", "-layout", str(p), "-"], capture_output=True, text=True, timeout=30)
     assert r.returncode == 0
     text = re.sub(r"\s+", " ", r.stdout)
-    assert "My Foundation Statement" in text
-    assert "Written by Sam Parent" in text
+    assert "Child-Focused Foundation Statement" in text  # PDF title since the parent-report restyle
+    assert "Completed by Sam Parent" in text
     assert "THROUGH MY CHILD'S EYES" in text.upper()
     assert "AAA child perspective content" in text
     assert "MY OWN PART" in text.upper()
@@ -110,7 +110,7 @@ def _register(name: str) -> tuple[str, str]:
     email = f"TEST_fnd_{name}_{suffix}@test.com"
     r = requests.post(
         f"{BASE_URL}/api/auth/register",
-        json={"email": email, "password": "TestPass123!", "name": f"Foundation {name}"},
+        json={"ack_privacy_notice": True, "consent_sensitive_info": True, "email": email, "password": "TestPass123!", "name": f"Foundation {name}"},
         timeout=30,
     )
     assert r.status_code == 200, r.text
@@ -267,7 +267,7 @@ def test_api_share_uses_email_local_part_when_sender_has_no_name():
     # Fresh register with an EMPTY name.
     r = requests.post(
         f"{BASE_URL}/api/auth/register",
-        json={"email": email, "password": "TestPass123!", "name": ""},
+        json={"ack_privacy_notice": True, "consent_sensitive_info": True, "email": email, "password": "TestPass123!", "name": ""},
         timeout=30,
     )
     assert r.status_code == 200, r.text

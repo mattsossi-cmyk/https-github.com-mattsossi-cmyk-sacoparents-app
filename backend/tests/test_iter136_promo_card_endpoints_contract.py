@@ -38,7 +38,7 @@ def _new_user_token(client: TestClient) -> str:
     email = f"iter136_{uuid.uuid4().hex[:8]}@example.com"
     r = client.post(
         "/api/auth/register",
-        json={"email": email, "password": "TestPass123!", "name": "Iter136 User"},
+        json={"ack_privacy_notice": True, "consent_sensitive_info": True, "email": email, "password": "TestPass123!", "name": "Iter136 User"},
     )
     assert r.status_code in (200, 201), r.text
     return r.json()["access_token"]

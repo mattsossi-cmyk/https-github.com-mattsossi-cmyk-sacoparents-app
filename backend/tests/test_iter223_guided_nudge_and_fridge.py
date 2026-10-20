@@ -88,34 +88,30 @@ def event_loop():
 
 @pytest.fixture
 def db_and_user():
-    """Provide (db, user_id, email) for parent1@test.com. Cleans up seed after."""
+    """A throwaway parent (no old safety result) with a portal_state row. Removed after."""
+    import uuid
     from motor.motor_asyncio import AsyncIOMotorClient
 
     from dotenv import load_dotenv
     load_dotenv("/app/backend/.env")
-    mongo_url = os.environ["MONGO_URL"]
-    db_name = os.environ["DB_NAME"]
-    client = AsyncIOMotorClient(mongo_url)
-    db = client[db_name]
-
-    async def _find_user():
-        return await db.users.find_one({"email": "parent1@test.com"})
+    client = AsyncIOMotorClient(os.environ["MONGO_URL"])
+    db = client[os.environ["DB_NAME"]]
+    user_id = f"test-nudge-{uuid.uuid4().hex[:10]}"
+    email = f"{user_id}@example.com"
 
     loop = asyncio.new_event_loop()
+
+    async def _add_user():
+        await db.users.insert_one({"user_id": user_id, "email": email, "name": "Nudge Test", "align_ref": str(uuid.uuid4())})
+
     try:
-        user = loop.run_until_complete(_find_user())
-        assert user, "parent1@test.com not seeded — cannot run nudge worker tests"
-        user_id = user.get("user_id") or user.get("id")
-        assert user_id
-        yield db, user_id, user["email"], loop
+        loop.run_until_complete(_add_user())
+        yield db, user_id, email, loop
     finally:
-        # Full cleanup — remove seeded draft & nudge rows
         async def _cleanup():
-            await db.portal_state.update_one(
-                {"user_id": user_id},
-                {"$unset": {"guided_drafts.foundation": ""}},
-            )
+            await db.portal_state.delete_many({"user_id": user_id})
             await db.guided_draft_nudges.delete_many({"user_id": user_id})
+            await db.users.delete_many({"user_id": user_id})
         loop.run_until_complete(_cleanup())
         client.close()
         loop.close()
@@ -127,25 +123,48 @@ def _now_ms_days_ago(days: int) -> int:
 
 class TestNudgeWorker:
     def _seed_draft(self, db, user_id, days_ago, loop):
+        # "foundation" / "safety" drafts are hidden topics and never get a nudge; use a visible one.
         snap = {
-            "topic": "foundation",
+            "topic": "coparenting",
             "answers": [{"q": "Q1", "a": "A1"}],
             "progress": {"step": 3, "total": 5},
             "updated_at": _now_ms_days_ago(days_ago),
         }
-        loop.run_until_complete(
-            db.portal_state.update_one(
+        async def _seed():
+            await db.portal_state.update_one(
                 {"user_id": user_id},
-                {"$set": {"user_id": user_id, "guided_drafts": {"foundation": snap}}},
+                {"$set": {"user_id": user_id, "guided_drafts": {"coparenting": snap}}},
                 upsert=True,
             )
-        )
-        # Clear any prior nudge for this user (fresh week key)
-        loop.run_until_complete(db.guided_draft_nudges.delete_many({"user_id": user_id}))
+            # Clear any prior nudge for this user (fresh week key)
+            await db.guided_draft_nudges.delete_many({"user_id": user_id})
 
-    def test_7_day_old_draft_is_eligible_and_sent(self, db_and_user):
+        loop.run_until_complete(_seed())
+
+    def test_old_safety_result_holds_the_nudge(self, db_and_user, monkeypatch):
         db, user_id, _email, loop = db_and_user
         from guided_draft_nudge import send_guided_draft_nudges
+        import email_service
+        sent_to = []
+        monkeypatch.setattr(email_service, "send_guided_draft_nudge", lambda **kw: sent_to.append(kw["to_email"]))
+
+        self._seed_draft(db, user_id, days_ago=7, loop=loop)
+
+        async def _flag_and_run():
+            await db.portal_state.update_one({"user_id": user_id}, {"$set": {"safety_ack": {"flagged": True}}})
+            await send_guided_draft_nudges(db)
+            return await db.guided_draft_nudges.find_one({"user_id": user_id})
+
+        row = loop.run_until_complete(_flag_and_run())
+        assert _email not in sent_to
+        assert row is None
+
+    def test_7_day_old_draft_is_eligible_and_sent(self, db_and_user, monkeypatch):
+        db, user_id, _email, loop = db_and_user
+        from guided_draft_nudge import send_guided_draft_nudges
+        import email_service
+        # Resend in the preview refuses test addresses; the sweep logic is what's under test.
+        monkeypatch.setattr(email_service, "send_guided_draft_nudge", lambda **kw: None)
 
         self._seed_draft(db, user_id, days_ago=7, loop=loop)
 
@@ -154,7 +173,7 @@ class TestNudgeWorker:
         assert stats["sent"] >= 1
         # Dedupe row written
         row = loop.run_until_complete(
-            db.guided_draft_nudges.find_one({"user_id": user_id, "topic": "foundation"})
+            db.guided_draft_nudges.find_one({"user_id": user_id, "topic": "coparenting"})
         )
         assert row is not None
         assert "week_key" in row
@@ -164,9 +183,12 @@ class TestNudgeWorker:
         assert 5 <= row["days_since_update"] <= 9
         assert 5 <= row["days_left"] <= 9
 
-    def test_second_run_dedupes(self, db_and_user):
+    def test_second_run_dedupes(self, db_and_user, monkeypatch):
         db, user_id, _email, loop = db_and_user
         from guided_draft_nudge import send_guided_draft_nudges
+        import email_service
+        # Resend in the preview refuses test addresses; the sweep logic is what's under test.
+        monkeypatch.setattr(email_service, "send_guided_draft_nudge", lambda **kw: None)
 
         self._seed_draft(db, user_id, days_ago=7, loop=loop)
         stats1 = loop.run_until_complete(send_guided_draft_nudges(db))
@@ -183,7 +205,7 @@ class TestNudgeWorker:
         stats = loop.run_until_complete(send_guided_draft_nudges(db))
         # Might still have OTHER stale drafts from other users — check row NOT written for this user
         row = loop.run_until_complete(
-            db.guided_draft_nudges.find_one({"user_id": user_id, "topic": "foundation"})
+            db.guided_draft_nudges.find_one({"user_id": user_id, "topic": "coparenting"})
         )
         assert row is None
 
@@ -194,7 +216,7 @@ class TestNudgeWorker:
         self._seed_draft(db, user_id, days_ago=20, loop=loop)
         loop.run_until_complete(send_guided_draft_nudges(db))
         row = loop.run_until_complete(
-            db.guided_draft_nudges.find_one({"user_id": user_id, "topic": "foundation"})
+            db.guided_draft_nudges.find_one({"user_id": user_id, "topic": "coparenting"})
         )
         assert row is None, "20-day-old draft should NOT get a nudge (past TTL)"
 
@@ -265,7 +287,7 @@ class TestFridgePdf:
         import io
         reader = PdfReader(io.BytesIO(r.content))
         text = "".join((p.extract_text() or "") for p in reader.pages)
-        assert "Safety-flagged voice" in text, f"marker missing; text={text[:400]}"
+        assert "Grey-rock voice" in text, f"marker missing; text={text[:400]}"
 
 
 # ---------------------------------------------------------------------

@@ -1,4 +1,19 @@
+import { toast } from "sonner";
+
 import { api } from "./api";
+
+export const PREPARING_NOTE = "Preparing a private copy. This can take up to 20 seconds.";
+
+// An older document's first share is rewritten without private details first; say so if it's slow.
+export async function withPreparingNote(run) {
+  const t = setTimeout(() => toast.loading(PREPARING_NOTE, { id: "preparing-copy", className: "preparing-copy-toast" }), 1500);
+  try {
+    return await run();
+  } finally {
+    clearTimeout(t);
+    toast.dismiss("preparing-copy");
+  }
+}
 
 /**
  * Create a short-lived share link for a Summary or Agreement and surface it
@@ -10,7 +25,7 @@ import { api } from "./api";
  * @returns {Promise<{mode: 'native' | 'clipboard', url: string}>}
  */
 export async function shareViaText(_kind, endpoint, title) {
-  const res = await api.post(endpoint);
+  const res = await withPreparingNote(() => api.post(endpoint));
   const path = res?.data?.path;
   if (!path) {
     throw new Error("Share link payload missing 'path'");

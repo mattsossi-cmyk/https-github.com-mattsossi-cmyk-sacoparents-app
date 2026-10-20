@@ -158,7 +158,7 @@ def test_reminders_toggle_roundtrip():
     """Use a fresh user to avoid disrupting parent1/parent2."""
     email = f"TEST_iter132_rem_{uuid.uuid4().hex[:8]}@test.com"
     r = requests.post(f"{API}/auth/register",
-                      json={"email": email, "password": PWD, "name": "Rem User"}, timeout=20)
+                      json={"ack_privacy_notice": True, "consent_sensitive_info": True, "email": email, "password": PWD, "name": "Rem User"}, timeout=20)
     assert r.status_code == 200, r.text
     tok = r.json()["access_token"]
 
@@ -190,7 +190,7 @@ def test_reminders_reenable_after_unsubscribe():
 
     email = f"TEST_iter132_unsub_{uuid.uuid4().hex[:8]}@test.com"
     r = requests.post(f"{API}/auth/register",
-                      json={"email": email, "password": PWD, "name": "Unsub User"}, timeout=20)
+                      json={"ack_privacy_notice": True, "consent_sensitive_info": True, "email": email, "password": PWD, "name": "Unsub User"}, timeout=20)
     assert r.status_code == 200, r.text
     tok = r.json()["access_token"]
     uid = r.json()["user"]["user_id"]
@@ -235,7 +235,7 @@ def test_completion_alert_fires_once_on_foundation_save(p1_token: str):
         # 2. Fresh parent registers.
         pemail = f"TEST_iter132_pfam_{uuid.uuid4().hex[:8]}@test.com"
         rr = requests.post(f"{API}/auth/register",
-                           json={"email": pemail, "password": PWD, "name": "Fam Parent"}, timeout=20)
+                           json={"ack_privacy_notice": True, "consent_sensitive_info": True, "email": pemail, "password": PWD, "name": "Fam Parent"}, timeout=20)
         assert rr.status_code == 200, rr.text
         ptok = rr.json()["access_token"]
         puid = rr.json()["user"]["user_id"]

@@ -64,6 +64,8 @@ def test_user(base_url):
     r = requests.post(f"{base_url}/api/auth/register", json=payload, timeout=30)
     assert r.status_code == 200, f"register failed: {r.status_code} {r.text}"
     data = r.json()
+    from ai_ready import accept_ai_notice
+    accept_ai_notice(f"{base_url}/api", {"Authorization": f"Bearer {data['access_token']}"})
     return {
         "email": email,
         "password": "TestPass123!",

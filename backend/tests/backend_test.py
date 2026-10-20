@@ -32,7 +32,7 @@ class TestAuth:
         # Register
         r = api_client.post(
             f"{BASE_URL}/api/auth/register",
-            json={"email": email, "password": "TestPass123!", "name": "Auth Test"},
+            json={"ack_privacy_notice": True, "consent_sensitive_info": True, "email": email, "password": "TestPass123!", "name": "Auth Test"},
             timeout=30,
         )
         assert r.status_code == 200, r.text
@@ -44,7 +44,7 @@ class TestAuth:
         # Duplicate
         r2 = api_client.post(
             f"{BASE_URL}/api/auth/register",
-            json={"email": email, "password": "TestPass123!", "name": "Dup"},
+            json={"ack_privacy_notice": True, "consent_sensitive_info": True, "email": email, "password": "TestPass123!", "name": "Dup"},
             timeout=15,
         )
         assert r2.status_code == 400
@@ -123,17 +123,16 @@ class TestMediationSave:
 
     def test_issues_save(self, auth_client):
         payload = {
-            "parenting_schedule": {"weekday": "alternating"},
-            "communication": {"channel": "app only"},
-            "child_needs": {"school": "Need consistent pickup"},
-            "financial": {"medical": "split 50/50"},
-            "household_rules": {"screens": "1 hour max"},
-            "safety_concerns": "none",
+            "items": {"parenting_schedule": "alternating weeks", "safety_concerns": "text from an old open tab"},
+            "other": "screens 1 hour max",
         }
         r = auth_client.put(f"{BASE_URL}/api/mediation/issues", json=payload, timeout=15)
         assert r.status_code == 200
-        r2 = auth_client.get(f"{BASE_URL}/api/mediation/prep", timeout=15)
-        assert r2.json()["issues"]["safety_concerns"] == "none"
+        issues = auth_client.get(f"{BASE_URL}/api/mediation/prep", timeout=15).json()["issues"]
+        assert issues["items"]["parenting_schedule"] == "alternating weeks"
+        assert issues["other"] == "screens 1 hour max"
+        # The old safety box is retired: new text is dropped and never returned.
+        assert "safety_concerns" not in issues["items"]
 
     def test_priority_save(self, auth_client):
         payload = {
@@ -170,7 +169,8 @@ class TestResources:
         assert r.status_code == 200
         items = r.json()
         assert isinstance(items, list)
-        assert len(items) == 6
+        assert len(items) >= 6
+        assert len({i["id"] for i in items}) == len(items)
         assert all("id" in i and "category" in i and "title" in i for i in items)
 
 
@@ -227,7 +227,7 @@ class TestAI:
         data = r.json()
         for k in [
             "summary_id",
-            "child_goals_summary",
+            "executive_summary",
             "top_concerns",
             "priority_agenda",
             "flexibility_areas",
@@ -259,10 +259,12 @@ class TestAI:
         email = f"TEST_empty_{uuid.uuid4().hex[:8]}@test.com"
         reg = api_client.post(
             f"{BASE_URL}/api/auth/register",
-            json={"email": email, "password": "TestPass123!", "name": "Empty"},
+            json={"ack_privacy_notice": True, "consent_sensitive_info": True, "email": email, "password": "TestPass123!", "name": "Empty"},
             timeout=20,
         )
         token = reg.json()["access_token"]
+        from ai_ready import accept_ai_notice
+        accept_ai_notice(f"{BASE_URL}/api", {"Authorization": f"Bearer {token}"})
         r = api_client.post(
             f"{BASE_URL}/api/mediation/summary",
             json={},

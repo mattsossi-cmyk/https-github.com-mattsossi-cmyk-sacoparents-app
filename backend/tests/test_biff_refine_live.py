@@ -5,6 +5,17 @@ BASE_URL = os.environ.get("REACT_APP_BACKEND_URL", "https://prepared-parents.pre
 EMAIL = "parent1@test.com"
 PASSWORD = "TestPass123!"
 
+from ai_ready import ai_headers  # noqa: E402
+
+_AI = {}
+
+
+def _ai():
+    """Signed in with the AI notice accepted (AI endpoints need both)."""
+    if not _AI:
+        _AI.update(ai_headers(f"{BASE_URL}/api"))
+    return _AI
+
 
 @pytest.fixture(scope="module")
 def token():
@@ -24,7 +35,7 @@ def _biff(draft, flags=None, retries=3):
         body["safety_flagged"] = True
     last = None
     for i in range(retries):
-        r = requests.post(f"{BASE_URL}/api/portal/biff-refine", json=body, timeout=60)
+        r = requests.post(f"{BASE_URL}/api/portal/biff-refine", json=body, headers=_ai(), timeout=60)
         last = r
         if r.status_code == 429:
             time.sleep(10 + i * 5)

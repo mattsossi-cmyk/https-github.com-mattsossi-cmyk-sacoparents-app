@@ -66,7 +66,8 @@ class TestFramingStorage:
     def test_framing_anonymous_not_stored(self):
         r = requests.post(f"{API}/self-assessment/ai/framing",
                           json={"text": "Should I respond to a late pickup?"}, timeout=60)
-        assert r.status_code == 200
+        # AI features need a signed-in parent who accepted the AI notice: nothing is sent or stored for visitors.
+        assert r.status_code == 401
         # And anon PDF has no framing rows
         pdf_body = {"entry": {"completed_at": datetime.now(timezone.utc).isoformat(),
                               "parent_name": "Anon", "answers": {}, "reflections": {}, "tips": {}, "goal": ""},
@@ -190,7 +191,7 @@ class TestCourtChecklistPdf:
         assert "not a legal document" in text
         assert "Module A" not in text
         # Row labels (a parent with professional-requested items only sees case, check-in and those items)
-        labels = ["Case code verified", "Family check-in"]
+        labels = ["Case code verified", "Safety step:"]  # the check-in row carries only the safety-step line
         if "asked for" not in text:
             labels += ["Self-Assessment", "Co-Parenting Relationship assessment", "Child Needs", "Foundation Statement",
                        "BIFF messages saved"]

@@ -3,6 +3,7 @@ import { ProSeeLink } from "./privacy/ProSeeLink";
 import { EyeOff, Eye, Download, Share2, Loader2, Save, Lock, Clock, Trash2, ChevronDown, ChevronRight } from "lucide-react";
 import { toast } from "sonner";
 import { api, API } from "../lib/api";
+import { withPreparingNote } from "../lib/share";
 import { requestPreShareConsent } from "@/components/PreShareConsentDialog";
 
 /**
@@ -162,11 +163,11 @@ export default function ReportShareControls({
 
     setSharing(true);
     try {
-      const { data } = await api.post(shareUrl, {
+      const { data } = await withPreparingNote(() => api.post(shareUrl, {
         excluded: exList(),
         expire_days: expireDays,  // null = never
         label: shareLabel.trim() || null,
-      });
+      }));
       const publicUrl = `${window.location.origin}${data.path}`;
       await navigator.clipboard.writeText(publicUrl);
       const windowLabel = expireDays === null ? "never expires" :

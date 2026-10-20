@@ -55,8 +55,9 @@ def _wipe_reminders():
             c.close()
     loop = asyncio.get_event_loop_policy().new_event_loop()
     loop.run_until_complete(_run())
-    loop.close()
     yield
+    loop.run_until_complete(_run())
+    loop.close()
 
 
 def _admin_client(client):

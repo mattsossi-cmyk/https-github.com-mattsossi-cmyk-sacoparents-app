@@ -192,8 +192,10 @@ def test_analytics_aggregation_computes_per_subject_rates():
 
     async def _seed_and_compute():
         c = AsyncIOMotorClient(MONGO_URL)
+        scratch = f"{DB_NAME}_t194_analytics"
         try:
-            db = c[DB_NAME]
+            # Own scratch database, so rows from other suites can't change the counts.
+            db = c[scratch]
             # 4 sent, 2 opened, 1 clicked.
             base_email = "iter194_analytics@test.local"
             docs = [
@@ -208,9 +210,9 @@ def test_analytics_aggregation_computes_per_subject_rates():
             for d in docs:
                 d["sent_at"] = datetime.now(timezone.utc)
             await db.alignment_reflection_reminders.insert_many(docs)
-            result = await compute_reminder_analytics(db)
-            return result
+            return await compute_reminder_analytics(db)
         finally:
+            await c.drop_database(scratch)
             c.close()
 
     loop = asyncio.get_event_loop_policy().new_event_loop()

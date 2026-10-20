@@ -20,6 +20,14 @@ if not BASE_URL:
 assert BASE_URL, "REACT_APP_BACKEND_URL not configured"
 API = f"{BASE_URL}/api/self-assessment/ai"
 
+from ai_ready import ai_headers  # noqa: E402
+
+
+@pytest.fixture(scope="module")
+def h():
+    """These AI routes need a signed-in parent who accepted the AI notice."""
+    return ai_headers(f"{BASE_URL}/api")
+
 SECTIONS = ["child_focus", "self_awareness", "communication", "differences"]
 
 
@@ -36,38 +44,42 @@ def _all_twenty(value: int = 4) -> dict:
 
 # ---------- /ai/tip ----------
 class TestAiTip:
-    def test_incomplete_section_returns_400(self):
+    def test_incomplete_section_returns_400(self, h):
         r = requests.post(
             f"{API}/tip",
+            headers=h,
             json={"section": "child_focus", "answers": {"child_focus_1": 3}},
         )
         assert r.status_code == 400, r.text
         assert "finish" in r.json()["detail"].lower()
 
-    def test_unknown_section_returns_400(self):
+    def test_unknown_section_returns_400(self, h):
         r = requests.post(
             f"{API}/tip",
+            headers=h,
             json={"section": "not_a_section", "answers": {}},
         )
         assert r.status_code == 400, r.text
         assert "unknown" in r.json()["detail"].lower()
 
-    def test_overall_requires_all_twenty(self):
+    def test_overall_requires_all_twenty(self, h):
         # Only one section filled -> others missing -> 400
         r = requests.post(
             f"{API}/tip",
+            headers=h,
             json={"section": "overall", "answers": _full_answers("child_focus")},
         )
         assert r.status_code == 400, r.text
 
-    def test_tip_bad_payload_422(self):
-        r = requests.post(f"{API}/tip", json={"answers": {}})
+    def test_tip_bad_payload_422(self, h):
+        r = requests.post(f"{API}/tip", json={"answers": {}}, headers=h)
         assert r.status_code == 422
 
-    def test_live_tip_returns_text(self):
+    def test_live_tip_returns_text(self, h):
         """Live Claude call: complete child_focus section -> non-empty tip."""
         r = requests.post(
             f"{API}/tip",
+            headers=h,
             json={"section": "child_focus", "answers": _full_answers("child_focus", 4)},
             timeout=45,
         )
@@ -82,18 +94,19 @@ class TestAiTip:
 
 # ---------- /ai/framing ----------
 class TestAiFraming:
-    def test_short_text_returns_422(self):
-        r = requests.post(f"{API}/framing", json={"text": "hi"})
+    def test_short_text_returns_422(self, h):
+        r = requests.post(f"{API}/framing", json={"text": "hi"}, headers=h)
         assert r.status_code == 422
 
-    def test_missing_text_returns_422(self):
-        r = requests.post(f"{API}/framing", json={})
+    def test_missing_text_returns_422(self, h):
+        r = requests.post(f"{API}/framing", json={}, headers=h)
         assert r.status_code == 422
 
-    def test_live_framing_returns_advice(self):
+    def test_live_framing_returns_advice(self, h):
         """Live Claude call: real situation -> advice + suggested fields present."""
         r = requests.post(
             f"{API}/framing",
+            headers=h,
             json={
                 "text": (
                     "My co-parent keeps changing pickup times at the last minute. "
@@ -109,10 +122,11 @@ class TestAiFraming:
         assert isinstance(data["suggested"], str)
         assert len(data["advice"].strip()) >= 10, f"advice empty: {data!r}"
 
-    def test_live_framing_grey_rock_hint(self):
+    def test_live_framing_grey_rock_hint(self, h):
         """safety_flagged=true should still return a valid shape (grey-rock voice)."""
         r = requests.post(
             f"{API}/framing",
+            headers=h,
             json={
                 "text": "The other parent sent a long angry message. I need to reply only about Saturday's drop-off time at 5pm.",
                 "safety_flagged": True,

@@ -9388,3 +9388,13 @@ dashboard for sharing SELECTED completed reports with any professional.
 - Safety First banner (components/caseSettings/SafetyFirstBanner.jsx) sits on the parent home above the Court Ordered / Self Journey doors. It has an Open Family check-in link (case link, or the Align root), Quick exit, and the 911 + DV Hotline numbers. Once Align confirms the check-in, it becomes "Safety step: completed".
 - Tests: the 27 old failures in the 50-file group are fixed (outdated tests updated; tests/ai_ready.py signs in and accepts the notices). tests/test_part3_privacy.py has 15 tests. Testing agent iteration_153: all pass.
 - Open: 21 old failures in the second test group (same cause: AI tests don't sign in or accept the AI notice). Align has not yet answered the "Who has looked" URL question or the reflection/readiness deletion question. The first share of an older summary is slow (15-20s) while the AI rewrite runs.
+
+## 2026-10-20 — Full backend test suite clean (PREVIEW ONLY, nothing deployed, no secrets touched)
+- Full suite: baseline 46 failed → final **0 failed, 2203 passed, 26 skipped** (each skip has a one-line reason). Per-failure list: memory/test_cleanup_ledger.md.
+- Real fixes found by tests: (1) guided_draft_nudge.py now skips parents with an old safety result (is_safety_flagged), like every other reminder;
+  (2) pdf_provenance.py no longer splits "How this report was built" across near-blank pages (Medical Deep Dive was 10 pages, now normal).
+- Test setup: conftest test_user + fresh-user fixtures accept the Privacy + AI notice (tests/ai_ready.py); retired-feature tests rewritten to assert the new rules.
+- "Preparing a private copy" toast verified in the browser on a slow first share (Summary → Share via text).
+- Skipped on purpose: 8 webhook modules (ALIGN_WEBHOOK_SECRET left unset by user), 4 retired v1 questionnaire modules, 14 retired old-safety-screen tests.
+- Open (user): Align replies to (a) "Who has looked" addresses (linked + general) and (b) reflection/readiness question did not come through — defaults kept
+  (link hidden; reflection/readiness not sent). Privacy Notice sections 3–6 / 8–11 stay out until the user sends text.

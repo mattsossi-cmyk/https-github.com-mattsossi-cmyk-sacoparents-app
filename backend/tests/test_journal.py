@@ -74,13 +74,9 @@ def guest_b():
 # ============== /api/journal/prompt ==============
 class TestPrompt:
     def test_prompt_unauth_behaviour(self):
-        # Test request expects 401, but the endpoint is currently public.
-        # We assert actual behaviour and surface mismatch in test report.
+        # The daily prompt is generic text with no account data, so it is public.
         r = requests.get(f"{BASE_URL}/api/journal/prompt", timeout=15)
-        # Document actual response
-        assert r.status_code in (200, 401, 403)
-        if r.status_code == 200:
-            pytest.xfail("prompt endpoint is public (test plan expected 401)")
+        assert r.status_code == 200, r.text
 
     def test_prompt_auth_returns_shape(self, user_a):
         r = requests.get(
@@ -368,7 +364,11 @@ class TestWeeklyRecap:
             timeout=30,
         )
         assert r.status_code == 200
-        return {"token": r.json()["access_token"]}
+        tok = r.json()["access_token"]
+        # The recap is an AI feature: it only runs once the AI notice is accepted.
+        from ai_ready import accept_ai_notice
+        accept_ai_notice(f"{BASE_URL}/api", {"Authorization": f"Bearer {tok}"})
+        return {"token": tok}
 
     def test_recap_with_lt_2_entries_returns_null(self, fresh_user):
         r = requests.get(

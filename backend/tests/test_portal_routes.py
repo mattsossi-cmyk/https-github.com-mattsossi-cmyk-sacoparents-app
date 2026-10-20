@@ -6,6 +6,17 @@ import requests
 BASE_URL = os.environ.get("REACT_APP_BACKEND_URL", "https://prepared-parents.preview.emergentagent.com").rstrip("/")
 API = f"{BASE_URL}/api"
 
+from ai_ready import ai_headers  # noqa: E402
+
+_AI = {}
+
+
+def _ai():
+    """Signed in with the AI notice accepted (AI endpoints need both)."""
+    if not _AI:
+        _AI.update(ai_headers(f"{BASE_URL}/api"))
+    return _AI
+
 EMAIL = "parent1@test.com"
 PASSWORD = "TestPass123!"
 
@@ -52,7 +63,7 @@ class TestCourtKeys:
 class TestBiffRefine:
     def test_refine_escalated(self):
         r = requests.post(
-            f"{API}/portal/biff-refine",
+            f"{API}/portal/biff-refine", headers=_ai(),
             json={"raw": "You were late again! You have zero respect."},
             timeout=60,
         )

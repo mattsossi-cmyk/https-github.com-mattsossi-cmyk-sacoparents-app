@@ -66,6 +66,8 @@ def test_parent2_mint_verify_link_and_history_cap_at_5(db, users):
     db.align_links.update_many({"user_id": users["parent2@test.com"]},
                                {"$set": {"unlinked_at": __import__("datetime").datetime.utcnow()}})
     db.align_access_log.delete_many({"user_id": users["parent2@test.com"]})
+    # Codes this test minted on earlier runs would trip the 5-per-hour limit when the suite is rerun.
+    db.link_codes.delete_many({"user_id": users["parent2@test.com"]})
 
     tok = _login("parent2@test.com")
     # Mint link code

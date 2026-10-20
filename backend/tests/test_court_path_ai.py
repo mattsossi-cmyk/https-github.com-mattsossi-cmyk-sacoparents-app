@@ -46,15 +46,22 @@ class TestCourtKeyVerify:
 
 # ---------- Regression: /self-assessment/ai ----------
 
+@pytest.fixture(scope="module")
+def h():
+    from ai_ready import ai_headers
+    return ai_headers(API)
+
+
 class TestSelfAssessmentAiRegression:
-    def test_framing_short_text_422(self):
-        r = requests.post(f"{API}/self-assessment/ai/framing", json={"text": "x"}, timeout=20)
+    def test_framing_short_text_422(self, h):
+        r = requests.post(f"{API}/self-assessment/ai/framing", json={"text": "x"}, headers=h, timeout=20)
         assert r.status_code == 422
 
-    def test_framing_valid(self):
+    def test_framing_valid(self, h):
         r = requests.post(
             f"{API}/self-assessment/ai/framing",
             json={"text": "You never bring the kids on time and I'm sick of it."},
+            headers=h,
             timeout=60,
         )
         assert r.status_code == 200, r.text

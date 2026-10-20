@@ -139,6 +139,9 @@ def render_provenance_footer(
     row_h = 5.0
     label_w = w - pill_w - 2.0
     for label, origin in rows:
+        # Break before a row that won't fit, so label and pill stay on one page.
+        if pdf.get_y() + row_h * 2 > pdf.page_break_trigger:
+            pdf.add_page()
         # Snapshot Y for the pill's right-column render after multi_cell.
         y_start = pdf.get_y()
         pdf.set_x(x0)

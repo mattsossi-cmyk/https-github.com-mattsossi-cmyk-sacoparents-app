@@ -242,57 +242,7 @@ class TestSafetyRedaction:
         assert r.json()["linked"] is True
 
 
-# --- Mediator email include_answers --------------------------------------
-class TestMediatorEmailIncludeAnswers:
-    """Payload shape test: endpoint accepts include_answers and records
-    `included_answers` on the mediator_emails entry. We don't require a
-    real completed assessment id — if none exists, we skip."""
-
-    def _find_assessment_id(self, s, tok) -> str | None:
-        r = s.get(f"{API}/safety-assessment/me/history", headers=_h(tok), timeout=20)
-        if r.status_code != 200:
-            return None
-        data = r.json()
-        items = data if isinstance(data, list) else data.get("items") or data.get("history") or data.get("assessments") or []
-        # Prefer completed ones.
-        completed = [it for it in items if it.get("completed") or it.get("status") in ("completed", "complete", "done")]
-        pool = completed or items
-        for it in pool:
-            aid = it.get("assessment_id") or it.get("id") or it.get("_id")
-            if aid:
-                return aid
-        return None
-
-    def test_endpoint_accepts_include_answers_field(self, s, tok_p1):
-        aid = self._find_assessment_id(s, tok_p1)
-        if not aid:
-            pytest.skip("No safety-assessment id available for parent1")
-        for include in (False, True):
-            r = s.post(
-                f"{API}/safety-assessment/{aid}/email-mediator",
-                headers=_h(tok_p1),
-                json={
-                    "mediator_email": "delivered@resend.dev",
-                    "mediator_name": "Test Mediator",
-                    "include_answers": include,
-                },
-                timeout=30,
-            )
-            # The endpoint may 404 if the id isn't the parent's; accept 200/202 as success.
-            assert r.status_code in (200, 202), f"include={include} -> {r.status_code} {r.text[:200]}"
-
-    def test_endpoint_default_include_answers_false(self, s, tok_p1):
-        aid = self._find_assessment_id(s, tok_p1)
-        if not aid:
-            pytest.skip("No safety-assessment id available for parent1")
-        # Omit include_answers entirely — default must be False and request must succeed.
-        r = s.post(
-            f"{API}/safety-assessment/{aid}/email-mediator",
-            headers=_h(tok_p1),
-            json={"mediator_email": "delivered@resend.dev", "mediator_name": "Test Mediator"},
-            timeout=30,
-        )
-        assert r.status_code in (200, 202), f"{r.status_code} {r.text[:200]}"
+# The old Safety Assessment "email to mediator" route is retired; test_align_safety_step.py checks it returns 404.
 
 
 # --- Migration ($setOnInsert never re-links an unlinked parent) ----------

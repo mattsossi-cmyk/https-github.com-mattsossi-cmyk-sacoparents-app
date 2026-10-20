@@ -42,27 +42,23 @@ def _ensure_primary_user_exists():
     # Try register
     requests.post(
         f"{BASE_URL}/api/auth/register",
-        json={"email": PRIMARY_EMAIL, "password": ORIGINAL_PASSWORD, "name": "Sam Parent"},
+        json={"ack_privacy_notice": True, "consent_sensitive_info": True, "email": PRIMARY_EMAIL, "password": ORIGINAL_PASSWORD, "name": "Sam Parent"},
         timeout=20,
     )
 
 
 def _grep_latest_reset_token(email: str, since_ts: float) -> str | None:
-    """Search backend logs for the latest 'Password reset requested but SMTP not configured. Link for <email>: ...' entry."""
+    """Latest reset token for this email from the DB (the backend never logs tokens or links)."""
+    from datetime import datetime, timezone
+    since = datetime.fromtimestamp(since_ts - 1, tz=timezone.utc).isoformat()
     deadline = time.time() + 8
     while time.time() < deadline:
-        try:
-            out = subprocess.check_output(
-                ["tail", "-n", "500"] + LOG_FILES, stderr=subprocess.DEVNULL
-            ).decode("utf-8", errors="ignore")
-        except Exception:
-            out = ""
-        # Only consider lines that mention this email
-        candidates = [ln for ln in out.splitlines() if email in ln and "Link" in ln]
-        for line in reversed(candidates):
-            m = TOKEN_RE.search(line)
-            if m:
-                return m.group(1)
+        from pymongo import MongoClient
+        mongo_url, db_name = _get_mongo()
+        doc = MongoClient(mongo_url)[db_name].magic_links.find_one(
+            {"email": email.lower(), "mode": "reset", "created_at": {"$gte": since}}, sort=[("created_at", -1)])
+        if doc:
+            return doc["token"]
         time.sleep(0.5)
     return None
 
@@ -151,7 +147,7 @@ class TestRequestEndpoint:
         assert data.get("ok") is True
         assert data.get("sent") is True
         assert "message" in data
-        # Backend should have logged the link since SMTP isn't configured
+        # The token is in the DB (never in the logs).
         tok = _grep_latest_reset_token(PRIMARY_EMAIL, ts)
         assert tok, "Expected backend log to contain the reset link for parent1@test.com"
 
@@ -298,7 +294,7 @@ class TestSuspendedUserPrivacy:
         email = f"test_susp_{uuid.uuid4().hex[:8]}@test.com"
         r = requests.post(
             f"{BASE_URL}/api/auth/register",
-            json={"email": email, "password": ORIGINAL_PASSWORD, "name": "Susp"},
+            json={"ack_privacy_notice": True, "consent_sensitive_info": True, "email": email, "password": ORIGINAL_PASSWORD, "name": "Susp"},
             timeout=20,
         )
         assert r.status_code == 200, r.text

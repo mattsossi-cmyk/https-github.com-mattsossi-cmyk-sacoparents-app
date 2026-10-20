@@ -128,7 +128,7 @@ def _wipe_iter192_rows():
 def _register(client, email, name):
     r = client.post(
         "/api/auth/register",
-        json={"email": email, "password": "TestPass192!", "name": name},
+        json={"ack_privacy_notice": True, "consent_sensitive_info": True, "email": email, "password": "TestPass192!", "name": name},
     )
     if r.status_code == 400:
         r = client.post(
