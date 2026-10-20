@@ -239,7 +239,10 @@ def test_export_shape_for_new_parent(client: TestClient) -> None:
     assert "redacted_for_safety" not in body
     assert body["parent"]["email"] == email
     assert "situation_snapshot" in body
-    assert "foundation_statement" in body
+    # Reflection / Foundation Statement answers are never sent to Align.
+    assert "foundation_statement" not in body
+    # No sharing choice yet -> the Communication Style answers are left out entirely.
+    assert "communication_readiness" not in body
     assert "special_needs" in body
     for lane in ("medical", "educational", "psychological"):
         assert lane in body["special_needs"]

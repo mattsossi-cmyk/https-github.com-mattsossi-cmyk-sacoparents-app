@@ -70,6 +70,7 @@ async def send_nudge(body: NudgeBody, user: UserPublic = Depends(get_current_use
                      db: AsyncIOMotorDatabase = Depends(get_db)) -> Dict[str, Any]:
     from email_service import EmailNotConfigured, EmailSendError, send_requested_reminder
     from requested_reminders import _links
+    from held_emails import record_held
     from self_assessment_reminders import is_safety_flagged
 
     uids, keys = await _owned(db, body.ref, user.user_id)
@@ -89,6 +90,7 @@ async def send_nudge(body: NudgeBody, user: UserPublic = Depends(get_current_use
         status = "suppressed_unsubscribed"
     elif await is_safety_flagged(db, uid):
         status = "suppressed_safety"
+        await record_held(db, "pro_nudge", uid, now.isoformat())
     elif not parent.get("email") or parent.get("email_bounced"):
         status = "suppressed_no_email"
     else:

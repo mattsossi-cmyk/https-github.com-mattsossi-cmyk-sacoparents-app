@@ -8,6 +8,7 @@ import { AdminGate } from "../components/AdminGate";
 import { AlignStatusPanel } from "../components/caseSettings/AlignStatusPanel";
 import { DailyCountsTable } from "../components/caseSettings/DailyCountsTable";
 import { AutoRestrictedCount } from "../components/caseSettings/AutoRestrictedCount";
+import { HeldEmailsCount } from "../components/caseSettings/HeldEmailsCount";
 import { ParentIdsCard } from "../components/caseSettings/ParentIdsCard";
 import { SecretPasteGuard } from "../components/caseSettings/SecretPasteGuard";
 import { api } from "../lib/api";
@@ -53,6 +54,7 @@ export default function AdminAuditLog() {
           <AlignStatusPanel key={`align-${rev}`} onForbidden={onForbidden} />
           <DailyCountsTable key={rev} onForbidden={onForbidden} />
           <AutoRestrictedCount onForbidden={onForbidden} />
+          <HeldEmailsCount onForbidden={onForbidden} />
           <ParentIdsCard onForbidden={onForbidden} />
           <p className="text-xs text-[#6E6787]">
             <Link to="/admin/help-services" className="underline text-[#3D1A78]" data-testid="admin-audit-help-link">Get help: local services</Link>

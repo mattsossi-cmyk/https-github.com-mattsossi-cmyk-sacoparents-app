@@ -82,7 +82,7 @@ export const METHODS = [
     lead: "Our companion site for professionals.",
     review: true,
     points: [
-      "Only after you link your account with a link code can Align read your Situation Snapshot, Foundation Statement and Special Needs summaries.",
+      "Only after you link your account with a link code can Align read your Situation Snapshot and Special Needs summaries. Your 4 Communication Style answers go to your assigned professional on Align only if you say yes, and you can change that on your Account page.",
       "You can unlink at any time from your Account page. After that Align can't read anything until you link again with a new code.",
       "Align never receives your co-parent's information or any safety answers saved in this app.",
     ],

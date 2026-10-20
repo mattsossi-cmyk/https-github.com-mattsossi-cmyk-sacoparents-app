@@ -9398,3 +9398,11 @@ dashboard for sharing SELECTED completed reports with any professional.
 - Skipped on purpose: 8 webhook modules (ALIGN_WEBHOOK_SECRET left unset by user), 4 retired v1 questionnaire modules, 14 retired old-safety-screen tests.
 - Open (user): Align replies to (a) "Who has looked" addresses (linked + general) and (b) reflection/readiness question did not come through — defaults kept
   (link hidden; reflection/readiness not sent). Privacy Notice sections 3–6 / 8–11 stay out until the user sends text.
+
+## 2026-10-20 — Held-back reminder count + supervised webhook run (PREVIEW ONLY)
+- New held_emails.py: each reminder held for safety (reassess, weekly note, requested-steps, professional nudge, comparison alert,
+  unfinished-draft) is recorded once per email as {kind, at} under a keyed hash — no name, email, user id or case code.
+- Admin-only GET /api/admin/safety-audit-log/held-emails → last 30 days, by type; 1–4 shows "fewer than 5". Card on /admin/audit-log
+  (components/caseSettings/HeldEmailsCount.jsx, testids held-emails-card/-total/-list/-{kind}). Preview numbers include test runs.
+- Webhook run: temporary secret in preview only, 8 webhook files → 84 passed / 0 failed after 9 outdated tests were updated; secret removed,
+  webhook back OFF (503). Tests: tests/test_held_emails.py (7).

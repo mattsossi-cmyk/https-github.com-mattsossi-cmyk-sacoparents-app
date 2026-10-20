@@ -28,6 +28,7 @@ import case_safety as cs
 from align_ref import backfill_align_refs, missing_align_refs
 from analytics_routes import ADMIN_EMAILS, require_admin
 from auth import get_current_user, get_db
+from held_emails import held_counts
 from models import UserPublic
 
 logger = logging.getLogger(__name__)
@@ -304,6 +305,12 @@ async def align_status(current: UserPublic = Depends(require_admin), db=Depends(
 @router.get("/admin/safety-audit-log/auto-restricted")
 async def auto_restricted(current: UserPublic = Depends(require_admin), db=Depends(get_db)):
     return JSONResponse({"count": await cs.count_auto_restricted(db)}, headers=NO_STORE)
+
+
+@router.get("/admin/safety-audit-log/held-emails")
+async def held_emails_count(current: UserPublic = Depends(require_admin), db=Depends(get_db)):
+    """Reminder emails held back for safety in the last 30 days, by type. Counts only; under 5 shows as "fewer than 5"."""
+    return JSONResponse(await held_counts(db), headers=NO_STORE)
 
 
 @router.get("/admin/safety-audit-log/link-health")

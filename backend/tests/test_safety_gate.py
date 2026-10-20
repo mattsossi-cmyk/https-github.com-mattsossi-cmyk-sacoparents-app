@@ -216,12 +216,13 @@ def test_restricted_strips_png_text_and_pdf_info():
 @pytest.mark.parametrize("sig", [None, "", "deadbeef", "__wrong_secret__"])
 def test_bad_signature_rejected(sig):
     case_id, ha, _ = _case()
+    before = _flags(ha).json()
     raw = _body(case_id, 5, mode="standard")
     if sig == "__wrong_secret__":
         sig = _sign(raw, "not-the-secret")
     assert _send(raw, sig).status_code == 401
     assert _stored(case_id) is None
-    assert not _flags(ha).json()["features"]["free_form_messaging"]
+    assert _flags(ha).json() == before
 
 
 # 6. Old timestamp, replay, or a version that isn't higher -> nothing changes.
@@ -306,7 +307,8 @@ def test_record_encrypted_and_audited():
     assert cs.decrypt(doc["enc"])["professional_name"] == "Dr. Reviewer"
     _flags(ha)
     actions = [(r["actor_type"], r["action"]) for r in db[cs.AUDIT].find({"case_id": case_id})]
-    assert ("system", "write") in actions and ("user", "read") in actions
+    # Only a named professional's update can write; the audit row names who (actor_type "professional").
+    assert ("professional", "write") in actions and ("user", "read") in actions
 
 
 def test_audit_export_admin_only_and_logged():
@@ -534,23 +536,16 @@ def test_checkin_thanks_once_per_account():
 
 
 # Check-in link: both parents in one case get the same case number; no case -> null (main Align site).
-def test_checkin_link_uses_each_parents_align_ref():
-    import re as _re
+def test_checkin_link_uses_shared_case_code_not_align_ref():
     case_id, ha, hb = _case()
     url = f"{API}/family-checkin/link"
     a, b = httpx.get(url, headers=ha, timeout=20), httpx.get(url, headers=hb, timeout=20)
-    ra, rb = a.json()["align_ref"], b.json()["align_ref"]
-    uuid4 = r"^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$"
-    assert _re.match(uuid4, ra) and _re.match(uuid4, rb) and ra != rb
-    ua = db.users.find_one({"align_ref": ra}, {"_id": 0, "user_id": 1, "email": 1})
-    assert ua and ua["email"] in _emails
-    assert httpx.get(url, headers=ha, timeout=20).json()["align_ref"] == ra
-    me = httpx.get(f"{API}/auth/me", headers=ha, timeout=20).text
-    assert ra not in me and ra not in _flags(ha).text
+    # Both parents get the same SA- case code; align_ref is never part of the link.
+    assert a.json() == {"case_id": case_id} and b.json() == {"case_id": case_id}
     assert "no-store" in a.headers.get("cache-control", "")
     assert httpx.get(url, timeout=20).status_code == 401
     _, hl = _user()
-    assert httpx.get(url, headers=hl, timeout=20).json() == {"align_ref": None}
+    assert httpx.get(url, headers=hl, timeout=20).json() == {"case_id": None}
 
 
 # Reminder: a week after the case was linked, still not done; closing hides it for a week; never once done.

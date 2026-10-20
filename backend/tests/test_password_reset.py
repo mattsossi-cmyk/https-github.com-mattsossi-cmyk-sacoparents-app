@@ -336,11 +336,15 @@ class TestRateLimit:
         # (rate limiter counts inserts into magic_links). Wait — for unknown
         # users we don't insert. So we must use the real user. We'll request
         # several times in a row; depending on prior tests we should hit 429.
+        from ai_ready import client_address
+        # One fixed client address, so the per-address count can't be split across proxy addresses.
+        addr = client_address()
         codes = []
         for _ in range(8):
             r = requests.post(
                 f"{BASE_URL}/api/auth/password-reset/request",
                 json={"email": PRIMARY_EMAIL},
+                headers=addr,
                 timeout=15,
             )
             codes.append(r.status_code)

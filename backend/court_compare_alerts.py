@@ -9,6 +9,7 @@ from datetime import datetime, timedelta, timezone
 from motor.motor_asyncio import AsyncIOMotorDatabase
 
 from email_service import send_compare_ready_alert, send_compare_share_alert
+from held_emails import record_held, week_key
 from self_assessment_reminders import is_safety_flagged
 
 logger = logging.getLogger(__name__)
@@ -17,9 +18,10 @@ WEEK = timedelta(days=7)
 
 
 async def _alert(db: AsyncIOMotorDatabase, uid: str, field: str, send) -> None:
-    if await is_safety_flagged(db, uid):
-        return
     now = datetime.now(timezone.utc)
+    if await is_safety_flagged(db, uid):
+        await record_held(db, "compare_alert", uid, f"{field}:{week_key(now)}")
+        return
     last = ((await db[ALERTS].find_one({"user_id": uid}, {"_id": 0, field: 1})) or {}).get(field)
     if last and datetime.fromisoformat(last) > now - WEEK:
         return

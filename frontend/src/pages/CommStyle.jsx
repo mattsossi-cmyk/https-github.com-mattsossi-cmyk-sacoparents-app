@@ -12,6 +12,8 @@ import SectionCoaching from "../components/SectionCoaching";
 import MethodologyCard from "../components/MethodologyCard";
 import { Sparkles } from "lucide-react";
 import { AiGuardFrame, useAiGuard } from "../components/aiNotice/AiGuard";
+import { CommShareCard } from "../components/commStyle/CommShareCard";
+import { getCommShare } from "../lib/commShare";
 
 const QUIZ = [
   {
@@ -60,6 +62,7 @@ export default function CommStyle() {
   const [analysis, setAnalysis] = useState(null);
   const [analyzing, setAnalyzing] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [askShare, setAskShare] = useState(false);
 
   useEffect(() => {
     api
@@ -101,7 +104,10 @@ export default function CommStyle() {
         free_text_sample: sample,
       });
       toast.success("Saved.");
-      navigate("/next-steps/comm_style");
+      // Ask once about sharing with the Align professional; after that the Account page switch changes it.
+      const choice = await getCommShare().catch(() => "unknown");
+      if (choice === null) setAskShare(true);
+      else navigate("/next-steps/comm_style");
     } catch (err) {
       logError("Save comm-style failed:", err);
       toast.error("Could not save.");
@@ -173,7 +179,7 @@ export default function CommStyle() {
                 value={sample}
                 onChange={(e) => setSample(e.target.value)}
                 className="input-soft resize-none"
-                placeholder="Stays private to your account."
+                placeholder="Private to your account unless you choose to share it with your assigned professional on Align."
                 data-testid="comm-sample-textarea"
               />
             </AiGuardFrame>
@@ -251,6 +257,7 @@ export default function CommStyle() {
           />
         </div>
       </WizardLayout>
+      <CommShareCard open={askShare} onDone={() => navigate("/next-steps/comm_style")} />
     </AppShell>
   );
 }

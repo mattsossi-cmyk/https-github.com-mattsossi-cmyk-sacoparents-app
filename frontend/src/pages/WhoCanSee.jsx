@@ -4,7 +4,7 @@ import { Link } from "react-router-dom";
 import { ProfessionalAccessNotice } from "../components/privacy/ProfessionalAccessNotice";
 import { useAccessLogLink } from "../lib/useCheckinLink";
 
-// Placeholder until Align sends the addresses (REACT_APP_ALIGN_ACCESS_LOG_URL with {case_id} / ..._GENERAL_URL); hidden while unset.
+// Only for parents linked to Align: their case page (?case=SA-...) or, without a case code, the plain page.
 function AccessLogLink() {
   const href = useAccessLogLink();
   if (!href) return null;

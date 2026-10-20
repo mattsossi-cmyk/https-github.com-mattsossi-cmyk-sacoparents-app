@@ -106,7 +106,7 @@ def test_parent2_mint_verify_link_and_history_cap_at_5(db, users):
     assert len(status["recent_reads"]) == 5
     assert status["last_read_at"]
     for read in status["recent_reads"]:
-        assert read["what"] == "Your Situation Snapshot, Foundation Statement and Special Needs summaries"
+        assert read["what"] == "Your Situation Snapshot and Special Needs summaries"
         assert read["redacted"] is False
     # Ensure newest first
     times = [r["at"] for r in status["recent_reads"]]

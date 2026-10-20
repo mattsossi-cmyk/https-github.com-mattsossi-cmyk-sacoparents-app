@@ -49,3 +49,12 @@ Command: `cd /app/backend && REACT_APP_BACKEND_URL=<preview> python -m pytest te
   test_iter67_edu_v2.py / test_iter70_psych_v2.py.
 - test_iter144_safety_gate_on_invites (12) and test_iter149 (2): old in-app Safety Assessment retired; replaced by
   test_align_safety_step.py.
+
+## Supervised webhook run (2026-10-20, preview only)
+- A temporary ALIGN_WEBHOOK_SECRET was written to preview backend/.env (never shown), backend restarted, the 8 webhook files run, then the
+  key was removed and the backend restarted. Afterwards: webhook POST -> 503, tests/test_webhook_off.py 3 passed, .env keys same as before.
+- First pass: 64 passed, 9 failed, 44 skipped. The 9 were outdated tests (fixed): refusal counters now include no_professional_name /
+  auto_red_refused; checklist PDF shows "Safety step: completed on SACOparentsAlign" once Align marks it done; audit write row is
+  actor_type "professional"; check-in link returns the shared case_id (never align_ref); bad-signature check compares flags to before.
+- Second pass: 84 passed, 0 failed, 44 skipped (auto_red tests, rule removed 2026-10-19; covered by test_safety_gate_correction.py).
+- With the webhook off again these 8 files skip themselves (by design).

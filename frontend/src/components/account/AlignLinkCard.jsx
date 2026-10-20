@@ -5,6 +5,7 @@ import { toast } from "sonner";
 import { api } from "../../lib/api";
 import { AlignLinkCode } from "./AlignLinkCode";
 import { AlignReadHistory } from "./AlignReadHistory";
+import { CommShareSwitch } from "./CommShareSwitch";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -31,8 +32,8 @@ function UnlinkButton({ busy, onConfirm }) {
         <AlertDialogHeader>
           <AlertDialogTitle>Unlink SA CoParents Align?</AlertDialogTitle>
           <AlertDialogDescription>
-            Align will stop being able to read your Situation Snapshot, Foundation Statement and Special Needs summaries
-            straight away. Anything Align already saved stays on Align. To link again you&rsquo;ll need a new code.
+            Align will stop being able to read your Situation Snapshot, Special Needs summaries and (if you chose to share them)
+            your Communication Style answers straight away. Anything Align already saved stays on Align. To link again you&rsquo;ll need a new code.
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
@@ -89,7 +90,7 @@ export default function AlignLinkCard() {
         </div>
         <p className="text-xs text-[#4B4567] mt-1 leading-relaxed">
           {status?.linked
-            ? "Align can read your Situation Snapshot, Foundation Statement and Special Needs summaries."
+            ? "Align can read your Situation Snapshot and Special Needs summaries, plus your Communication Style answers if you said yes below."
             : "Align can't read anything from your account. It only can after you link with a code."}
           {status?.last_read_at && (
             <span data-testid="align-link-last-read"> Last read {when(status.last_read_at)}.</span>
@@ -101,6 +102,7 @@ export default function AlignLinkCard() {
         <AlignLinkCode onPoll={load} />
         {status?.linked && <UnlinkButton busy={busy} onConfirm={unlink} />}
       </div>
+      <CommShareSwitch />
       {status && <AlignReadHistory reads={status.recent_reads || []} />}
     </div>
   );

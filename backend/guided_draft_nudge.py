@@ -85,6 +85,7 @@ async def send_guided_draft_nudges(
     # Late import so this module stays test-friendly even when the
     # email service is misconfigured (Resend key missing in preview).
     from email_service import send_guided_draft_nudge as _email
+    from held_emails import record_held
     from self_assessment_reminders import is_safety_flagged
 
     portal_url = portal_url or "https://sacoparentsapp.online/"
@@ -114,8 +115,7 @@ async def send_guided_draft_nudges(
         if not user_doc or not user_doc.get("email"):
             continue
         # Same hold as every other reminder: no emails to a parent with an old safety result.
-        if await is_safety_flagged(db, user_id):
-            continue
+        held = await is_safety_flagged(db, user_id)
 
         for topic, snapshot in drafts.items():
             if not isinstance(snapshot, dict):
@@ -142,6 +142,9 @@ async def send_guided_draft_nudges(
             already = await db[NUDGES_COLL].find_one(dedupe_key)
             if already:
                 skipped_dupes += 1
+                continue
+            if held:
+                await record_held(db, "draft_nudge", user_id, f"{topic}:{week_key}")
                 continue
 
             progress = snapshot.get("progress") or {}

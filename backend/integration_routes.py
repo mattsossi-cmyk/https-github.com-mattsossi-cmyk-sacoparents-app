@@ -51,6 +51,7 @@ from motor.motor_asyncio import AsyncIOMotorDatabase
 from pydantic import BaseModel, EmailStr, Field
 
 from auth import UserPublic, get_current_user, get_db
+from align_share import communication_readiness
 from integration_keys import match_integration_key
 from safety_gate import require_ipv_clearance
 from self_assessment_reminders import is_safety_flagged
@@ -310,10 +311,12 @@ async def export_assessments(
     user_id = user["user_id"]
     # A parent with an older saved concerning result gets the same reply as one with nothing saved yet (no flag).
     held = await is_safety_flagged(db, user_id)
-    await _log_read(db, user_id, "export-assessments", held)
 
     prep = {} if held else (await db.prep_data.find_one({"user_id": user_id}, {"_id": 0}) or {})
     completed = prep.get("completed") or {}
+    # Only when the parent said yes to sharing; otherwise the field is left out entirely.
+    comm = None if held else await communication_readiness(db, user_id, prep)
+    await _log_read(db, user_id, "export-assessments", held, comm_shared=bool(comm))
 
     # Situation Snapshot = the parent's saved mediation prep answers,
     # normalised so the sibling doesn't have to re-implement the shape.
@@ -328,10 +331,7 @@ async def export_assessments(
         "updated_at": _iso(prep.get("updated_at")),
     }
 
-    # Foundation Statement answers stay with the parent (shared only when the parent sends it). Shape kept, values empty.
-    canonical = {"child_lens": None, "own_part": None, "best_outcome": None, "coparent_feedback": None}
-    foundation_statement = {"child_lens": None, "my_part": None, "best_case": None, "coparent_lens": None,
-                            "canonical": canonical, "updated_at": None}
+    # Reflection / Foundation Statement answers are never sent to Align (Align doesn't use them).
 
     # Three-pronged Special Needs — pull the parent's latest report
     # payload from each deep-dive collection. If the parent hasn't
@@ -343,17 +343,19 @@ async def export_assessments(
         "psychological": None if held else await _latest_deep_dive_report(db, "psych_deep_reports", user_id),
     }
 
-    return {
+    body = {
         "parent": {
             "email": user["email"],
             "name": user.get("name"),
         },
         "situation_snapshot": situation_snapshot,
-        "foundation_statement": foundation_statement,
         "special_needs": special_needs,
         "exported_at": _iso(_now()),
         "schema_version": 1,
     }
+    if comm:
+        body["communication_readiness"] = comm
+    return body
 
 
 # ----------------------------- Align links ----------------------------- #
@@ -376,8 +378,11 @@ async def _linked_user(db: AsyncIOMotorDatabase, email: str) -> Dict[str, Any]:
     return user
 
 
-async def _log_read(db: AsyncIOMotorDatabase, user_id: str, endpoint: str, redacted: bool) -> None:
-    await db[_ACCESS_LOG].insert_one({"user_id": user_id, "endpoint": endpoint, "redacted": redacted, "at": _now()})
+async def _log_read(db: AsyncIOMotorDatabase, user_id: str, endpoint: str, redacted: bool, comm_shared: bool = False) -> None:
+    row = {"user_id": user_id, "endpoint": endpoint, "redacted": redacted, "at": _now()}
+    if comm_shared:
+        row["comm_shared"] = True
+    await db[_ACCESS_LOG].insert_one(row)
 
 
 async def migrate_verified_links(db: AsyncIOMotorDatabase) -> int:
@@ -395,9 +400,10 @@ async def migrate_verified_links(db: AsyncIOMotorDatabase) -> int:
 
 
 _READ_LABELS = {
-    "export-assessments": "Your Situation Snapshot, Foundation Statement and Special Needs summaries",
+    "export-assessments": "Your Situation Snapshot and Special Needs summaries",
     "foundation-statement.pdf": "Your Foundation Statement PDF",
 }
+_COMM_LABEL = "Your Situation Snapshot, Special Needs summaries and Communication Style answers"
 
 
 _REDACTED_NOTES = {
@@ -426,7 +432,7 @@ async def _link_status(db: AsyncIOMotorDatabase, user_id: str) -> AlignLinkStatu
     reads = [
         AlignRead(
             at=_iso(r["at"]),
-            what=_READ_LABELS.get(r["endpoint"], r["endpoint"]),
+            what=_COMM_LABEL if r.get("comm_shared") else _READ_LABELS.get(r["endpoint"], r["endpoint"]),
             redacted=bool(r.get("redacted")),
             note=_REDACTED_NOTES.get(r["endpoint"]) if r.get("redacted") else None,
         )

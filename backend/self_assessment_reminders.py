@@ -16,6 +16,7 @@ import jwt
 from motor.motor_asyncio import AsyncIOMotorDatabase
 
 from auth import JWT_ALGO, JWT_SECRET
+from held_emails import record_held
 from safety_gate import BLOCKED_LEVEL_CEILING, _latest_safety_level, lifted_by_professional
 
 logger = logging.getLogger(__name__)
@@ -92,6 +93,7 @@ async def send_reassess_reminders(db: AsyncIOMotorDatabase, *, now: Optional[dat
             continue
         if await is_safety_flagged(db, user_id):
             stats["skipped_safety"] += 1
+            await record_held(db, "reassess", user_id, f"{entry_id}:{kind}")
             continue
         user = await db.users.find_one({"user_id": user_id}, {"_id": 0, "email": 1, "name": 1, "is_guest": 1,
                                                                 "email_bounced": 1, "email_complained": 1})

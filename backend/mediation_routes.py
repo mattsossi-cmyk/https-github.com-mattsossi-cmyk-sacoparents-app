@@ -72,11 +72,13 @@ async def _load_prep(db, user_id: str) -> Dict[str, Any]:
 
 def _snapshot_prep(prep: Dict[str, Any]) -> Dict[str, Any]:
     """Freeze the parts of prep we want to compare across summaries (never the Issues safety text)."""
+    cs = prep.get("comm_style")
     return {
         "child_goals": prep.get("child_goals"),
         "issues": prep_privacy.clean_issues(prep.get("issues")),
         "priority": prep.get("priority"),
-        "comm_style": prep.get("comm_style"),
+        # saved_at changes on every save, so it isn't part of "what changed".
+        "comm_style": {k: v for k, v in cs.items() if k != "saved_at"} if isinstance(cs, dict) else cs,
         "readiness": prep.get("readiness"),
     }
 
@@ -133,7 +135,8 @@ async def save_comm_style(
     request: Request,
     current: UserPublic = Depends(get_current_user),
 ):
-    await _save_section(request.app.state.db, current.user_id, "comm_style", body.dict())
+    # saved_at = the "date answered" sent to Align if the parent chose to share these answers.
+    await _save_section(request.app.state.db, current.user_id, "comm_style", {**body.dict(), "saved_at": _now()})
     return {"ok": True}
 
 

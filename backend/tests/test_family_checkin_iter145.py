@@ -125,19 +125,21 @@ class TestChecklist:
 
 class TestPdf:
     def test_pdf_full(self):
+        # Align marked this case done earlier in the module, so the one safety line says so.
         t = pdf_text(ST["a"])
-        assert "Safety step: see SACOparentsAlign" in t and "Safety step: not started" not in t
+        assert "Safety step: completed on SACOparentsAlign" in t and "Safety step: not started" not in t
+        low = t.lower().replace("safety step", "")
         for w in ("Module A", "Module B", "Module C", "Child Needs & Priorities", "Co-Parenting Dynamics", "Conflict Readiness"):
             assert w not in t
         for w in BANNED:
-            assert w not in t.lower(), w
+            assert w not in low, w
 
     def test_pdf_requested_only(self):
         r = ST["a"].put(f"{BASE_URL}/api/court-path/requested", json={"keys": ["coparent", "self"]})
         assert r.status_code == 200, r.text
         t = " ".join(pdf_text(ST["a"]).split())
         assert "Showing your case, your safety step and the assessments your professional asked for." in t
-        assert "Family check-in" in t
+        assert "Safety step: completed on SACOparentsAlign" in t
 
 
 class TestCourtAiChat:
