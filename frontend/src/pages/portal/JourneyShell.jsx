@@ -33,6 +33,9 @@ import { CoparentingAssessmentView } from "./coparenting/CoparentingAssessmentVi
 import { useFoundationBuilder } from "./foundation/useFoundationBuilder";
 import { ChildNeedsView } from "./ChildNeedsView";
 import { FoundationStatementView } from "./FoundationStatementView";
+import { ParentHome } from "./home/ParentHome";
+import { ProfessionalAccessCard } from "../../components/privacy/ProfessionalAccessCard";
+import { NEW_HOME_ON } from "../../lib/previewGate";
 import { api } from "../../lib/api";
 import {
   Dialog,
@@ -490,9 +493,9 @@ const PRIMARY_MODULES = [
 // Professional (Align) site opened from the Court Ordered sub-view.
 // Env-overridable so the founder can switch the hostname without a
 // code change.
-const BUILDER_PATH = "/dashboard?open=parallel-builder";
+export const BUILDER_PATH = "/dashboard?open=parallel-builder";
 
-const ALIGN_SITE_URL =
+export const ALIGN_SITE_URL =
   process.env.REACT_APP_ALIGN_SITE_URL ||
   "https://sacoparentsalign.com";
 
@@ -519,6 +522,8 @@ export function JourneyShell({
   progressByTopic = {},
   pairProgress = null,
   safetyFlagged = false,
+  onViewChange = () => {},
+  biffReady = true,
 }) {
   // Suppress a few unused props so we don't trip the linter; they
   // are still accepted for API compatibility with the handlers in
@@ -534,6 +539,10 @@ export function JourneyShell({
   // picked. Back clears the memory so a parent who deliberately
   // exits a sub-view returns to the landing on the next visit too.
   const [view, setView] = useState(() => readLastDoor() || "door");
+  useEffect(() => {
+    onViewChange(view);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [view]);
 
   const openDoor = (next) => {
     writeLastDoor(next);
@@ -920,17 +929,23 @@ export function JourneyShell({
     else if (key === "card4") openFoundation("court", builder);
   };
 
-  // Deep links: /dashboard?open=self-assessment | parallel-builder
+  // Deep links: /dashboard?open=self-assessment | parallel-builder | court | comm-builder
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const open = params.get("open");
-    if (open !== "self-assessment" && open !== "parallel-builder") return;
+    if (!["self-assessment", "parallel-builder", "court", "comm-builder"].includes(open)) return;
     params.delete("open");
     const qs = params.toString();
     window.history.replaceState(null, "", window.location.pathname + (qs ? `?${qs}` : ""));
-    openDoor("self");
-    if (open === "parallel-builder") openPp("welcome");
-    else openAssess(true);
+    if (open === "court") openDoor("court");
+    else if (open === "comm-builder") onOpenCommBuilder();
+    else if (open === "parallel-builder") {
+      openDoor("self");
+      openPp("welcome");
+    } else {
+      openDoor("self");
+      openAssess(true);
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -1002,46 +1017,7 @@ export function JourneyShell({
   // -----------------------------------------------------------------
   // LANDING — welcome artwork + two doors + goal card.
   // -----------------------------------------------------------------
-  if (view === "door") {
-    return (
-      <div data-testid="journey-shell" className="space-y-4">
-        <div className="flex justify-end">
-          <button
-            type="button"
-            data-testid="journey-quick-exit"
-            onClick={quickExitAction}
-            className="min-h-[40px] px-4 rounded-full text-xs font-bold bg-rose-600 hover:bg-rose-700 text-white shadow-sm transition-colors"
-          >
-            <i className="fa-solid fa-bolt mr-1" aria-hidden="true"></i>
-            Quick Exit
-          </button>
-        </div>
-        <StartWithSafetyBanner />
-        <SafetyFirstBanner alignUrl={ALIGN_SITE_URL} onQuickExit={quickExitAction} />
-        <CoparentingBuilderReferral
-          builderUrl={BUILDER_PATH}
-          progress={ppStatus}
-          onOpen={(e) => {
-            e.preventDefault();
-            openDoor("self");
-            openPp("welcome");
-          }}
-        />
-        <section
-          data-testid="door-landing"
-          className="rounded-2xl bg-white border border-slate-200 p-4 shadow-sm"
-        >
-          <div className="text-center space-y-1 pb-3">
-            <div className="text-[0.625rem] uppercase font-bold tracking-wider text-purple-700">
-              {greetingName ? `Welcome, ${greetingName}` : "Welcome"}
-            </div>
-            <h1 className="text-xl font-bold text-slate-900">
-              Pick your path
-            </h1>
-            <p className="text-xs text-slate-600">
-              Two ways in. The Communication Builder works with either one.
-            </p>
-          </div>
+  const doorButtons = (
           <div className="space-y-3">
             <button
               type="button"
@@ -1101,29 +1077,115 @@ export function JourneyShell({
               <i aria-hidden="true" className="ml-auto fa-solid fa-chevron-right text-sky-400"></i>
             </button>
           </div>
+  );
+  const welcomeArt = (
+    <WelcomeArtwork
+      testid="door-welcome-image"
+      actions={{
+        self: () => openDoor("self"),
+        court: () => openDoor("court"),
+        comm: () => onOpenCommBuilder(),
+      }}
+    />
+  );
+  const goalBanner = (
+    <GoalBanner
+      testid="door-landing-goal"
+      goal={saHistory.currentGoal}
+      setAt={saHistory.latest?.completed_at}
+      practice={saHistory.practice}
+      onPractise={saHistory.practise}
+      dueDays={saHistory.dueDays}
+      onOpen={() => {
+        openDoor("self");
+        openAssess(saHistory.dueDays > 0);
+      }}
+    />
+  );
+
+  if (view === "door" && NEW_HOME_ON) {
+    return (
+      <div data-testid="journey-shell">
+        <ParentHome
+          user={user}
+          saHistory={saHistory}
+          biffCount={biffAuthoredCount}
+          biffReady={biffReady}
+          builderPath={BUILDER_PATH}
+          actions={{
+            openSelfAssessment: () => {
+              openDoor("self");
+              openAssess(false);
+            },
+            openCommBuilder: () => onOpenCommBuilder(),
+            openCourt: () => openDoor("court"),
+            openBuilder: () => {
+              openDoor("self");
+              openPp("welcome");
+            },
+          }}
+          top={
+            <>
+              <SafetyFirstBanner alignUrl={ALIGN_SITE_URL} onQuickExit={quickExitAction} />
+              <section data-testid="door-landing" aria-label="Your paths">
+                {doorButtons}
+              </section>
+              <ProfessionalAccessCard />
+              {welcomeArt}
+            </>
+          }
+          afterSteps={goalBanner}
+        />
+      </div>
+    );
+  }
+
+  if (view === "door") {
+    return (
+      <div data-testid="journey-shell" className="space-y-4">
+        <div className="flex justify-end">
+          <button
+            type="button"
+            data-testid="journey-quick-exit"
+            onClick={quickExitAction}
+            className="min-h-[40px] px-4 rounded-full text-xs font-bold bg-rose-600 hover:bg-rose-700 text-white shadow-sm transition-colors"
+          >
+            <i className="fa-solid fa-bolt mr-1" aria-hidden="true"></i>
+            Quick Exit
+          </button>
+        </div>
+        <StartWithSafetyBanner />
+        <SafetyFirstBanner alignUrl={ALIGN_SITE_URL} onQuickExit={quickExitAction} />
+        <CoparentingBuilderReferral
+          builderUrl={BUILDER_PATH}
+          progress={ppStatus}
+          onOpen={(e) => {
+            e.preventDefault();
+            openDoor("self");
+            openPp("welcome");
+          }}
+        />
+        <section
+          data-testid="door-landing"
+          className="rounded-2xl bg-white border border-slate-200 p-4 shadow-sm"
+        >
+          <div className="text-center space-y-1 pb-3">
+            <div className="text-[0.625rem] uppercase font-bold tracking-wider text-purple-700">
+              {greetingName ? `Welcome, ${greetingName}` : "Welcome"}
+            </div>
+            <h1 className="text-xl font-bold text-slate-900">
+              Pick your path
+            </h1>
+            <p className="text-xs text-slate-600">
+              Two ways in. The Communication Builder works with either one.
+            </p>
+          </div>
+          {doorButtons}
         </section>
 
-        <WelcomeArtwork
-          testid="door-welcome-image"
-          actions={{
-            self: () => openDoor("self"),
-            court: () => openDoor("court"),
-            comm: () => onOpenCommBuilder(),
-          }}
-        />
+        {welcomeArt}
 
-        <GoalBanner
-          testid="door-landing-goal"
-          goal={saHistory.currentGoal}
-          setAt={saHistory.latest?.completed_at}
-          practice={saHistory.practice}
-          onPractise={saHistory.practise}
-          dueDays={saHistory.dueDays}
-          onOpen={() => {
-            openDoor("self");
-            openAssess(saHistory.dueDays > 0);
-          }}
-        />
+        {goalBanner}
       </div>
     );
   }

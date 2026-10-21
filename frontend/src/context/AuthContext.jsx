@@ -76,6 +76,12 @@ export function AuthProvider({ children }) {
     return res.data;
   }, []);
 
+  const setJourneyPath = useCallback(async (path) => {
+    const res = await api.put("/auth/journey-path", { path });
+    setUser(res.data);
+    return res.data;
+  }, []);
+
   const startGuest = useCallback(async () => {
     const res = await api.post("/auth/guest", {});
     setUser(res.data.user);
@@ -97,6 +103,7 @@ export function AuthProvider({ children }) {
       loginWithGoogle,
       logout,
       updateProfile,
+      setJourneyPath,
       checkAuth,
       startGuest,
       claimGuest,
@@ -109,6 +116,7 @@ export function AuthProvider({ children }) {
       loginWithGoogle,
       logout,
       updateProfile,
+      setJourneyPath,
       checkAuth,
       startGuest,
       claimGuest,

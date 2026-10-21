@@ -19,6 +19,7 @@ import AlignLinkCard from "../components/account/AlignLinkCard";
 import RequestedRemindersSwitch from "../components/account/RequestedRemindersSwitch";
 import CompletionAlertsSwitch from "../components/account/CompletionAlertsSwitch";
 import ProfessionalDigestSwitch from "../components/account/ProfessionalDigestSwitch";
+import { JourneyPathSetting } from "../components/account/JourneyPathSetting";
 
 
 function LinkTile({ to, icon, label, desc, testid }) {
@@ -97,6 +98,7 @@ export default function Account() {
           <MarketingConsentToggle />
         </section>
 
+        <JourneyPathSetting />
         <RequestedRemindersSwitch />
         <CompletionAlertsSwitch />
         <ProfessionalDigestSwitch />

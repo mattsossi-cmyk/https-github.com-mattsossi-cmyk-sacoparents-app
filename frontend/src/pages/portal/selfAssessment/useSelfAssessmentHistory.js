@@ -13,6 +13,7 @@ const practiceKeyFor = (userId) => `sacoparents_goal_practice_v1:${userId || "lo
 export function useSelfAssessmentHistory(userId) {
   const [history, setHistory] = useState(() => readJson(keyFor(userId), []));
   const [practice, setPractice] = useState(() => readJson(practiceKeyFor(userId), null));
+  const [loaded, setLoaded] = useState(false);
 
   useEffect(() => {
     setHistory(readJson(keyFor(userId), []));
@@ -35,7 +36,8 @@ export function useSelfAssessmentHistory(userId) {
           writeJson(practiceKeyFor(userId), data.goal_practice);
         }
       })
-      .catch(() => {});
+      .catch(() => {})
+      .finally(() => !cancelled && setLoaded(true));
     return () => {
       cancelled = true;
     };
@@ -103,6 +105,7 @@ export function useSelfAssessmentHistory(userId) {
 
   return {
     history,
+    loaded,
     latest,
     currentGoal: latest?.goal || "",
     practice: {

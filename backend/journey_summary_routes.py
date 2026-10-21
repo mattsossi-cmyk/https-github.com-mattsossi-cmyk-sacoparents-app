@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from datetime import datetime, timezone
 from io import BytesIO
-from typing import Dict, List
+from typing import Any, Dict, List, Literal
 
 from fastapi import APIRouter, Depends, HTTPException
 from fastapi.responses import StreamingResponse
@@ -119,6 +119,41 @@ async def mark_steps_celebrated(
         upsert=True,
     )
     return {"celebrated": True}
+
+
+DASHBOARD_CELEBRATIONS = "dashboard_step_celebrations"
+DashboardStep = Literal["selfAssessment", "communication", "order", "courtChecklist"]
+
+
+class DashboardCelebratedIn(BaseModel):
+    steps: List[DashboardStep]
+    seeded: bool = False
+
+
+@router.get("/dashboard-celebrated")
+async def get_dashboard_celebrated(
+    user: UserPublic = Depends(get_current_user),
+    db: AsyncIOMotorDatabase = Depends(get_db),
+) -> Dict[str, Any]:
+    doc = await db[DASHBOARD_CELEBRATIONS].find_one({"user_id": user.user_id}, {"_id": 0, "steps": 1})
+    return {"steps": doc.get("steps", {}) if doc else None}
+
+
+# Steps already done when the dashboard first loads are stored as "seeded": no confetti, not in the weekly note.
+@router.post("/dashboard-celebrated")
+async def mark_dashboard_celebrated(
+    body: DashboardCelebratedIn,
+    user: UserPublic = Depends(get_current_user),
+    db: AsyncIOMotorDatabase = Depends(get_db),
+) -> Dict[str, Any]:
+    doc = await db[DASHBOARD_CELEBRATIONS].find_one({"user_id": user.user_id}, {"_id": 0, "steps": 1}) or {}
+    steps = doc.get("steps", {})
+    value = "seeded" if body.seeded else datetime.now(timezone.utc).isoformat()
+    for key in body.steps:
+        steps.setdefault(key, value)
+    await db[DASHBOARD_CELEBRATIONS].update_one({"user_id": user.user_id}, {"$set": {"steps": steps}}, upsert=True)
+    return {"steps": steps}
+
 
 
 @router.get("/pdf")

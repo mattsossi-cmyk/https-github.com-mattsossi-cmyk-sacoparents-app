@@ -118,6 +118,7 @@ import InterventionCompliance from "@/pages/InterventionCompliance";
 import SignUp from "@/pages/SignUp";
 import MediatorBadge from "@/pages/MediatorBadge";
 import GetHelp from "@/pages/GetHelp";
+import StartWithSafetyPage from "@/pages/StartWithSafetyPage";
 import CalendarPage from "@/pages/CalendarPage";
 import AdminHelpServices from "@/pages/AdminHelpServices";
 import AdminAuditLog from "@/pages/AdminAuditLog";
@@ -279,6 +280,7 @@ function AppRoutes() {
         <Route path="/cancel-subscription" element={<CancelSubscription />} />
         <Route path="/safety" element={<Safety />} />
         <Route path="/help" element={<GetHelp />} />
+        <Route path="/start-with-safety" element={<StartWithSafetyPage />} />
         <Route path="/calendar" element={<CalendarPage />} />
         {/* Case settings are not shown to families yet (any limits a case has still apply). */}
         <Route path="/case-settings" element={<Navigate to="/" replace />} />

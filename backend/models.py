@@ -1,6 +1,6 @@
 """Pydantic models for SA CoParents Mediation Prep App."""
 from pydantic import BaseModel, EmailStr, Field
-from typing import List, Optional, Dict, Any
+from typing import List, Literal, Optional, Dict, Any
 from datetime import datetime, timezone
 import uuid
 
@@ -43,7 +43,11 @@ class UserPublic(BaseModel):
     email_complained: bool = False
     consent_current: bool = False
     ai_notice_current: bool = False
+    journey_path: Optional[str] = None
 
+
+class JourneyPathIn(BaseModel):
+    path: Literal["court_ordered", "self_journey", "mediation_prep"]
 
 class TokenResponse(BaseModel):
     access_token: str

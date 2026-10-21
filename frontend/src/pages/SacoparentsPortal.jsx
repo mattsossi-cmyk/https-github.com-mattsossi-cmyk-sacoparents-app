@@ -3,6 +3,8 @@ import { Link, useNavigate } from "react-router-dom";
 
 import { api } from "../lib/api";
 import { useAuth } from "../context/AuthContext";
+import { PathPicker } from "../components/journeyPath/PathPicker";
+import { NEW_HOME_ON } from "../lib/previewGate";
 
 import {
   ALIGN_RECORDS_KEY,
@@ -252,6 +254,8 @@ export default function SacoparentsPortal() {
   const [syncStatus, setSyncStatus] = useState("idle");
   const syncDebounceRef = useRef(null);
   const hasHydratedFromServerRef = useRef(false);
+  const [portalHydrated, setPortalHydrated] = useState(false);
+  const [journeyView, setJourneyView] = useState(null);
 
   // ----------------------------------------------------------------
   // Hydrate from localStorage on mount
@@ -360,6 +364,7 @@ export default function SacoparentsPortal() {
         const { data } = await api.get("/portal/state");
         if (cancelled || !data?.exists) {
           hasHydratedFromServerRef.current = true;
+        setPortalHydrated(true);
           return;
         }
         const s = data.state || {};
@@ -424,8 +429,10 @@ export default function SacoparentsPortal() {
           writeJson(SNAPSHOT_HISTORY_KEY, s.snapshot_history);
         }
         hasHydratedFromServerRef.current = true;
+        setPortalHydrated(true);
       } catch {
         hasHydratedFromServerRef.current = true;
+        setPortalHydrated(true);
       }
     })();
     return () => {
@@ -1529,12 +1536,14 @@ export default function SacoparentsPortal() {
   );
 
   const showBackBtn = screen !== "journey";
+  const dashboardMode = NEW_HOME_ON && screen === "journey" && journeyView === "door";
 
   return (
     <div
       className="bg-slate-50 text-slate-800 font-sans min-h-screen flex flex-col pb-32"
       data-testid="sacoparents-portal"
     >
+      <PathPicker />
       {/* Print-only styles */}
       <style>{`
         @media print {
@@ -1549,7 +1558,7 @@ export default function SacoparentsPortal() {
 
       {/* TOP APP HEADER */}
       <header
-        className="bg-purple-950 text-white shadow-md sticky top-0 z-50 no-print"
+        className={`bg-purple-950 text-white shadow-md sticky top-0 z-50 no-print ${dashboardMode ? "hidden" : ""}`}
         data-testid="portal-header"
       >
         <div className="max-w-md mx-auto px-4 py-3 flex flex-wrap justify-between items-center gap-2">
@@ -1604,7 +1613,7 @@ export default function SacoparentsPortal() {
 
       {/* MAIN CONTAINER */}
       <main className="max-w-md mx-auto px-4 py-4 flex-1 w-full space-y-4">
-        {screen === "journey" && <ProfessionalAccessCard />}
+        {screen === "journey" && !dashboardMode && <ProfessionalAccessCard />}
         {screen === "journey" && (
           <JourneyShell
             user={user}
@@ -1648,12 +1657,14 @@ export default function SacoparentsPortal() {
             progressByTopic={progressByTopic}
             pairProgress={pairProgress}
             safetyFlagged={safetyFlagged}
+            onViewChange={setJourneyView}
+            biffReady={!user || portalHydrated}
           />
         )}
 
       </main>
       {/* The site-wide footer sits under the fixed bottom bar here, so the link is repeated above it. */}
-      <div data-testid="portal-privacy-footer" className="no-print py-4 text-center text-[0.8125rem]">
+      <div data-testid="portal-privacy-footer" className={`no-print py-4 text-center text-[0.8125rem] ${dashboardMode ? "hidden" : ""}`}>
         <Link to="/privacy-notice" data-testid="portal-privacy-footer-link" className="font-semibold text-[#3D1A78] underline underline-offset-2">
           Privacy Notice
         </Link>
