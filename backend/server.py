@@ -650,7 +650,7 @@ def _validated_answers(doc: dict, body: JointResponsesIn) -> dict:
             raise HTTPException(status_code=400, detail="Please answer the main question in every section")
         answers.update({k: (body.answers.get(k) or "").strip()[:2000] for k in optional if (body.answers.get(k) or "").strip()})
         payload = {"answers": answers, "completed_at": datetime.now(timezone.utc).isoformat()}
-        if body.foundation:
+        if body.foundation is not None:
             payload["foundation"] = _foundation_payload(body)
         return payload
     valid = {k for k, _, _ in QUESTIONS}
@@ -658,7 +658,7 @@ def _validated_answers(doc: dict, body: JointResponsesIn) -> dict:
     if any(not v for v in answers.values()):
         raise HTTPException(status_code=400, detail="Please answer all questions")
     payload = {"answers": answers, "completed_at": datetime.now(timezone.utc).isoformat()}
-    if body.foundation:
+    if body.foundation is not None:
         payload["foundation"] = _foundation_payload(body)
     return payload
 
@@ -696,7 +696,7 @@ async def save_joint_responses(rid: str, body: JointResponsesIn, user=Depends(ge
     _assert_joint_open(doc)
     payload = _validated_answers(doc, body)
     existing_foundation = (doc.get("responses", {}).get(role) or {}).get("foundation")
-    if existing_foundation and not payload.get("foundation"):
+    if existing_foundation and body.foundation is None:  # omitted = keep; explicit [] = parent chose not to include it
         payload["foundation"] = existing_foundation
     updates = {f"responses.{role}": payload}
     other = "b" if role == "a" else "a"

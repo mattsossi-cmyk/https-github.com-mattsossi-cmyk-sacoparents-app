@@ -28,6 +28,7 @@ def _agreement(child="FS Kid"):
     b = new_user(API, "parent", "B", email=eb, invite=toks["b"])
     for s, tok in ((a, toks["a"]), (b, toks["b"])):
         assert s.post(f"{API}/joint/invitations/accept", json={"code": tok}).status_code == 200
+        assert s.post(f"{API}/joint/reports/{d['id']}/safety-screening/decline").status_code == 200  # Start-with-Safety step
     return a, b, d["id"]
 
 
@@ -71,3 +72,13 @@ class TestFoundationMerge:
         r = a.get(f"{API}/joint/reports/{rid}/report")
         assert r.status_code == 200
         assert r.json().get("foundation_statements") == []
+
+    def test_co_parent_sees_included_foundation_and_explicit_empty_removes_it(self) -> None:
+        a, b, rid = _agreement_with_foundation()
+        fs = b.get(f"{API}/joint/reports/{rid}/report").json().get("foundation_statements", [])
+        assert len(fs) == 1 and "predictable handoffs" in fs[0]["content"]  # included = co-parent sees it
+        answers = {k: "We share decisions with weekly check-ins and even holiday splits" for k in AREA_KEYS}
+        assert a.put(f"{API}/joint/reports/{rid}/responses", json={"answers": answers}).status_code == 200  # omitted → kept
+        assert len(a.get(f"{API}/joint/reports/{rid}/report").json().get("foundation_statements", [])) == 1
+        assert a.put(f"{API}/joint/reports/{rid}/responses", json={"answers": answers, "foundation": []}).status_code == 200  # unticked → removed
+        assert b.get(f"{API}/joint/reports/{rid}/report").json().get("foundation_statements") == []

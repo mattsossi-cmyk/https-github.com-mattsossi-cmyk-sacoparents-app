@@ -19,7 +19,8 @@ export default function JointAssessment() {
   const [error, setError] = useState(null);
   const [link, setLink] = useState(null);
   const [linkCode, setLinkCode] = useState("");
-  const [foundation, setFoundation] = useState(null);
+  const [foundationText, setFoundationText] = useState("");
+  const [includeFoundation, setIncludeFoundation] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -76,7 +77,7 @@ export default function JointAssessment() {
   const submit = async () => {
     setBusy(true);
     try {
-      await api.put(`/joint/reports/${id}/responses`, { answers, ...(foundation ? { foundation } : {}) });
+      await api.put(`/joint/reports/${id}/responses`, { answers, foundation: includeFoundation && foundationText.trim() ? [{ title: "Foundation Statement", content: foundationText }] : [] });
       toast.success("Your responses are saved — they remain private until both parents finish.");
       navigate(`/joint/${id}`);
     } catch (e) {
@@ -165,21 +166,17 @@ export default function JointAssessment() {
           )}
         </div>
 
-        {detail.kind !== "agreement" && (
+        {(() => { const target = detail.kind === "agreement" ? "agreement" : "joint report"; return (
           <div className="bg-white border-2 border-brand-green rounded-lg p-5 mb-8" data-testid="foundation-card">
             <p className="font-semibold text-brand-green">Foundation Statement (optional)</p>
-            <p className="text-sm text-muted-foreground mt-1 mb-3">In your own words: what matters most to you for {detail.child_name} in this co-parenting relationship, and what you hope this process achieves. Private until you choose to share it; once shared, it appears in the joint report that both parents and the professional can read.</p>
-            <Textarea className="min-h-[110px]" value={foundation?.[0]?.content || ""} onChange={(e) => setFoundation(e.target.value.trim() ? [{ title: "Foundation Statement", content: e.target.value }] : null)} data-testid="foundation-text" />
+            <p className="text-sm text-muted-foreground mt-1 mb-3">In your own words: what matters most to you for {detail.child_name}, and what you hope this {detail.kind === "agreement" ? "agreement" : "process"} achieves. Private until you choose to include it below.</p>
+            <Textarea className="min-h-[110px]" value={foundationText} onChange={(e) => setFoundationText(e.target.value)} data-testid="foundation-text" />
+            <label className="mt-3 flex items-start gap-2 text-sm" data-testid="foundation-include-label">
+              <input type="checkbox" className="mt-1 h-4 w-4 accent-[#3D1A78]" checked={includeFoundation} onChange={(e) => setIncludeFoundation(e.target.checked)} data-testid="foundation-include-checkbox" />
+              <span>Include my Foundation Statement in the {target}. <strong>If you include it, your co-parent will see it in the {target}.</strong> The professional on your case can also read it there.</span>
+            </label>
           </div>
-        )}
-
-        {detail.kind === "agreement" && (
-          <div className="bg-white border-2 border-brand-green rounded-lg p-5 mb-8" data-testid="foundation-card">
-            <p className="font-semibold text-brand-green">Foundation Statements</p>
-            <p className="text-sm text-muted-foreground mt-1 mb-3">In your own words: what matters most to you for {detail.child_name}, and what you hope this agreement achieves. It is merged into the agreement alongside your proposed terms. Private until you choose to share it; once shared, it appears in the joint report that both parents and the professional can read.</p>
-            <Textarea className="min-h-[110px]" value={foundation?.[0]?.content || ""} onChange={(e) => setFoundation(e.target.value.trim() ? [{ title: "Foundation Statement", content: e.target.value }] : null)} data-testid="foundation-text" />
-          </div>
-        )}
+        ); })()}
 
         <div className="space-y-6">
           {detail.kind === "agreement" && (config?.agreement_sections || []).length > 0 ? (config.agreement_sections.map((s) => (

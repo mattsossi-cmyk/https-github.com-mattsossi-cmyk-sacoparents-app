@@ -35,6 +35,7 @@ def _agreement_with_foundation(child="FS Kid"):
     b = new_user(API, "parent", "Bob", email=eb, invite=toks["b"])
     for s, tok in ((a, toks["a"]), (b, toks["b"])):
         assert s.post(f"{API}/joint/invitations/accept", json={"code": tok}).status_code == 200
+        assert s.post(f"{API}/joint/reports/{rid}/safety-screening/decline").status_code == 200  # Start-with-Safety step
     answers = {k: "We share decisions with weekly check-ins and even holiday splits" for k in AREA_KEYS}
     stmt_title = "My Foundation Statement"
     ra = a.put(f"{API}/joint/reports/{rid}/responses", json={
