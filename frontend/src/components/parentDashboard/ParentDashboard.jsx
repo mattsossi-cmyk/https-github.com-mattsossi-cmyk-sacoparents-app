@@ -102,6 +102,7 @@ export default function ParentDashboard({
   embedded = false,
   checkinCard = false,
   checkinDoneOn = null,
+  checkinNote = null,
 }) {
   const steps = useMemo(() => buildSteps(path, status, links), [path, status, links]);
   const listed = checkinCard ? steps.filter((s) => s.id !== "checkin") : steps;
@@ -197,6 +198,7 @@ export default function ParentDashboard({
             <a className="pd-btn pd-btn-solid" {...linkProps(checkin.href, checkin.external)} data-testid="pd-checkin-button">
               Open Private check-in
             </a>
+            {checkinNote}
           </section>
         )}
 

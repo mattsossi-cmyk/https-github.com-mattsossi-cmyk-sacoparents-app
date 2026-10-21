@@ -9578,3 +9578,5 @@ dashboard for sharing SELECTED completed reports with any professional.
   check unsigned POST /api/internal/safety-status + /api/professional/directory/invite/accept-webhook on sacoparentsapp.online -> expect 503.
 
 ## 2026-10-21 ~14:55 UTC — Private check-in card shows 'Confirmed by SACOparentsAlign on <date>' (setup_completed_on) only when setup_complete===true. Verified with an intercepted case-settings response. Deployment still running; live bundle unchanged at check time.
+
+## 2026-10-21 ~14:56 UTC — Check-in thank-you on the new home's Private check-in card: reuses useCheckinThanks + ThanksNote (server once-per-account flag shared with the Court page card). Verified with intercepted responses (no real flag consumed). Deployment still running (live bundle main.3acadc33.js, webhooks 401).

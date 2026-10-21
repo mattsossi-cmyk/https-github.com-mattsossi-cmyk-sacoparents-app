@@ -6,6 +6,8 @@ import { toast } from "sonner";
 import ParentDashboard, { buildSteps } from "../../../components/parentDashboard/ParentDashboard";
 import { useCaseSettings } from "../../../lib/useCaseSettings";
 import { finishedOn } from "../../../components/caseSettings/FamilyCheckinCard";
+import { ThanksNote } from "../../../components/caseSettings/FamilyCheckinNotes";
+import { useCheckinThanks } from "../../../lib/useCheckinThanks";
 import { useDashboardData } from "./useDashboardData";
 import { useDashboardCelebrations } from "./useDashboardCelebrations";
 import { WeeklyWinNote } from "./WeeklyWinNote";
@@ -57,6 +59,7 @@ export function ParentHome({ user, saHistory, biffCount, biffReady, actions, bui
   const data = useDashboardData(user?.user_id, path === "court");
   const settings = useCaseSettings();
   const checkinDone = settings?.setup_complete === true;
+  const [thanks, closeThanks] = useCheckinThanks(checkinDone);
   const celebrations = useDashboardCelebrations(user?.user_id);
   const { status, prepAny } = stepStatus({ checkinDone, saHistory, data, biffCount });
 
@@ -108,6 +111,7 @@ export function ParentHome({ user, saHistory, biffCount, biffReady, actions, bui
       embedded
       checkinCard
       checkinDoneOn={checkinDone ? finishedOn(settings.setup_completed_on) : null}
+      checkinNote={thanks ? <ThanksNote testid="pd-checkin" onClose={closeThanks} /> : null}
       parentName={user?.name ? user.name.split(" ")[0] : null}
       path={path}
       status={status}
