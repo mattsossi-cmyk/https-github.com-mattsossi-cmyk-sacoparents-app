@@ -9570,3 +9570,9 @@ dashboard for sharing SELECTED completed reports with any professional.
 - Tag audit: Self Journey partly true (linked co-parent sees first name + 'all three done'; court-code pro sees status/dates; if linked to
   Align, Child Needs reports + Mediation Prep child_goals/issues/priority export automatically). Foundation PDF to Align always 409.
 - Flag for user: Court page shows "Family check-in: Not finished yet" (pre-existing) — may clash with the 'unknown, not not-started' rule.
+
+## 2026-10-21 ~14:50 UTC — Check-in wording neutral + a deployment started by the user
+- FamilyCheckinCard (Court page + JourneyShell): pill "See SACOparentsAlign" unless setup_complete===true ("Done"); reminder note now
+  "If you haven't done your Family check-in yet, it only takes a few minutes, whenever you're ready." Verified at 390px.
+- User started a deployment (~14:50). New home stays OFF on live (NEW_HOME_ON preview-only; user said "Not yet"). After it finishes:
+  check unsigned POST /api/internal/safety-status + /api/professional/directory/invite/accept-webhook on sacoparentsapp.online -> expect 503.

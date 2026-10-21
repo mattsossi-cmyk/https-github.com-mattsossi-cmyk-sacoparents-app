@@ -33,6 +33,6 @@ export const ThanksNote = ({ testid, onClose }) => (
 
 export const ReminderNote = ({ testid, onClose }) => (
   <CardNote tone="reminder" testid={`${testid}-reminder`} onClose={onClose}>
-    Your Family check-in is still open. It only takes a few minutes, whenever you&apos;re ready.
+    If you haven&apos;t done your Family check-in yet, it only takes a few minutes, whenever you&apos;re ready.
   </CardNote>
 );

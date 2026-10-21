@@ -37,7 +37,7 @@ export function FamilyCheckinCard({ alignUrl, testid = "family-checkin", stacked
                   data-done={done}
                   className={`text-[0.6875rem] font-bold px-2 py-0.5 rounded-full border ${done ? "bg-emerald-50 text-emerald-800 border-emerald-200" : "bg-slate-100 text-slate-700 border-slate-200"}`}
                 >
-                  {done ? "Done" : "Not finished yet"}
+                  {done ? "Done" : "See SACOparentsAlign"}
                 </span>
               )}
             </div>
