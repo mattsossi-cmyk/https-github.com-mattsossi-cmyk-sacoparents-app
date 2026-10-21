@@ -36,7 +36,7 @@ export default function SafetyResponses() {
                 <ul className="mt-2 space-y-1.5 text-sm">{d.communication.items.map((it) => <li key={it.id} data-testid={`comm-response-${it.id}`}><span className="font-medium">{it.question}</span> <span className="text-brand-purple" data-testid={`comm-response-${it.id}-answer`}>{it.answer}</span></li>)}</ul>
               </div>
             ) : (
-              <p className="rounded-lg border border-dashed border-border bg-white p-3 text-sm text-muted-foreground" data-testid="comm-not-completed">Communication readiness: not completed by this parent.</p>
+              <p className="rounded-lg border border-dashed border-border bg-white p-3 text-sm text-muted-foreground" data-testid="comm-not-completed">Communication readiness: not shared by this parent.</p>
             )}
             {d.not_completed && <p className="rounded-lg border border-dashed border-border bg-white p-4 text-sm text-muted-foreground" data-testid="screening-not-completed">Family check-in: not completed by this parent. There are no answers to review.</p>}
             <ul className="space-y-2" data-testid="screening-responses-list">

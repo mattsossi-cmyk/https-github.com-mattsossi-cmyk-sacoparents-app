@@ -4,7 +4,7 @@ from datetime import datetime, timezone
 from fastapi import APIRouter, Depends, HTTPException, Response
 from pydantic import BaseModel
 
-PRIVACY_NOTICE_VERSION = "2026-10-19.2"  # bumped: communication-readiness import bullet, Foundation Statement instead of reflections (owner 2026-10-19)
+PRIVACY_NOTICE_VERSION = "2026-10-19.2"  # bumped: points rewritten for Align (Foundation Statement, joint comparison, stop sharing, who looked); no readiness sentence (owner 2026-10-20)
 SUBHEAD = "Private by default. Shared with your consent, or as the law requires."
 # Reusable legal-notice sentences (also for the future privacy policy). Edit here only.
 LEGAL_NOTICE_SENTENCES = [
@@ -22,11 +22,11 @@ NOTICE = {
     "subhead": SUBHEAD,
     "intro": "Your preparation is private and under your control.",
     "points": [
-        {"heading": "Your individual answers remain private.", "body": "Your co-parent does not automatically see your assessments, personal reflections, or journal entries."},
-        {"heading": "You control what you share.", "body": "In the Self Journey, you choose which completed reports to share and with whom. Separate consent rules apply to joint and court-ordered participation."},
-        {"heading": "Reports are different from raw answers.", "body": "Sharing a selected report does not automatically provide access to your entire account or private journal."},
-        {"heading": "Safety comes first.", "body": "Family violence and communication safety concerns may require separate participation and additional safeguards."},
-        {"heading": "Professionals and courts receive the information you authorize, or what the law or a court order requires.", "body": "Assigned professionals may see individual screening answers."},
+        {"heading": "Your individual answers remain private.", "body": "Your co-parent never sees your assessment answers or your safety check-in. Your Foundation Statement stays private unless you choose to share it; once shared, it appears in the joint report that both parents and the professional can read."},
+        {"heading": "You control what you share.", "body": "Once both parents have submitted their answers, the joint report shows the generated comparison to both parents and to the professional on the case, never anyone's raw answers. Beyond that, you choose which professionals to share a report with, and you can stop sharing with a professional you added yourself. Separate rules apply to court-ordered participation."},
+        {"heading": "Reports are different from raw answers.", "body": "Sharing a report gives that professional access to the report only, not to your whole account or your individual answers."},
+        {"heading": "Safety comes first.", "body": "Your Family check-in answers are seen only by the professionals assigned to your case and, when needed, SA CoParents administrators, on a protected screen. Every view is recorded, and you can see who looked and when. Court documents and reports show only whether the check-in was received, not started, or declined."},
+        {"heading": "Professionals and courts receive the information you authorize, or what the law or a court order requires.", "body": "Reports are built from what you authorize. A report a professional submits to a court is frozen and cannot be changed afterward."},
     ],
     "legal_heading": "Important Legal Notice",
     "legal": LEGAL_NOTICE,

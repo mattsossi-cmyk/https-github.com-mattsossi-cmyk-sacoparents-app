@@ -14,11 +14,12 @@ def test_text_matches_spec():
     assert NOTICE["intro"] == "Your preparation is private and under your control."
     assert [p["heading"] for p in NOTICE["points"]] == ["Your individual answers remain private.", "You control what you share.", "Reports are different from raw answers.", "Safety comes first.",
                                                         "Professionals and courts receive the information you authorize, or what the law or a court order requires."]
-    assert [p["body"] for p in NOTICE["points"]] == ["Your co-parent does not automatically see your assessments, personal reflections, or journal entries.",
-                                                     "In the Self Journey, you choose which completed reports to share and with whom. Separate consent rules apply to joint and court-ordered participation.",
-                                                     "Sharing a selected report does not automatically provide access to your entire account or private journal.",
-                                                     "Family violence and communication safety concerns may require separate participation and additional safeguards.",
-                                                     "Assigned professionals may see individual screening answers."]
+    assert [p["body"] for p in NOTICE["points"]] == ["Your co-parent never sees your assessment answers or your safety check-in. Your Foundation Statement stays private unless you choose to share it; once shared, it appears in the joint report that both parents and the professional can read.",
+                                                     "Once both parents have submitted their answers, the joint report shows the generated comparison to both parents and to the professional on the case, never anyone's raw answers. Beyond that, you choose which professionals to share a report with, and you can stop sharing with a professional you added yourself. Separate rules apply to court-ordered participation.",
+                                                     "Sharing a report gives that professional access to the report only, not to your whole account or your individual answers.",
+                                                     "Your Family check-in answers are seen only by the professionals assigned to your case and, when needed, SA CoParents administrators, on a protected screen. Every view is recorded, and you can see who looked and when. Court documents and reports show only whether the check-in was received, not started, or declined.",
+                                                     "Reports are built from what you authorize. A report a professional submits to a court is frozen and cannot be changed afterward."]
+    assert "reflections" not in str(NOTICE) and "Self Journey" not in str(NOTICE) and "readiness" not in str(NOTICE).lower()
     assert NOTICE["legal_heading"] == "Important Legal Notice"
     assert NOTICE["legal"] == ("Using SA CoParents does not automatically create an attorney-client, therapist-patient, or other legally privileged relationship. "
                                "Information may be subject to lawful disclosure requirements. SA CoParents is a separate tool from the law practice of Matt Sossi. "
