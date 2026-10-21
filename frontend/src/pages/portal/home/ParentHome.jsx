@@ -5,6 +5,7 @@ import { toast } from "sonner";
 
 import ParentDashboard, { buildSteps } from "../../../components/parentDashboard/ParentDashboard";
 import { useCaseSettings } from "../../../lib/useCaseSettings";
+import { finishedOn } from "../../../components/caseSettings/FamilyCheckinCard";
 import { useDashboardData } from "./useDashboardData";
 import { useDashboardCelebrations } from "./useDashboardCelebrations";
 import { WeeklyWinNote } from "./WeeklyWinNote";
@@ -54,7 +55,8 @@ export function ParentHome({ user, saHistory, biffCount, biffReady, actions, bui
   const navigate = useNavigate();
   const path = PATH_PROP[user?.journey_path] || null;
   const data = useDashboardData(user?.user_id, path === "court");
-  const checkinDone = useCaseSettings()?.setup_complete === true;
+  const settings = useCaseSettings();
+  const checkinDone = settings?.setup_complete === true;
   const celebrations = useDashboardCelebrations(user?.user_id);
   const { status, prepAny } = stepStatus({ checkinDone, saHistory, data, biffCount });
 
@@ -105,6 +107,7 @@ export function ParentHome({ user, saHistory, biffCount, biffReady, actions, bui
     <ParentDashboard
       embedded
       checkinCard
+      checkinDoneOn={checkinDone ? finishedOn(settings.setup_completed_on) : null}
       parentName={user?.name ? user.name.split(" ")[0] : null}
       path={path}
       status={status}

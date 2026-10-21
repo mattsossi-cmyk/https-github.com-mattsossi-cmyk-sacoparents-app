@@ -9576,3 +9576,5 @@ dashboard for sharing SELECTED completed reports with any professional.
   "If you haven't done your Family check-in yet, it only takes a few minutes, whenever you're ready." Verified at 390px.
 - User started a deployment (~14:50). New home stays OFF on live (NEW_HOME_ON preview-only; user said "Not yet"). After it finishes:
   check unsigned POST /api/internal/safety-status + /api/professional/directory/invite/accept-webhook on sacoparentsapp.online -> expect 503.
+
+## 2026-10-21 ~14:55 UTC — Private check-in card shows 'Confirmed by SACOparentsAlign on <date>' (setup_completed_on) only when setup_complete===true. Verified with an intercepted case-settings response. Deployment still running; live bundle unchanged at check time.

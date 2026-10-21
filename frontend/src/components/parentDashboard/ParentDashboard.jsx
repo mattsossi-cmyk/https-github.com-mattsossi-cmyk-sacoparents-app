@@ -101,6 +101,7 @@ export default function ParentDashboard({
   afterSteps = null,
   embedded = false,
   checkinCard = false,
+  checkinDoneOn = null,
 }) {
   const steps = useMemo(() => buildSteps(path, status, links), [path, status, links]);
   const listed = checkinCard ? steps.filter((s) => s.id !== "checkin") : steps;
@@ -188,6 +189,11 @@ export default function ParentDashboard({
               <PrivacyTag kind={checkin.privacy} small />
               <span className="pd-step-state" data-testid="pd-checkin-state">{stateLabel(checkin.status)}</span>
             </div>
+            {checkinDoneOn && (
+              <p className="pd-checkin-done" data-testid="pd-checkin-done-on">
+                Confirmed by SACOparentsAlign on {checkinDoneOn}
+              </p>
+            )}
             <a className="pd-btn pd-btn-solid" {...linkProps(checkin.href, checkin.external)} data-testid="pd-checkin-button">
               Open Private check-in
             </a>

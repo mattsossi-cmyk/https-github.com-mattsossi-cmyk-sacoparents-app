@@ -571,3 +571,9 @@ img.pd-art {
 .pd-btn-solid:focus-visible {
   outline-color: #4a2574;
 }
+.pd-checkin-done {
+  margin: -6px 0 14px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--pd-done);
+}
