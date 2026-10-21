@@ -62,7 +62,7 @@ const S = [
   {
     h: "Your individual assessment answers are private by default",
     b: [
-      { p: "Your individual answers are private by default. Your co-parent never sees them. A professional sees them only when that professional is assigned to your case or you share a report with them, or where disclosure is required by law." },
+      { p: "Your individual answers are private by default. Your co-parent never sees them. A professional sees them only when that professional is assigned to your case, or where disclosure is required by law. Sharing a report gives access to the report only." },
       { p: "Completing an SA CoParents Align assessment does not provide your individual answers to your co-parent. In a joint report, once both parents have submitted their answers, the generated comparison (areas of alignment and difference) is shown to both parents and to the professional on the case. No separate sharing step is needed for that comparison, and neither parent sees the other parent's raw answers." },
       { ul: ["Your individual responses remain associated with your account and are not disclosed to the other parent.", "Your Foundation Statement stays private unless you choose to share it; once shared, it appears in the joint report that both parents and the professional can read.", "When SA CoParents Align generates a report, Mediation Statement, co-parenting agreement, or similar output, the resulting document may contain selected information derived from your responses. You should review any report before sharing it."] },
     ],
@@ -118,7 +118,7 @@ const S = [
   {
     h: "Artificial intelligence",
     b: [
-      { p: "Parent reports are generated from fixed, rule-based templates. SA CoParents Align also uses artificial-intelligence services, reached through Emergent's integration relay, in specific tools used by professionals. Family check-in answers, safe-contact details, and concern levels are never sent to any AI service. Information sent to these services is not used to train AI models." },
+      { p: "Parent reports are generated from fixed, rule-based templates. SA CoParents Align also uses artificial-intelligence services, reached through Emergent's integration relay, in specific tools used by professionals. Family check-in answers, safe-contact details, and concern levels are never sent to any AI service." },
       { ul: [
         "Report drafting assistant (Claude Sonnet 5.5, Anthropic), used by professionals to draft report language. It receives the case code, the child's first initial, the professional's draft text, and the parents' assessment answers for that case.",
         "Align Assistant (GPT-5.5, OpenAI), a help assistant for professionals. It receives the professional's question and a neutral case summary (case code, child's first initial, step status, alignment counts). Never a parent's answers.",
