@@ -9504,3 +9504,7 @@ dashboard for sharing SELECTED completed reports with any professional.
 ## 2026-10-21 — Weekly Win Note decisions (build with the dashboard)
 - Dashboard only (never email); window = last 7 days rolling; Family check-in never listed; hide note when nothing finished.
 - Still blocked on user: secrets re-publish (live still a971d13d, both webhooks 401) and ParentDashboard files (not received).
+
+## 2026-10-21 — Next Step Hint decisions (build with the dashboard)
+- Pick: steps a professional requested (court code) come first, if any are unfinished; otherwise the first unfinished step in the path's
+  dashboard order. Never points to the Family check-in (Start with Safety banner covers it). All done -> "You're all caught up".
