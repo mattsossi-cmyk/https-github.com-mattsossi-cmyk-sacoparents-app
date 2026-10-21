@@ -915,15 +915,17 @@ export function JourneyShell({
     else if (key === "card4") openFoundation("court", builder);
   };
 
-  // Email reminder deep link: /dashboard?open=self-assessment
+  // Deep links: /dashboard?open=self-assessment | parallel-builder
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
-    if (params.get("open") !== "self-assessment") return;
+    const open = params.get("open");
+    if (open !== "self-assessment" && open !== "parallel-builder") return;
     params.delete("open");
     const qs = params.toString();
     window.history.replaceState(null, "", window.location.pathname + (qs ? `?${qs}` : ""));
     openDoor("self");
-    openAssess(true);
+    if (open === "parallel-builder") openPp("welcome");
+    else openAssess(true);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
