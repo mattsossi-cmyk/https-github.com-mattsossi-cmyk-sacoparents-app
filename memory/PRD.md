@@ -9447,3 +9447,12 @@ dashboard for sharing SELECTED completed reports with any professional.
   Verified with mongorestore --dryRun: all 163 collections present. Restore: mongorestore --uri=$MONGO_URL --gzip --archive=<file> --drop (only on request).
 - Production DB is separate: only the user can export it (Manage Publishes → Database → Dump DB).
 - Pending user go-ahead: delete SACOPARENTSALIGN_WEBHOOK_SECRET + INTEGRATION_SHARED_SECRET, then deploy.
+
+## 2026-10-21 — DEPLOYED to https://sacoparentsapp.online (user said "Deploy now")
+- Before deploy: removed SACOPARENTSALIGN_WEBHOOK_SECRET from preview backend/.env only (invite-accept webhook now 503). INTEGRATION_SHARED_SECRET
+  kept everywhere (Align needs it). User removes ALIGN_WEBHOOK_SECRET + SACOPARENTSALIGN_WEBHOOK_SECRET from production Secrets themselves.
+- Live checks after deploy: notice version 2026-10-20-v8 live (brief Cloudflare 520 during switchover), home 200, /api/ 200,
+  login UI → 401 "Invalid email or password" shown for a wrong password; parent1@test.com does NOT exist in production (prod DB separate).
+  Family check-in card (signed out) opens https://sacoparentsalign.com in a new tab (Align 200).
+- Not verified on live: a successful sign-in with a real account (no production test account). backend/.env PUBLIC_APP_URL/PUBLIC_API_URL
+  point at the preview domain — confirm production overrides them to sacoparentsapp.online (affects links in emails).
