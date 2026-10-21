@@ -9,6 +9,10 @@ export function quickExit() {
     [sessionStorage, localStorage].forEach((s) => Object.keys(s).forEach((k) => { if (KEYS.some((p) => k.toLowerCase().includes(p))) s.removeItem(k); }));
     sessionStorage.setItem("align-quick-exit", "1");
   } catch { /* storage unavailable */ }
+  try {
+    // End the session on the server (all devices) so a copied cookie no longer works; keepalive lets it finish after navigation.
+    fetch(`${process.env.REACT_APP_BACKEND_URL}/api/auth/logout?everywhere=true`, { method: "POST", credentials: "include", keepalive: true }).catch(() => {});
+  } catch { /* ignore */ }
   window.location.replace(EXIT_URL);
 }
 

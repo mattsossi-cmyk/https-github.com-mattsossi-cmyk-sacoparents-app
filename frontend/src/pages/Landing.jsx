@@ -11,6 +11,7 @@ import { AlignModel } from "@/components/AlignModel";
 import { MomentsStrip } from "@/components/MomentsStrip";
 import { ListedProsTeaser } from "@/components/ListedProsTeaser";
 import { SAMPLE_REPORTS } from "@/lib/samples";
+import { usePageTitle } from "@/lib/usePageTitle";
 import { DemoVideoButton } from "@/components/DemoVideoButton";
 
 const POSTER_IMG = "/align-hero-simple.jpg";
@@ -47,6 +48,7 @@ const CONTROL_POINTS = [
 ];
 
 export default function Landing() {
+  usePageTitle("SA CoParents Align | Professional Joint Reports");
   return (
     <div className="min-h-screen bg-background" data-testid="landing-page">
       <header className="no-print max-w-6xl mx-auto px-4 sm:px-6 py-6 flex items-center justify-between gap-3">

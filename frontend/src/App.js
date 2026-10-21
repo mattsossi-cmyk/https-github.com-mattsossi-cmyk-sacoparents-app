@@ -39,6 +39,10 @@ function LegalLensRedirect() {
   const { id } = useParams();
   return <Navigate to={`/cases/${id}/professional-report`} replace />;
 }
+function LegacyCheckInRedirect() {
+  const { id } = useParams();
+  return <Navigate to={`/joint/${id}/check-in`} replace />;
+}
 import Legal from "@/pages/Legal";
 import AcceptInvite from "@/pages/AcceptInvite";
 import Methodology from "@/pages/Methodology";
@@ -104,7 +108,8 @@ function AppRoutes() {
             <Route path="/check-in" element={<Protected><CheckInAlias /></Protected>} />
             <Route path="/who-can-see" element={<Protected><CheckInAlias to="hub" /></Protected>} />
             <Route path="/joint/:id/communication-readiness" element={<Protected><CommunicationReadiness /></Protected>} />
-            <Route path="/joint/:id/safety-screening" element={<Protected><SafetyScreening /></Protected>} />
+            <Route path="/joint/:id/check-in" element={<Protected><SafetyScreening /></Protected>} />
+            <Route path="/joint/:id/safety-screening" element={<LegacyCheckInRedirect />} />
             <Route path="/joint/:id/safety-screening/:role" element={<Protected><SafetyResponses /></Protected>} />
             <Route path="/joint/:id/safety-review" element={<Protected><SafetyReview /></Protected>} />
             <Route path="/professional-training" element={<Protected><ProfessionalTraining /></Protected>} />

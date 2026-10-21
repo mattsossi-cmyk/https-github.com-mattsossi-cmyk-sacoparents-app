@@ -28,6 +28,7 @@ export function SafetyScreeningPanel({ rid }) {
             <div key={role} className={`rounded-md border p-3 text-sm ${s.tier === 3 ? "border-amber-300 bg-amber-50" : "border-border bg-white"}`} data-testid={`safety-screening-${role}`}>
               <p className="font-semibold">{s.name}</p>
               <p className="text-xs" data-testid={`safety-screening-${role}-status`}>{s.received ? `Received · ${s.version_label} · ${(s.completed_at || "").slice(0, 10)}` : s.entry_label || "Not started"}</p>
+              {s.has_safe_contact && <p className="mt-1 inline-flex items-center rounded-full bg-emerald-50 px-2 py-0.5 text-[11px] font-semibold text-emerald-800 ring-1 ring-emerald-200" data-testid={`safety-screening-${role}-safe-contact`}>Safe contact on file — open the private screen to view</p>}
               {s.received && <p className="text-xs font-medium" data-testid={`safety-screening-${role}-tier`}>{s.tier_label}</p>}
               <p className="text-[11px] text-muted-foreground" data-testid={`safety-screening-${role}-comm`}>Communication readiness: {s.communication_received ? "shared (private)" : "not shared"}</p>
               {s.entry_status === "not_started" && s.reminded_at && <p className="text-[11px] text-amber-800" data-testid={`safety-screening-${role}-reminded`}>Reminder sent {new Date(s.reminded_at).toLocaleDateString()} · no response yet</p>}

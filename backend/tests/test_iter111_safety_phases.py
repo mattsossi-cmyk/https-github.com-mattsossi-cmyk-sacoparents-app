@@ -171,7 +171,7 @@ def test_review_fixes_no_tier_in_receipt_scan_or_parent_overview():
 def test_check_in_alias_resolves_by_session_and_shared_code():
     pro, pa, pb, rid = _case()
     code = pro.get(f"{API}/joint/reports/{rid}").json().get("case_code")
-    r = pa.get(f"{API}/me/check-in"); assert r.status_code == 200 and r.json()["report_id"] == rid and r.json()["path"] == f"/joint/{rid}/safety-screening"
+    r = pa.get(f"{API}/me/check-in"); assert r.status_code == 200 and r.json()["report_id"] == rid and r.json()["path"] == f"/joint/{rid}/check-in"
     r = pa.get(f"{API}/me/check-in", params={"case": code.lower()}); assert r.status_code == 200 and r.json()["report_id"] == rid
     assert pb.get(f"{API}/me/check-in", params={"case": code}).json()["report_id"] == rid
     assert pa.get(f"{API}/me/check-in", params={"case": "SA-000000"}).status_code == 404

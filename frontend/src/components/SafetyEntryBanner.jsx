@@ -10,7 +10,7 @@ export const SafetyEntryBanner = () => {
   const [s, setS] = useState(null);
   useEffect(() => { api.get("/me/safety-entry").then((r) => setS(r.data)).catch(() => setS(null)); }, []);
   if (!s?.applies) return null;
-  const target = s.report_id ? `/joint/${s.report_id}/safety-screening` : "/start-with-safety";
+  const target = s.report_id ? `/joint/${s.report_id}/check-in` : "/start-with-safety";
   if (s.status !== "not_started") {
     return (
       <div className="font-jakarta border-b border-[#3D1A78]/15 bg-[#f6f3fb]" data-testid="safety-entry-link">

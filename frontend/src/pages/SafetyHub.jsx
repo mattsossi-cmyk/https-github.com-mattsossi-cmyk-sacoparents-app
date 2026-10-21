@@ -8,9 +8,9 @@ import { Button } from "@/components/ui/button";
 import { WhoLooked } from "@/components/WhoLooked";
 
 const CARDS = [
-  { key: "safety", icon: ShieldCheck, title: "Private Safety & Power Dynamics", body: "Screens for coercive control, boundary violations, physical or emotional safety risks, and conflict history.", cta: "Start Private Screening", to: "safety-screening" },
+  { key: "safety", icon: ShieldCheck, title: "Private Safety & Power Dynamics", body: "Screens for coercive control, boundary violations, physical or emotional safety risks, and conflict history.", cta: "Start Private Screening", to: "check-in" },
   { key: "communication", icon: MessageSquareText, title: "Communication Readiness", body: "Helps identify the communication approach that feels safest for your family, such as direct messaging, written-only, or structured third-party communication.", cta: "Check Communication Readiness", to: "communication-readiness" },
-  { key: "inclusive", icon: HeartHandshake, title: "Inclusive Family Support", body: "Behavior-focused screening that honors all family structures.", cta: "View Inclusive Care", to: "safety-screening" },
+  { key: "inclusive", icon: HeartHandshake, title: "Inclusive Family Support", body: "Behavior-focused screening that honors all family structures.", cta: "View Inclusive Care", to: "check-in" },
 ];
 const EMERGENCY = [["Immediate danger?", "Call 911"], ["National DV Hotline", "1-800-799-SAFE (7233)"], ["Text", "START to 88788"], ["Crisis Lifeline", "988"]];
 
@@ -54,7 +54,7 @@ export default function SafetyHub() {
           })}
         </section>
         <section className="text-center">
-          <Link to={`/joint/${id}/safety-screening`}><Button size="lg" className="h-auto min-h-12 w-full max-w-md whitespace-normal rounded-full bg-[#3D1A78] px-6 py-3 text-base font-bold leading-snug hover:bg-[#2f1460] focus-visible:ring-2 focus-visible:ring-[#3D1A78] focus-visible:ring-offset-2 sm:w-auto sm:px-8" data-testid="hub-begin-btn">Begin Confidential Safety Assessment</Button></Link>
+          <Link to={`/joint/${id}/check-in`}><Button size="lg" className="h-auto min-h-12 w-full max-w-md whitespace-normal rounded-full bg-[#3D1A78] px-6 py-3 text-base font-bold leading-snug hover:bg-[#2f1460] focus-visible:ring-2 focus-visible:ring-[#3D1A78] focus-visible:ring-offset-2 sm:w-auto sm:px-8" data-testid="hub-begin-btn">Begin Confidential Safety Assessment</Button></Link>
           <p className="mt-3 text-sm text-slate-600" data-testid="hub-privacy-line">Your answers are never shown to the other parent and are shared only with the professionals assigned to your case.</p>
         </section>
         <WhoLooked rid={id} />

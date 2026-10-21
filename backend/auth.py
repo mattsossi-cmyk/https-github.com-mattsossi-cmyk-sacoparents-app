@@ -33,13 +33,13 @@ from core import db, logger, app_url, _parse_iso, PRO_ROLES
 router = APIRouter()
 
 
-def set_auth_cookies(response: Response, user_id: str, email: str):
+def set_auth_cookies(response: Response, user_id: str, email: str, session_version: int = 0):
     response.set_cookie(
-        key="access_token", value=create_access_token(user_id, email),
+        key="access_token", value=create_access_token(user_id, email, session_version),
         httponly=True, secure=True, samesite="none", max_age=1800, path="/",
     )
     response.set_cookie(
-        key="refresh_token", value=create_refresh_token(user_id),
+        key="refresh_token", value=create_refresh_token(user_id, session_version),
         httponly=True, secure=True, samesite="none", max_age=604800, path="/",
     )
 
@@ -83,6 +83,8 @@ async def get_current_user(request: Request) -> dict:
     user = await db.users.find_one({"_id": payload["sub"]})
     if not user:
         raise HTTPException(status_code=401, detail="User not found")
+    if int(payload.get("sv") or 0) != int(user.get("session_version") or 0):
+        raise HTTPException(status_code=401, detail="Session ended")
     return user
 
 
@@ -241,12 +243,19 @@ async def login(body: LoginIn, request: Request, response: Response):
         )
         raise HTTPException(status_code=401, detail="Invalid email or password")
     await db.login_attempts.delete_one({"identifier": identifier})
-    set_auth_cookies(response, user["_id"], email)
+    set_auth_cookies(response, user["_id"], email, int(user.get("session_version") or 0))
     return public_user(user)
 
 
 @router.post("/auth/logout")
-async def logout(response: Response):
+async def logout(request: Request, response: Response, everywhere: bool = False):
+    """everywhere=true (Quick Exit): bump the user's session version so every existing access/refresh token stops working."""
+    if everywhere:
+        try:
+            user = await get_current_user(request)
+            await db.users.update_one({"_id": user["_id"]}, {"$inc": {"session_version": 1}})
+        except HTTPException:
+            pass
     response.delete_cookie("access_token", path="/")
     response.delete_cookie("refresh_token", path="/")
     return {"ok": True}
@@ -332,8 +341,10 @@ async def refresh(request: Request, response: Response):
     user = await db.users.find_one({"_id": payload["sub"]})
     if not user:
         raise HTTPException(status_code=401, detail="User not found")
+    if int(payload.get("sv") or 0) != int(user.get("session_version") or 0):
+        raise HTTPException(status_code=401, detail="Session ended")
     response.set_cookie(
-        key="access_token", value=create_access_token(user["_id"], user["email"]),
+        key="access_token", value=create_access_token(user["_id"], user["email"], int(user.get("session_version") or 0)),
         httponly=True, secure=True, samesite="none", max_age=1800, path="/",
     )
     return {"ok": True}

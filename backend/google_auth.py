@@ -48,7 +48,7 @@ def build_router(set_auth_cookies, public_user) -> APIRouter:
             raise HTTPException(status_code=401, detail="Google did not return an email address.")
         user = await resolve_google_user(email, request.client.host if request.client else "")
         await db.users.update_one({"_id": user["_id"]}, {"$set": {"google_linked_at": datetime.now(timezone.utc).isoformat(), "google_picture": data.get("picture", "")}})
-        set_auth_cookies(response, user["_id"], user["email"])
+        set_auth_cookies(response, user["_id"], user["email"], int(user.get("session_version") or 0))
         return public_user(user)
 
     @r.delete("/auth/google/link")

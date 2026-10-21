@@ -20,7 +20,7 @@ export default function StartWithSafety() {
     }).catch(() => { sessionStorage.setItem(SEEN_KEY, "1"); navigate("/dashboard", { replace: true }); });
   }, [navigate]);
   const ack = () => api.post("/me/safety-entry/ack-notice").catch(() => {});
-  const begin = () => { ack(); sessionStorage.setItem(SEEN_KEY, "1"); navigate(s.report_id ? `/joint/${s.report_id}/safety-screening` : "/dashboard"); };
+  const begin = () => { ack(); sessionStorage.setItem(SEEN_KEY, "1"); navigate(s.report_id ? `/joint/${s.report_id}/check-in` : "/dashboard"); };
   const decline = async () => {
     setBusy(true);
     try { if (s.report_id && s.status === "not_started") await api.post(`/joint/reports/${s.report_id}/safety-screening/decline`); } catch { /* status only; never block the parent */ }

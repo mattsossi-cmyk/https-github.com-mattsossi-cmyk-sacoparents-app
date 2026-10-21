@@ -327,6 +327,13 @@ class ChooseIn(BaseModel):
     version: str
 
 
+CHECKIN_REMINDER_HTML = ('<table role="presentation" width="100%"><tr><td style="padding:24px;font-family:Arial,sans-serif">'
+                         "<p>Hi {name},</p>"
+                         "<p>A short, private check-in is still waiting for you in your SA CoParents account. It takes about five minutes, and every question can be skipped.</p>"
+                         '<p><a href="{link}" style="display:inline-block;background:#5B2A86;color:#fff;padding:10px 16px;border-radius:6px;text-decoration:none">Sign in to continue</a></p>'
+                         '<p style="font-size:12px;color:#888">Sent by {from_name}. We never ask for your password by email.</p></td></tr></table>')
+
+
 def _status(doc: dict) -> dict:
     out = {}
     for r in ("a", "b"):
@@ -341,6 +348,7 @@ def _status(doc: dict) -> dict:
                   "tier": scr.get("tier") if scr else None, "tier_label": TIER_LABEL.get(scr.get("tier")) if scr else None, "version_label": VERSION_LABEL.get(ver or ""),
                   "completed_at": (scr or {}).get("completed_at"), "source": (scr or {}).get("source"), "receipt": receipt(scr, p.get("name") or f"Parent {r.upper()}", (doc.get("safety_declined") or {}).get(r)),
                   "reminded_at": (doc.get("safety_reminded_at") or {}).get(r), "communication_received": bool((doc.get("communication_readiness") or {}).get(r)),
+                  "has_safe_contact": bool((scr or {}).get("safe_contact")),
                   "declined_at": (doc.get("safety_declined") or {}).get(r),
                   "entry_status": entry_status(doc, r), "entry_label": entry_label(doc, r)}
     return out
@@ -427,7 +435,7 @@ def build_router(db, get_current_user, get_joint_report_doc, report_role, log_ac
         else:
             st = {role: st[role]} if role else {}
             for v in st.values():  # parents never see a tier, flag or triggered rule (review fix 2026-10-18)
-                for k in ("app_tier", "app_tier_label", "triggered_rules", "tier", "tier_label"):
+                for k in ("app_tier", "app_tier_label", "triggered_rules", "tier", "tier_label", "has_safe_contact"):
                     v.pop(k, None)
         mine = st.get(role) if role else None
         spec = public_spec(mine["version"]) if mine and mine["version"] and not mine["choice_needed"] else None
@@ -526,7 +534,7 @@ def build_router(db, get_current_user, get_joint_report_doc, report_role, log_ac
             raise HTTPException(status_code=404, detail="No case found for this account" + (" and code" if case else ""))
         role_of = lambda d: "a" if (d["participants"].get("a") or {}).get("user_id") == user["_id"] else "b"  # noqa: E731
         doc = next((d for d in docs if entry_status(d, role_of(d)) == "not_started"), docs[0])
-        return {"report_id": doc["id"], "case_code": doc.get("case_code"), "path": f"/joint/{doc['id']}/safety-screening"}
+        return {"report_id": doc["id"], "case_code": doc.get("case_code"), "path": f"/joint/{doc['id']}/check-in"}
 
 
     @r.post("/me/safety-entry/ack-notice")
@@ -659,26 +667,10 @@ async def run_screening_reminders(db, send_email, app_url, from_name: str, logge
             if not user or not user.get("email"):
                 continue
             code = doc.get("case_code") or doc["id"][:8]
-            from email_utils import MINIMAL_NOTIFICATIONS, NEUTRAL_SUBJECT
-            if MINIMAL_NOTIFICATIONS:
-                html = ('<table role="presentation" width="100%"><tr><td style="padding:24px;font-family:Arial,sans-serif">'
-                        f"<p>Hi {escape(user.get('name') or 'there')},</p>"
-                        "<p>You have an optional step waiting in your SA CoParents account. It takes about five minutes and every question can be skipped.</p>"
-                        f'<p><a href="{app_url()}/joint/{doc["id"]}/safety-hub" style="display:inline-block;background:#5B2A86;color:#fff;padding:10px 16px;border-radius:6px;text-decoration:none">Sign in to continue</a></p>'
-                        f'<p style="font-size:12px;color:#888">Sent by {escape(from_name)}. We never ask for your password by email.</p></td></tr></table>')
-                subject = NEUTRAL_SUBJECT
-            else:
-                html = ('<table role="presentation" width="100%"><tr><td style="padding:24px;font-family:Arial,sans-serif">'
-                    f"<p>Hi {escape(user.get('name') or 'there')},</p>"
-                    f"<p>A short, private safety screening is still waiting for you on case <strong>{escape(code)}</strong>. It takes about five minutes. "
-                    "Every question can be skipped, and your co-parent will never see your answers — only your professional can.</p>"
-                    f'<p><a href="{app_url()}/joint/{doc["id"]}/safety-screening" style="display:inline-block;background:#5B2A86;color:#fff;padding:10px 16px;border-radius:6px;text-decoration:none">Open my private screening</a></p>'
-                    "<p style=\"color:#666;font-size:13px\">If you are in danger now, call 911 or the National Hotline at 1-800-799-7233 (text START to 88788).</p>"
-                    f'<p style="font-size:12px;color:#888">Sent by {escape(from_name)}. We never ask for your password by email.</p></td></tr></table>')
+            from email_utils import NEUTRAL_SUBJECT
+            html = CHECKIN_REMINDER_HTML.format(name=escape(user.get('name') or 'there'), link=f"{app_url()}/check-in?case={escape(code)}", from_name=escape(from_name))
             try:
-                if not MINIMAL_NOTIFICATIONS:
-                    subject = f"A private screening is waiting for you — Case {code} - {from_name}"
-                await send_email(to=user["email"], subject=subject, html=html, case_id=doc["id"], kind="safety_screening_reminder", to_role=f"Parent {role.upper()}")
+                await send_email(to=user["email"], subject=NEUTRAL_SUBJECT, html=html, case_id=doc["id"], kind="safety_screening_reminder", to_role=f"Parent {role.upper()}")
             except Exception as exc:
                 logger.warning("safety screening reminder failed for %s/%s: %s", doc["id"], role, exc)
                 continue
