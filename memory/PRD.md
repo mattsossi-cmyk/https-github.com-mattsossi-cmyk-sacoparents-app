@@ -9500,3 +9500,7 @@ dashboard for sharing SELECTED completed reports with any professional.
   return 503 and the active run id is no longer a971d13d; THEN restore the path work from /app/memory/held/path_work/.
 - Step celebration (dashboard): app's existing confetti + short 'Step done' note, once per step, saved on account; NO celebration for Family check-in.
 - Dashboard files still not received.
+
+## 2026-10-21 — Weekly Win Note decisions (build with the dashboard)
+- Dashboard only (never email); window = last 7 days rolling; Family check-in never listed; hide note when nothing finished.
+- Still blocked on user: secrets re-publish (live still a971d13d, both webhooks 401) and ParentDashboard files (not received).
