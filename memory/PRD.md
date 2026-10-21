@@ -9508,3 +9508,7 @@ dashboard for sharing SELECTED completed reports with any professional.
 ## 2026-10-21 — Next Step Hint decisions (build with the dashboard)
 - Pick: steps a professional requested (court code) come first, if any are unfinished; otherwise the first unfinished step in the path's
   dashboard order. Never points to the Family check-in (Start with Safety banner covers it). All done -> "You're all caught up".
+
+## 2026-10-21 — Progress Ring (build with the dashboard)
+- Reuse the existing ring style (pages/portal/selfJourney/AssessProgressRing.jsx). Counts the parent's path steps except the Family check-in
+  (same rule as celebration / win note / next-step hint). Shows "X of Y done".
