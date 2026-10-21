@@ -180,7 +180,7 @@ export default function CommStyle() {
                 value={sample}
                 onChange={(e) => setSample(e.target.value)}
                 className="input-soft resize-none"
-                placeholder="Private to your account unless you choose to share it with your assigned professional on Align."
+                placeholder="Private to your account unless you choose to share it with SACOparentsAlign."
                 data-testid="comm-sample-textarea"
               />
             </AiGuardFrame>

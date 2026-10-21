@@ -82,6 +82,12 @@ export function AuthProvider({ children }) {
     return res.data;
   }, []);
 
+  const setCalmMode = useCallback(async (on) => {
+    const res = await api.put("/auth/calm-mode", { on });
+    setUser(res.data);
+    return res.data;
+  }, []);
+
   const startGuest = useCallback(async () => {
     const res = await api.post("/auth/guest", {});
     setUser(res.data.user);
@@ -104,6 +110,7 @@ export function AuthProvider({ children }) {
       logout,
       updateProfile,
       setJourneyPath,
+      setCalmMode,
       checkAuth,
       startGuest,
       claimGuest,
@@ -117,6 +124,7 @@ export function AuthProvider({ children }) {
       logout,
       updateProfile,
       setJourneyPath,
+      setCalmMode,
       checkAuth,
       startGuest,
       claimGuest,

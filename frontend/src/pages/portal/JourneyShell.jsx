@@ -37,6 +37,7 @@ import { ParentHome } from "./home/ParentHome";
 import { PrivacyTag } from "../../components/parentDashboard/ParentDashboard";
 import { ProfessionalAccessCard } from "../../components/privacy/ProfessionalAccessCard";
 import { NEW_HOME_ON } from "../../lib/previewGate";
+import { useCalmMode } from "../../lib/useCalmMode";
 import { api } from "../../lib/api";
 import {
   Dialog,
@@ -542,6 +543,7 @@ export function JourneyShell({
   // exits a sub-view returns to the landing on the next visit too.
   // With the new parent home, home is always the dashboard: no door memory.
   const [view, setView] = useState(() => (NEW_HOME_ON ? "door" : readLastDoor() || "door"));
+  const { calm } = useCalmMode();
   useEffect(() => {
     onViewChange(view);
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -1123,19 +1125,16 @@ export function JourneyShell({
 
   if (view === "door" && NEW_HOME_ON) {
     return (
-      <div data-testid="journey-shell" className="space-y-4">
+      <div data-testid="journey-shell" className={`space-y-4${calm ? " calm-mode" : ""}`}>
+        {welcomeArt}
         <section
           data-testid="door-landing"
           aria-label="Your paths"
           className="rounded-2xl bg-white border border-slate-200 p-4 shadow-sm"
         >
-          <div className="pb-3">
-            <SafetyFirstBanner alignUrl={ALIGN_SITE_URL} onQuickExit={quickExitAction} />
-          </div>
           {doorButtons}
         </section>
         <ProfessionalAccessCard />
-        {welcomeArt}
         <ParentHome
           user={user}
           saHistory={saHistory}
@@ -1349,6 +1348,11 @@ export function JourneyShell({
         <SubViewHeader
           title="Self Journey"
           subtitle="Take the next step to build a safer, calmer, and more child-focused future."
+        />
+        <SafetyFirstBanner
+          alignUrl={ALIGN_SITE_URL}
+          onQuickExit={quickExitAction}
+          text="Before you start your Self Journey, take your private Family check-in. Your co-parent never sees your answers."
         />
         <FamilyCheckinCard alignUrl={ALIGN_SITE_URL} testid="self-family-checkin" stacked />
         <SafetyScreenLink alignUrl={ALIGN_SITE_URL} />

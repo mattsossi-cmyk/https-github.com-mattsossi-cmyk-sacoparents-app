@@ -20,6 +20,7 @@ import RequestedRemindersSwitch from "../components/account/RequestedRemindersSw
 import CompletionAlertsSwitch from "../components/account/CompletionAlertsSwitch";
 import ProfessionalDigestSwitch from "../components/account/ProfessionalDigestSwitch";
 import { JourneyPathSetting } from "../components/account/JourneyPathSetting";
+import { CalmModeSetting } from "../components/account/CalmModeSetting";
 
 
 function LinkTile({ to, icon, label, desc, testid }) {
@@ -99,6 +100,7 @@ export default function Account() {
         </section>
 
         <JourneyPathSetting />
+        <CalmModeSetting />
         <RequestedRemindersSwitch />
         <CompletionAlertsSwitch />
         <ProfessionalDigestSwitch />

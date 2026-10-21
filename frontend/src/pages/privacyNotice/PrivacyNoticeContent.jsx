@@ -52,8 +52,8 @@ export function PrivacyNoticeContent() {
         <p data-testid="privacy-notice-align-sharing">
           <strong>Sharing with SACOparentsAlign.</strong> If you link your account to SACOparentsAlign with a link code, SACOparentsAlign can read your
           Situation Snapshot and Special Needs summaries. Your four Communication Style answers (your three choices and the message you pasted, with the
-          date you answered) go to your assigned professional on SACOparentsAlign only if you say yes. They never go to your co-parent, the court, or any
-          report. You can change your answer at any time on your Account page. Your reflection and Foundation Statement answers are never sent to
+          date you answered) are sent to SACOparentsAlign only if you say yes. There they are seen only by the professionals assigned to your case and,
+          when needed, SA CoParents administrators. They never go to your co-parent, the court, or any report. You can change your answer at any time on your Account page. Your reflection and Foundation Statement answers are never sent to
           SACOparentsAlign.
         </p>
       </section>

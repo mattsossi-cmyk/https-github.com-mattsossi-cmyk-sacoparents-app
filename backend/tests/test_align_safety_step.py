@@ -378,7 +378,7 @@ def test_privacy_notice_short_true_text():
     assert "not started" not in page and "not started" not in notice
     assert "your professional" not in page.lower() and "the professional linked" not in page.lower()
     assert "six points" not in (fe / "components/PreShareConsentDialog.jsx").read_text()
-    assert PRIVACY_NOTICE_VERSION == "2026-10-20-v8"
+    assert PRIVACY_NOTICE_VERSION == "2026-10-21-v9"
     heads = re.findall(r"<h2[^>]*>(\d+)\. ", page)
     assert heads == [str(i) for i in range(1, len(heads) + 1)], heads
 

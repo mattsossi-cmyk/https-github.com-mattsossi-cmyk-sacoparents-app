@@ -8,6 +8,9 @@ import { useCaseSettings } from "../../../lib/useCaseSettings";
 import { finishedOn } from "../../../components/caseSettings/FamilyCheckinCard";
 import { ThanksNote } from "../../../components/caseSettings/FamilyCheckinNotes";
 import { useCheckinThanks } from "../../../lib/useCheckinThanks";
+import { useAccessLogLink } from "../../../lib/useCheckinLink";
+import { useCalmMode } from "../../../lib/useCalmMode";
+import { CommShareReask } from "../../../components/commStyle/CommShareReask";
 import { useDashboardData } from "./useDashboardData";
 import { useDashboardCelebrations } from "./useDashboardCelebrations";
 import { WeeklyWinNote } from "./WeeklyWinNote";
@@ -62,6 +65,8 @@ export function ParentHome({ user, saHistory, biffCount, biffReady, actions, bui
   const [thanks, closeThanks] = useCheckinThanks(checkinDone);
   const celebrations = useDashboardCelebrations(user?.user_id);
   const { status, prepAny } = stepStatus({ checkinDone, saHistory, data, biffCount });
+  const whoHasLooked = useAccessLogLink();
+  const { calm } = useCalmMode();
 
   const links = useMemo(
     () => ({
@@ -71,10 +76,11 @@ export function ParentHome({ user, saHistory, biffCount, biffReady, actions, bui
       order: prepAny ? "/summary" : "/prep/child-goals",
       courtChecklist: OPEN.court,
       whoCanSee: "/who-can-see-my-information",
+      whoHasLooked,
       privacy: "/privacy-notice",
       getHelp: "/help",
     }),
-    [prepAny]
+    [prepAny, whoHasLooked]
   );
   const steps = buildSteps(path, status, links);
   const requested = new Set([...(data.requested?.keys || []), ...(data.requested?.professional_keys || [])]);
@@ -94,8 +100,11 @@ export function ParentHome({ user, saHistory, biffCount, biffReady, actions, bui
     }
     const fresh = doneKeys.filter((k) => !celebrations.steps[k]);
     if (!fresh.length) return;
-    burst();
-    toast.success("Step done", { description: steps.filter((s) => fresh.includes(s.id)).map((s) => s.title).join(", ") });
+    if (!calm) burst();
+    toast.success("Step done", {
+      description: steps.filter((s) => fresh.includes(s.id)).map((s) => s.title).join(", "),
+      className: calm ? "calm-toast" : undefined,
+    });
     celebrations.record(fresh, false);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [ready, doneKeys.join(",")]);
@@ -107,6 +116,8 @@ export function ParentHome({ user, saHistory, biffCount, biffReady, actions, bui
   };
 
   return (
+    <>
+    <CommShareReask />
     <ParentDashboard
       embedded
       checkinCard
@@ -123,5 +134,6 @@ export function ParentHome({ user, saHistory, biffCount, biffReady, actions, bui
       belowNext={<WeeklyWinNote steps={steps} celebrated={celebrations.steps} />}
       afterSteps={afterSteps}
     />
+    </>
   );
 }

@@ -17,7 +17,7 @@ import secure_docs
 from privacy_consent import consent_fields, has_current_consent, log_consent
 from ai_notice import has_ai_notice
 
-from models import UserRegister, UserLogin, UserPublic, JourneyPathIn, TokenResponse, GuestClaimPayload, MagicLinkRequest, MagicLinkConsume, SignupFromToken, PasswordResetRequest, PasswordResetConfirm, EmailVerifyConfirm, EmailCodeSend, EmailCodeConfirm, PasswordResetCodeConfirm
+from models import UserRegister, UserLogin, UserPublic, JourneyPathIn, CalmModeIn, TokenResponse, GuestClaimPayload, MagicLinkRequest, MagicLinkConsume, SignupFromToken, PasswordResetRequest, PasswordResetConfirm, EmailVerifyConfirm, EmailCodeSend, EmailCodeConfirm, PasswordResetCodeConfirm
 from email_service import send_magic_link, send_setup_link, send_password_reset_link, send_verification_link, send_verification_code, send_password_reset_code, EmailNotConfigured, EmailSendError
 
 router = APIRouter(prefix="/auth", tags=["auth"])
@@ -84,6 +84,7 @@ def _serialize_user(doc: dict) -> UserPublic:
         consent_current=has_current_consent(doc),
         ai_notice_current=has_ai_notice(doc),
         journey_path=doc.get("journey_path"),
+        calm_mode=bool(doc.get("calm_mode", False)),
     )
 
 
@@ -474,6 +475,17 @@ async def set_journey_path(
         {"user_id": current.user_id},
         {"$set": {"journey_path": body.path, "journey_path_set_at": datetime.now(timezone.utc).isoformat()}},
     )
+    user = await db.users.find_one({"user_id": current.user_id}, {"_id": 0})
+    return _serialize_user(user)
+
+
+@router.put("/calm-mode", response_model=UserPublic)
+async def set_calm_mode(
+    body: CalmModeIn,
+    current=Depends(get_current_user),
+    db: AsyncIOMotorDatabase = Depends(get_db),
+):
+    await db.users.update_one({"user_id": current.user_id}, {"$set": {"calm_mode": body.on}})
     user = await db.users.find_one({"user_id": current.user_id}, {"_id": 0})
     return _serialize_user(user)
 

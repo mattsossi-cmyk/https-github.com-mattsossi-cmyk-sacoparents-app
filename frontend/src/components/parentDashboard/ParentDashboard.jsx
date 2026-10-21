@@ -269,6 +269,9 @@ export default function ParentDashboard({
 
       <footer className="pd-footer">
         <a {...linkProps(links.whoCanSee)} data-testid="pd-footer-who-can-see">Who can see my information</a>
+        {links.whoHasLooked && (
+          <a {...linkProps(links.whoHasLooked, true)} data-testid="pd-footer-who-has-looked">Who has looked at my information</a>
+        )}
         <a {...linkProps(links.privacy)} data-testid="pd-footer-privacy">Privacy</a>
         <a {...linkProps(links.getHelp)} data-testid="pd-footer-get-help">Get help</a>
       </footer>

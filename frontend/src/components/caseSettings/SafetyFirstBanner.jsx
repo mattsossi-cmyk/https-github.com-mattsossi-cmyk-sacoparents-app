@@ -4,8 +4,10 @@ import { CheckCircle2, ExternalLink, ShieldCheck, Zap } from "lucide-react";
 import { useCaseSettings } from "../../lib/useCaseSettings";
 import { useCheckinLink } from "../../lib/useCheckinLink";
 
-// Shown above the journey choice until SACOparentsAlign confirms the Family check-in is done.
-export function SafetyFirstBanner({ alignUrl, onQuickExit, testid = "safety-first-banner" }) {
+const DEFAULT_TEXT = "Before you choose your journey, take your private Family check-in. Your co-parent never sees your answers.";
+
+// Shown until SACOparentsAlign confirms the Family check-in is done.
+export function SafetyFirstBanner({ alignUrl, onQuickExit, testid = "safety-first-banner", text = DEFAULT_TEXT }) {
   const done = useCaseSettings()?.setup_complete === true;
   const href = useCheckinLink(alignUrl);
   if (done) {
@@ -24,7 +26,7 @@ export function SafetyFirstBanner({ alignUrl, onQuickExit, testid = "safety-firs
         <div className="min-w-0 flex-1">
           <h2 id={`${testid}-title`} className="text-sm font-extrabold text-[#5a2a18]">Safety first</h2>
           <p data-testid={`${testid}-text`} className="text-[0.8125rem] text-[#4B4567] mt-0.5 leading-snug">
-            Before you choose your journey, take your private Family check-in. Your co-parent never sees your answers.
+            {text}
           </p>
         </div>
       </div>

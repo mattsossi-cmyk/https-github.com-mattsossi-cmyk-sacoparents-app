@@ -5,7 +5,7 @@ from datetime import datetime, timedelta, timezone
 from io import BytesIO
 from typing import Any, Dict, Optional, Tuple
 
-from fastapi import APIRouter, Depends, HTTPException, Path, Request
+from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Path, Request
 from fastapi.responses import StreamingResponse
 from motor.motor_asyncio import AsyncIOMotorDatabase
 
@@ -37,6 +37,7 @@ from pydantic import BaseModel, EmailStr, Field
 from typing import List
 import mediation_sharing  # noqa: E402
 import prep_privacy  # noqa: E402
+from align_share import push_to_align  # noqa: E402
 import shared_link_page  # noqa: E402
 
 
@@ -134,10 +135,12 @@ async def save_priority(
 async def save_comm_style(
     body: CommStylePayload,
     request: Request,
+    background: BackgroundTasks,
     current: UserPublic = Depends(get_current_user),
 ):
     # saved_at = the "date answered" sent to Align if the parent chose to share these answers.
     await _save_section(request.app.state.db, current.user_id, "comm_style", {**body.dict(), "saved_at": _now()})
+    background.add_task(push_to_align, request.app.state.db, current.user_id)
     return {"ok": True}
 
 

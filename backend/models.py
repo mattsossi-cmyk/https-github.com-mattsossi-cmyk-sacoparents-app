@@ -44,10 +44,15 @@ class UserPublic(BaseModel):
     consent_current: bool = False
     ai_notice_current: bool = False
     journey_path: Optional[str] = None
+    calm_mode: bool = False
 
 
 class JourneyPathIn(BaseModel):
     path: Literal["court_ordered", "self_journey", "mediation_prep"]
+
+
+class CalmModeIn(BaseModel):
+    on: bool
 
 class TokenResponse(BaseModel):
     access_token: str

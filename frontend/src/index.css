@@ -158,6 +158,16 @@ h1, h2, h3, h4, .font-serif {
     }
 }
 
+/* Calm Mode (Account switch): no animations or transitions on the home screen or its "Step done" note. */
+.calm-mode *,
+.calm-mode *::before,
+.calm-mode *::after,
+[data-sonner-toast].calm-toast {
+    animation: none !important;
+    transition: none !important;
+    scroll-behavior: auto !important;
+}
+
 
 /* Wizard progress segment fill smooth */
 .progress-fill {

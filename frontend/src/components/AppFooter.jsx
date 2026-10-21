@@ -1,7 +1,8 @@
 import React from "react";
 import { Link } from "react-router-dom";
 import { useOwnFooterLink } from "../lib/footerLink";
-import { ShieldCheck, LifeBuoy, FlaskConical, Accessibility as A11yIcon, HardDrive, FileText, UserCheck } from "lucide-react";
+import { useAccessLogLink } from "../lib/useCheckinLink";
+import { ShieldCheck, LifeBuoy, FlaskConical, Accessibility as A11yIcon, HardDrive, FileText, UserCheck, Eye } from "lucide-react";
 
 /**
  * AppFooter — persistent slim footer for authenticated / in-app pages.
@@ -10,6 +11,8 @@ import { ShieldCheck, LifeBuoy, FlaskConical, Accessibility as A11yIcon, HardDri
  */
 export default function AppFooter() {
   useOwnFooterLink();
+  // Align's access log, only for parents linked to Align (with their SA case code when they have one).
+  const whoHasLooked = useAccessLogLink();
   return (
     <footer
       className="mt-16 border-t border-[#E5E0EE] bg-white/60 backdrop-blur-sm"
@@ -19,6 +22,13 @@ export default function AppFooter() {
         <div className="flex flex-wrap gap-x-6 gap-y-3 items-center justify-center text-[0.8125rem] text-[#4B4567]">
           <FooterLink to="/privacy-notice" icon={<ShieldCheck size={13} />} testId="footer-privacy">Privacy Notice</FooterLink>
           <FooterLink to="/who-can-see-my-information" icon={<UserCheck size={13} />} testId="footer-who-can-see">Who can see my information</FooterLink>
+          {whoHasLooked && (
+            <a href={whoHasLooked} target="_blank" rel="noopener noreferrer" data-testid="footer-who-has-looked"
+               className="inline-flex items-center gap-1.5 text-[#4B4567] hover:text-[#3D1A78] hover:underline underline-offset-2">
+              <Eye size={13} />
+              Who has looked at my information
+            </a>
+          )}
           <FooterLink to="/terms" icon={<FileText size={13} />} testId="footer-terms">Terms</FooterLink>
           <FooterLink to="/data-retention" icon={<HardDrive size={13} />} testId="footer-data-retention">Data retention</FooterLink>
           <FooterLink to="/methodology" icon={<FlaskConical size={13} />} testId="footer-methodology">Methodology</FooterLink>

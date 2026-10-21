@@ -16,7 +16,7 @@ export function CommShareSwitch() {
     setChoice(on ? "yes" : "no");
     try {
       await setCommShare(on);
-      toast.success(on ? "Your 4 Communication Style answers will be shared with your assigned professional on Align." : "Your Communication Style answers are no longer shared.");
+      toast.success(on ? "Your 4 Communication Style answers will be shared with SACOparentsAlign." : "Your Communication Style answers are no longer shared.");
     } catch {
       setChoice(before);
       toast.error("Couldn't save that right now. Please try again.");
@@ -28,8 +28,8 @@ export function CommShareSwitch() {
       <Switch id="comm-share-switch" data-testid="comm-share-switch" checked={choice === "yes"}
               disabled={choice === undefined} onCheckedChange={toggle} className="mt-0.5 shrink-0" />
       <label htmlFor="comm-share-switch" className="text-xs text-[#4B4567] leading-relaxed">
-        Share my 4 Communication Style answers privately with my assigned professional on Align. They never go to my
-        co-parent, the court, or any report.
+        Share my 4 Communication Style answers with SACOparentsAlign. They&apos;re seen only by my assigned professionals
+        and, when needed, SA CoParents administrators. They never go to my co-parent, the court, or any report.
         {choice === null && <span data-testid="comm-share-undecided"> Not chosen yet, so nothing is shared.</span>}
       </label>
     </div>
