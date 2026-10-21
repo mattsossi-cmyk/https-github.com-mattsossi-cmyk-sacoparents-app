@@ -64,3 +64,8 @@ Command: `cd /app/backend && REACT_APP_BACKEND_URL=<preview> python -m pytest te
   (test_iter161 bot/human opens); the file passed 11/11 on rerun. Earlier transient timeouts (test_align_safety_step x2) also pass on rerun.
 - test_password_reset rate-limit test now uses one fixed client address (was flaky when proxy addresses varied).
 - New: tests/test_align_share.py (7), tests/test_held_emails.py (7), frontend src/lib/accessLogHref.test.js (5).
+
+## Final full run, 2026-10-21 (after notice v8 + linked-only sharing)
+- 2245 tests: 2216 passed, 26 skipped, 3 failed. All 3 = ConnectTimeout (test machine could not reach the preview address):
+  test_guest_autobootstrap::test_login_parent1, test_iter184::test_child_needs_consent_toggle..., test_iter_court_agreements::test_pdf_with_agreements.
+  Re-run of those 3 files: 33 passed, 0 failed. Log: test_reports/pytest/full_run6.log / full_run6.xml.
