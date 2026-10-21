@@ -4,7 +4,7 @@ import "./CoparentingBuilderReferral.css";
 
 /**
  * "What's next" card shown after a parent completes the Start with Safety step.
- * Sends the parent to the SA CoParents Co-Parenting Builder.
+ * Sends the parent to the SA CoParents Parallel Parenting Option Builder.
  *
  * IMPORTANT: show this card to EVERY parent who finishes the step, with the same
  * wording. Never show, hide or change it based on answers, skips or concern level:
@@ -20,8 +20,10 @@ export default function CoparentingBuilderReferral({
   builderUrl = "https://sacoparentsapp.online",
   headingLevel = 2,
   onOpen,
+  progress = null,
   testid = "builder-referral",
 }) {
+  const badge = { in_progress: "In progress", done: "Done" }[progress];
   const Heading = `h${Math.min(Math.max(headingLevel, 1), 6)}`;
 
   // Same tab on purpose: a second tab would stay open after Quick Exit.
@@ -43,11 +45,16 @@ export default function CoparentingBuilderReferral({
         </div>
 
         <p className="cbr-eyebrow" data-testid={`${testid}-eyebrow`}>What&apos;s next</p>
+        {badge && (
+          <p className={`cbr-badge cbr-badge-${progress}`} data-testid={`${testid}-badge`}>
+            Builder: {badge}
+          </p>
+        )}
         <Heading id="cbr-title" className="cbr-title">
-          Your next step: build your co&#8209;parenting plan
+          Your next step: build your parallel parenting plan
         </Heading>
         <p className="cbr-text">
-          The SA CoParents Co&#8209;Parenting Builder walks you through
+          The SA CoParents Parallel Parenting Option Builder walks you through
           schedules, communication and your child's needs, one step at a time,
           so you're ready for mediation.
         </p>
@@ -62,7 +69,7 @@ export default function CoparentingBuilderReferral({
           onClick={onOpen}
           data-testid={`${testid}-open`}
         >
-          Open the Co&#8209;Parenting Builder
+          Open the Parallel Parenting Option Builder
         </a>
       </div>
     </section>

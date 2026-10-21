@@ -9479,3 +9479,15 @@ dashboard for sharing SELECTED completed reports with any professional.
   Parallel Parenting Option Builder; new deep link added next to ?open=self-assessment. Card click opens builder in-place.
 - Self-tested at 390px: Quick Exit above banner, no overflow, card click + address both open builder. Awaiting user's "deploy".
 - Open question for user: card says "Co-Parenting Builder" but the page is titled "Parallel Parenting Option Builder".
+
+## 2026-10-21 ~12:30 UTC — Name change + progress badge done; path work HELD for secrets-only re-publish
+- Card renamed to "Parallel Parenting Option Builder" (heading: "build your parallel parenting plan"); badge "Builder: In progress/Done"
+  from /api/parallel-parenting/me (useParallelStatus in selfJourney/useParallelDone.js). All 3 states checked at 390px.
+- Path work (user.journey_path, PUT /api/auth/journey-path, PathPicker popup, Account "Your path") built + picker smoke-tested,
+  then SET ASIDE so the user's re-publish ships only banner/card/name/badge. Held at /app/memory/held/path_work/ (README has restore cmd;
+  `git apply --check` OK). Restore after user says re-published.
+- User-approved dashboard tags: check-in "You, your professional + a few admins"; Self-Assessment "Only you see your answers";
+  Communication Builder "Only you, unless you share it"; Order step = Co-Parenting Agreement "Shared only if you both agree"
+  (must link to Parallel Parenting Option Builder); Court checklist "You + your professional".
+- ParentDashboard.jsx/.css + photo NOT received yet (4 attempts). Dashboard not started; start only after the re-publish.
+- Test account created in preview: badgecheck+1792585401@test.com / TestPass123! (in-progress parallel plan, path self_journey).

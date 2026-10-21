@@ -25,7 +25,7 @@ import { useCoparentingDone } from "./selfJourney/useCoparentingDone";
 import { useChildNeeds } from "./childNeeds/useChildNeeds";
 import { SendToProvider } from "./childNeeds/SendToProvider";
 import { FlowArrow } from "./selfJourney/FlowArrow";
-import { useParallelDone } from "./selfJourney/useParallelDone";
+import { useParallelStatus } from "./selfJourney/useParallelDone";
 import { useStepsCelebrated } from "./selfJourney/useStepsCelebrated";
 import { AllStepsBanner } from "./selfJourney/AllStepsBanner";
 import { ContinueStep } from "./selfJourney/ContinueStep";
@@ -856,7 +856,8 @@ export function JourneyShell({
   const [cpAssessOpen, setCpAssessOpen] = useState(false);
   const childNeeds = useChildNeeds(user?.user_id);
   const cpDone = useCoparentingDone(user?.user_id, cpAssessOpen);
-  const ppDone = useParallelDone(user?.user_id, ppOpen);
+  const ppStatus = useParallelStatus(user?.user_id, ppOpen);
+  const ppDone = ppStatus === "done";
   const assessDone = {
     self: saHistory.history.length > 0,
     coparent: cpDone,
@@ -1019,6 +1020,7 @@ export function JourneyShell({
         <SafetyFirstBanner alignUrl={ALIGN_SITE_URL} onQuickExit={quickExitAction} />
         <CoparentingBuilderReferral
           builderUrl={BUILDER_PATH}
+          progress={ppStatus}
           onOpen={(e) => {
             e.preventDefault();
             openDoor("self");

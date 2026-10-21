@@ -1,0 +1,140 @@
+diff --git a/backend/auth.py b/backend/auth.py
+index 11c6d1b..892f028 100644
+--- a/backend/auth.py
++++ b/backend/auth.py
+@@ -17,7 +17,7 @@ import secure_docs
+ from privacy_consent import consent_fields, has_current_consent, log_consent
+ from ai_notice import has_ai_notice
+ 
+-from models import UserRegister, UserLogin, UserPublic, TokenResponse, GuestClaimPayload, MagicLinkRequest, MagicLinkConsume, SignupFromToken, PasswordResetRequest, PasswordResetConfirm, EmailVerifyConfirm, EmailCodeSend, EmailCodeConfirm, PasswordResetCodeConfirm
++from models import UserRegister, UserLogin, UserPublic, JourneyPathIn, TokenResponse, GuestClaimPayload, MagicLinkRequest, MagicLinkConsume, SignupFromToken, PasswordResetRequest, PasswordResetConfirm, EmailVerifyConfirm, EmailCodeSend, EmailCodeConfirm, PasswordResetCodeConfirm
+ from email_service import send_magic_link, send_setup_link, send_password_reset_link, send_verification_link, send_verification_code, send_password_reset_code, EmailNotConfigured, EmailSendError
+ 
+ router = APIRouter(prefix="/auth", tags=["auth"])
+@@ -83,6 +83,7 @@ def _serialize_user(doc: dict) -> UserPublic:
+         email_complained=bool(doc.get("email_complained", False)),
+         consent_current=has_current_consent(doc),
+         ai_notice_current=has_ai_notice(doc),
++        journey_path=doc.get("journey_path"),
+     )
+ 
+ 
+@@ -463,6 +464,20 @@ async def update_profile(
+     return _serialize_user(user)
+ 
+ 
++@router.put("/journey-path", response_model=UserPublic)
++async def set_journey_path(
++    body: JourneyPathIn,
++    current=Depends(get_current_user),
++    db: AsyncIOMotorDatabase = Depends(get_db),
++):
++    await db.users.update_one(
++        {"user_id": current.user_id},
++        {"$set": {"journey_path": body.path, "journey_path_set_at": datetime.now(timezone.utc).isoformat()}},
++    )
++    user = await db.users.find_one({"user_id": current.user_id}, {"_id": 0})
++    return _serialize_user(user)
++
++
+ # ============ Guest Sandbox ============
+ # 1 year by default — matches the original spec's "1-year Demo Sandbox". Override
+ # via the GUEST_LIFETIME_HOURS env var if needed.
+diff --git a/backend/models.py b/backend/models.py
+index cf11eae..c0e6132 100644
+--- a/backend/models.py
++++ b/backend/models.py
+@@ -1,6 +1,6 @@
+ """Pydantic models for SA CoParents Mediation Prep App."""
+ from pydantic import BaseModel, EmailStr, Field
+-from typing import List, Optional, Dict, Any
++from typing import List, Literal, Optional, Dict, Any
+ from datetime import datetime, timezone
+ import uuid
+ 
+@@ -43,8 +43,12 @@ class UserPublic(BaseModel):
+     email_complained: bool = False
+     consent_current: bool = False
+     ai_notice_current: bool = False
++    journey_path: Optional[str] = None
+ 
+ 
++class JourneyPathIn(BaseModel):
++    path: Literal["court_ordered", "self_journey", "mediation_prep"]
++
+ class TokenResponse(BaseModel):
+     access_token: str
+     token_type: str = "bearer"
+diff --git a/frontend/src/context/AuthContext.jsx b/frontend/src/context/AuthContext.jsx
+index fa996b3..af83ff5 100644
+--- a/frontend/src/context/AuthContext.jsx
++++ b/frontend/src/context/AuthContext.jsx
+@@ -76,6 +76,12 @@ export function AuthProvider({ children }) {
+     return res.data;
+   }, []);
+ 
++  const setJourneyPath = useCallback(async (path) => {
++    const res = await api.put("/auth/journey-path", { path });
++    setUser(res.data);
++    return res.data;
++  }, []);
++
+   const startGuest = useCallback(async () => {
+     const res = await api.post("/auth/guest", {});
+     setUser(res.data.user);
+@@ -97,6 +103,7 @@ export function AuthProvider({ children }) {
+       loginWithGoogle,
+       logout,
+       updateProfile,
++      setJourneyPath,
+       checkAuth,
+       startGuest,
+       claimGuest,
+@@ -109,6 +116,7 @@ export function AuthProvider({ children }) {
+       loginWithGoogle,
+       logout,
+       updateProfile,
++      setJourneyPath,
+       checkAuth,
+       startGuest,
+       claimGuest,
+diff --git a/frontend/src/pages/Account.jsx b/frontend/src/pages/Account.jsx
+index bed6077..9038487 100644
+--- a/frontend/src/pages/Account.jsx
++++ b/frontend/src/pages/Account.jsx
+@@ -19,6 +19,7 @@ import AlignLinkCard from "../components/account/AlignLinkCard";
+ import RequestedRemindersSwitch from "../components/account/RequestedRemindersSwitch";
+ import CompletionAlertsSwitch from "../components/account/CompletionAlertsSwitch";
+ import ProfessionalDigestSwitch from "../components/account/ProfessionalDigestSwitch";
++import { JourneyPathSetting } from "../components/account/JourneyPathSetting";
+ 
+ 
+ function LinkTile({ to, icon, label, desc, testid }) {
+@@ -97,6 +98,7 @@ export default function Account() {
+           <MarketingConsentToggle />
+         </section>
+ 
++        <JourneyPathSetting />
+         <RequestedRemindersSwitch />
+         <CompletionAlertsSwitch />
+         <ProfessionalDigestSwitch />
+diff --git a/frontend/src/pages/SacoparentsPortal.jsx b/frontend/src/pages/SacoparentsPortal.jsx
+index 526f889..366ca6a 100644
+--- a/frontend/src/pages/SacoparentsPortal.jsx
++++ b/frontend/src/pages/SacoparentsPortal.jsx
+@@ -3,6 +3,7 @@ import { Link, useNavigate } from "react-router-dom";
+ 
+ import { api } from "../lib/api";
+ import { useAuth } from "../context/AuthContext";
++import { PathPicker } from "../components/journeyPath/PathPicker";
+ 
+ import {
+   ALIGN_RECORDS_KEY,
+@@ -1535,6 +1536,7 @@ export default function SacoparentsPortal() {
+       className="bg-slate-50 text-slate-800 font-sans min-h-screen flex flex-col pb-32"
+       data-testid="sacoparents-portal"
+     >
++      <PathPicker />
+       {/* Print-only styles */}
+       <style>{`
+         @media print {
