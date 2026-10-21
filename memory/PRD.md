@@ -9491,3 +9491,12 @@ dashboard for sharing SELECTED completed reports with any professional.
   (must link to Parallel Parenting Option Builder); Court checklist "You + your professional".
 - ParentDashboard.jsx/.css + photo NOT received yet (4 attempts). Dashboard not started; start only after the re-publish.
 - Test account created in preview: badgecheck+1792585401@test.com / TestPass123! (in-progress parallel plan, path self_journey).
+
+## 2026-10-21 ~12:45 UTC — No re-publish has happened yet (deployer RCA) + decisions
+- CORRECTION: the live site is still run a971d13d (02:59 UTC). My 'banner is live' read was wrong: the strings I matched
+  ('parallel-builder', 'Builder: ') already existed in older code (sa-parallel-builder.webp, CbJourneyCard). Both webhook secrets are still
+  present in the live run, so the webhooks still answer 401. The user still needs to: delete both secrets, confirm they're gone, re-publish.
+- After the re-publish: check unsigned POST /api/internal/safety-status + /api/professional/directory/invite/accept-webhook on the live site
+  return 503 and the active run id is no longer a971d13d; THEN restore the path work from /app/memory/held/path_work/.
+- Step celebration (dashboard): app's existing confetti + short 'Step done' note, once per step, saved on account; NO celebration for Family check-in.
+- Dashboard files still not received.
