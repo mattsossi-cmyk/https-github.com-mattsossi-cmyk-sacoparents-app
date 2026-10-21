@@ -10,7 +10,6 @@ import { ThanksNote } from "../../../components/caseSettings/FamilyCheckinNotes"
 import { useCheckinThanks } from "../../../lib/useCheckinThanks";
 import { useAccessLogLink } from "../../../lib/useCheckinLink";
 import { useCalmMode } from "../../../lib/useCalmMode";
-import { CommShareReask } from "../../../components/commStyle/CommShareReask";
 import { useDashboardData } from "./useDashboardData";
 import { useDashboardCelebrations } from "./useDashboardCelebrations";
 import { WeeklyWinNote } from "./WeeklyWinNote";
@@ -116,8 +115,6 @@ export function ParentHome({ user, saHistory, biffCount, biffReady, actions, bui
   };
 
   return (
-    <>
-    <CommShareReask />
     <ParentDashboard
       embedded
       checkinCard
@@ -134,6 +131,5 @@ export function ParentHome({ user, saHistory, biffCount, biffReady, actions, bui
       belowNext={<WeeklyWinNote steps={steps} celebrated={celebrations.steps} />}
       afterSteps={afterSteps}
     />
-    </>
   );
 }

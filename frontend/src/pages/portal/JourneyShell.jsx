@@ -33,9 +33,8 @@ import { CoparentingAssessmentView } from "./coparenting/CoparentingAssessmentVi
 import { useFoundationBuilder } from "./foundation/useFoundationBuilder";
 import { ChildNeedsView } from "./ChildNeedsView";
 import { FoundationStatementView } from "./FoundationStatementView";
-import { ParentHome } from "./home/ParentHome";
+import { CommShareReask } from "../../components/commStyle/CommShareReask";
 import { PrivacyTag } from "../../components/parentDashboard/ParentDashboard";
-import { ProfessionalAccessCard } from "../../components/privacy/ProfessionalAccessCard";
 import { NEW_HOME_ON } from "../../lib/previewGate";
 import { useCalmMode } from "../../lib/useCalmMode";
 import { api } from "../../lib/api";
@@ -1127,34 +1126,7 @@ export function JourneyShell({
     return (
       <div data-testid="journey-shell" className={`space-y-4${calm ? " calm-mode" : ""}`}>
         {welcomeArt}
-        <section
-          data-testid="door-landing"
-          aria-label="Your paths"
-          className="rounded-2xl bg-white border border-slate-200 p-4 shadow-sm"
-        >
-          {doorButtons}
-        </section>
-        <ProfessionalAccessCard />
-        <ParentHome
-          user={user}
-          saHistory={saHistory}
-          biffCount={biffAuthoredCount}
-          biffReady={biffReady}
-          builderPath={BUILDER_PATH}
-          actions={{
-            openSelfAssessment: () => {
-              openDoor("self");
-              openAssess(false);
-            },
-            openCommBuilder: () => onOpenCommBuilder(),
-            openCourt: () => openDoor("court"),
-            openBuilder: () => {
-              openDoor("self");
-              openPp("welcome");
-            },
-          }}
-          afterSteps={goalBanner}
-        />
+        <CommShareReask />
       </div>
     );
   }

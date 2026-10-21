@@ -9593,3 +9593,9 @@ dashboard for sharing SELECTED completed reports with any professional.
 - Reply to Align with the sample payload: memory/align_reply_2026-10-21.md
 - Tests: backend tests/test_align_share.py 26 passed; iteration_157 (testing agent) 100% backend + frontend.
 - Open: confirm the deploy result; webhooks 503; republish for these changes; Align to confirm cr_ meanings, header name, and how to remove data after a "no".
+
+## 2026-10-21 ~17:15 UTC: Home trimmed to the welcome picture only (PREVIEW)
+- The user asked to delete everything below the three illustrated tiles on the home. The new home now renders only the "Welcome to SA CoParents" artwork and its caption. The tiles still open each path.
+- Removed from the home: the text door tiles with privacy tags (door-landing), the "Who can see your information" box (ProfessionalAccessCard), and the whole ParentDashboard (Hi name, progress bar, Private check-in, next step, steps, pd-footer with Who has looked). The step celebration therefore no longer shows on the home.
+- Kept (user choices): the crisis line, the bottom bar (Journey, Report, BIFF Tool) and the CommShareReask dialog (now mounted in JourneyShell). The ParentHome/ParentDashboard files are unused but kept.
+- Align's "Who has looked" link is now only in the AppFooter on other in-app pages, not on the home.
