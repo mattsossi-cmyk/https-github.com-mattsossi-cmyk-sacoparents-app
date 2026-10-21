@@ -9463,3 +9463,7 @@ dashboard for sharing SELECTED completed reports with any professional.
 - After: home 200, notice v8, password-reset request 200, export-assessments w/o key 401 — BUT both webhooks still answer 401 (= secrets still
   loaded; 503 expected when absent). Debug question queued to the deploy agent (presence of the two secrets + PUBLIC_* values, RCA). Unresolved.
 - Align (via user): still reads export-assessments OK; stopped sending both webhooks; final notice 2026-10-20.1 live.
+- Deployer RCA (run a971d13d, live since 02:59:58 UTC): ALIGN_WEBHOOK_SECRET + SACOPARENTSALIGN_WEBHOOK_SECRET still PRESENT in the running
+  production env, carried forward from the production Secrets store (not the codebase .env). User's deletion did not persist. INTEGRATION_SHARED_SECRET
+  present; PUBLIC_APP_URL/PUBLIC_BACKEND_URL/PUBLIC_API_URL = https://sacoparentsapp.online (correct). Fix (user): delete both again, confirm
+  gone from list, re-deploy → both webhooks should return 503. RCA file: /app/deployer-agent-docs/RCA_a971d13d-02c3-4c53-be64-6517dc5408e4.MD
