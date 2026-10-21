@@ -9512,3 +9512,24 @@ dashboard for sharing SELECTED completed reports with any professional.
 ## 2026-10-21 — Progress Ring (build with the dashboard)
 - Reuse the existing ring style (pages/portal/selfJourney/AssessProgressRing.jsx). Counts the parent's path steps except the Family check-in
   (same rule as celebration / win note / next-step hint). Shows "X of Y done".
+
+## 2026-10-21 — Dashboard files received + build plan (WAITING for secrets re-publish first)
+- Saved: /app/memory/held/dashboard/ParentDashboard.jsx + ParentDashboard.css (CSS was pasted in chat). dashboard-photo.jpg NOT sent ->
+  use components/startWithSafety/start-with-safety-photo.jpg as the hero (user approved).
+- User order: re-publish (secrets) FIRST, then build dashboard + restore path work (memory/held/path_work) in preview.
+- Decisions: check-in step opens an in-app Start with Safety page (Quick Exit, banner, SafetyFirstBanner check-in button + hotlines,
+  builder card) which then opens Align; check-in status "done" only when setup_complete===true else "unknown". Keep the file's progress bar
+  (not ring), count excludes check-in. Dashboard replaces the JourneyShell "door" landing; keep bottom nav; hide portal header while dashboard
+  shows (pd-top has Quick Exit -> https://www.weather.com/ via replace). Add "All your tools" list below steps so every feature stays reachable.
+- Mediation Prep pages live under the Co-Parenting Agreement step (Agreement is generated from child_goals/issues/priority):
+  status todo / in_progress (GET /api/mediation/prep completed.* any) / done (agreement in GET /api/mediation/agreements, date generated_at);
+  link to Parallel Parenting Option Builder from that step.
+- Step sources: Self-Assessment history (done) / draft GET /self-assessment/me (in_progress), deep link /dashboard?open=self-assessment;
+  Communication Builder: biff_logs (exclude id 1 demo) >=1 -> done, needs new deep link (e.g. ?open=comm-builder);
+  Court checklist (court path only): POST /api/court-path/checklist {done,total}; requested keys GET /api/court-path/requested ('self' maps
+  to Self-Assessment). Existing art via images: selfAssessment /images/sa-self-assessment-640.webp, communication
+  /images/comm-builder-art-640.webp, courtChecklist /images/court-journey-640.webp; checkin + order keep built-in art (portrait art in 48px
+  squares may need object-fit: cover).
+- Next step rule overrides the file's: requested unfinished first, else first unfinished in order, never check-in; all done -> "You're all
+  caught up". Celebration: confetti + 'Step done', once per step, stored on account, not check-in; seed already-done steps silently.
+  Weekly win note: dashboard only, last 7 days, no check-in, hidden if empty.
