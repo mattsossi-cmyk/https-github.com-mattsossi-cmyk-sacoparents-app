@@ -9456,3 +9456,10 @@ dashboard for sharing SELECTED completed reports with any professional.
   Family check-in card (signed out) opens https://sacoparentsalign.com in a new tab (Align 200).
 - Not verified on live: a successful sign-in with a real account (no production test account). backend/.env PUBLIC_APP_URL/PUBLIC_API_URL
   point at the preview domain — confirm production overrides them to sacoparentsapp.online (affects links in emails).
+
+## 2026-10-21 ~03:05 UTC — Re-publish after user's production Secrets edits
+- User set PUBLIC_APP_URL/PUBLIC_BACKEND_URL/PUBLIC_API_URL = https://sacoparentsapp.online and deleted ALIGN_WEBHOOK_SECRET + SACOPARENTSALIGN_WEBHOOK_SECRET
+  in production Secrets (their report), kept INTEGRATION_SHARED_SECRET. Re-deploy job 6f8f7a2c… ran; 520 blip at 02:59:56.
+- After: home 200, notice v8, password-reset request 200, export-assessments w/o key 401 — BUT both webhooks still answer 401 (= secrets still
+  loaded; 503 expected when absent). Debug question queued to the deploy agent (presence of the two secrets + PUBLIC_* values, RCA). Unresolved.
+- Align (via user): still reads export-assessments OK; stopped sending both webhooks; final notice 2026-10-20.1 live.
