@@ -1,5 +1,5 @@
 """Pydantic models for SA CoParents Mediation Prep App."""
-from pydantic import BaseModel, EmailStr, Field
+from pydantic import BaseModel, EmailStr, Field, StrictBool
 from typing import List, Literal, Optional, Dict, Any
 from datetime import datetime, timezone
 import uuid
@@ -52,7 +52,7 @@ class JourneyPathIn(BaseModel):
 
 
 class CalmModeIn(BaseModel):
-    on: bool
+    on: StrictBool
 
 class TokenResponse(BaseModel):
     access_token: str

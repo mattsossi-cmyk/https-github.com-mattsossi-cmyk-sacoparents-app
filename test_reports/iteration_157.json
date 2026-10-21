@@ -1,0 +1,60 @@
+{
+  "summary": "Tested Calm Mode, the Align 'Who has looked at my information' footer link, the new Communication Style sharing wording with re-ask, Align export field names, Privacy Notice v9, and the home layout (welcome art first, Safety First banner moved to Self Journey). Backend: 13 new pytest tests against the public URL plus 15 existing test_align_share.py tests, 28/28 passed. Frontend: every requested flow was checked at 390x844, and home order/overflow also at 1920x800. All pass. Only minor issues found.",
+  "backend_issues": {
+    "critical": [],
+    "minor": [
+      {"endpoint": "PUT /api/auth/calm-mode", "issue": "Pydantic's lax bool accepts {on:'yes'|'true'|1} as true. The 422 response only fires for {}, null, lists and 'maybe'. Use StrictBool if exact booleans are wanted."}
+    ]
+  },
+  "frontend_issues": {
+    "ui_bugs": [
+      {"component": "CommShareReask (home re-ask card)", "issue": "comm-share-what always says '...your 3 Communication Style choices and your sample message', even when the parent left the sample box empty. The CommStyle page card handles this correctly ('which you left empty').", "selector": "[data-testid=comm-share-what]", "priority": "LOW"}
+    ],
+    "integration_issues": [
+      {"flow": "Home load", "issue": "GET /api/integrations/align-share/communication-readiness is called 3-4 times on a single /dashboard load (duplicate fetches)", "affected_selectors": []},
+      {"flow": "AppFooter on /account", "issue": "/account does not render AppShell/AppFooter, so [data-testid=footer-who-has-looked] can never appear there (the request listed /account as an example page). The link does appear correctly on AppShell pages like /prep/communication.", "affected_selectors": ["[data-testid=footer-who-has-looked]"]}
+    ],
+    "design_issues": []
+  },
+  "test_report_links": [
+    "/app/backend/tests/test_iter160_calm_mode_align_footer.py",
+    "/app/backend/tests/iter160_setup_users.py",
+    "/app/backend/tests/iter160_export_check.py",
+    "/app/test_reports/pytest/pytest_iter160.xml"
+  ],
+  "verified": [
+    "HOME ORDER mobile+desktop: door-welcome-image (y=138) < door-landing (743/815) < parent-dashboard (1397/1401); no safety-first-banner; scrollWidth equals viewport",
+    "SELF JOURNEY: safety-first-banner is directly under the header; the text matches exactly; the checkin link is <a target=_blank href=https://sacoparentsalign.com>; quick-exit goes to weather.com",
+    "COURT: court-page renders with no safety-first-banner or -done",
+    "CALM MODE switch: toast 'Calm Mode is on.' / 'Calm Mode is off.'; state survives reload; /auth/me calm_mode matches",
+    "CALM MODE home: journey-shell gets the 'calm-mode' class; hotspot animation-name is none and transition is none. With calm off, the hotspot animation is sa-hotspot-pulse",
+    "Reduced motion: switch is checked and disabled; device note text matches exactly; home has the calm-mode class while the server value stays false; switching back to no-preference removes it live",
+    "Backend calm-mode: 401 without auth, 422 for non-boolean, user returned with calm_mode",
+    "Footer: unlinked user sees neither link; linked user with case gets ?case=SA-T16003D1; linked user without case gets the bare /who-can-see; text is correct and target=_blank",
+    "Comm share card wording exact on /prep/communication for a linked user; Account comm-share-row label correct; unlinked users see neither",
+    "RE-ASK: API returns {choice:null, decided_at:null, reask:true} and the export omits the field. The home card shows the 'We've updated who can see...' text. Skip sends DELETE, reask becomes false and the card doesn't return on reload. Yes saves yes with reask false",
+    "EXPORT: 4 answers plus answered_at, cr_conflict, cr_child, cr_direct, cr_channel, completed_at after yes; field absent without yes",
+    "PRIVACY v9: parent2@test.com gets consent_current=false and sees consent-screen; privacy-notice-align-sharing contains the new sentence",
+    "REGRESSION: pd-checkin-button goes to /start-with-safety; with calm off, 'Step done' toast and confetti canvas appear; with calm on, the toast has the calm-toast class and there is no canvas"
+  ],
+  "action_items": [
+    "Optional: pass hasSample to the re-ask card copy so it doesn't mention a sample message that doesn't exist",
+    "Optional: dedupe the align-share GET calls on home",
+    "Optional: StrictBool on CalmModeIn",
+    "Optional: decide whether /account should render AppFooter (with the who-has-looked link)"
+  ],
+  "critical_code_review_comments": [
+    "Review request says test_align_share.py has 26 passing tests; it actually has 15 (all pass).",
+    "The Self Journey and Court views' journey-shell don't get the calm-mode class. This matches the spec (home only), but it means their animations still run with Calm Mode on."
+  ],
+  "updated_files": [
+    "/app/backend/tests/test_iter160_calm_mode_align_footer.py",
+    "/app/backend/tests/iter160_setup_users.py",
+    "/app/backend/tests/iter160_export_check.py"
+  ],
+  "success_rate": {"backend": "100%", "frontend": "100% (minor copy/efficiency notes only)"},
+  "seed_data_creation": "Created 3 temp UI users (test_iter160ui_*) plus a fake joint_alignment_cases doc (test_iter160:true); all cleaned up with `python tests/iter160_setup_users.py cleanup`. The pytest file cleans its own test_iter160_* users.",
+  "retest_needed": false,
+  "should_main_agent_self_test": true,
+  "context_for_next_testing_agent": "Run `python /app/backend/tests/iter160_setup_users.py` to create unlinked/case/nocase users (then set journey_path via mongo to skip the path picker), and `... cleanup` to remove them. Comm Style route is /prep/communication (not /prep/comm-style). parent2@test.com still needs v9 re-accept (not accepted by me)."
+}

@@ -39,7 +39,7 @@ export function CommShareCard({ open, hasSample, reask = false, onDone }) {
           <AlertDialogTitle data-testid="comm-share-question">{COMM_SHARE_QUESTION}</AlertDialogTitle>
           <AlertDialogDescription data-testid="comm-share-what">
             {reask ? (
-              <>{COMM_SHARE_REASK} The 4 answers are your 3 Communication Style choices and your sample message.</>
+              <>{COMM_SHARE_REASK} The 4 answers are your 3 Communication Style choices and the optional message box.</>
             ) : (
               <>The 4 answers are your 3 choices above and {hasSample ? "the message you pasted" : "the optional message box, which you left empty"}.</>
             )}{" "}
