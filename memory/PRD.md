@@ -9533,3 +9533,11 @@ dashboard for sharing SELECTED completed reports with any professional.
 - Next step rule overrides the file's: requested unfinished first, else first unfinished in order, never check-in; all done -> "You're all
   caught up". Celebration: confetti + 'Step done', once per step, stored on account, not check-in; seed already-done steps silently.
   Weekly win note: dashboard only, last 7 days, no check-in, hidden if empty.
+
+## 2026-10-21 — Dashboard layout update from user (still WAITING for secrets re-publish before building)
+- New dashboard keeps the three illustrated tiles from today's home ON TOP: Court Ordered ("Referred by a court, mediator, or attorney."),
+  Self Journey ("Starting on my own."), Communication Builder ("Not a separate path. A message-writing tool you can open any time, from
+  either path."). They must stay. DELETE the "Welcome / Pick your path" heading.
+- Order: Safety First banner (existing check-in box) + confidentiality link (assumed: the existing "Who can see my information" card ->
+  /who-can-see-my-information) at the top, then the three tiles, then the dashboard steps below. Keep path saving (sign-up choice sets steps;
+  tiles switch views any time).
