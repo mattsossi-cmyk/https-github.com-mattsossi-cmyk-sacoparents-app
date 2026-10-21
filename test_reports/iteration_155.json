@@ -1,0 +1,28 @@
+{
+  "summary": "Frontend tests of the 3 approved follow-ups all passed. (1) The Privacy Notice paragraph privacy-notice-align-sharing matches the approved text exactly. It is the element right after privacy-notice-who-can-see, inside section #collect. Headings are numbered 1-4 in order. No horizontal overflow at 1920 or 390. (2) The v8 version bump works: parent2 and parent1 each saw the 'Before you continue' screen once on login. Continue stayed disabled until both boxes were ticked. After continuing they landed on /dashboard, and the screen did not come back on later pages. (3) parent2 (not linked): the Account Align card says 'Not linked' and has no comm-share-row or comm-share-switch. Saving /prep/communication went straight to /next-steps/comm_style with no comm-share-card. PUT communication-readiness as parent2 returned 409 'Link your account to SACOparentsAlign first.' (4) parent1 (linked): the Account card shows comm-share-row and comm-share-undecided while the choice is null. Switch on showed a toast and stayed on after reload (API choice=yes). Switch off showed a toast and stayed off after reload (choice=no). With choice=no, saving /prep/communication went straight to /next-steps/comm_style with no dialog. Unlink was not clicked.",
+  "backend_issues": {"critical": [], "minor": []},
+  "frontend_issues": {
+    "ui_bugs": [
+      {"component": "CommStyle -> /next-steps/comm_style navigation", "issue": "After saving, the next page keeps the old scroll position (scrollY was 839), so the user lands near the bottom of the next-steps page instead of the top. Minor, probably pre-existing.", "selector": "[data-testid='wizard-next-button']", "priority": "LOW"}
+    ],
+    "integration_issues": [],
+    "design_issues": [
+      {"screen": "Account > Align card (unlinked parent2)", "issues": ["The card says 'Not linked. Align can't read anything...' but still shows 'Last read Oct 21, 2026' and a list of RECENT READS BY ALIGN. These are past reads from an earlier link (probably from backend test runs). The history is correct, but the copy is confusing next to 'can't read anything'. Consider a label such as 'Earlier reads, before you unlinked'."]}
+    ]
+  },
+  "test_report_links": [],
+  "action_items": [
+    "Optional: scroll to top after navigating from /prep/communication to /next-steps/comm_style",
+    "Optional: clarify the past-reads copy on the unlinked Align card"
+  ],
+  "critical_code_review_comments": [
+    "CommStyle.onNext: if GET /integrations/align-link fails, linked becomes false and the dialog is skipped silently. This fails safe (nothing is shared), so it is acceptable."
+  ],
+  "updated_files": ["/app/test_reports/iteration_155.json"],
+  "success_rate": {"backend": "N/A (only the 409 check, passed)", "frontend": "100%"},
+  "test_credentials": "parent1@test.com / TestPass123! (linked), parent2@test.com / TestPass123! (not linked), from /app/memory/test_credentials.md",
+  "seed_data_creation": "parent1's comm-share choice went from null to yes to no during the switch test, so it is now 'no'. Both parents accepted the v8 notice. parent2 and parent1 comm-style answers were saved as balanced/balanced/balanced.",
+  "retest_needed": false,
+  "should_main_agent_self_test": false,
+  "context_for_next_testing_agent": "Login via the UI: login-show-email-toggle, login-email-input, login-password-input, login-submit-button. Consent screen checkboxes: consent-screen-consent-ack, consent-screen-consent-sensitive, then consent-screen-continue. The Communication Style route is /prep/communication. Answers use comm-q1-balanced etc., and wizard-next-button saves. parent1's choice is now 'no'. Running backend tests/test_align_share.py relinks parent1 and resets the choice to null, so run them first if you need to test the dialog again."
+}

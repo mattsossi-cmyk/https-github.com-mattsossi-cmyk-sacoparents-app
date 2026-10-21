@@ -93,7 +93,7 @@ export default function AlignLinkCard() {
             ? "Align can read your Situation Snapshot and Special Needs summaries, plus your Communication Style answers if you said yes below."
             : "Align can't read anything from your account. It only can after you link with a code."}
           {status?.last_read_at && (
-            <span data-testid="align-link-last-read"> Last read {when(status.last_read_at)}.</span>
+            <span data-testid="align-link-last-read"> Last read {when(status.last_read_at)}{status.linked ? "" : ", before you unlinked"}.</span>
           )}
         </p>
       </div>
@@ -103,7 +103,7 @@ export default function AlignLinkCard() {
         {status?.linked && <UnlinkButton busy={busy} onConfirm={unlink} />}
       </div>
       {status?.linked && <CommShareSwitch />}
-      {status && <AlignReadHistory reads={status.recent_reads || []} />}
+      {status && <AlignReadHistory reads={status.recent_reads || []} linked={Boolean(status.linked)} />}
     </div>
   );
 }

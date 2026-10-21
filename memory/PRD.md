@@ -9422,3 +9422,12 @@ dashboard for sharing SELECTED completed reports with any professional.
    Align read history label shows "…and Communication Style answers" when included. Copy no longer says Align reads the Foundation Statement.
 4. Admin held-back reminder card (see earlier entry). 5. Supervised webhook run (see earlier entry).
 - Open: PrivacyNoticeContent.jsx (hashed, v7) doesn't describe the optional Communication Style sharing — needs user's wording + version bump.
+
+## 2026-10-21 — Notice v8, linked-only sharing, reset on unlink (PREVIEW ONLY, do not publish)
+- PrivacyNoticeContent.jsx section 2: new paragraph (testid privacy-notice-align-sharing) "Sharing with SACOparentsAlign. …" (user-approved text).
+  PRIVACY_NOTICE_VERSION = "2026-10-20-v8", hash c4668edf9f430a6bb5927131f637016bb6ceef85fb5a2209419490f17e0c7175 → every account re-accepts once.
+- Communication Style sharing question (after save) and Account switch only for parents linked to Align; PUT choice → 409 when not linked.
+- DELETE /api/integrations/align-link resets the sharing choice (align_share.reset_share_choice) → re-linking never silently restarts sharing.
+- Small fixes: NextSteps page scrolls to top on arrival; unlinked Account card labels old history "Earlier reads, before you unlinked".
+- Tests: tests/test_align_share.py now 10; testing agent iteration_155 passed (no retest).
+- Release: wait for Align's notice 2026-10-19.2 confirmation; ship both together. Paste-ready note for Align was given to the user.

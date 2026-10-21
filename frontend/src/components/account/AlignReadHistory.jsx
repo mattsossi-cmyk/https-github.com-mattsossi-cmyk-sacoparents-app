@@ -4,10 +4,12 @@ const when = (iso) =>
   new Date(iso).toLocaleString("en-US", { month: "short", day: "numeric", year: "numeric", hour: "numeric", minute: "2-digit" });
 
 // Last 5 times SA CoParents Align read this parent's account.
-export function AlignReadHistory({ reads }) {
+export function AlignReadHistory({ reads, linked = true }) {
   return (
     <div data-testid="align-read-history" className="mt-4 border-t border-[#EFE9F9] pt-3">
-      <p className="text-[0.6875rem] font-bold uppercase tracking-[0.14em] text-[#6E6787] mb-2">Recent reads by Align</p>
+      <p data-testid="align-read-history-title" className="text-[0.6875rem] font-bold uppercase tracking-[0.14em] text-[#6E6787] mb-2">
+        {linked ? "Recent reads by Align" : "Earlier reads, before you unlinked"}
+      </p>
       {reads.length === 0 ? (
         <p data-testid="align-read-history-empty" className="text-xs text-[#4B4567]">Align hasn&rsquo;t read anything from your account yet.</p>
       ) : (

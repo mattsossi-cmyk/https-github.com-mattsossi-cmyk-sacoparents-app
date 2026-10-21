@@ -165,6 +165,11 @@ export default function NextSteps() {
     load();
   }, [load]);
 
+  // Arriving from a long form: start at the top, not the old scroll position.
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, [assessment]);
+
   const regenerate = async () => {
     setBusy(true);
     try {
