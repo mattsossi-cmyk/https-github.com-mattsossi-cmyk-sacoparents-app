@@ -9599,3 +9599,9 @@ dashboard for sharing SELECTED completed reports with any professional.
 - Removed from the home: the text door tiles with privacy tags (door-landing), the "Who can see your information" box (ProfessionalAccessCard), and the whole ParentDashboard (Hi name, progress bar, Private check-in, next step, steps, pd-footer with Who has looked). The step celebration therefore no longer shows on the home.
 - Kept (user choices): the crisis line, the bottom bar (Journey, Report, BIFF Tool) and the CommShareReask dialog (now mounted in JourneyShell). The ParentHome/ParentDashboard files are unused but kept.
 - Align's "Who has looked" link is now only in the AppFooter on other in-app pages, not on the home.
+
+## 2026-10-21 ~17:20 UTC: Self Journey top = Start with Safety photo banner, then Safety first, then the builder card (PREVIEW)
+- User: the safety banners don't show on the first dashboard (home). When a parent taps Self Journey, they appear above the Parallel Parenting builder card.
+- Self Journey view (JourneyShell door-view-self): StartWithSafetyBanner (original photo of a parent hugging a child at sunset), then SafetyFirstBanner (Self Journey wording), then CoparentingBuilderReferral (opens the builder), then the Family check-in card. The home has none of these. Court Ordered is unchanged (no banner).
+- Verified at 1920 and 390: order correct, no overflow, builder card opens the Parallel Parenting Option Builder.
+- Not in the deploy dispatched at ~17:16 UTC. Needs another publish.

@@ -1321,10 +1321,19 @@ export function JourneyShell({
           title="Self Journey"
           subtitle="Take the next step to build a safer, calmer, and more child-focused future."
         />
+        <StartWithSafetyBanner />
         <SafetyFirstBanner
           alignUrl={ALIGN_SITE_URL}
           onQuickExit={quickExitAction}
           text="Before you start your Self Journey, take your private Family check-in. Your co-parent never sees your answers."
+        />
+        <CoparentingBuilderReferral
+          builderUrl={BUILDER_PATH}
+          progress={ppStatus}
+          onOpen={(e) => {
+            e.preventDefault();
+            openPp("welcome");
+          }}
         />
         <FamilyCheckinCard alignUrl={ALIGN_SITE_URL} testid="self-family-checkin" stacked />
         <SafetyScreenLink alignUrl={ALIGN_SITE_URL} />
