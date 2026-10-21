@@ -51,7 +51,7 @@ from motor.motor_asyncio import AsyncIOMotorDatabase
 from pydantic import BaseModel, EmailStr, Field
 
 from auth import UserPublic, get_current_user, get_db
-from align_share import communication_readiness
+from align_share import communication_readiness, reset_share_choice
 from integration_keys import match_integration_key
 from safety_gate import require_ipv_clearance
 from self_assessment_reminders import is_safety_flagged
@@ -455,6 +455,7 @@ async def align_link_status(current: UserPublic = Depends(get_current_user), db:
 async def unlink_align(current: UserPublic = Depends(get_current_user), db: AsyncIOMotorDatabase = Depends(get_db)):
     """Parent turns off Align's access. Linking again needs a new code."""
     await db[_LINKS].update_one({"user_id": current.user_id, "unlinked_at": None}, {"$set": {"unlinked_at": _now()}})
+    await reset_share_choice(db, current.user_id)
     logger.info("align unlinked user=%s", current.user_id)
     return await _link_status(db, current.user_id)
 

@@ -102,7 +102,7 @@ export default function AlignLinkCard() {
         <AlignLinkCode onPoll={load} />
         {status?.linked && <UnlinkButton busy={busy} onConfirm={unlink} />}
       </div>
-      <CommShareSwitch />
+      {status?.linked && <CommShareSwitch />}
       {status && <AlignReadHistory reads={status.recent_reads || []} />}
     </div>
   );

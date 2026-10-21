@@ -49,6 +49,13 @@ export function PrivacyNoticeContent() {
           administrators can, and every view is recorded. Nothing about your answers appears in this app&apos;s reports or documents. They show
           only &ldquo;Safety step: completed on SACOparentsAlign&rdquo; or, when this app can&apos;t know, &ldquo;Safety step: see SACOparentsAlign&rdquo;.
         </p>
+        <p data-testid="privacy-notice-align-sharing">
+          <strong>Sharing with SACOparentsAlign.</strong> If you link your account to SACOparentsAlign with a link code, SACOparentsAlign can read your
+          Situation Snapshot and Special Needs summaries. Your four Communication Style answers (your three choices and the message you pasted, with the
+          date you answered) go to your assigned professional on SACOparentsAlign only if you say yes. They never go to your co-parent, the court, or any
+          report. You can change your answer at any time on your Account page. Your reflection and Foundation Statement answers are never sent to
+          SACOparentsAlign.
+        </p>
       </section>
 
       <section id="ai" data-testid="privacy-notice-ai" className="scroll-mt-6 space-y-4">

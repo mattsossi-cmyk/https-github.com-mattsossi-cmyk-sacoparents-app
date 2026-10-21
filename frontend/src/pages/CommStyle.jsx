@@ -104,8 +104,9 @@ export default function CommStyle() {
         free_text_sample: sample,
       });
       toast.success("Saved.");
-      // Ask once about sharing with the Align professional; after that the Account page switch changes it.
-      const choice = await getCommShare().catch(() => "unknown");
+      // Ask once (only parents linked to Align); after that the Account page switch changes it.
+      const linked = await api.get("/integrations/align-link").then((r) => Boolean(r.data?.linked), () => false);
+      const choice = linked ? await getCommShare().catch(() => "unknown") : "unknown";
       if (choice === null) setAskShare(true);
       else navigate("/next-steps/comm_style");
     } catch (err) {

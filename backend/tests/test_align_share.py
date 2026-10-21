@@ -146,3 +146,35 @@ def test_parent_with_old_safety_result_never_gets_the_field(client):
     _db.portal_state.update_one({"user_id": uid}, {"$set": {"user_id": uid, "safety_ack": {"flagged": True}}}, upsert=True)
     body = _export(client, email)
     assert "communication_readiness" not in body and "MARKER-SAMPLE" not in json.dumps(body)
+
+
+def test_only_linked_parents_can_set_a_choice(client):
+    _, h, _ = _parent(client, linked=False)
+    r = client.put(SHARE, headers=h, json={"share": True})
+    assert r.status_code == 409, r.text
+    assert client.get(SHARE, headers=h).json()["choice"] is None
+
+
+def test_unlinking_resets_the_choice_and_relinking_does_not_restart_sharing(client):
+    email, h, _ = _parent(client)
+    client.put("/api/mediation/comm-style", headers=h, json=COMM)
+    client.put(SHARE, headers=h, json={"share": True})
+    assert "communication_readiness" in _export(client, email)
+    assert client.delete("/api/integrations/align-link", headers=h).json()["linked"] is False
+    assert client.get(SHARE, headers=h).json() == {"choice": None, "decided_at": None}
+    code = client.post("/api/link-codes", headers=h, json={}).json()["code"]
+    assert client.post("/api/integrations/verify-link-code", headers=KEY, json={"code": code}).status_code == 200
+    assert "communication_readiness" not in _export(client, email)
+
+
+def test_privacy_notice_describes_the_sharing():
+    from pathlib import Path
+    page = " ".join((Path(__file__).resolve().parents[2] / "frontend/src/pages/privacyNotice/PrivacyNoticeContent.jsx").read_text().split())
+    for s in ("Sharing with SACOparentsAlign.",
+              "If you link your account to SACOparentsAlign with a link code, SACOparentsAlign can read your Situation Snapshot and Special Needs summaries.",
+              "Your four Communication Style answers (your three choices and the message you pasted, with the date you answered) go to your assigned "
+              "professional on SACOparentsAlign only if you say yes.",
+              "They never go to your co-parent, the court, or any report.",
+              "You can change your answer at any time on your Account page.",
+              "Your reflection and Foundation Statement answers are never sent to SACOparentsAlign."):
+        assert s in page, s

@@ -5,7 +5,7 @@ No choice yet (skipped) or "no" -> the communication_readiness field is left out
 from datetime import datetime, timezone
 from typing import Any, Dict, Literal, Optional
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, HTTPException
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel
 
@@ -67,6 +67,9 @@ async def get_share_choice(current: UserPublic = Depends(get_current_user), db=D
 
 @router.put(_PATH, response_model=ShareStatus)
 async def set_share_choice(body: ShareBody, current: UserPublic = Depends(get_current_user), db=Depends(get_db)):
+    # Only parents linked to Align are asked (stale tabs included).
+    if not await db.align_links.find_one({"user_id": current.user_id, "unlinked_at": None}, {"_id": 1}):
+        raise HTTPException(status_code=409, detail="Link your account to SACOparentsAlign first.")
     await db[_COLL].update_one(
         {"user_id": current.user_id},
         {"$set": {"communication_readiness": "yes" if body.share else "no",
@@ -74,6 +77,11 @@ async def set_share_choice(body: ShareBody, current: UserPublic = Depends(get_cu
         upsert=True,
     )
     return JSONResponse((await _status(db, current.user_id)).model_dump(), headers=NO_STORE)
+
+
+async def reset_share_choice(db, user_id: str) -> None:
+    """Unlinking clears the choice, so linking again never silently restarts sharing."""
+    await db[_COLL].delete_one({"user_id": user_id})
 
 
 async def communication_readiness(db, user_id: str, prep: Dict[str, Any]) -> Optional[Dict[str, Any]]:
