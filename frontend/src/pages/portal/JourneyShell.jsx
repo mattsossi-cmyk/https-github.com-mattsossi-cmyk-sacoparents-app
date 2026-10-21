@@ -6,6 +6,8 @@ import InviteCoparentCard from "../../components/InviteCoparentCard";
 import { SelfAssessmentView } from "./SelfAssessmentView";
 import { FamilyCheckinCard } from "../../components/caseSettings/FamilyCheckinCard";
 import { SafetyFirstBanner } from "../../components/caseSettings/SafetyFirstBanner";
+import StartWithSafetyBanner from "../../components/startWithSafety/StartWithSafetyBanner";
+import CoparentingBuilderReferral from "../../components/startWithSafety/CoparentingBuilderReferral";
 import { SafetyScreenLink } from "./SafetyScreenLink";
 import { CourtOrderedView } from "./CourtOrderedView";
 import { ParallelParentingView } from "./ParallelParentingView";
@@ -488,6 +490,8 @@ const PRIMARY_MODULES = [
 // Professional (Align) site opened from the Court Ordered sub-view.
 // Env-overridable so the founder can switch the hostname without a
 // code change.
+const BUILDER_PATH = "/dashboard?open=parallel-builder";
+
 const ALIGN_SITE_URL =
   process.env.REACT_APP_ALIGN_SITE_URL ||
   "https://sacoparentsalign.com";
@@ -1000,6 +1004,27 @@ export function JourneyShell({
   if (view === "door") {
     return (
       <div data-testid="journey-shell" className="space-y-4">
+        <div className="flex justify-end">
+          <button
+            type="button"
+            data-testid="journey-quick-exit"
+            onClick={quickExitAction}
+            className="min-h-[40px] px-4 rounded-full text-xs font-bold bg-rose-600 hover:bg-rose-700 text-white shadow-sm transition-colors"
+          >
+            <i className="fa-solid fa-bolt mr-1" aria-hidden="true"></i>
+            Quick Exit
+          </button>
+        </div>
+        <StartWithSafetyBanner />
+        <SafetyFirstBanner alignUrl={ALIGN_SITE_URL} onQuickExit={quickExitAction} />
+        <CoparentingBuilderReferral
+          builderUrl={BUILDER_PATH}
+          onOpen={(e) => {
+            e.preventDefault();
+            openDoor("self");
+            openPp("welcome");
+          }}
+        />
         <section
           data-testid="door-landing"
           className="rounded-2xl bg-white border border-slate-200 p-4 shadow-sm"
@@ -1014,9 +1039,6 @@ export function JourneyShell({
             <p className="text-xs text-slate-600">
               Two ways in. The Communication Builder works with either one.
             </p>
-          </div>
-          <div className="pb-3">
-            <SafetyFirstBanner alignUrl={ALIGN_SITE_URL} onQuickExit={quickExitAction} />
           </div>
           <div className="space-y-3">
             <button

@@ -1,0 +1,220 @@
+/* Start with Safety banner — scoped with the .sws- prefix */
+
+.sws-banner {
+  --sws-ink: #3d1f80;        /* deep purple text + icons */
+  --sws-accent: #5a2fb0;     /* brighter purple for "SAFETY" */
+  --sws-soft: #cfc0f2;       /* rays, underline */
+  --sws-tint: #f1ecfc;       /* feature panel */
+  --sws-tint-2: #e3d9f8;     /* wave back */
+  --sws-card: #ffffff;
+
+  position: relative;
+  max-width: 560px;
+  margin: 0 auto;
+  overflow: hidden;
+  border-radius: 28px;
+  background: linear-gradient(180deg, var(--sws-card) 0%, #fbf9ff 100%);
+  box-shadow: 0 0 0 6px #ece5fb, 0 10px 30px rgba(61, 31, 128, 0.12);
+  color: var(--sws-ink);
+  font-family: "Poppins", "Nunito", "Segoe UI", system-ui, -apple-system,
+    sans-serif;
+  text-align: center;
+}
+
+/* ---------- top: emblem + heading ---------- */
+
+.sws-top {
+  padding: 28px 24px 4px;
+}
+
+.sws-emblem {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+}
+
+.sws-shield {
+  width: 112px;
+  height: auto;
+}
+.sws-shield-outline {
+  fill: var(--sws-ink);
+}
+.sws-ink {
+  fill: var(--sws-ink);
+}
+
+.sws-rays {
+  width: 40px;
+  height: auto;
+  stroke: var(--sws-soft);
+  stroke-width: 7;
+  stroke-linecap: round;
+}
+.sws-rays-right {
+  transform: scaleX(-1);
+}
+
+.sws-title {
+  margin: 10px 0 0;
+  line-height: 0.95;
+  font-weight: 800;
+  letter-spacing: -0.01em;
+}
+.sws-title-small {
+  display: block;
+  font-size: clamp(2rem, 8vw, 3rem);
+  color: var(--sws-ink);
+}
+.sws-title-big {
+  display: block;
+  font-size: clamp(3.4rem, 15vw, 5.6rem);
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: 0.01em;
+  background: linear-gradient(180deg, var(--sws-accent), var(--sws-ink));
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+.sws-underline {
+  display: block;
+  width: 78%;
+  height: 7px;
+  margin: 8px auto 14px;
+  border-radius: 50%;
+  background: var(--sws-soft);
+}
+
+.sws-tagline {
+  margin: 0;
+  font-size: clamp(1.05rem, 4.4vw, 1.4rem);
+  font-weight: 600;
+  line-height: 1.35;
+  color: var(--sws-ink);
+}
+
+/* ---------- photo band ---------- */
+
+.sws-photo {
+  position: relative;
+  margin-top: -8px;
+}
+.sws-photo img {
+  display: block;
+  width: 100%;
+  aspect-ratio: 980 / 345;
+  object-fit: cover;
+  object-position: 60% 30%;
+  /* soft fade from the white top area into the photo */
+  -webkit-mask-image: linear-gradient(180deg, transparent 0%, #000 12%);
+  mask-image: linear-gradient(180deg, transparent 0%, #000 12%);
+}
+.sws-wave {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: -1px;
+  width: 100%;
+  height: 18%;
+}
+.sws-wave-back {
+  fill: var(--sws-tint-2);
+}
+.sws-wave-front {
+  fill: var(--sws-tint);
+}
+
+/* ---------- feature row ---------- */
+
+.sws-features {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  margin: 0;
+  padding: 10px 12px 26px;
+  list-style: none;
+  background: var(--sws-tint);
+}
+.sws-features li {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  padding: 6px 8px;
+  font-size: clamp(0.85rem, 3.4vw, 1.05rem);
+  font-weight: 600;
+  line-height: 1.25;
+}
+.sws-features li + li {
+  border-left: 2px solid var(--sws-soft);
+}
+
+.sws-icon {
+  width: 54px;
+  height: 54px;
+  color: var(--sws-ink);
+  fill: var(--sws-ink);
+}
+.sws-icon-cut {
+  fill: var(--sws-tint);
+}
+
+/* ---------- optional button ---------- */
+
+.sws-cta-wrap {
+  padding: 0 24px 24px;
+  background: var(--sws-tint);
+}
+.sws-cta {
+  width: 100%;
+  min-height: 48px;
+  border: 0;
+  border-radius: 999px;
+  background: var(--sws-ink);
+  color: #fff;
+  font: inherit;
+  font-weight: 700;
+  font-size: 1.05rem;
+  cursor: pointer;
+}
+.sws-cta:hover {
+  background: var(--sws-accent);
+}
+.sws-cta:focus-visible {
+  outline: 3px solid var(--sws-accent);
+  outline-offset: 3px;
+}
+
+/* ---------- small phones ---------- */
+
+@media (max-width: 380px) {
+  .sws-top {
+    padding: 22px 16px 4px;
+  }
+  .sws-shield {
+    width: 92px;
+  }
+  .sws-rays {
+    width: 30px;
+  }
+  .sws-icon {
+    width: 44px;
+    height: 44px;
+  }
+  .sws-features {
+    padding: 8px 4px 20px;
+  }
+  .sws-features li {
+    font-size: 0.8rem;
+  }
+}
+
+/* Windows high-contrast / forced colours: keep text readable */
+@media (forced-colors: active) {
+  .sws-title-big {
+    background: none;
+    color: CanvasText;
+  }
+}

@@ -9467,3 +9467,15 @@ dashboard for sharing SELECTED completed reports with any professional.
   production env, carried forward from the production Secrets store (not the codebase .env). User's deletion did not persist. INTEGRATION_SHARED_SECRET
   present; PUBLIC_APP_URL/PUBLIC_BACKEND_URL/PUBLIC_API_URL = https://sacoparentsapp.online (correct). Fix (user): delete both again, confirm
   gone from list, re-deploy → both webhooks should return 503. RCA file: /app/deployer-agent-docs/RCA_a971d13d-02c3-4c53-be64-6517dc5408e4.MD
+
+## 2026-10-21 ~12:00 UTC — Start with Safety banner + Co-Parenting Builder card (PREVIEW ONLY, not published)
+- User zip installed at frontend/src/components/startWithSafety/ (StartWithSafetyBanner.jsx/.css, CoparentingBuilderReferral.jsx/.css, photo).
+- Journey landing (JourneyShell door view) order: Quick Exit (journey-quick-exit) → StartWithSafetyBanner → existing SafetyFirstBanner
+  (Family check-in link / completed chip / hotline) → CoparentingBuilderReferral → Pick your path.
+- Card is unconditional: same wording for every parent, never depends on answers, skips, concern level or check-in status.
+- Clash fixes vs user's files: eyebrow "This step is complete" → "What's next", check icon → arrow (untrue for parents not checked in);
+  button opens in SAME tab (new tab would survive Quick Exit). Wording otherwise unchanged.
+- builderUrl = /dashboard?open=parallel-builder (live: https://sacoparentsapp.online/dashboard?open=parallel-builder) opens the
+  Parallel Parenting Option Builder; new deep link added next to ?open=self-assessment. Card click opens builder in-place.
+- Self-tested at 390px: Quick Exit above banner, no overflow, card click + address both open builder. Awaiting user's "deploy".
+- Open question for user: card says "Co-Parenting Builder" but the page is titled "Parallel Parenting Option Builder".
