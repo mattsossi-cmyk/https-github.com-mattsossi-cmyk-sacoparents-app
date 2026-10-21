@@ -145,7 +145,7 @@ export default function ParentDashboard({
             <img className="pd-hero" src={heroImage} alt="" aria-hidden="true" />
           )}
           <div className="pd-hello-body">
-            <h1 className="pd-h1" data-testid="pd-greeting">{parentName ? `Hi ${parentName}` : "Welcome back"}</h1>
+            <h1 className="pd-h1" data-testid="pd-greeting">{parentName ? `Hi ${parentName}` : "Welcome"}</h1>
             <p className="pd-hello-sub">Every step you take here is for your child.</p>
             <div className="pd-progress">
               <div

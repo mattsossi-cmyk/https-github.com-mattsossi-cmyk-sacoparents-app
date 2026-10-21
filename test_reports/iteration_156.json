@@ -1,0 +1,41 @@
+{
+  "summary": "Tested the new parent dashboard on the preview host at 390px, plus a quick 1920 check. Backend: 17/17 pytest pass for PUT /api/auth/journey-path (all 3 valid paths, 4 invalid bodies -> 422, no login -> 401, GET /me returns journey_path, parent1 = court_ordered) and /api/journey-summary/dashboard-celebrated (new user gets {steps:null}; seeded stores 'seeded'; non-seeded stores an ISO date and never overwrites an existing value; 'checkin', 'foo', a string or an empty body -> 422; GET/POST without login -> 401). Frontend checks that passed: top order (Safety First, then door-court/self/comm, then the Who can see card, then the welcome image); no 'Pick your path' heading; purple portal header hidden; scrollWidth 390. parent1 shows every privacy tag and status exactly as specified, next step Communication Builder, progress 1 of 4. Every row, the Next button, the three buttons, the Parallel Parenting Option Builder link, the footer links and all 4 deep links open the right view. Agreement row goes to /summary. Back from Court and Back from Self Journey return to the dashboard. New account: the path popup shows once with Quick Exit and is gone after reload. Account 'Your path' shows the saved path, switching shows the toast 'Your path is updated.', and the Court checklist step is added/removed (0 of 4 vs 0 of 3). Celebration: after SA completion the toast 'Step done Self-Assessment' shows once, the weekly note reads 'In the last 7 days you finished: Self-Assessment.', and there is no toast on reload. All 4 Quick Exits go to weather.com (signed in). The Start with Safety page has its banner, check-in box (Align link with case id), hotlines, builder card (Done badge for parent1) and Home. Bottom nav (Journey, Report drawer, BIFF drawer, PDF Export print, Get help) works. Signed-out '/' renders the dashboard with no crash and no page errors. Main issue found: the old 'door memory' (localStorage sacoparents_last_door) stops the dashboard from acting as home once a parent opens Self Journey or Court.",
+  "backend_issues": {
+    "critical": [],
+    "minor": [
+      {"endpoint": "POST /api/journey-summary/dashboard-celebrated", "issue": "The save reads, changes in memory, then $sets the whole steps dict. If two tabs post at the same time, one can drop the other's keys. Use per-key conditional updates instead (filter {'steps.<k>': {'$exists': false}} with $set 'steps.<k>')."}
+    ]
+  },
+  "frontend_issues": {
+    "ui_bugs": [
+      {"component": "JourneyShell door memory vs new home", "issue": "The Self-Assessment row, the Parallel Parenting Option Builder link, ?open=self-assessment / parallel-builder / court and the door-court / door-self buttons all call openDoor(), which writes localStorage 'sacoparents_last_door'. After that: (1) the bottom-nav 'Journey' (nav-doors -> openDoorGateway only does setScreen('journey')) stays in Self Journey; (2) reloading /dashboard reopens Self Journey or Court; (3) 'Home' on /start-with-safety (sws-page-home -> /dashboard) lands in Self Journey after the builder card was used. The only way back to the dashboard is the in-view Back button. Reproduced with parent1.", "selector": "[data-testid=nav-doors], [data-testid=sws-page-home]", "priority": "MEDIUM"},
+      {"component": "StartWithSafetyPage (signed out)", "issue": "For signed-out visitors, the LegalAcknowledgment modal (z-1000, legal-acknowledgment-modal) covers sws-page-quick-exit, so Quick Exit cannot be clicked. The modal has no Quick Exit of its own. This is a safety issue for DV users.", "selector": "[data-testid=legal-acknowledgment-modal]", "priority": "MEDIUM"},
+      {"component": "StartWithSafetyPage 390px", "issue": "The floating 'Main menu' pill (bottom-left) covers the 'Open Family check-in' button in the Safety First box on first view.", "selector": "[data-testid=safety-first-banner-checkin]", "priority": "LOW"}
+    ],
+    "integration_issues": [],
+    "design_issues": [
+      {"screen": "Dashboard signed out", "issues": ["The greeting reads 'Welcome back' for an anonymous first-time visitor. 'Welcome' would fit better."]},
+      {"screen": "/help", "issues": ["The text says 'Quick exit opens the calendar right away', but the Quick Exits on the app go to weather.com. Copy mismatch (likely pre-existing)."]}
+    ]
+  },
+  "test_report_links": ["/app/backend/tests/test_parent_dashboard_iter156.py", "/app/test_reports/pytest/iter156.xml"],
+  "action_items": [
+    "Make the dashboard the real home under NEW_HOME_ON. Either stop openDoor() from writing sacoparents_last_door, or clear it (and setView('door')) when nav-doors is tapped, when /dashboard loads without ?open, and when sws-page-home is used.",
+    "Let Quick Exit work over the LegalAcknowledgment modal: add a Quick Exit button to the modal, or skip the modal on /start-with-safety.",
+    "Move or hide the 'Main menu' floating pill on /start-with-safety so it does not cover the check-in button at 390px.",
+    "Optional: make the dashboard-celebrated write atomic per key; change the signed-out greeting to 'Welcome'."
+  ],
+  "critical_code_review_comments": [
+    "journey_summary_routes.mark_dashboard_celebrated: whole-dict $set race (see backend minor).",
+    "ParentHome next-step: only 'self' maps through REQUESTED_KEY, as specified. Fine.",
+    "JourneyShell.jsx is about 1600 lines and SacoparentsPortal.jsx about 2100. Both are well over the 700-line guideline."
+  ],
+  "updated_files": ["/app/backend/tests/test_parent_dashboard_iter156.py"],
+  "success_rate": {"backend": "100% (17/17)", "frontend": "~90% (all requested links, statuses, popup, account switch, celebration and quick exits pass; door-memory home regression and the signed-out modal blocking Quick Exit fail)"},
+  "test_credentials": "parent1@test.com / TestPass123! (court_ordered). Created test_dash_ui_1792592486@test.com (now mediation_prep, SA done, celebrated selfAssessment) and test_dash_ui2_1792592620@test.com (no path set) / TestPass123!. Plus several test_dash_*@test.com accounts from pytest.",
+  "seed_data_creation": "Registered TEST accounts above. SA completed for test_dash_ui_1792592486 via API.",
+  "retest_needed": true,
+  "should_main_agent_self_test": true,
+  "context_for_next_testing_agent": "Clear localStorage 'sacoparents_last_door' before loading /dashboard, otherwise the last door view opens instead of the dashboard. Stub weather.com with page.route when testing Quick Exit. The comm builder opens as an overlay (comm-builder-page) over the dashboard. SA opens self-assessment-page over door-view-self. The builder opens pp-welcome. The Court Back button is court-back.",
+  "rca of the issue": "Door memory: JourneyShell initialises view from readLastDoor() and openDoor() persists the door. Only goBack() clears it. ParentHome actions (openSelfAssessment, openBuilder, openCourt) and the deep-link effect all go through openDoor, and SacoparentsPortal.openDoorGateway does not reset the JourneyShell view. Repro: sign in as parent1, tap the Self-Assessment row, close it, tap bottom-nav Journey (or reload /dashboard): Self Journey shows instead of the dashboard."
+}

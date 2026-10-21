@@ -524,6 +524,7 @@ export function JourneyShell({
   safetyFlagged = false,
   onViewChange = () => {},
   biffReady = true,
+  homeRequest = 0,
 }) {
   // Suppress a few unused props so we don't trip the linter; they
   // are still accepted for API compatibility with the handlers in
@@ -538,14 +539,15 @@ export function JourneyShell({
   // so returning parents land straight back in the door they last
   // picked. Back clears the memory so a parent who deliberately
   // exits a sub-view returns to the landing on the next visit too.
-  const [view, setView] = useState(() => readLastDoor() || "door");
+  // With the new parent home, home is always the dashboard: no door memory.
+  const [view, setView] = useState(() => (NEW_HOME_ON ? "door" : readLastDoor() || "door"));
   useEffect(() => {
     onViewChange(view);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [view]);
 
   const openDoor = (next) => {
-    writeLastDoor(next);
+    if (!NEW_HOME_ON) writeLastDoor(next);
     setView(next);
   };
 
@@ -553,6 +555,12 @@ export function JourneyShell({
     writeLastDoor(null);
     setView("door");
   };
+
+  // Bottom-nav "Journey" returns to the dashboard.
+  useEffect(() => {
+    if (homeRequest) goBack();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [homeRequest]);
 
   // Card 3 can be opened from Self Journey or the Court page; Back returns there.
   const [subFrom, setSubFrom] = useState("self");

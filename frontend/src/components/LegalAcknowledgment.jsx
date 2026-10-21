@@ -5,6 +5,7 @@ import { api } from "../lib/api";
 import { useAuth } from "../context/AuthContext";
 import { logError } from "../lib/logger";
 import { PrivacyLinks } from "./privacy/PrivacyLinks";
+import { quickExitAction } from "../pages/portal/JourneyShell";
 
 const STORAGE_KEY = "sac_legal_ack_v1";
 const VERSION = "v1";
@@ -157,7 +158,7 @@ export default function LegalAcknowledgment() {
           <div className="w-10 h-10 rounded-full bg-white/15 grid place-items-center shrink-0">
             <ScrollText size={18} />
           </div>
-          <div>
+          <div className="min-w-0 flex-1">
             <div className="text-[0.625rem] uppercase tracking-[0.2em] opacity-80">
               A quick note before we start
             </div>
@@ -168,6 +169,14 @@ export default function LegalAcknowledgment() {
               Just so we&apos;re on the same page
             </h2>
           </div>
+          <button
+            type="button"
+            onClick={quickExitAction}
+            data-testid="legal-ack-quick-exit"
+            className="shrink-0 self-start min-h-[40px] px-3 rounded-full bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold transition-colors"
+          >
+            Quick Exit
+          </button>
         </div>
 
         <div className="px-6 py-6 space-y-3 max-h-[60vh] overflow-y-auto">

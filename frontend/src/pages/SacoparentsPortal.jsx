@@ -674,7 +674,11 @@ export default function SacoparentsPortal() {
     });
   }, []);
 
-  const openDoorGateway = useCallback(() => setScreen("journey"), []);
+  const [homeRequest, setHomeRequest] = useState(0);
+  const openDoorGateway = useCallback(() => {
+    setScreen("journey");
+    if (NEW_HOME_ON) setHomeRequest((n) => n + 1);
+  }, []);
 
   const requestDoorEntry = useCallback((door) => {
     setScreen("journey");
@@ -1659,6 +1663,7 @@ export default function SacoparentsPortal() {
             safetyFlagged={safetyFlagged}
             onViewChange={setJourneyView}
             biffReady={!user || portalHydrated}
+            homeRequest={homeRequest}
           />
         )}
 

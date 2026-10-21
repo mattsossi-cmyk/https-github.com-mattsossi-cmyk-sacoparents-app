@@ -22,6 +22,7 @@ import { useAuth } from "../context/AuthContext";
 // (auth callback, onboarding) where the primary action must be taken first.
 const HIDDEN_PREFIXES = [
   "/dashboard",
+  "/start-with-safety",
   "/onboarding/",
   "/auth/callback",
   "/auth/magic",

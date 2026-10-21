@@ -146,13 +146,15 @@ async def mark_dashboard_celebrated(
     user: UserPublic = Depends(get_current_user),
     db: AsyncIOMotorDatabase = Depends(get_db),
 ) -> Dict[str, Any]:
-    doc = await db[DASHBOARD_CELEBRATIONS].find_one({"user_id": user.user_id}, {"_id": 0, "steps": 1}) or {}
-    steps = doc.get("steps", {})
+    uid = user.user_id
     value = "seeded" if body.seeded else datetime.now(timezone.utc).isoformat()
+    coll = db[DASHBOARD_CELEBRATIONS]
+    await coll.update_one({"user_id": uid}, {"$setOnInsert": {"steps": {}}}, upsert=True)
+    # Per-key conditional set: two tabs can't drop each other's keys or overwrite a date.
     for key in body.steps:
-        steps.setdefault(key, value)
-    await db[DASHBOARD_CELEBRATIONS].update_one({"user_id": user.user_id}, {"$set": {"steps": steps}}, upsert=True)
-    return {"steps": steps}
+        await coll.update_one({"user_id": uid, f"steps.{key}": {"$exists": False}}, {"$set": {f"steps.{key}": value}})
+    doc = await coll.find_one({"user_id": uid}, {"_id": 0, "steps": 1})
+    return {"steps": doc.get("steps", {})}
 
 
 

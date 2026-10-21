@@ -9541,3 +9541,18 @@ dashboard for sharing SELECTED completed reports with any professional.
 - Order: Safety First banner (existing check-in box) + confidentiality link (assumed: the existing "Who can see my information" card ->
   /who-can-see-my-information) at the top, then the three tiles, then the dashboard steps below. Keep path saving (sign-up choice sets steps;
   tiles switch views any time).
+
+## 2026-10-21 ~14:30 UTC — Parent dashboard BUILT in preview (behind preview-only switch)
+- NEW_HOME_ON (frontend/src/lib/previewGate.js) = preview host only. Live keeps the old home. On user's "deploy": set NEW_HOME_ON = true.
+- Files: components/parentDashboard/ParentDashboard.jsx/.css (user's file adapted), pages/portal/home/{ParentHome,useDashboardData,
+  useDashboardCelebrations,WeeklyWinNote}, pages/StartWithSafetyPage.jsx (/start-with-safety), path work restored
+  (journeyPath/*, account/JourneyPathSetting, PUT /api/auth/journey-path), backend GET/POST /api/journey-summary/dashboard-celebrated
+  (collection dashboard_step_celebrations, per-key conditional set).
+- Top order: Safety First banner -> 3 tiles (Court Ordered / Self Journey / Communication Builder) -> Who can see card -> WelcomeArtwork;
+  then hello card (Start with Safety photo, progress excl. check-in), next step, weekly note, steps, GoalBanner, footer. Portal header +
+  outer access card + portal footer hidden on the dashboard. No door memory with the new home; bottom-nav Journey returns to dashboard.
+- Art: existing for selfAssessment / communication / courtChecklist; built-in for checkin + order.
+- Also: Quick Exit added to the LegalAcknowledgment modal (all pages, goes live with any re-publish); Main-menu pill hidden on /start-with-safety.
+- Tested: iteration_156 (17/17 backend, frontend flows pass) + main-agent fixes self-verified at 390px (door memory, legal quick exit, pill,
+  celebration race, 'Welcome' for signed-out). GetHelp copy "quick exit opens the calendar" is accurate for that page (navigates /calendar).
+- Still pending: user's secrets re-publish (live still a971d13d, both webhooks 401); user's "deploy" for the dashboard.
