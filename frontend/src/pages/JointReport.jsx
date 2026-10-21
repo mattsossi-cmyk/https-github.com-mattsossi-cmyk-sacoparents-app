@@ -14,6 +14,7 @@ import { FoundationStatements } from "@/components/FoundationStatements";
 import { CaseAttachments } from "@/components/FoundationAttachments";
 import { ShareFoundation } from "@/components/ShareFoundation";
 import { SafetyScreeningPanel } from "@/components/SafetyScreeningPanel";
+import { SharedProfessionals } from "@/components/SharedProfessionals";
 import { InviteCadenceSettings } from "@/components/InviteCadenceSettings";
 const NO_REPORT = new Set(["agreement", "foundation"]);
 import { CompareView } from "@/components/CompareView";
@@ -36,6 +37,7 @@ export default function JointReport() {
   const [report, setReport] = useState(null);
   const [subjects, setSubjects] = useState([]);
   const [shareEmail, setShareEmail] = useState("");
+  const [shareKey, setShareKey] = useState(0);
   const [error, setError] = useState(null);
   const [view, setView] = useState("compare");
 
@@ -86,6 +88,7 @@ export default function JointReport() {
       const { data } = await api.post(`/joint/reports/${id}/share`, { email: shareEmail });
       toast.success(`Shared with ${data.shared_with}`);
       setShareEmail("");
+      setShareKey((k) => k + 1);
     } catch (e) { toast.error(formatApiError(e)); }
   };
 
@@ -187,6 +190,10 @@ export default function JointReport() {
                   <Share2 className="h-3.5 w-3.5" /> Email to professional
                 </Button>
               </div>
+              <SharedProfessionals rid={id} refreshKey={shareKey} />
+              <p className="mt-2 text-xs text-muted-foreground" data-testid="share-how-it-works">
+                The professional signs in to their own SA CoParents Align account to read the report; there is no public link. You can stop sharing with a professional you added yourself at any time.
+              </p>
             </div>
           )}
         </div>

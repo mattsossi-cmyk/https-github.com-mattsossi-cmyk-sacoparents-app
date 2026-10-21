@@ -1042,6 +1042,35 @@ async def share_joint_report(rid: str, body: ShareIn, user=Depends(get_current_u
     return {"ok": True, "shared_with": pro.get("name", body.email.lower())}
 
 
+@api.get("/joint/reports/{rid}/shares")
+async def list_joint_shares(rid: str, user=Depends(get_current_user)):
+    doc = await get_joint_report_doc(rid, user)
+    if report_role(doc, user["_id"]) is None:
+        raise HTTPException(status_code=403, detail="Only a participating parent can view sharing")
+    assigned = {pid for pid in (doc.get("professional_id"), doc.get("created_by")) if pid}
+    ids = list(assigned | set(doc.get("shared_with", [])))
+    users = {u["_id"]: u async for u in db.users.find({"_id": {"$in": ids}}, {"name": 1, "role": 1})} if ids else {}
+    out = []
+    for pid in ids:
+        u = users.get(pid) or {}
+        out.append({"id": pid, "name": u.get("name") or "Professional", "assigned": pid in assigned, "removable": pid not in assigned})
+    out.sort(key=lambda s: (not s["assigned"], s["name"]))
+    return out
+
+
+@api.delete("/joint/reports/{rid}/share/{pro_id}")
+async def stop_joint_share(rid: str, pro_id: str, user=Depends(get_current_user)):
+    doc = await get_joint_report_doc(rid, user)
+    if report_role(doc, user["_id"]) is None:
+        raise HTTPException(status_code=403, detail="Only a participating parent can stop sharing")
+    if pro_id in (doc.get("professional_id"), doc.get("created_by")):
+        raise HTTPException(status_code=403, detail="Professionals assigned to your case cannot be removed by a parent")
+    if pro_id not in doc.get("shared_with", []):
+        raise HTTPException(status_code=404, detail="This professional does not have shared access")
+    await db.joint_reports.update_one({"id": rid}, {"$pull": {"shared_with": pro_id}})
+    return {"ok": True}
+
+
 @api.get("/joint/connections")
 async def list_connections(user=Depends(get_current_user)):
     uid = user["_id"]

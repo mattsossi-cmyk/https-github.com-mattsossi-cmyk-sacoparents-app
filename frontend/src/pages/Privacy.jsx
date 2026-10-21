@@ -62,9 +62,9 @@ const S = [
   {
     h: "Your individual assessment answers are private by default",
     b: [
-      { p: "Your information is private by default. SA CoParents Align does not share your assessment or reports with your co-parent or a professional unless you choose to share them, except where disclosure is required by law." },
-      { p: "Completing an SA CoParents Align assessment does not automatically provide your answers to your co-parent. Unless a particular feature clearly tells you otherwise before you submit information:" },
-      { ul: ["Your individual responses remain associated with your account and are not automatically disclosed to the other parent.", "When SA CoParents Align generates a report, Foundation Statement, Mediation Statement, co-parenting agreement, or similar output, the resulting document may contain selected information derived from your responses.", "You should review any report before sharing it."] },
+      { p: "Your individual answers are private by default. Your co-parent never sees them. A professional sees them only when that professional is assigned to your case or you share a report with them, or where disclosure is required by law." },
+      { p: "Completing an SA CoParents Align assessment does not provide your individual answers to your co-parent. In a joint report, once both parents have submitted their answers, the generated comparison (areas of alignment and difference) is shown to both parents and to the professional on the case. No separate sharing step is needed for that comparison, and neither parent sees the other parent's raw answers." },
+      { ul: ["Your individual responses remain associated with your account and are not disclosed to the other parent.", "Your Foundation Statement stays private unless you choose to share it; once shared, it appears in the joint report that both parents and the professional can read.", "When SA CoParents Align generates a report, Mediation Statement, co-parenting agreement, or similar output, the resulting document may contain selected information derived from your responses. You should review any report before sharing it."] },
     ],
   },
   {
@@ -72,6 +72,7 @@ const S = [
     b: [
       { p: "SA CoParents Align may provide tools allowing users to intentionally share selected reports or information with:" },
       { ul: ["A co-parent", "Attorney", "Mediator", "Therapist", "Parenting professional", "Collaborative-law professional", "Parenting coordinator or facilitator", "Other professional", "Another person selected by the user"] },
+      { p: "In SA CoParents Align, you share a joint report with a professional by entering the email address of that professional's SA CoParents Align account. The professional signs in to read the report. There are no public sharing links. Shared access does not expire on its own; it ends when you stop sharing or delete your account." },
       { p: "Sharing one report does not, by itself, authorise access to your entire SA CoParents Align account. Sharing a report does not automatically provide access to unrelated assessments, private notes, raw responses, or other reports unless the sharing feature specifically states otherwise. Before sharing information, users should carefully review what the recipient will receive." },
     ],
   },
@@ -80,7 +81,7 @@ const S = [
     b: [
       { p: "Once information leaves your private SA CoParents Align account, SA CoParents Align cannot completely control what happens to it. A recipient may potentially:" },
       { ul: ["Download a report", "Save it", "Print it", "Forward it", "Screenshot it", "Provide it to an attorney or professional", "Use it in a legal proceeding"] },
-      { p: "Revoking an SA CoParents Align sharing link may prevent future access through that link, but cannot retrieve or delete copies that a recipient previously downloaded, printed, photographed, forwarded, or otherwise retained. Parents should therefore carefully consider what information they choose to share." },
+      { p: "You can stop sharing with a professional you added yourself from the report page; that professional can no longer open the report in SA CoParents Align. Professionals assigned to your case (for example by a court or as the professional running the case) cannot be removed by a parent. Stopping sharing cannot retrieve or delete copies that a recipient previously downloaded, printed, photographed, forwarded, or otherwise retained. Parents should therefore carefully consider what information they choose to share." },
     ],
   },
   {
@@ -110,15 +111,21 @@ const S = [
     b: [
       { p: "SA CoParents Align recognises that information concerning family violence, intimate partner violence, coercive control, threats, stalking, intimidation, and communication safety may create unique risks." },
       { p: "Family Violence or Communication Safety assessments are educational and preparation tools. They are not professional risk assessments, forensic evaluations, diagnoses, or legal determinations that family violence has or has not occurred." },
-      { p: "Family-violence joint assessments on SA CoParents Align are prepared only with a third-party professional (such as a mediator). Each parent's individual responses are never shared with the other parent; the professional facilitating the assessment sees the completed comparison only after both parents finish." },
+      { p: "The Family check-in is completed by each parent individually. Your co-parent never sees your answers, which questions you skipped, or any concern level. Professionals assigned to your case can read your answers on a protected screen; every view is recorded and listed for you under \u201cWho can see my information\u201d. SA CoParents administrators can open the same screen when needed to support your case or keep someone safe; those views are recorded and shown to you as \u201cSA CoParents administrator\u201d. Court documents, shared reports, and emails show only whether the check-in was received, not started, or declined. Your answers, safe-contact details, and concern level are never sent to any AI service." },
       { p: "When a feature identifies possible safety concerns, the platform may provide information concerning possible safeguards, professional resources, communication structures, or dispute-resolution considerations. SA CoParents Align should not be used as an emergency service. A user experiencing an immediate emergency should contact appropriate emergency services (911), the National Domestic Violence Hotline (1-800-799-SAFE), or the Suicide & Crisis Lifeline (988)." },
     ],
   },
   {
     h: "Artificial intelligence",
     b: [
-      { p: "SA CoParents Align generates reports using fixed, rule-based templates written for parents and reviewed for child-focused language. The platform does not currently use artificial intelligence to analyse your information, and your assessment responses, children's information, family-violence information, and reports are not sent to any AI provider and are not used to train artificial-intelligence models." },
-      { p: "If AI-assisted features are introduced in the future, this Policy will be updated before launch and, where required by law, additional consent will be requested." },
+      { p: "Parent reports are generated from fixed, rule-based templates. SA CoParents Align also uses artificial-intelligence services, reached through Emergent's integration relay, in specific tools used by professionals. Family check-in answers, safe-contact details, and concern levels are never sent to any AI service. Information sent to these services is not used to train AI models." },
+      { ul: [
+        "Report drafting assistant (Claude Sonnet 5.5, Anthropic), used by professionals to draft report language. It receives the case code, the child's first initial, the professional's draft text, and the parents' assessment answers for that case.",
+        "Align Assistant (GPT-5.5, OpenAI), a help assistant for professionals. It receives the professional's question and a neutral case summary (case code, child's first initial, step status, alignment counts). Never a parent's answers.",
+        "Legal Lens research (Gemini 3.1 Pro, Google, or GPT-5.5, OpenAI). It receives the professional's research question only.",
+        "Research summaries (Perplexity). They receive category labels, a joint rating, and the professional's ZIP code. Never names, case numbers, or answers.",
+      ] },
+      { p: "If we add or change an AI feature in a way that changes what parent information is sent, this Policy will be updated before launch and, where required by law, additional consent will be requested." },
     ],
   },
   {
@@ -134,14 +141,22 @@ const S = [
     b: [
       { p: "SA CoParents Align uses carefully selected service providers to operate the platform. Depending upon the services currently used, these providers may assist with cloud hosting, database storage, authentication, email delivery, security, error monitoring, and technical infrastructure. Service providers receive only the information reasonably necessary to perform their services and are expected to handle information consistently with their contractual obligations and applicable law." },
       { p: "Our current material service providers are:" },
-      { ul: ["Emergent Labs — application hosting and platform infrastructure.", "MongoDB Atlas — primary database, encryption at rest.", "Resend — transactional email delivery (invitations, verification codes, professional-request notifications)."] },
+      { ul: [
+        "Emergent Labs — application hosting, platform infrastructure, the integration relay used for AI services, and fallback email delivery.",
+        "MongoDB Atlas (provided through Emergent) — primary database, encryption at rest.",
+        "Cloudflare — domain, DNS, and TLS for sacoparentsalign.com.",
+        "Resend — transactional email delivery (invitations, verification codes, professional-request notifications). Never screening answers.",
+        "Anthropic (Claude Sonnet 5.5), OpenAI (GPT-5.5), Google (Gemini 3.1 Pro), and Perplexity — AI services used in professional tools, limited to the information described in the Artificial intelligence section.",
+        "Google — optional sign-in with an existing Google account for eligible professional, judge, and administrator accounts.",
+      ] },
     ],
   },
   {
     h: "Data security",
     b: [
-      { p: "SA CoParents Align uses reasonable administrative, technical, and organisational safeguards designed to protect personal information from unauthorised access, disclosure, alteration, destruction, or misuse. Depending upon the production environment, these safeguards may include:" },
-      { ul: ["Encryption of information in transit", "Encryption of stored information", "Secure password hashing", "Access controls", "Authentication controls", "Secure session management", "Restricted administrative access", "Security logging", "Vendor access controls", "Backup protections", "Security monitoring"] },
+      { p: "SA CoParents Align uses reasonable administrative, technical, and organisational safeguards designed to protect personal information from unauthorised access, disclosure, alteration, destruction, or misuse. These include:" },
+      { ul: ["Encryption of information in transit (HTTPS)", "Encryption of stored information on disk by our database provider", "Passwords stored as bcrypt hashes; never in plain text", "Access limited by role, with every view of a parent's safety or report information written to an access log", "Short-lived, HTTP-only, secure session cookies", "Sign-in lockout after repeated failed attempts", "Restricted administrative access", "Backup protections provided by our hosting provider"] },
+      { p: "Access to stored information is limited to SA CoParents administrators and the operators of our hosting and database providers, who are bound by their service terms." },
       { p: "No website, application, database, or electronic communication system can guarantee absolute security. Users are responsible for protecting their passwords and devices and should not share account credentials with a co-parent or another person." },
     ],
   },
@@ -156,15 +171,16 @@ const S = [
   {
     h: "Data retention",
     b: [
-      { p: "SA CoParents Align retains personal information only for as long as reasonably necessary to provide the service, maintain the user's account, fulfill the purpose for which information was collected, maintain platform security, meet legitimate operational requirements, and comply with applicable legal obligations." },
-      { p: "Users may request deletion of their account and personal information subject to applicable legal, security, backup, fraud-prevention, and record-retention requirements." },
+      { p: "SA CoParents Align keeps your information until you delete your account. We do not currently run automatic time-based deletion of case information." },
+      { p: "Court submissions already sent to a court stay with the court. Security logs and access logs are kept to protect the service and to show you who has viewed your information." },
     ],
   },
   {
     h: "Account and data deletion",
     b: [
-      { p: "Users may request deletion of their account and associated personal information at any time by emailing the Privacy Officer from the address on the account. Upon a valid deletion request, SA CoParents Align will delete or de-identify covered personal information from active systems within 30 days, except where retention is reasonably necessary or legally required." },
-      { p: "Information contained in system backups may remain for a limited backup-retention period before being automatically overwritten or deleted. Deleting information from SA CoParents Align cannot delete copies previously downloaded, printed, saved, or independently retained by another person." },
+      { p: "Parents can delete their account at any time from the dashboard (Delete account, at the bottom of the page; your password is required). Deletion takes effect immediately: your assessment answers, Family check-in, safe-contact details, Foundation Statement, and communication readiness answers are removed from the case, and you appear to the other participants as \u201cFormer participant\u201d. Your co-parent's own information stays in the case." },
+      { p: "Professionals and other users, or anyone who prefers not to use the dashboard, may request deletion by emailing the Privacy Officer from the address on the account. SA CoParents Align will delete or de-identify covered personal information from active systems within 30 days, except where retention is reasonably necessary or legally required." },
+      { p: "Copies in system backups kept by our hosting provider remain for a limited backup-retention period before being automatically overwritten. Deleting information from SA CoParents Align cannot delete copies previously downloaded, printed, saved, or independently retained by another person, or records already submitted to a court." },
     ],
   },
   {
@@ -210,7 +226,7 @@ const S = [
       { p: "When two parents voluntarily participate in a joint or shared process, SA CoParents Align may generate a report comparing or organising information provided by both parents. The purpose of a Joint Report is not to declare a winner or determine which parent is correct." },
       { p: "A Joint Report may identify:" },
       { ul: ["Areas of alignment", "Areas of disagreement", "Shared concerns", "Different perceptions", "Child-related needs", "Possible communication issues", "Safety considerations", "Topics requiring professional assistance", "Options or resources for moving forward"] },
-      { p: "Before participating in a joint process, users should be clearly informed about what information will be compared, what information will remain private, and what information may appear in the resulting Joint Report. Raw assessment answers are not disclosed merely because a Joint Report is generated; a parent only ever sees the generated comparison, never the other parent's raw answers." },
+      { p: "Before participating in a joint process, users are told what information will be compared, what information will remain private, and what will appear in the resulting Joint Report. Once both parents have submitted their answers, the Joint Report is shown to both parents and to the professional on the case. Raw assessment answers are not disclosed; a parent only ever sees the generated comparison, never the other parent's raw answers." },
     ],
   },
   {
@@ -229,7 +245,7 @@ const S = [
   {
     h: "Data breach and security incidents",
     b: [
-      { p: "If SA CoParents Align discovers a security incident involving personal information, we will investigate and respond in accordance with applicable law. Where notification is legally required, affected users and appropriate authorities will be notified as required by applicable law. We may also take protective measures such as resetting credentials, disabling compromised access, revoking sharing links, or temporarily restricting affected functionality." },
+      { p: "If SA CoParents Align discovers a security incident involving personal information, we will investigate and respond in accordance with applicable law. Where notification is legally required, affected users and appropriate authorities will be notified as required by applicable law. We may also take protective measures such as resetting credentials, disabling compromised access, ending shared access, or temporarily restricting affected functionality." },
     ],
   },
   {
@@ -274,7 +290,7 @@ export default function Privacy() {
       <main className="max-w-3xl mx-auto px-6 py-12">
         <p className="text-xs uppercase tracking-widest text-brand-teal font-bold mb-2">Privacy, Confidentiality &amp; Data Protection Policy</p>
         <h1 className="text-4xl sm:text-5xl font-semibold mb-3" data-testid="privacy-heading">Private by Default. Shared by Choice.</h1>
-        <p className="text-sm text-muted-foreground mb-8" data-testid="privacy-effective">Effective: September 2, 2026 · Last updated: September 2, 2026</p>
+        <p className="text-sm text-muted-foreground mb-8" data-testid="privacy-effective">Effective: September 2, 2026 · Last updated: October 20, 2026</p>
 
         <div className="space-y-4 text-muted-foreground leading-relaxed mb-12">
           <p>
@@ -290,9 +306,10 @@ export default function Privacy() {
             Our guiding privacy principle is: <em>Private by Default. Shared by Choice.</em>
           </p>
           <p>
-            Your information is private by default. SA CoParents Align does not automatically share your individual assessment answers, proposed
-            agreement terms, reports, or other private preparation materials with your co-parent, attorney, mediator, therapist, court, or other
-            professional. You decide when available sharing features are used, subject to the limited circumstances described in this Policy,
+            Your information is private by default. SA CoParents Align does not share your individual assessment answers, proposed
+            agreement terms, or other private preparation materials with your co-parent, attorney, mediator, therapist, court, or other
+            professional. In a joint case, the generated comparison is shown to both parents and the professional on the case once both parents
+            have submitted; everything else is shared only when you choose, subject to the limited circumstances described in this Policy,
             including service providers necessary to operate the platform and disclosures required by law.
           </p>
         </div>
