@@ -9580,3 +9580,5 @@ dashboard for sharing SELECTED completed reports with any professional.
 ## 2026-10-21 ~14:55 UTC — Private check-in card shows 'Confirmed by SACOparentsAlign on <date>' (setup_completed_on) only when setup_complete===true. Verified with an intercepted case-settings response. Deployment still running; live bundle unchanged at check time.
 
 ## 2026-10-21 ~14:56 UTC — Check-in thank-you on the new home's Private check-in card: reuses useCheckinThanks + ThanksNote (server once-per-account flag shared with the Court page card). Verified with intercepted responses (no real flag consumed). Deployment still running (live bundle main.3acadc33.js, webhooks 401).
+
+## 2026-10-21 ~15:00 UTC — User said DEPLOY for the new home: NEW_HOME_ON = true (lib/previewGate.js). Goes live with the next deployment that picks up the code (user had 2 deployments running). Verify on sacoparentsapp.online afterwards: new home + path question visible; webhooks 503.
