@@ -9441,3 +9441,9 @@ dashboard for sharing SELECTED completed reports with any professional.
   SACOparents has no Align-side ids; our ids are q1/q2/q3/free_text_sample (answer codes in align_share.QUESTIONS).
 - Align secure connection (ALIGN_WEBHOOK_SECRET): user will create it on Align and paste the same value into the live site's settings;
   agent then checks presence only (never the value). Still unset in preview.
+
+## 2026-10-21 — Preview DB backup (no changes made; nothing deployed; no secrets deleted yet)
+- mongodump of PREVIEW DB to /root/backups/preview_<DB>_<UTC>.archive.gz (path in /root/backups/LATEST; chmod 600; outside /app so never in git).
+  Verified with mongorestore --dryRun: all 163 collections present. Restore: mongorestore --uri=$MONGO_URL --gzip --archive=<file> --drop (only on request).
+- Production DB is separate: only the user can export it (Manage Publishes → Database → Dump DB).
+- Pending user go-ahead: delete SACOPARENTSALIGN_WEBHOOK_SECRET + INTEGRATION_SHARED_SECRET, then deploy.
