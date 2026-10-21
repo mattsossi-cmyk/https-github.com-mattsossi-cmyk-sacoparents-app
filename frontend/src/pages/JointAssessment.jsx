@@ -52,24 +52,6 @@ export default function JointAssessment() {
     }
   };
 
-  const doFoundation = async () => {
-    setBusy(true);
-    try {
-      const { data } = await api.get("/external/assessments");
-      const stmts = data.statements || [];
-      if (!stmts.length) {
-        toast.error("No Foundation Statements found on your sacoparentsapp.online account");
-      } else {
-        setFoundation(stmts);
-        toast.success(`${stmts.length} Foundation Statement${stmts.length > 1 ? "s" : ""} ready to merge into the agreement`);
-      }
-    } catch (e) {
-      toast.error(formatApiError(e));
-    } finally {
-      setBusy(false);
-    }
-  };
-
   useEffect(() => {
     Promise.all([api.get("/joint/config"), api.get(`/joint/reports/${id}`)])
       .then(([c, d]) => {
@@ -186,34 +168,16 @@ export default function JointAssessment() {
         {detail.kind !== "agreement" && (
           <div className="bg-white border-2 border-brand-green rounded-lg p-5 mb-8" data-testid="foundation-card">
             <p className="font-semibold text-brand-green">Foundation Statement (optional)</p>
-            <p className="text-sm text-muted-foreground mt-1 mb-3">In your own words: what matters most to you for {detail.child_name} in this co-parenting relationship, and what you hope this process achieves. Never shown to the other parent; included only in your professional's report as parent-reported information.</p>
+            <p className="text-sm text-muted-foreground mt-1 mb-3">In your own words: what matters most to you for {detail.child_name} in this co-parenting relationship, and what you hope this process achieves. Private until you choose to share it; once shared, it appears in the joint report that both parents and the professional can read.</p>
             <Textarea className="min-h-[110px]" value={foundation?.[0]?.content || ""} onChange={(e) => setFoundation(e.target.value.trim() ? [{ title: "Foundation Statement", content: e.target.value }] : null)} data-testid="foundation-text" />
-            {link?.linked && !foundation && <Button variant="outline" size="sm" onClick={doFoundation} disabled={busy} className="gap-2 mt-3" data-testid="pull-foundation-btn"><Download className="h-4 w-4" /> {busy ? "Loading…" : "Pull in my Foundation Statement from sacoparentsapp.online"}</Button>}
           </div>
         )}
 
         {detail.kind === "agreement" && (
           <div className="bg-white border-2 border-brand-green rounded-lg p-5 mb-8" data-testid="foundation-card">
             <p className="font-semibold text-brand-green">Foundation Statements</p>
-            <p className="text-sm text-muted-foreground mt-1 mb-4">
-              Your Foundation Statement from sacoparentsapp.online will be merged into the co-parenting agreement alongside your proposed terms.
-            </p>
-            {foundation ? (
-              <div data-testid="foundation-loaded">
-                <p className="text-sm font-medium mb-2">{foundation.length} statement{foundation.length > 1 ? "s" : ""} will be included:</p>
-                <ul className="list-disc pl-5 space-y-1">
-                  {foundation.map((s, i) => (
-                    <li key={i} className="text-sm text-muted-foreground">{s.title || `Statement ${i + 1}`}</li>
-                  ))}
-                </ul>
-              </div>
-            ) : link?.linked ? (
-              <Button variant="outline" onClick={doFoundation} disabled={busy} className="gap-2" data-testid="pull-foundation-btn">
-                <Download className="h-4 w-4" /> {busy ? "Loading…" : "Pull in my Foundation Statements"}
-              </Button>
-            ) : (
-              <p className="text-sm text-muted-foreground" data-testid="foundation-link-hint">Link your sacoparentsapp.online account above to include your Foundation Statement.</p>
-            )}
+            <p className="text-sm text-muted-foreground mt-1 mb-3">In your own words: what matters most to you for {detail.child_name}, and what you hope this agreement achieves. It is merged into the agreement alongside your proposed terms. Private until you choose to share it; once shared, it appears in the joint report that both parents and the professional can read.</p>
+            <Textarea className="min-h-[110px]" value={foundation?.[0]?.content || ""} onChange={(e) => setFoundation(e.target.value.trim() ? [{ title: "Foundation Statement", content: e.target.value }] : null)} data-testid="foundation-text" />
           </div>
         )}
 
