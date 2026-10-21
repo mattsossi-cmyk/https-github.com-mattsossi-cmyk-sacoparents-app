@@ -9605,3 +9605,8 @@ dashboard for sharing SELECTED completed reports with any professional.
 - Self Journey view (JourneyShell door-view-self): StartWithSafetyBanner (original photo of a parent hugging a child at sunset), then SafetyFirstBanner (Self Journey wording), then CoparentingBuilderReferral (opens the builder), then the Family check-in card. The home has none of these. Court Ordered is unchanged (no banner).
 - Verified at 1920 and 390: order correct, no overflow, builder card opens the Parallel Parenting Option Builder.
 - Not in the deploy dispatched at ~17:16 UTC. Needs another publish.
+
+## 2026-10-21 ~17:30 UTC: Deploy run 5f9b1473 finished cleanly
+- Live bundle main.d3c8a94a.js: the trimmed home is LIVE (no ParentHome/dashboard). The Self Journey photo banner + builder card are NOT live yet; the live Self Journey shows only the Safety first box + Family check-in.
+- Webhooks are still ON (both 401). ALIGN_WEBHOOK_SECRET and SACOPARENTSALIGN_WEBHOOK_SECRET are still in the production Secrets store (carried forward prod to prod, not from the preview .env). INTEGRATION_SHARED_SECRET is kept.
+- Next: the user deletes both keys in Deployment Panel > Secrets, saves, reloads to confirm they're gone, then one publish ships the Self Journey change and the webhook shutdown together.
