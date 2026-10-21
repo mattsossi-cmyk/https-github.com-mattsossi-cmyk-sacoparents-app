@@ -9431,3 +9431,13 @@ dashboard for sharing SELECTED completed reports with any professional.
 - Small fixes: NextSteps page scrolls to top on arrival; unlinked Account card labels old history "Earlier reads, before you unlinked".
 - Tests: tests/test_align_share.py now 10; testing agent iteration_155 passed (no retest).
 - Release: wait for Align's notice 2026-10-19.2 confirmation; ship both together. Paste-ready note for Align was given to the user.
+
+## 2026-10-21 — Clear page for blocked Summary/Agreement share links (PREVIEW ONLY; wait for user's "deploy")
+- backend/shared_link_page.py: GET /api/mediation/shared/{token} opened in a browser (Accept text/html) now returns a branded HTML page
+  (testids shared-link-blocked-page/-title/-message), no-store + noindex. Scripts still get JSON {"detail": msg} with the same status.
+  Messages: made before a privacy update (410), expired (404), not valid (404), switched off by the parent (404), no longer available (404).
+- Tests: tests/test_shared_link_page.py (11) + test_part3_privacy.py → 26 passed. Mobile screenshot OK, no overflow.
+- Sample communication_readiness payload generated from the real export path (fake parent, cleaned up) and given to the user.
+  SACOparents has no Align-side ids; our ids are q1/q2/q3/free_text_sample (answer codes in align_share.QUESTIONS).
+- Align secure connection (ALIGN_WEBHOOK_SECRET): user will create it on Align and paste the same value into the live site's settings;
+  agent then checks presence only (never the value). Still unset in preview.

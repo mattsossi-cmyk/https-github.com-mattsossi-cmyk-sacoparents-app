@@ -37,6 +37,7 @@ from pydantic import BaseModel, EmailStr, Field
 from typing import List
 import mediation_sharing  # noqa: E402
 import prep_privacy  # noqa: E402
+import shared_link_page  # noqa: E402
 
 
 router = APIRouter(prefix="/mediation", tags=["mediation"])
@@ -1592,28 +1593,28 @@ async def download_shared_pdf(
     token: str,
     request: Request,
 ):
-    """Public endpoint: anyone with a valid signed token can download the PDF."""
+    """Public endpoint: anyone with a valid signed token can download the PDF. Blocked links in a browser get a clear page."""
     payload = decode_share_token(token)
     if not payload:
-        raise HTTPException(status_code=404, detail="This link has expired or is invalid.")
+        return shared_link_page.blocked(request, 404, shared_link_page.invalid_reason(token))
     db = request.app.state.db
     if await is_share_token_revoked(db, payload.get("jti")):
-        raise HTTPException(status_code=404, detail="This link has been revoked by the sender.")
+        return shared_link_page.blocked(request, 404, shared_link_page.SWITCHED_OFF)
     user = await db.users.find_one({"user_id": payload["sub"]}, {"_id": 0})
     if not user:
-        raise HTTPException(status_code=404, detail="This link is no longer valid.")
+        return shared_link_page.blocked(request, 404, shared_link_page.GONE)
 
     doc_type = payload["doc_type"]
     doc_id = payload["doc_id"]
     if doc_type not in mediation_sharing.COLL:
-        raise HTTPException(status_code=404, detail="Unknown document type")
+        return shared_link_page.blocked(request, 404, shared_link_page.GONE)
     # Links made before the privacy update can't be cleaned: the parent can make a new one.
     if not payload.get("clean"):
-        raise HTTPException(status_code=410, detail=mediation_sharing.OLD_LINK)
+        return shared_link_page.blocked(request, 410, mediation_sharing.OLD_LINK)
     coll, key = mediation_sharing.COLL[doc_type]
     doc = await db[coll].find_one({key: doc_id, "user_id": user["user_id"]}, {"_id": 0})
     if not doc:
-        raise HTTPException(status_code=404, detail="Document not found")
+        return shared_link_page.blocked(request, 404, shared_link_page.GONE)
     pdf_bytes = await _shared_pdf(db, doc_type, doc, user.get("name", ""), user.get("mediation_date"), payload.get("ex"))
     filename = mediation_sharing.FILENAME[doc_type]
 
