@@ -34,6 +34,7 @@ import { useFoundationBuilder } from "./foundation/useFoundationBuilder";
 import { ChildNeedsView } from "./ChildNeedsView";
 import { FoundationStatementView } from "./FoundationStatementView";
 import { ParentHome } from "./home/ParentHome";
+import { PrivacyTag } from "../../components/parentDashboard/ParentDashboard";
 import { ProfessionalAccessCard } from "../../components/privacy/ProfessionalAccessCard";
 import { NEW_HOME_ON } from "../../lib/previewGate";
 import { api } from "../../lib/api";
@@ -1043,6 +1044,9 @@ export function JourneyShell({
                 <p className="text-[0.6875rem] text-indigo-700 mt-0.5 leading-snug">
                   Referred by a court, mediator, or attorney.
                 </p>
+                {NEW_HOME_ON && (
+                  <span className="pd-vars block mt-1.5" data-testid="door-tag-court"><PrivacyTag kind="you_pro" small /></span>
+                )}
               </div>
               <i aria-hidden="true" className="ml-auto fa-solid fa-chevron-right text-indigo-400"></i>
             </button>
@@ -1062,6 +1066,9 @@ export function JourneyShell({
                 <p className="text-[0.6875rem] text-purple-700 mt-0.5 leading-snug">
                   Starting on my own.
                 </p>
+                {NEW_HOME_ON && (
+                  <span className="pd-vars block mt-1.5" data-testid="door-tag-self"><PrivacyTag kind="share_or_link" small /></span>
+                )}
               </div>
               <i aria-hidden="true" className="ml-auto fa-solid fa-chevron-right text-purple-400"></i>
             </button>
@@ -1081,6 +1088,9 @@ export function JourneyShell({
                 <p className="text-[0.6875rem] text-sky-800 mt-0.5 leading-snug">
                   Not a separate path. A message-writing tool you can open any time, from either path.
                 </p>
+                {NEW_HOME_ON && (
+                  <span className="pd-vars block mt-1.5" data-testid="door-tag-comm"><PrivacyTag kind="only_you_unless" small /></span>
+                )}
               </div>
               <i aria-hidden="true" className="ml-auto fa-solid fa-chevron-right text-sky-400"></i>
             </button>
@@ -1113,7 +1123,19 @@ export function JourneyShell({
 
   if (view === "door" && NEW_HOME_ON) {
     return (
-      <div data-testid="journey-shell">
+      <div data-testid="journey-shell" className="space-y-4">
+        <section
+          data-testid="door-landing"
+          aria-label="Your paths"
+          className="rounded-2xl bg-white border border-slate-200 p-4 shadow-sm"
+        >
+          <div className="pb-3">
+            <SafetyFirstBanner alignUrl={ALIGN_SITE_URL} onQuickExit={quickExitAction} />
+          </div>
+          {doorButtons}
+        </section>
+        <ProfessionalAccessCard />
+        {welcomeArt}
         <ParentHome
           user={user}
           saHistory={saHistory}
@@ -1132,16 +1154,6 @@ export function JourneyShell({
               openPp("welcome");
             },
           }}
-          top={
-            <>
-              <SafetyFirstBanner alignUrl={ALIGN_SITE_URL} onQuickExit={quickExitAction} />
-              <section data-testid="door-landing" aria-label="Your paths">
-                {doorButtons}
-              </section>
-              <ProfessionalAccessCard />
-              {welcomeArt}
-            </>
-          }
           afterSteps={goalBanner}
         />
       </div>

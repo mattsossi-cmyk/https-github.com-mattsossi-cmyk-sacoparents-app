@@ -50,7 +50,7 @@ const burst = () => {
 };
 
 // Parent home: wires ParentDashboard to real step status, links, celebrations and the weekly note.
-export function ParentHome({ user, saHistory, biffCount, biffReady, actions, builderPath, top, afterSteps }) {
+export function ParentHome({ user, saHistory, biffCount, biffReady, actions, builderPath, afterSteps }) {
   const navigate = useNavigate();
   const path = PATH_PROP[user?.journey_path] || null;
   const data = useDashboardData(user?.user_id, path === "court");
@@ -102,20 +102,19 @@ export function ParentHome({ user, saHistory, biffCount, biffReady, actions, bui
   };
 
   return (
-    <div className="-mx-4 -mt-4">
-      <ParentDashboard
-        parentName={user?.name ? user.name.split(" ")[0] : null}
-        path={path}
-        status={status}
-        links={links}
-        onNavigate={onNavigate}
-        images={IMAGES}
-        nextId={nextId}
-        extras={{ order: { label: "Parallel Parenting Option Builder", href: builderPath } }}
-        top={<div className="pd-top-slot">{top}</div>}
-        belowNext={<WeeklyWinNote steps={steps} celebrated={celebrations.steps} />}
-        afterSteps={afterSteps}
-      />
-    </div>
+    <ParentDashboard
+      embedded
+      checkinCard
+      parentName={user?.name ? user.name.split(" ")[0] : null}
+      path={path}
+      status={status}
+      links={links}
+      onNavigate={onNavigate}
+      images={IMAGES}
+      nextId={nextId}
+      extras={{ order: { label: "Parallel Parenting Option Builder", href: builderPath } }}
+      belowNext={<WeeklyWinNote steps={steps} celebrated={celebrations.steps} />}
+      afterSteps={afterSteps}
+    />
   );
 }

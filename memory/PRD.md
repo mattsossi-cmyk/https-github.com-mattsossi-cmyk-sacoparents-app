@@ -9556,3 +9556,17 @@ dashboard for sharing SELECTED completed reports with any professional.
 - Tested: iteration_156 (17/17 backend, frontend flows pass) + main-agent fixes self-verified at 390px (door memory, legal quick exit, pill,
   celebration race, 'Welcome' for signed-out). GetHelp copy "quick exit opens the calendar" is accurate for that page (navigates /calendar).
 - Still pending: user's secrets re-publish (live still a971d13d, both webhooks 401); user's "deploy" for the dashboard.
+
+## 2026-10-21 ~14:45 UTC — Home rebuilt around the ORIGINAL live look (preview only, NEW_HOME_ON)
+- Kept exactly as live: purple header, white card with Safety first banner + the 3 original buttons (wording/styles), "Who can see"
+  card, WelcomeArtwork (sa-welcome v3 picture: Self Journey / Court Ordered Path / Communication Builder, glow pulse, badge, caption),
+  GoalBanner, bottom menu. Only change to the original card: "Pick your path" heading removed (user asked).
+- Added from user's files: red Quick Exit in the purple header (home only; buttons wrap to 2nd row), privacy tags on the 3 buttons
+  (Court "You + your professional", Self "Only you, unless you share or link it", Comm "Only you, unless you share it"),
+  welcome card (photo, greeting, progress), Private check-in card (-> /start-with-safety; check-in removed from the steps list),
+  next step + weekly note + steps list below the picture (user picked both options twice; went with keep), footer. ParentDashboard
+  `embedded` + `checkinCard` props; portal footer hidden on home.
+- User's multi-picks resolved as: keep next steps below picture; purple header + red Quick Exit; Safety banner first. Tell user to swap if wrong.
+- Tag audit: Self Journey partly true (linked co-parent sees first name + 'all three done'; court-code pro sees status/dates; if linked to
+  Align, Child Needs reports + Mediation Prep child_goals/issues/priority export automatically). Foundation PDF to Align always 409.
+- Flag for user: Court page shows "Family check-in: Not finished yet" (pre-existing) — may clash with the 'unknown, not not-started' rule.

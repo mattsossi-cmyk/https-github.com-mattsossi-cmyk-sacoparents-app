@@ -1562,11 +1562,11 @@ export default function SacoparentsPortal() {
 
       {/* TOP APP HEADER */}
       <header
-        className={`bg-purple-950 text-white shadow-md sticky top-0 z-50 no-print ${dashboardMode ? "hidden" : ""}`}
+        className="bg-purple-950 text-white shadow-md sticky top-0 z-50 no-print"
         data-testid="portal-header"
       >
         <div className="max-w-md mx-auto px-4 py-3 flex flex-wrap justify-between items-center gap-2">
-          <div className="flex items-center space-x-2.5 min-w-[10rem] flex-1">
+          <div className={`flex items-center space-x-2.5 flex-1 ${dashboardMode ? "min-w-[14rem]" : "min-w-[10rem]"}`}>
             <div className="bg-purple-800/50 p-2 rounded-xl backdrop-blur-md border border-purple-400/30 shrink-0">
               <i className="fa-solid fa-hands-holding-child text-purple-300 text-lg"></i>
             </div>
@@ -1597,6 +1597,16 @@ export default function SacoparentsPortal() {
             >
               <i className="fa-solid fa-file-pdf"></i> Export PDF
             </button>
+            {dashboardMode && (
+              <button
+                type="button"
+                onClick={quickExitAction}
+                data-testid="header-quick-exit"
+                className="min-h-[44px] px-4 rounded-full bg-[#b42318] hover:bg-[#9a1d14] text-white text-[0.95rem] font-bold transition-colors"
+              >
+                Quick Exit <span aria-hidden="true">✕</span>
+              </button>
+            )}
           </div>
         </div>
       </header>

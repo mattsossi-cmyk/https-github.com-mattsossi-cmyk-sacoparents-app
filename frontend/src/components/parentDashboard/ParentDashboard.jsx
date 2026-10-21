@@ -19,6 +19,8 @@ import defaultHero from "../startWithSafety/start-with-safety-photo.jpg";
  *  - nextId      step id for "Your next step", or null when everything is done.
  *  - extras      { [stepId]: { label, href } } a second link under a step row.
  *  - top / belowNext / afterSteps   extra content slots.
+ *  - embedded    sits inside the app page: no own top bar or full-page background.
+ *  - checkinCard shows the Private check-in as its own card (and not as a row in the steps list).
  */
 
 const PRIVACY = {
@@ -27,6 +29,7 @@ const PRIVACY = {
   only_you_unless: { icon: "lock", text: "Only you, unless you share it" },
   both_agree: { icon: "people", text: "Shared only if you both agree" },
   you_pro: { icon: "lock", text: "You + your professional" },
+  share_or_link: { icon: "lock", text: "Only you, unless you share or link it" },
 };
 
 export function buildSteps(path, status = {}, links = {}) {
@@ -96,8 +99,12 @@ export default function ParentDashboard({
   top = null,
   belowNext = null,
   afterSteps = null,
+  embedded = false,
+  checkinCard = false,
 }) {
   const steps = useMemo(() => buildSteps(path, status, links), [path, status, links]);
+  const listed = checkinCard ? steps.filter((s) => s.id !== "checkin") : steps;
+  const checkin = steps.find((s) => s.id === "checkin");
 
   // The check-in is never counted: this app can't always know it's done.
   const counted = steps.filter((s) => s.id !== "checkin");
@@ -127,14 +134,16 @@ export default function ParentDashboard({
   };
 
   return (
-    <div className="pd" data-testid="parent-dashboard">
+    <div className={`pd ${embedded ? "pd-embedded" : ""}`} data-testid="parent-dashboard">
       {/* Top bar */}
-      <header className="pd-top">
-        <span className="pd-brand">SA CoParents</span>
-        <button type="button" className="pd-exit" onClick={quickExit} data-testid="pd-quick-exit">
-          Quick Exit <span aria-hidden="true">✕</span>
-        </button>
-      </header>
+      {!embedded && (
+        <header className="pd-top">
+          <span className="pd-brand">SA CoParents</span>
+          <button type="button" className="pd-exit" onClick={quickExit} data-testid="pd-quick-exit">
+            Quick Exit <span aria-hidden="true">✕</span>
+          </button>
+        </header>
+      )}
 
       <main className="pd-main">
         {top}
@@ -165,6 +174,25 @@ export default function ParentDashboard({
             </div>
           </div>
         </section>
+
+        {checkinCard && checkin && (
+          <section className="pd-checkin" aria-labelledby="pd-checkin-title" data-testid="pd-checkin-card">
+            <div className="pd-next-head">
+              <div>
+                <h2 id="pd-checkin-title" className="pd-h2 pd-checkin-title">{checkin.title}</h2>
+                <p className="pd-checkin-blurb">{checkin.blurb}</p>
+              </div>
+              <StepArt id="checkin" src={images.checkin} />
+            </div>
+            <div className="pd-next-meta">
+              <PrivacyTag kind={checkin.privacy} small />
+              <span className="pd-step-state" data-testid="pd-checkin-state">{stateLabel(checkin.status)}</span>
+            </div>
+            <a className="pd-btn pd-btn-solid" {...linkProps(checkin.href, checkin.external)} data-testid="pd-checkin-button">
+              Open Private check-in
+            </a>
+          </section>
+        )}
 
         {/* Next step */}
         {next ? (
@@ -205,7 +233,7 @@ export default function ParentDashboard({
             Your steps
           </h2>
           <ol className="pd-steps">
-            {steps.map((s, i) => (
+            {listed.map((s, i) => (
               <li key={s.id} className={`pd-step is-${s.status}`} data-testid={`pd-step-${s.id}`}>
                 <a className="pd-step-link" {...linkProps(s.href, s.external)} data-testid={`pd-step-${s.id}-link`}>
                   <span className="pd-art-wrap">
@@ -264,7 +292,7 @@ function StepMark({ n, status }) {
   );
 }
 
-function PrivacyTag({ kind, small }) {
+export function PrivacyTag({ kind, small }) {
   const p = PRIVACY[kind];
   if (!p) return null;
   return (

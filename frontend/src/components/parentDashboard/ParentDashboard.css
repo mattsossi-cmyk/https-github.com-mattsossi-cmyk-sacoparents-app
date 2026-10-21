@@ -529,3 +529,45 @@ img.pd-art {
   font-family: inherit;
   letter-spacing: normal;
 }
+/* Embedded in the app's own page (purple header + bottom menu stay). */
+.pd-embedded {
+  min-height: 0;
+  background: transparent;
+}
+.pd-embedded .pd-main {
+  max-width: none;
+  padding: 0;
+  gap: 16px;
+}
+.pd-embedded .pd-footer {
+  padding: 12px 0 4px;
+}
+/* Tag colours outside the .pd root (on the app's three path buttons). */
+.pd-vars {
+  --pd-ink: #3d1f80;
+  --pd-tint: #f1ecfc;
+}
+.pd-checkin {
+  padding: 18px 18px 20px;
+  border-radius: var(--pd-radius);
+  background: var(--pd-card);
+  box-shadow: 0 0 0 2px var(--pd-tint);
+}
+.pd-checkin-title {
+  margin: 0 0 4px;
+}
+.pd-checkin-blurb {
+  margin: 0 0 12px;
+  font-size: 0.95rem;
+  color: var(--pd-muted);
+}
+.pd-btn-solid {
+  background: #4a2574;
+  color: #fff;
+}
+.pd-btn-solid:hover {
+  background: #3d1f80;
+}
+.pd-btn-solid:focus-visible {
+  outline-color: #4a2574;
+}
