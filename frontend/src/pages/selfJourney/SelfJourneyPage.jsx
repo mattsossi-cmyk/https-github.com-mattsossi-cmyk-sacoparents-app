@@ -1,5 +1,4 @@
 import React, { createContext, useContext, useEffect, useRef, useState } from "react";
-import { createPortal } from "react-dom";
 import { Link, useNavigate } from "react-router-dom";
 
 import { useAuth } from "../../context/AuthContext";
@@ -116,14 +115,13 @@ function Overlays({ overlay, close, setOverlay, sa, childNeeds, user, parentName
     );
   }
   if (overlay?.kind === "needs") {
-    return createPortal(
-      <div className="sj-overlay" data-testid="sj-needs-overlay">
-        <div className="sj-overlay-inner">
-          <ChildNeedsView onBack={close} onQuickExit={quickExitAction} safetyFlag={false} needs={childNeeds}
-            userId={user.user_id} parentName={parentName} initialOpenKey={overlay.key} />
-        </div>
-      </div>,
-      document.body
+    // ChildNeedsView (JourneyPage) portals itself as a fixed full-screen page; wrapping it in another
+    // fixed z-50 overlay hid it behind a blank screen.
+    return (
+      <div data-testid="sj-needs-overlay">
+        <ChildNeedsView onBack={close} onQuickExit={quickExitAction} safetyFlag={false} needs={childNeeds}
+          userId={user.user_id} parentName={parentName} initialOpenKey={overlay.key} />
+      </div>
     );
   }
   return null;

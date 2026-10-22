@@ -1,0 +1,49 @@
+{
+  "summary": "Tested the Self Journey guide (/self-journey/:step) end to end on the backend and the frontend, using fresh registered parents (concern path and clear path) and parent1 for read-only checks. Backend: the 7 existing tests plus 9 new public-URL tests all pass. Frontend: one CRITICAL bug found and fixed. The Child Needs overlay showed a blank screen with no way back, because ChildNeedsView/JourneyPage already portals itself as a fixed z-50 page and was wrapped in a second fixed z-50 .sj-overlay with an opaque background that sat on top of it. After the fix the Educational form shows and cn-back returns to the guide. Every other requested flow worked as specified.",
+  "backend_issues": {"critical": [], "minor": []},
+  "frontend_issues": {
+    "ui_bugs": [
+      {"component": "SelfJourneyPage Overlays (needs)", "issue": "FIXED by testing agent. sj-needs-overlay rendered as an empty lavender full-screen with no back button. The opaque .sj-overlay portal covered ChildNeedsView's own portal. The wrapper is now a plain <div data-testid='sj-needs-overlay'> with no portal and no fixed position.", "selector": "[data-testid=sj-needs-overlay]", "priority": "CRITICAL"}
+    ],
+    "integration_issues": [
+      {"flow": "Journey Guide first question", "issue": "For a parent who has not yet accepted the AI notice, the first tap on a chip or Send opens the notice. After ai-notice-continue the question is dropped and the parent has to tap again. confirmSend returns false after openNotice. This is app-wide AiNoticeProvider behaviour, but here it is a small friction.", "affected_selectors": ["sj-suggestion-0", "sj-chat-send", "ai-notice-continue"]}
+    ],
+    "design_issues": [
+      {"screen": "Summary under print media", "issues": ["The global crisis strip ('In danger? Call 911…') and the site footer ('Privacy Notice', 'Who can see my information') appear in print. No private data, but consider hiding them in @media print."]},
+      {"screen": "Child Needs", "issues": ["Summary's 'N area(s) explored' counts only the accordions open right now. Collapsing an area lowers the count, so it reads as un-exploring it."]}
+    ]
+  },
+  "test_report_links": ["/app/backend/tests/test_self_journey.py", "/app/backend/tests/test_self_journey_public.py", "/app/test_reports/pytest/sj_public.xml"],
+  "action_items": [
+    "Review the testing agent's fix in SelfJourneyPage.jsx (needs overlay no longer double-portalled). Keep it, or apply the same idea differently.",
+    "Optional: after the AI notice is accepted, automatically send the question the parent first tapped.",
+    "Optional: editing the Foundation draft after approval (or tapping 'Approved ✓') un-approves only in local state. It is not persisted until Next/Save, and the old text stays in /api/foundation-builder/me. Consider auto-saving the un-approve or making it clear to the parent.",
+    "Optional: typed answers are saved only on Next or 'Save & finish later'. A reload before that loses them. Consider debounced autosave.",
+    "Optional: hide the crisis strip and site footer in print."
+  ],
+  "critical_code_review_comments": [
+    "SelfJourney.jsx is 916 lines. Split it into step components and an AssistantSheet module.",
+    "Opening any overlay from the guide is fine for SA/CP (each portals itself). Don't wrap the portal-based views in another fixed overlay. That was the root cause of the blank screen.",
+    "FoundationPage toggleApproved un-approves with one click and no confirmation or persist."
+  ],
+  "verified": [
+    "/journey Step 1 card (journey-flow-step-self, a button that navigates) opens /self-journey. /self-journey redirects to the furthest step, and a new parent lands on /safety. (A first-time parent sees the path-picker modal on /journey first.)",
+    "Safety: title correct. sj-next is disabled until a pick. The check-in link is <a target=_blank rel=noopener> to https://sacoparentsalign.com/ for a new parent. For parent1 it is https://sacoparentsalign.com/check-in?case=SA-783115: an SA case code, not an align_ref. /family-checkin/link returns parent1's joint case SA-783115 rather than SA-DEMO01. The clear and concern notices show (tel:911, tel:18007997233). The CTA changes to 'Continue on My Safety Pathway'.",
+    "Next saves and shows a toast. Save-later shows a toast. Reload keeps typed answers. A URL to an unreached step redirects. Back and progress-segment jumps work, and unreached segments are disabled.",
+    "Self-Assessment overlay opens, and sa-back returns to the same step. Co-Parenting overlay opens, and cp-back returns with cp-agree kept.",
+    "Concern path: coparenting shows the concern notice and offers only parallel and unsure. Mediation shows sj-mediation-concern. Clear path offers all three approaches. Switching to concern drops cooperative (server says approach=null).",
+    "Child Needs: accordions toggle (aria-expanded). sj-open-special-needs has href /special-needs-v2. The Educational overlay works after the fix.",
+    "Foundation: Draft, then edit, then Approve shows the toast 'Saved as your Foundation Statement.' GET /api/foundation-builder/me fields.statement equals the draft. 'Approved ✓' survives a reload. Editing afterwards un-approves.",
+    "Summary: shows statuses only, and no Situation, Mediation or co-parenting note text appears on it or on /summary. The statement shows in sj-summary-statement. sj-edit-1/3/6 navigate to the right step. Download PDF calls window.print once. Under print media, 'Safety pathway options' and 'safety concerns' are hidden and the row shows 'Completed'.",
+    "Guide: header, help and sheet avatars are circles (border-radius 50%), /images/guide-avatar.webp, picture in purple, dark blue and white. data-spins goes 0→1→2 with animationName sj-spin (0.9s). Real AI replies arrived. The second question reused session_id. Payload is only message and section, with no private notes. Escape and sj-assistant-close both close the sheet.",
+    "Calm Mode: PUT {on:true} gives root class 'sj is-calm' and the avatar animationName is 'none' after asking. It was reset to false afterwards.",
+    "Layout: no horizontal overflow on any of the 8 steps at 390x844 or 1920x800. The crisis strip is visible. Footer, help button and sheet bottoms sit above the strip (390: footer and sheet bottom at 800, strip top at 806. 1920: 756 vs 775).",
+    "sj-quick-exit goes to weather.com."
+  ],
+  "updated_files": ["/app/frontend/src/pages/selfJourney/SelfJourneyPage.jsx", "/app/backend/tests/test_self_journey_public.py"],
+  "success_rate": {"backend": "100% (16/16)", "frontend": "~95% (1 critical bug found and fixed, plus minor UX notes)"},
+  "seed_data_creation": "Registered test_sjui_7764e1@example.com (concern path, completed through summary, Foundation statement 'Final statement TEST_FINAL for my child.'), test_sjclear_*@example.com (clear then concern) and test_sj_*@example.com (API tests), all with password TestPass123!. parent1 was used read-only.",
+  "retest_needed": false,
+  "should_main_agent_self_test": true,
+  "context_for_next_testing_agent": "Child Needs overlay fix: SelfJourneyPage.jsx no longer uses createPortal or .sj-overlay for needs. The .sj-overlay CSS is now unused. New parents get a path-picker modal on /journey (path-picker-choice-self_journey). The AI notice needs a second tap after acceptance."
+}

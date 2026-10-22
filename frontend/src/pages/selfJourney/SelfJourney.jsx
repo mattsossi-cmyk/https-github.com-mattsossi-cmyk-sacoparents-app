@@ -212,6 +212,9 @@ export default function SelfJourney({
   const [chatOpen, setChatOpen] = useState(false);
   const [toast, setToast] = useState("");
   const contentRef = useRef(null);
+  const dirty = useRef(false);
+  const saveRef = useRef(onSave);
+  saveRef.current = onSave;
 
   const index = STEPS.findIndex((s) => s.slug === slug);
   const step = STEPS[index];
@@ -223,13 +226,25 @@ export default function SelfJourney({
     window.scrollTo?.(0, 0);
   }, [slug]);
 
+  // Answers save quietly a moment after the parent stops typing or picking.
+  useEffect(() => {
+    if (!dirty.current) return undefined;
+    const t = setTimeout(() => {
+      dirty.current = false;
+      Promise.resolve(saveRef.current?.(progress)).catch(() => {});
+    }, 1200);
+    return () => clearTimeout(t);
+  }, [progress]);
+
   // Unknown slug, or a page the parent hasn't reached yet → send them to their furthest page
   if (index === -1 || index > progress.maxStepReached) {
     return <Navigate to={`/self-journey/${STEPS[progress.maxStepReached].slug}`} replace />;
   }
 
-  const update = (section, patch) =>
+  const update = (section, patch) => {
+    dirty.current = true;
     setProgress((p) => ({ ...p, [section]: { ...p[section], ...patch } }));
+  };
 
   const flash = (message) => {
     setToast(message);
@@ -237,6 +252,7 @@ export default function SelfJourney({
   };
 
   const persist = async (next = progress, message = "Progress saved. You can pick up right here anytime.") => {
+    dirty.current = false;
     const stamped = { ...next, updatedAt: new Date().toISOString() };
     setProgress(stamped);
     try {
@@ -336,10 +352,10 @@ export default function SelfJourney({
         )}
         {step.slug === "child-needs" && (
           <ChildNeedsPage
-            opened={progress.childNeeds.opened}
-            onToggle={(key) => {
+            explored={progress.childNeeds.opened}
+            onExplore={(key) => {
               const o = progress.childNeeds.opened;
-              update("childNeeds", { opened: o.includes(key) ? o.filter((x) => x !== key) : [...o, key] });
+              if (!o.includes(key)) update("childNeeds", { opened: [...o, key] });
             }}
             panels={ChildNeedsPanels}
           />
@@ -572,11 +588,17 @@ function CoParentingPage({ data, concern, onChange, CoParentingPanel }) {
   );
 }
 
-function ChildNeedsPage({ opened, onToggle, panels }) {
+// "Explored" (saved, counted on the Summary) stays once an area has been opened; collapsing only folds it.
+function ChildNeedsPage({ explored, onExplore, panels }) {
+  const [expanded, setExpanded] = useState([]);
+  const toggle = (key) => {
+    onExplore(key);
+    setExpanded((e) => (e.includes(key) ? e.filter((x) => x !== key) : [...e, key]));
+  };
   return (
     <>
       {CHILD_AREAS.map(([key, name, desc]) => {
-        const open = opened.includes(key);
+        const open = expanded.includes(key);
         const Panel = panels[key];
         return (
           <section key={key} className="sj-accordion">
@@ -585,12 +607,12 @@ function ChildNeedsPage({ opened, onToggle, panels }) {
               className="sj-accordion-head"
               aria-expanded={open}
               aria-controls={`need-${key}`}
-              onClick={() => onToggle(key)}
+              onClick={() => toggle(key)}
               data-testid={`sj-need-${key}`}
             >
               <span>
                 <strong>{name}</strong>
-                <span className="sj-muted">{open ? "In progress" : "Optional"}</span>
+                <span className="sj-muted">{explored.includes(key) ? "Explored" : "Optional"}</span>
               </span>
               <ChevronIcon open={open} />
             </button>

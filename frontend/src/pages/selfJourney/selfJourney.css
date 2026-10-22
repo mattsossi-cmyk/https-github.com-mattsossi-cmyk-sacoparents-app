@@ -223,8 +223,6 @@
 }
 .sj a.sj-open-btn { color: var(--sj-purple); }
 .sj-open-btn[aria-disabled="true"] { opacity: .6; cursor: progress; }
-.sj-overlay { position: fixed; inset: 0; z-index: 50; overflow-y: auto; background: #f7f4fb; }
-.sj-overlay-inner { max-width: 28rem; margin: 0 auto; padding: 16px 16px calc(80px + var(--crisis-strip-h, 0px)); }
 .sj-sheet { bottom: var(--crisis-strip-h, 0px); height: min(560px, calc(75vh - var(--crisis-strip-h, 0px))); }
 .sj-link-btn, .sj-exit-btn { white-space: nowrap; }
 @media (max-width: 420px) {
@@ -234,4 +232,5 @@
 @media print {
   .sj-header, .sj-progress, .sj-footer, .sj-help-btn, .sj-row, .sj-no-print { display: none !important; }
   .sj-content { padding: 0 !important; }
+  body:has(.sj) [data-testid="portal-crisis-strip"], body:has(.sj) [data-testid="app-footer"] { display: none !important; }
 }
