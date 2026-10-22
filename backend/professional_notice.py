@@ -4,7 +4,7 @@ from datetime import datetime, timezone
 from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel
 
-PROFESSIONAL_NOTICE_VERSION = "2026-10-19.1"  # bumped: parents can see who viewed their information (owner 2026-10-19)
+PROFESSIONAL_NOTICE_VERSION = "2026-10-22.1"  # bumped: parents see views of their own check-in information; report views stay in the case activity log (owner 2026-10-22)
 PROFESSIONAL_NOTICE_ROLES = ("professional",)
 # Owner-approved text (2026-10-13). Edit strings here only.
 NOTICE = {
@@ -18,7 +18,7 @@ NOTICE = {
         {"heading": "Confidentiality", "body": "Parent assessments may contain sensitive personal, family, medical, educational, psychological, or safety-related information. Professionals must protect this information and follow applicable confidentiality, privacy, and disclosure requirements."},
         {"heading": "Family Violence and Safety", "body": "When intimate partner violence, coercive control, intimidation, or other safety concerns are identified, professionals must independently evaluate whether further participation, communication, or joint processes are appropriate. Parent-to-parent communication must never be required when unsafe."},
         {"heading": "Separate Parent Perspectives", "body": "SA CoParents Align is designed to review individual parent perspectives without automatically disclosing one parent's private responses to the other parent. Any disclosure must follow applicable law, informed consent, court orders, and established safety protocols."},
-        {"heading": "Access Is Visible to Parents", "body": "Parents can see when you view their information, including your name and role. Every opening of a parent's safety answers, assessment answers, Foundation Statement or communications log is recorded and listed for that parent."},
+        {"heading": "Access Is Visible to Parents", "body": "Parents can see when you view their information, including your name and role. Every opening of a parent's Family check-in answers or safe-contact details, and every safety review action, is recorded and listed for that parent. Your views of the shared joint report and Foundation Statements are recorded in the case activity log, which you and the court can see."},
         {"heading": "Artificial Intelligence", "body": "AI may assist in organizing information, identifying reported similarities and differences, and presenting potential child-focused options. AI-generated findings are not independent verification of facts, clinical diagnoses, legal conclusions, or professional recommendations."},
         {"heading": "Professional Responsibility", "body": "Attorneys, mediators, mental health professionals, and other authorized users remain responsible for independently reviewing information, evaluating safety, identifying limitations, and determining whether a report is appropriate for its intended purpose."},
         {"heading": "Court Reports", "body": "Reports should clearly distinguish parent-reported information, AI-assisted summaries, professional observations, and professional conclusions. The court retains authority over judicial decisions."},

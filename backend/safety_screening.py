@@ -500,8 +500,9 @@ def build_router(db, get_current_user, get_joint_report_doc, report_role, log_ac
         if not role or _is_pro(doc, user):
             raise HTTPException(status_code=403, detail="Available to the parent whose answers these are")
         what = {"safety_screening": "Your individual answers and safe-contact details", "safety_review": "Your check-in status and concern level (not your answers)",
-                "redaction": "A single answer in the joint report", "safety_review_export": "Safety provisions document (no answers)",
-                "view": "Your assessment answers (report)", "download": "Your assessment answers (report)", "foundation_view": "Your Foundation Statement (report)"}
+                "redaction": "A single answer in the joint report", "safety_review_export": "Safety provisions document (no answers)"}
+        # Owner 2026-10-22: report-level views (joint report, downloads, Foundation Statements, communications log) are no longer listed for parents;
+        # they stay in the professional's case activity log and the court's closing summary.
         tag = f"Parent {role.upper()}"
         rows = await db.access_events.find({"report_id": rid, "kind": {"$in": list(what)}}, {"_id": 0}).sort("at", -1).to_list(500)
         ids = {e.get("by") for e in rows if e.get("by")}
@@ -513,12 +514,10 @@ def build_router(db, get_current_user, get_joint_report_doc, report_role, log_ac
             if (e.get("by_role") or "").startswith("Parent"):
                 continue  # a parent opening their own report is not a professional view
             label = what[e["kind"]]
-            if "Communications Log" in (e.get("action") or ""):
-                label = "Communications log (report)"
             admin = e.get("by") in admins
             out.append({"at": e.get("at"), "viewer": "SA CoParents administrator" if admin else (e.get("by_name") or "Professional"),
                         "viewer_role": "SA CoParents administrator" if admin else (e.get("by_role") or "Assigned professional"), "what": label})
-        return {"role": role, "events": out, "note": "Every time a professional or administrator opens your safety answers, your assessment answers in the report, or your Foundation Statement, it is recorded here. Your co-parent never appears in this list because they can never open your answers."}
+        return {"role": role, "events": out, "note": "Every time a professional or administrator opens your Family check-in answers or safe-contact details, or reviews your check-in status, it is recorded here. Views of the shared joint report are kept in the case activity log held by your professional and the court. Your co-parent never appears in this list because they can never open your answers."}
 
 
     @r.get("/me/check-in")
