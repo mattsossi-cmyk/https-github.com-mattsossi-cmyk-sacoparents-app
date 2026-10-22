@@ -939,11 +939,12 @@ export function JourneyShell({
     else if (key === "card4") openFoundation("court", builder);
   };
 
-  // Deep links: /dashboard?open=self-assessment | parallel-builder | court | comm-builder
+  // Deep links: /dashboard?open=self-assessment | parallel-builder | court | comm-builder | coparenting-assessment | child-needs
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const open = params.get("open");
-    if (!["self-assessment", "parallel-builder", "court", "comm-builder"].includes(open)) return;
+    const keys = ["self-assessment", "parallel-builder", "court", "comm-builder", "coparenting-assessment", "child-needs"];
+    if (!keys.includes(open)) return;
     params.delete("open");
     const qs = params.toString();
     window.history.replaceState(null, "", window.location.pathname + (qs ? `?${qs}` : ""));
@@ -952,6 +953,12 @@ export function JourneyShell({
     else if (open === "parallel-builder") {
       openDoor("self");
       openPp("welcome");
+    } else if (open === "coparenting-assessment") {
+      openDoor("self");
+      setCpAssessOpen(true);
+    } else if (open === "child-needs") {
+      openDoor("self");
+      openChildNeeds("self");
     } else {
       openDoor("self");
       openAssess(true);

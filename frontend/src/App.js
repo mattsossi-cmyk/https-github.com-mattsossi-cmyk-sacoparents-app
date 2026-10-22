@@ -337,6 +337,7 @@ function AppRoutes() {
           path="/dashboard"
           element={<SacoparentsPortal />}
         />
+        <Route path="/journey" element={<SacoparentsPortal />} />
         <Route
           path="/my-plan"
           element={

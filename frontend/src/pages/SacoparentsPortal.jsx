@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo, useRef, useState, useCallback } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
+import JourneyFlow from "./JourneyFlow";
 
 import { api } from "../lib/api";
 import { useAuth } from "../context/AuthContext";
@@ -38,7 +39,7 @@ import {
   writeString,
 } from "./portal/portalStorage";
 import { GuidedJourneyModal } from "./portal/GuidedJourneyModal";
-import { JourneyShell, quickExitAction } from "./portal/JourneyShell";
+import { JourneyShell, quickExitAction, ALIGN_SITE_URL } from "./portal/JourneyShell";
 import { CommunicationBuilderView } from "./portal/CommunicationBuilderView";
 import {
   BiffCoachDrawer,
@@ -107,6 +108,8 @@ export default function SacoparentsPortal() {
   // Grey-rock tone: the parent's own on/off choice. (The old in-app safety check is off.)
   const [greyRock, setGreyRock] = useState(false);
   const navigate = useNavigate();
+  // /journey shows the Journey Flow page inside the portal (same header, crisis strip and bottom bar).
+  const onFlow = useLocation().pathname === "/journey";
 
   // Alignment filter
   const [folderFilter, setFolderFilter] = useState("All");
@@ -1540,7 +1543,7 @@ export default function SacoparentsPortal() {
   );
 
   const showBackBtn = screen !== "journey";
-  const dashboardMode = NEW_HOME_ON && screen === "journey" && journeyView === "door";
+  const dashboardMode = NEW_HOME_ON && !onFlow && screen === "journey" && journeyView === "door";
 
   return (
     <div
@@ -1627,8 +1630,9 @@ export default function SacoparentsPortal() {
 
       {/* MAIN CONTAINER */}
       <main className="max-w-md mx-auto px-4 py-4 flex-1 w-full space-y-4">
-        {screen === "journey" && !dashboardMode && <ProfessionalAccessCard />}
-        {screen === "journey" && (
+        {onFlow && <JourneyFlow onExportPdf={handlePrint} alignUrl={ALIGN_SITE_URL} onQuickExit={quickExitAction} />}
+        {!onFlow && screen === "journey" && !dashboardMode && <ProfessionalAccessCard />}
+        {!onFlow && screen === "journey" && (
           <JourneyShell
             user={user}
             pathPickedAt={
@@ -1699,9 +1703,9 @@ export default function SacoparentsPortal() {
       >
         <button
           data-testid="nav-doors"
-          onClick={openDoorGateway}
+          onClick={() => navigate("/journey")}
           className={
-            screen === "journey"
+            onFlow
               ? "flex flex-1 min-w-0 flex-col items-center space-y-0.5 text-center bottom-nav-active"
               : "flex flex-1 min-w-0 flex-col items-center space-y-0.5 text-center text-slate-500 hover:text-purple-800"
           }
