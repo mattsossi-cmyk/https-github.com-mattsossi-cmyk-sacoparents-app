@@ -39,7 +39,7 @@ import {
   writeString,
 } from "./portal/portalStorage";
 import { GuidedJourneyModal } from "./portal/GuidedJourneyModal";
-import { JourneyShell, quickExitAction, ALIGN_SITE_URL } from "./portal/JourneyShell";
+import { JourneyShell, quickExitAction } from "./portal/JourneyShell";
 import { CommunicationBuilderView } from "./portal/CommunicationBuilderView";
 import {
   BiffCoachDrawer,
@@ -1600,7 +1600,7 @@ export default function SacoparentsPortal() {
             >
               <i className="fa-solid fa-file-pdf"></i> Export PDF
             </button>
-            {dashboardMode && (
+            {(dashboardMode || onFlow) && (
               <button
                 type="button"
                 onClick={quickExitAction}
@@ -1630,7 +1630,7 @@ export default function SacoparentsPortal() {
 
       {/* MAIN CONTAINER */}
       <main className="max-w-md mx-auto px-4 py-4 flex-1 w-full space-y-4">
-        {onFlow && <JourneyFlow onExportPdf={handlePrint} alignUrl={ALIGN_SITE_URL} onQuickExit={quickExitAction} />}
+        {onFlow && <JourneyFlow />}
         {!onFlow && screen === "journey" && !dashboardMode && <ProfessionalAccessCard />}
         {!onFlow && screen === "journey" && (
           <JourneyShell

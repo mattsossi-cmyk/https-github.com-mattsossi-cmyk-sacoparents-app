@@ -34,6 +34,7 @@ import { useFoundationBuilder } from "./foundation/useFoundationBuilder";
 import { ChildNeedsView } from "./ChildNeedsView";
 import { FoundationStatementView } from "./FoundationStatementView";
 import { CommShareReask } from "../../components/commStyle/CommShareReask";
+import JourneyFlow from "../JourneyFlow";
 import { PrivacyTag } from "../../components/parentDashboard/ParentDashboard";
 import { NEW_HOME_ON } from "../../lib/previewGate";
 import { useCalmMode } from "../../lib/useCalmMode";
@@ -939,11 +940,11 @@ export function JourneyShell({
     else if (key === "card4") openFoundation("court", builder);
   };
 
-  // Deep links: /dashboard?open=self-assessment | parallel-builder | court | comm-builder | coparenting-assessment | child-needs
+  // Deep links: /dashboard?open=self-assessment | parallel-builder | parallel-builder-steps | court | comm-builder | coparenting-assessment | child-needs
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const open = params.get("open");
-    const keys = ["self-assessment", "parallel-builder", "court", "comm-builder", "coparenting-assessment", "child-needs"];
+    const keys = ["self-assessment", "parallel-builder", "parallel-builder-steps", "court", "comm-builder", "coparenting-assessment", "child-needs"];
     if (!keys.includes(open)) return;
     params.delete("open");
     const qs = params.toString();
@@ -953,6 +954,9 @@ export function JourneyShell({
     else if (open === "parallel-builder") {
       openDoor("self");
       openPp("welcome");
+    } else if (open === "parallel-builder-steps") {
+      openDoor("self");
+      openPp(0);
     } else if (open === "coparenting-assessment") {
       openDoor("self");
       setCpAssessOpen(true);
@@ -1328,22 +1332,17 @@ export function JourneyShell({
           title="Self Journey"
           subtitle="Take the next step to build a safer, calmer, and more child-focused future."
         />
-        <StartWithSafetyBanner />
-        <SafetyFirstBanner
-          alignUrl={ALIGN_SITE_URL}
-          onQuickExit={quickExitAction}
-          text="Before you start your Self Journey, take your private Family check-in. Your co-parent never sees your answers."
-        />
-        <CoparentingBuilderReferral
-          builderUrl={BUILDER_PATH}
-          progress={ppStatus}
-          onOpen={(e) => {
-            e.preventDefault();
-            openPp("welcome");
+        {/* Same steps as the Journey page; each step opens here, in place. */}
+        <JourneyFlow
+          embedded
+          actions={{
+            self: () => openAssess(false),
+            coparenting: () => setCpAssessOpen(true),
+            parallelNext: () => openPp("welcome"),
+            parallelBuilder: () => openPp(0),
+            childNeeds: () => openChildNeeds("self"),
           }}
         />
-        <FamilyCheckinCard alignUrl={ALIGN_SITE_URL} testid="self-family-checkin" stacked />
-        <SafetyScreenLink alignUrl={ALIGN_SITE_URL} />
 
         <GoalBanner
           testid="door-self-goal"
@@ -1356,77 +1355,6 @@ export function JourneyShell({
         />
         <GoalReachedBanner history={saHistory.history} userId={user?.user_id} active={!(assessOpen || ppOpen || cpAssessOpen)} />
 
-        {/* Assessment artwork (replaces cards 1–3): tappable panels/arrows + labeled buttons. */}
-        <div id="door-self-actions" data-testid="door-self-actions" className="space-y-4 scroll-mt-4">
-          {!allStepsDone && (
-            <ContinueStep step={resumeStep} doneCount={journeySteps.filter((s) => s.done).length} total={journeySteps.length} />
-          )}
-
-          <JourneyArtCard testid="door-self-art-assess" art={ASSESS_ART} done={assessDone} nextKey={nextAssess} onAction={openAssessKey}>
-            {saHistory.latest && (
-              <p data-testid="door-self-card-assess-last" className="text-[0.6875rem] font-semibold text-purple-700 text-center">
-                Latest Self-Assessment: {saHistory.latest.scores.overall}/100 · {saHistory.history.length} completed
-              </p>
-            )}
-          </JourneyArtCard>
-
-          <FlowArrow testid="door-self-flow-arrow" to="door-self-art-needs" label="Your Child's Specific Needs" step="3 of 6" done={journeySteps[2].done} />
-
-          <JourneyArtCard testid="door-self-art-needs" art={NEEDS_ART} done={assessDone} nextKey={nextAssess} onAction={openAssessKey} />
-
-          <FlowArrow testid="door-self-flow-arrow-foundation" to="door-self-card-foundation" label="Create Your Foundation Statement" step="4 of 6" done={journeySteps[3].done} />
-
-          {/* Card 4 — Create Your Foundation Statement. */}
-          <button
-            type="button"
-            data-testid="door-self-card-foundation"
-            onClick={() => openFoundation("self")}
-            className="w-full bg-white border border-slate-200 shadow-sm hover:shadow-md hover:border-orange-300 rounded-2xl p-4 transition flex items-center gap-3 text-left"
-          >
-            <div className="shrink-0 w-9 h-9 rounded-full bg-orange-500 text-white font-extrabold flex items-center justify-center">
-              4
-            </div>
-            <div className="shrink-0 w-12 h-12 rounded-full bg-orange-100 text-orange-700 flex items-center justify-center">
-              <i className="fa-solid fa-file-pen text-lg"></i>
-            </div>
-            <div className="min-w-0 flex-1">
-              <div className="text-sm font-bold text-slate-900 leading-tight">
-                Create Your Foundation Statement
-              </div>
-              <p className="text-[0.6875rem] text-slate-600 mt-0.5 leading-snug">
-                Define your shared goals and values. Build the
-                foundation for productive discussions and future
-                agreements.
-              </p>
-              {foundationBuilder.savedAt && (
-                <p
-                  data-testid="door-self-card-foundation-saved"
-                  className="text-[0.625rem] font-bold text-emerald-700 mt-1"
-                >
-                  Saved <i className="fa-solid fa-check mx-0.5"></i> · Edit
-                </p>
-              )}
-            </div>
-            <div className="shrink-0 w-8 h-8 rounded-full bg-slate-100 text-slate-600 flex items-center justify-center">
-              <i className="fa-solid fa-chevron-right text-xs"></i>
-            </div>
-          </button>
-        </div>
-
-        <FlowArrow testid="door-self-flow-arrow-parallel" to="door-self-art-parallel" label="Parallel Parenting" step="5 of 6" done={journeySteps[4].done} />
-
-        <JourneyArtCard
-          testid="door-self-art-parallel"
-          art={PP_ART}
-          onAction={(k) => openPp(PP_ART.items.find((it) => it.key === k).screen)}
-        />
-
-        <FlowArrow testid="door-self-flow-arrow-biff" to="door-self-card-biff" label="SA CoParent Communication Builder" step="6 of 6" done={journeySteps[5].done} />
-
-        {/* Communication Builder — picture + action button. */}
-        <CbJourneyCard onOpen={() => onOpenCommBuilder()} countLabel={biffCountLabel} done={journeySteps[5].done} />
-
-        {allThreeDone && <FlowArrow testid="door-self-flow-arrow-rewards" to="door-self-progress" label="Your progress" step="Finish" />}
 
         {/* Accomplishments sit at the end, just before the badges. */}
         <div data-testid="door-self-progress" className="space-y-4">

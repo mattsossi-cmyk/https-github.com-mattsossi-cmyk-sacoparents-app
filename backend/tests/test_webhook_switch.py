@@ -52,3 +52,12 @@ def test_enabled_flag_without_a_secret_stays_off(client, monkeypatch):
     monkeypatch.delenv("SACOPARENTSALIGN_WEBHOOK_SECRET", raising=False)
     assert client.post(SAFETY, json={}).status_code == 503
     assert client.post(INVITE, json={}).status_code == 503
+
+
+@pytest.mark.parametrize("value", ["off", "OFF", " Off "])
+def test_a_secret_set_to_off_is_off_even_with_the_flag(client, monkeypatch, value):
+    monkeypatch.setenv("WEBHOOKS_ENABLED", "true")
+    monkeypatch.setenv("ALIGN_WEBHOOK_SECRET", value)
+    monkeypatch.setenv("SACOPARENTSALIGN_WEBHOOK_SECRET", value)
+    assert client.post(SAFETY, json={}).status_code == 503
+    assert client.post(INVITE, json={}).status_code == 503
