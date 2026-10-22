@@ -161,7 +161,13 @@ h1, h2, h3, h4, .font-serif {
 /* Red "In danger?" bar on every signed-in screen (GlobalCrisisStrip in App.js): keep content and bottom bars above it. */
 body.has-crisis-strip {
     --crisis-strip-h: 2.75rem;
+}
+/* On .App, not body: html/body/#root are height 100%, so padding there wouldn't add space after long pages. */
+body.has-crisis-strip .App {
     padding-bottom: var(--crisis-strip-h);
+}
+body.has-crisis-strip [data-sonner-toaster][data-y-position="bottom"] {
+    bottom: calc(var(--crisis-strip-h) + 1rem) !important;
 }
 body.has-crisis-strip [data-testid="back-to-dashboard-pill"] {
     bottom: calc(var(--crisis-strip-h) + 0.75rem);

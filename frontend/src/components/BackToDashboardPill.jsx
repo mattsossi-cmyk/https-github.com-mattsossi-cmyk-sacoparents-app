@@ -23,6 +23,7 @@ import { useAuth } from "../context/AuthContext";
 const HIDDEN_PREFIXES = [
   "/dashboard",
   "/journey",
+  "/coach", // has its own "Back to Dashboard" link; the pill covered the composer
   "/start-with-safety",
   "/onboarding/",
   "/auth/callback",

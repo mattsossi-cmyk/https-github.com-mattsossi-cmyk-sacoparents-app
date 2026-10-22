@@ -295,7 +295,7 @@ function SessionList({ sessions, activeId, onOpen, onDelete }) {
   if (!sessions.length) return null;
   return (
     <aside
-      className="rounded-3xl border border-[#E5E0EE] bg-white p-4 h-fit lg:sticky lg:top-24"
+      className="min-w-0 rounded-3xl border border-[#E5E0EE] bg-white p-4 h-fit lg:sticky lg:top-24"
       data-testid="coach-session-list"
     >
       <div className="flex items-center gap-2 mb-3">
@@ -340,7 +340,10 @@ function SessionList({ sessions, activeId, onOpen, onDelete }) {
 }
 
 export default function Coach() {
-  const { sessionId } = useParams();
+  const { sessionId: routeId } = useParams();
+  // /coach/new = a blank conversation; the first message creates the session.
+  const isNew = routeId === "new";
+  const sessionId = isNew ? undefined : routeId;
   const navigate = useNavigate();
   const [messages, setMessages] = useState([]);
   const [session, setSession] = useState(null);
@@ -497,7 +500,7 @@ export default function Coach() {
           <DemoModeBanner />
         </div>
 
-        <div className="grid lg:grid-cols-[260px_1fr] gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-[260px_1fr] gap-6">
           <SessionList
             sessions={sessions}
             activeId={sessionId}
@@ -506,7 +509,7 @@ export default function Coach() {
           />
 
           <div className="min-w-0">
-            {!sessionId ? (
+            {!sessionId && !isNew ? (
               <>
                 <div className="flex justify-end mb-3">
                   <CoachModelPickerChip
@@ -523,8 +526,8 @@ export default function Coach() {
               </>
             ) : (
               <>
-                <div className="flex items-start justify-between gap-4 mb-4">
-                  <div>
+                <div className="flex flex-wrap items-start justify-between gap-4 mb-4">
+                  <div className="min-w-0">
                     <div className="eyebrow text-[#3D1A78] flex items-center gap-1.5">
                       <Sparkles size={12} /> AI Coach
                     </div>
@@ -535,7 +538,7 @@ export default function Coach() {
                       {session?.title || "New conversation"}
                     </h1>
                   </div>
-                  <div className="shrink-0 flex items-center gap-2 flex-wrap justify-end">
+                  <div className="flex items-center gap-2 flex-wrap justify-end">
                     <CoachModelPickerChip
                       value={modelPreference}
                       onChange={setModelPreference}

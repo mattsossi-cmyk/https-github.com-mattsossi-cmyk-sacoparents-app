@@ -1,0 +1,37 @@
+{
+  "summary": "Frontend-only test of Journey Flow wording, the Start with Safety link to the SACOparentsAlign check-in, and the global 'In danger?' crisis bar. Tested at 390x844 (main) and 1920x800 with a demo-mode parent. Everything requested works. WORDING: the decision reads 'Are there safety concerns?', the co-parenting pill reads 'No · lower conflict' and the parallel pill reads 'Yes · there are safety concerns'. SAFETY STEP: on both /journey and the Self Journey screen (door-view-self > journey-flow) it is an <a target=_blank> to https://sacoparentsalign.com (demo parent has no case). Clicking it opens a new tab and the app URL stays the same (/journey, or /dashboard with the Self Journey still open). OTHER STEPS: self, coparenting, parallelNext (pp-welcome), parallelBuilder (pp-step-communication), childNeeds and foundation all open the right screen, both from /journey and in place inside Self Journey. Export PDF calls window.print once. CRISIS BAR: exactly 1 on all 20 signed-in routes checked. It sits 64px from the bottom (above the tab bar) on /dashboard and /journey, and at the very bottom on the other routes. Count is 0 on /login and /register when signed out. All 4 links (tel:911, tel:18007997233, sms:88788?body=START, tel:988) are hit-testable. No horizontal page overflow on any route at its first screen. The Main menu pill never overlaps the bar and is not on /journey. The SpecialNeedsV2 sticky bar (bottom 44px, ends at y=800 while the bar starts at 806) and the Coach composer (ends at 764) both sit above the bar. Problems found: (1) on long pages the bottom of the page ends up under the bar (padding fix doesn't work); (2) the /coach/:id conversation page overflows sideways by 111px at 390px; (3) /plan-options redirects to /, so its fixed bar couldn't be tested. Smaller issues are listed below.",
+  "backend_issues": {"critical": [], "minor": []},
+  "frontend_issues": {
+    "ui_bugs": [
+      {"component": "index.css body.has-crisis-strip padding", "issue": "The padding-bottom on body has no effect because index.css:61 sets 'html, body, #root { height: 100% }'. Content overflows the 844px body, so the padding doesn't add space after it. When scrolled to the very bottom of long pages, the global footer copyright row (data-testid global-copyright, y 795-844) sits under the crisis bar (starts at y 806). Seen on /coach, /learning, /special-needs-v2 and /my-plan; the measurements on /account and /help looked fine. Fix: put the padding on #root or .App, e.g. 'body.has-crisis-strip #root { padding-bottom: var(--crisis-strip-h) }', or use min-height instead of height.", "selector": "[data-testid='global-copyright']", "priority": "MEDIUM"},
+      {"component": "Coach conversation /coach/:id at 390px", "issue": "The page overflows sideways by 111px (scrollWidth - innerWidth = 111). Coach.jsx:500 uses 'grid lg:grid-cols-[260px_1fr]', which has no column template below lg, so the single column grows to fit content. coach-session-list reaches right=501 and the composer reaches right=501. Chat bubbles and the composer are cut off on the right. Fix: add grid-cols-1 or min-w-0 to the grid children. Probably not caused by this change, but it breaks the 'no horizontal overflow' rule on a signed-in page.", "selector": "[data-testid='coach-session-list'], [data-testid='coach-composer']", "priority": "MEDIUM"},
+      {"component": "Coach empty state", "issue": "'Start with a blank conversation' goes to /coach/new. The page then calls GET /api/coach/sessions/new, gets a 404 and shows the toast 'Could not load that conversation.' Not caused by this change.", "selector": "text=Start with a blank conversation", "priority": "LOW"},
+      {"component": "Coach starter + AI notice", "issue": "The first time you tap a starter prompt, the AI notice dialog appears. After ticking ai-notice-agree and pressing ai-notice-continue, no message is sent; the parent has to tap the starter again.", "selector": "[data-testid='ai-notice-continue']", "priority": "LOW"}
+    ],
+    "integration_issues": [],
+    "design_issues": [
+      {"screen": "/coach/:id at 390px", "issues": ["The Main menu pill (y 744-788) covers the left part of the composer's disclaimer line ('Not legal, medical, or therapy advice…'). The textarea itself (686-722) is clear."]},
+      {"screen": "Toasts on non-portal pages", "issues": ["Bottom toasts (e.g. on /coach) cover the crisis bar while they show. index.css only lifts toasts on the portal (body:has bottom-nav); there's no rule for body.has-crisis-strip."]}
+    ]
+  },
+  "test_report_links": [],
+  "action_items": [
+    "Fix the crisis-bar space reservation. body padding doesn't work while html/body/#root have height:100%. Move the padding to #root/.App (or use min-height) so the copyright line and last buttons aren't under the bar on long pages (/coach, /learning, /special-needs-v2, /my-plan).",
+    "Fix the 111px sideways overflow on /coach/:id at 390px (Coach.jsx:500: add grid-cols-1 / min-w-0).",
+    "Optional: raise bottom toasts above the bar when body.has-crisis-strip; fix /coach/new 404; send the picked starter automatically after the AI notice is accepted.",
+    "/plan-options is <Navigate to='/'> in App.js:288, so the PlanOptions fixed bar change can't be reached or verified. Confirm this is intended."
+  ],
+  "critical_code_review_comments": [
+    "GlobalCrisisStrip + SafetyCrisisStrip: logic is fine; count is 1 everywhere. The --crisis-strip-h value (2.75rem/44px) is a fixed guess. The bar measured 38px at 390px (2 lines) and 25px at 1920. If the text wraps to 3 lines on a narrow screen, it will cover more than the reserved space.",
+    "JourneyFlow StepCard: while useCheckinLink loads, the href is null, so the <a> has no href and aria-disabled. That's fine, but it has no tabindex and no visual disabled state during the short load.",
+    "SafetyCrisisStrip is z-40; modal overlays (z-50) dim and cover it. That's acceptable, but the AI notice modal hides the crisis numbers while open."
+  ],
+  "updated_files": [],
+  "success_rate": {"backend": "N/A (not requested)", "frontend": "95% - all requested checks pass; the padding bug and the /coach/:id overflow are the main issues"},
+  "test_credentials": "Demo mode (login-demo-mode-button) + v9 consent gate. /app/memory/test_credentials.md present.",
+  "seed_data_creation": "Demo coach sessions were created by tapping a starter prompt.",
+  "retest_needed": true,
+  "should_main_agent_self_test": true,
+  "context_for_next_testing_agent": "Demo login, then tick the consent checkboxes and click Continue. Playwright gotchas: page.evaluate with a string that evaluates to a function calls that function, so wrap print overrides in '() => {...}'. The browser tool wrapper breaks str.replace/str() in screenshot paths; use literal paths. Coach starter: tap, check ai-notice-agree, click ai-notice-continue, then tap the starter again. SNV2 sticky bar: pick snc2-picker-*, then snc2-picker-continue; the bar is the parent of snc2-prev. Not published or deployed.",
+  "rca of the issue": "Covered footer: index.css:61 'html, body, #root { height: 100% }' fixes body at the viewport height, so body.has-crisis-strip padding-bottom sits inside an 844px box that the content overflows, and it reserves no scroll space. Coach overflow: '.grid' without grid-cols-* below lg makes an auto-sized single column that grows to the min-content width of the session list and messages."
+}

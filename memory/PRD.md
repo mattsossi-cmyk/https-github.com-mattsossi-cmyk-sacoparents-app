@@ -9639,3 +9639,10 @@ dashboard for sharing SELECTED completed reports with any professional.
 - New "Both paths" step after Child's Needs: "Create Your Foundation Statement" (image from the user's Foundation Statement.png, at /images/journey/foundation.webp). Deep link /dashboard?open=foundation; in Self Journey it calls openFoundation("self").
 - The user's six journey photos still haven't arrived (no new upload). The stand-ins stay.
 - Deploy dispatched for webhook_switch + Journey Flow. Verify: both webhooks 503, /journey 200, the bundle has the new wording.
+
+## 2026-10-22 ~13:30 UTC: Wording, direct check-in, red bar on every signed-in screen (PREVIEW; user said DON'T PUBLISH)
+- Parallel pill: "Yes · there are safety concerns" (lowercase). The diamond and the green pill are unchanged ("Are there safety concerns?" / "No · lower conflict").
+- The Start with Safety step in JourneyFlow is now an <a target=_blank> to useCheckinLink(alignUrl): the Align Family check-in with the SA case code, or the bare https://sacoparentsalign.com. JourneyFlow now takes an alignUrl prop (portal + Self Journey pass ALIGN_SITE_URL). The /start-with-safety page still exists but this step no longer links to it.
+- components/GlobalCrisisStrip.jsx (mounted in App.js): SafetyCrisisStrip bottom-0 on every signed-in route except /, /dashboard and /journey (the portal renders its own above its bottom tabs). Adds body.has-crisis-strip: .App padding-bottom var(--crisis-strip-h)=2.75rem, toasts and back-to-dashboard-pill lifted. Bottom-pinned bars on PlanOptions, Coach and SpecialNeedsV2 use bottom-[var(--crisis-strip-h,0px)]. The pill is hidden on /journey and /coach.
+- Coach fixes (found by testing): /coach/new opens a blank conversation (it used to 404 with a toast); grid-cols-1 + min-w-0 + a flex-wrap header fix 111px of sideways overflow at 390px. AI notice "re-tap after agreeing" is deliberate in AiNoticeProvider; not changed.
+- Tests: iteration_158 passed everything requested. Fixes self-verified (copyright ends at 800 < strip top 806; /coach/new overflowX 0).
