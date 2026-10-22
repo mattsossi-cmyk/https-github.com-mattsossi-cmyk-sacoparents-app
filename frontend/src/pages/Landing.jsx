@@ -14,7 +14,7 @@ import { SAMPLE_REPORTS } from "@/lib/samples";
 import { usePageTitle } from "@/lib/usePageTitle";
 import { DemoVideoButton } from "@/components/DemoVideoButton";
 
-const POSTER_IMG = "/align-hero-simple.jpg";
+const POSTER_IMG = "/align-hero-ai.jpg";
 
 const STEPS = [
   { n: 1, key: "invite", icon: Mail, title: "Invite", body: "The professional opens the case and invites each parent privately — parents never exchange codes." },
@@ -78,7 +78,7 @@ export default function Landing() {
           <div className="absolute -top-4 -right-4 w-full h-full bg-secondary rounded-xl -z-10" />
           <img
             src={POSTER_IMG}
-            alt="SA CoParents Align — For Professionals. Two parent perspectives. One child-focused report."
+            alt="Two paths, purple and teal, converging into one around a child at the centre — SA CoParents Align"
             className="rounded-xl shadow-xl w-full"
             data-testid="hero-image"
           />
