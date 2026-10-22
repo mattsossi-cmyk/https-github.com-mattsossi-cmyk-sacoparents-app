@@ -27,6 +27,7 @@ import sys
 import uuid
 from typing import Tuple
 
+import pytest
 import requests
 
 sys.path.insert(0, "/app/backend")
@@ -37,6 +38,13 @@ from tests.conftest import BASE_URL  # noqa: E402
 WEBHOOK_URL = f"{BASE_URL}/api/professional/directory/invite/accept-webhook"
 INVITES_LIST_URL = f"{BASE_URL}/api/professional/directory/invites"
 TEMPLATES_URL = f"{BASE_URL}/api/professional/reminder-note-templates"
+
+
+# The invite webhook is off unless the server has the secret AND WEBHOOKS_ENABLED == "true" (see webhook_switch.py).
+NEEDS_WEBHOOK = pytest.mark.skipif(
+    not (os.environ.get("SACOPARENTSALIGN_WEBHOOK_SECRET") and os.environ.get("WEBHOOKS_ENABLED") == "true"),
+    reason="invite webhook is switched off on this server",
+)
 
 # Same value seeded in /app/backend/.env for this test env — the code
 # reads os.environ inside the server process, so we mirror it here to
@@ -97,6 +105,7 @@ def _mint_invite(prof_id: str = "sacpa-004") -> Tuple[str, str, str]:
 # Webhook — signature guardrails
 # ---------------------------------------------------------------------
 
+@NEEDS_WEBHOOK
 def test_webhook_requires_signature_header():
     _mtok, _iid, invite_token = _mint_invite()
     body = json.dumps({"token": invite_token}).encode("utf-8")
@@ -105,6 +114,7 @@ def test_webhook_requires_signature_header():
     assert r.status_code == 401
 
 
+@NEEDS_WEBHOOK
 def test_webhook_rejects_bad_signature():
     _mtok, _iid, invite_token = _mint_invite()
     body = json.dumps({"token": invite_token}).encode("utf-8")
@@ -118,6 +128,7 @@ def test_webhook_rejects_bad_signature():
     assert r.status_code == 401
 
 
+@NEEDS_WEBHOOK
 def test_webhook_404s_unknown_token():
     body = json.dumps({"token": "unknown-token-xyz-123"}).encode("utf-8")
     r = requests.post(
@@ -130,6 +141,7 @@ def test_webhook_404s_unknown_token():
     assert r.status_code == 404
 
 
+@NEEDS_WEBHOOK
 def test_webhook_happy_path_flips_invite_and_is_idempotent():
     mediator_token, invite_id, invite_token = _mint_invite("sacpa-001")
     body = json.dumps({
@@ -170,6 +182,7 @@ def test_webhook_happy_path_flips_invite_and_is_idempotent():
     assert "invite_token" not in matched[0]
 
 
+@NEEDS_WEBHOOK
 def test_webhook_case_bound_appends_acceptance_to_case_doc():
     # Register a mediator + mint a case.
     _email, mediator_token = _register("whcase")
@@ -225,6 +238,7 @@ def test_webhook_case_bound_appends_acceptance_to_case_doc():
     assert accepts[0]["accepted_at"]
 
 
+@NEEDS_WEBHOOK
 def test_invites_audit_list_is_scoped_to_caller():
     _e_a, tok_a = _register("audit-a")
     _e_b, tok_b = _register("audit-b")

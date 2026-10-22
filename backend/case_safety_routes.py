@@ -16,6 +16,7 @@ import json
 import logging
 import re
 import os
+from webhook_switch import webhook_secret
 from datetime import datetime, timedelta, timezone
 from typing import Literal, Optional, Union
 
@@ -75,7 +76,7 @@ def _unauthorized() -> HTTPException:
 
 
 def _signature_ok(raw: bytes, provided: str) -> bool:
-    secret = os.environ.get("ALIGN_WEBHOOK_SECRET")
+    secret = webhook_secret("ALIGN_WEBHOOK_SECRET")
     if not secret:
         logger.error("ALIGN_WEBHOOK_SECRET is not set; refusing safety-status request")
         return False
@@ -106,7 +107,7 @@ def _fresh(ts: Union[int, float, str]) -> bool:
 
 @internal_router.post("/internal/safety-status")
 async def receive_safety_status(request: Request, db=Depends(get_db)):
-    if not os.environ.get("ALIGN_WEBHOOK_SECRET"):
+    if not webhook_secret("ALIGN_WEBHOOK_SECRET"):
         # Webhook is off until a secret is set; nothing is read or changed.
         await cs.record_reject(db, "webhook_off")
         raise HTTPException(status_code=503, detail="Unavailable.")
@@ -298,7 +299,7 @@ async def align_status(current: UserPublic = Depends(require_admin), db=Depends(
         "rejected_30d": totals,
         "silence": cs.silence_status(last["at"] if last else None, datetime.now(timezone.utc)),
         "last_test": last_test,
-        "webhook_on": bool(os.environ.get("ALIGN_WEBHOOK_SECRET")),
+        "webhook_on": bool(webhook_secret("ALIGN_WEBHOOK_SECRET")),
     }, headers=NO_STORE)
 
 
@@ -319,7 +320,7 @@ async def link_health(current: UserPublic = Depends(require_admin), db=Depends(g
     now = datetime.now(timezone.utc)
     week = (now - timedelta(days=cs.SILENCE_DAYS)).isoformat()
     day = (now - timedelta(days=1)).isoformat()
-    webhook_on = bool(os.environ.get("ALIGN_WEBHOOK_SECRET"))
+    webhook_on = bool(webhook_secret("ALIGN_WEBHOOK_SECRET"))
     heard = bool(
         await db[cs.AUDIT].find_one({"action": {"$in": APPLIED_ACTIONS}, "at": {"$gte": week}}, {"_id": 1})
         or await db[cs.TESTS].find_one({"received_at": {"$gte": week}}, {"_id": 1})

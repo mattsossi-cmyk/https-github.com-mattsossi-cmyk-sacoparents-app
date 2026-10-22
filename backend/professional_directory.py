@@ -16,6 +16,7 @@ exact contract we expect the sibling directory to expose.
 from __future__ import annotations
 
 import os
+from webhook_switch import webhook_secret as _switch_secret
 from datetime import datetime, timezone
 from typing import Any, Dict, List, Optional
 
@@ -375,8 +376,8 @@ import hmac
 
 def webhook_secret() -> Optional[str]:
     """Shared HMAC secret for the accept webhook. Set on both sides
-    of the integration. Missing → webhook endpoint 503s."""
-    return os.environ.get("SACOPARENTSALIGN_WEBHOOK_SECRET")
+    of the integration. Missing, or WEBHOOKS_ENABLED not "true" → webhook endpoint 503s."""
+    return _switch_secret("SACOPARENTSALIGN_WEBHOOK_SECRET")
 
 
 def verify_webhook_signature(*, raw_body: bytes, signature_header: Optional[str]) -> bool:

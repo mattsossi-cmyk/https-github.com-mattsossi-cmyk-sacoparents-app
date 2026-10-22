@@ -8,6 +8,7 @@ import hashlib
 import hmac
 import json
 import os
+from webhook_switch import webhook_secret
 import time
 import uuid
 from datetime import datetime, timedelta, timezone
@@ -37,7 +38,7 @@ def _webhook_url() -> str:
 
 
 def _configured() -> bool:
-    return bool(os.environ.get("ALIGN_WEBHOOK_SECRET") and os.environ.get("PUBLIC_BACKEND_URL"))
+    return bool(webhook_secret("ALIGN_WEBHOOK_SECRET") and os.environ.get("PUBLIC_BACKEND_URL"))
 
 
 async def _new_test(db, prefix: str) -> str:

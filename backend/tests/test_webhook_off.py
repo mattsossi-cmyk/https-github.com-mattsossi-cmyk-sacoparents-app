@@ -12,7 +12,7 @@ from dotenv import load_dotenv
 from pymongo import MongoClient
 
 load_dotenv("/app/backend/.env")
-if os.environ.get("ALIGN_WEBHOOK_SECRET"):
+if os.environ.get("ALIGN_WEBHOOK_SECRET") and os.environ.get("WEBHOOKS_ENABLED") == "true":
     pytest.skip("ALIGN_WEBHOOK_SECRET is set: webhook is on", allow_module_level=True)
 
 API = "http://localhost:8001/api"

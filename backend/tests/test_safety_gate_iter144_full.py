@@ -18,7 +18,7 @@ FE = dotenv_values("/app/frontend/.env")
 BE = dotenv_values("/app/backend/.env")
 BASE_URL = FE["REACT_APP_BACKEND_URL"].rstrip("/")
 SECRET = BE.get("ALIGN_WEBHOOK_SECRET")
-if not SECRET:
+if not SECRET or BE.get("WEBHOOKS_ENABLED") != "true":
     pytest.skip("webhook off", allow_module_level=True)
 DB = MongoClient(BE["MONGO_URL"].strip('"'))[BE["DB_NAME"].strip('"')]
 URL = f"{BASE_URL}/api/internal/safety-status"
