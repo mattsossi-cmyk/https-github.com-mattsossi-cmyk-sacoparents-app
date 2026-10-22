@@ -14,7 +14,7 @@ import "./JourneyFlow.css";
 // Real screens. "print" = the same Export PDF as the header button.
 // Start with Safety opens the Family check-in on SACOparentsAlign directly (useCheckinLink), in a new tab.
 export const ROUTES = {
-  self: "/dashboard?open=self-assessment",
+  self: "/self-journey",
   coparenting: "/dashboard?open=coparenting-assessment",
   parallelNext: "/dashboard?open=parallel-builder",
   parallelBuilder: "/dashboard?open=parallel-builder-steps",

@@ -1340,7 +1340,6 @@ export function JourneyShell({
           embedded
           alignUrl={ALIGN_SITE_URL}
           actions={{
-            self: () => openAssess(false),
             coparenting: () => setCpAssessOpen(true),
             parallelNext: () => openPp("welcome"),
             parallelBuilder: () => openPp(0),

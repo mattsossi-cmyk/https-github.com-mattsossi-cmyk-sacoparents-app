@@ -10,6 +10,7 @@ import { PreShareConsentHost } from "@/components/PreShareConsentDialog";
 import PolicyRefreshBanner from "@/components/PolicyRefreshBanner";
 import BackToDashboardPill from "@/components/BackToDashboardPill";
 import GlobalCrisisStrip from "@/components/GlobalCrisisStrip";
+import SelfJourneyPage from "@/pages/selfJourney/SelfJourneyPage";
 import DomainGuard from "@/components/DomainGuard";
 
 import Landing from "@/pages/Landing";
@@ -339,6 +340,8 @@ function AppRoutes() {
           element={<SacoparentsPortal />}
         />
         <Route path="/journey" element={<SacoparentsPortal />} />
+        <Route path="/self-journey" element={<ProtectedRoute><SelfJourneyPage /></ProtectedRoute>} />
+        <Route path="/self-journey/:step" element={<ProtectedRoute><SelfJourneyPage /></ProtectedRoute>} />
         <Route
           path="/my-plan"
           element={
