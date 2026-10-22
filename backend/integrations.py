@@ -104,12 +104,28 @@ async def integration_case_invite(token: str, request: Request):
 
 class CaseUpdateIn(BaseModel):
     token: str
-    status: str
+    status: str = "readiness"
     assessment_id: str = ""
     responses: dict | None = None
+    communication_readiness: dict | None = None
+
+
+def _readiness_update(role: str, body: "CaseUpdateIn") -> dict:
+    """Communication Style results pushed by the parent app (parent chose to share). Only the four readiness ids are kept."""
+    comm = body.communication_readiness
+    if not isinstance(comm, dict) or not isinstance(comm.get("responses"), dict):
+        raise HTTPException(status_code=400, detail="communication_readiness.responses (object) is required")
+    from safety_import import _date
+    from safety_screening import comm_record
+    rec = comm_record(comm["responses"], source="sacoparentsapp.online", completed_at=_date(comm.get("completed_at")) or None)
+    if not rec["responses"]:
+        raise HTTPException(status_code=400, detail="No recognised readiness answers (cr_conflict, cr_direct, cr_channel, cr_child)")
+    return {f"communication_readiness.{role}": rec}
 
 
 def _compute_case_updates(report: dict, role: str, body: "CaseUpdateIn", now: str) -> dict:
+    if body.status == "readiness" or (body.communication_readiness is not None and body.responses is None):
+        return _readiness_update(role, body)
     if body.status == "started":
         return {"status": "in_progress"} if report["status"] == "pending_invite" else {}
     if body.status != "completed":
