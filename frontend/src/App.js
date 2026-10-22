@@ -9,6 +9,7 @@ import BiometricGate from "@/components/BiometricGate";
 import { PreShareConsentHost } from "@/components/PreShareConsentDialog";
 import PolicyRefreshBanner from "@/components/PolicyRefreshBanner";
 import BackToDashboardPill from "@/components/BackToDashboardPill";
+import GlobalCrisisStrip from "@/components/GlobalCrisisStrip";
 import DomainGuard from "@/components/DomainGuard";
 
 import Landing from "@/pages/Landing";
@@ -687,6 +688,7 @@ function App() {
             <AppRoutes />
             <GlobalFooterLink />
             <BackToDashboardPill />
+            <GlobalCrisisStrip />
             <PreShareConsentHost />
             <Toaster position="bottom-right" toastOptions={TOAST_OPTIONS} />
             </FooterLinkProvider>

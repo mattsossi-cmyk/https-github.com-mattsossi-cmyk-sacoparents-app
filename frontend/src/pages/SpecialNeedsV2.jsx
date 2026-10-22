@@ -821,7 +821,7 @@ export default function SpecialNeedsV2() {
         )}
 
         {/* footer nav — question-level in focus mode, step-level otherwise */}
-        <div className="mt-6 sticky bottom-0 -mx-4 sm:mx-0 sm:relative bg-white/95 sm:bg-transparent backdrop-blur-sm sm:backdrop-blur-none border-t border-[#EEE9F7] sm:border-none py-3 sm:py-0 px-4 sm:px-0 flex flex-wrap items-center justify-between gap-3">
+        <div className="mt-6 sticky bottom-[var(--crisis-strip-h,0px)] -mx-4 sm:mx-0 sm:relative bg-white/95 sm:bg-transparent backdrop-blur-sm sm:backdrop-blur-none border-t border-[#EEE9F7] sm:border-none py-3 sm:py-0 px-4 sm:px-0 flex flex-wrap items-center justify-between gap-3">
           <button
             data-testid="snc2-prev"
             onClick={() => {

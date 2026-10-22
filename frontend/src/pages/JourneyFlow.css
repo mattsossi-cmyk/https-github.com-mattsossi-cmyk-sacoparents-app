@@ -28,6 +28,8 @@
 .jf-card:hover { transform: translateY(-2px); box-shadow: 0 10px 24px rgba(59, 10, 99, 0.14); }
 .jf-card:focus-visible { outline: 3px solid var(--jf-purple); outline-offset: 3px; }
 .jf-card.jf-green { border-color: var(--jf-green); }
+a.jf-card { text-decoration: none; }
+a.jf-card[aria-disabled="true"] { cursor: progress; }
 .jf-step { font-size: 12px; font-weight: 800; letter-spacing: 0.1em; text-transform: uppercase; color: var(--jf-purple); }
 .jf-green .jf-step { color: var(--jf-green-ink); }
 .jf-img { width: 100%; height: auto; max-height: 420px; object-fit: contain; border-radius: 10px; background: #f3eefa; display: block; }

@@ -8,11 +8,12 @@ import React from "react";
  * Clinical guardrail: even when the parent has cleared the Safety
  * Screen, immediate crisis contact info must remain one tap away.
  */
-export function SafetyCrisisStrip() {
+// `bottom`: above the portal's bottom bar by default; "bottom-0" on screens without one.
+export function SafetyCrisisStrip({ bottom = "bottom-16" }) {
   return (
     <div
       data-testid="portal-crisis-strip"
-      className="no-print fixed bottom-16 left-0 right-0 z-40 max-w-md mx-auto px-3"
+      className={`no-print fixed ${bottom} left-0 right-0 z-40 max-w-md mx-auto px-3`}
     >
       <div className="bg-rose-950/95 text-rose-50 rounded-t-lg px-3 py-1.5 text-[0.625rem] flex items-center gap-2 shadow-lg border-t border-rose-800">
         <i className="fa-solid fa-shield-heart text-rose-300 shrink-0" aria-hidden></i>

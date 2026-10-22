@@ -194,7 +194,7 @@ function ChatComposer({ onSend, disabled }) {
         e.preventDefault();
         submit();
       }}
-      className="sticky bottom-0 bg-gradient-to-t from-white via-white to-transparent pt-4 pb-2"
+      className="sticky bottom-[var(--crisis-strip-h,0px)] bg-gradient-to-t from-white via-white to-transparent pt-4 pb-2"
       data-testid="coach-composer"
     >
       <AiGuardFrame tp="coach" guard={guard}>

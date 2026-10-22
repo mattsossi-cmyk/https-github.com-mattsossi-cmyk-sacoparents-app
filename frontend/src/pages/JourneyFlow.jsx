@@ -2,22 +2,24 @@ import React from "react";
 import { useNavigate } from "react-router-dom";
 
 import { useCalmMode } from "../lib/useCalmMode";
+import { useCheckinLink } from "../lib/useCheckinLink";
 import "./JourneyFlow.css";
 
 /*
   SA CoParents — Journey Flow
   Order: Self Journey → Start with Safety → split into
-         Co-Parenting path or Parallel Parenting path → Child's Needs → Export PDF
+         Co-Parenting path or Parallel Parenting path → Child's Needs → Foundation Statement → Export PDF
 */
 
 // Real screens. "print" = the same Export PDF as the header button.
+// Start with Safety opens the Family check-in on SACOparentsAlign directly (useCheckinLink), in a new tab.
 export const ROUTES = {
   self: "/dashboard?open=self-assessment",
-  safety: "/start-with-safety",
   coparenting: "/dashboard?open=coparenting-assessment",
   parallelNext: "/dashboard?open=parallel-builder",
   parallelBuilder: "/dashboard?open=parallel-builder-steps",
   childNeeds: "/dashboard?open=child-needs",
+  foundation: "/dashboard?open=foundation",
   exportPdf: "print",
 };
 
@@ -35,15 +37,27 @@ function Arrow({ color = "#5b2db3" }) {
   );
 }
 
-function StepCard({ id, step, title, subtitle, img, alt, onGo, tone = "purple" }) {
-  return (
-    <button type="button" className={`jf-card jf-${tone}`} onClick={() => onGo(id)} data-testid={`journey-flow-step-${id}`}>
+// `href` (even null while it loads) makes the card a link that opens in a new tab.
+function StepCard({ id, step, title, subtitle, img, alt, onGo, href, tone = "purple" }) {
+  const body = (
+    <>
       {step && <span className="jf-step">{step}</span>}
       <img src={img} alt={alt} className="jf-img" loading="lazy" />
       <span className="jf-title">{title}</span>
       <span className="jf-sub">{subtitle}</span>
-    </button>
+    </>
   );
+  const cls = `jf-card jf-${tone}`;
+  const testid = `journey-flow-step-${id}`;
+  if (href !== undefined) {
+    return (
+      <a href={href || undefined} aria-disabled={!href} target="_blank" rel="noopener noreferrer" className={cls} data-testid={testid}>
+        {body}
+        <span className="sr-only"> (opens SACOparentsAlign in a new tab)</span>
+      </a>
+    );
+  }
+  return <button type="button" className={cls} onClick={() => onGo(id)} data-testid={testid}>{body}</button>;
 }
 
 function PathSplit({ go }) {
@@ -51,7 +65,7 @@ function PathSplit({ go }) {
     <section className="jf-split" aria-label="Choose your path" data-testid="journey-flow-split">
       <div className="jf-path jf-path-green" data-testid="journey-flow-path-coparenting">
         <div className="jf-path-label">
-          <span className="jf-pill jf-pill-green">Yes · lower conflict</span>
+          <span className="jf-pill jf-pill-green">No · lower conflict</span>
           <h2>Co-Parenting Path</h2>
         </div>
         <Arrow color="#2e9d4a" />
@@ -60,7 +74,7 @@ function PathSplit({ go }) {
       </div>
       <div className="jf-path jf-path-purple" data-testid="journey-flow-path-parallel">
         <div className="jf-path-label">
-          <span className="jf-pill jf-pill-purple">Yes · There are Safety Concerns</span>
+          <span className="jf-pill jf-pill-purple">Yes · there are safety concerns</span>
           <h2>Parallel Parenting Path</h2>
         </div>
         <Arrow />
@@ -75,9 +89,10 @@ function PathSplit({ go }) {
 }
 
 // `actions` (optional) opens a step in place, e.g. inside the Self Journey screen; otherwise each step goes to ROUTES.
-export default function JourneyFlow({ actions = {}, embedded = false }) {
+export default function JourneyFlow({ alignUrl, actions = {}, embedded = false }) {
   const navigate = useNavigate();
   const { calm } = useCalmMode();
+  const checkinHref = useCheckinLink(alignUrl);
   const go = (key) => {
     if (actions[key]) return actions[key]();
     if (ROUTES[key] === "print") return window.print();
@@ -99,10 +114,10 @@ export default function JourneyFlow({ actions = {}, embedded = false }) {
           img={IMG("self")} alt="Self Assessment screen" onGo={go} />
         <Arrow />
         <StepCard id="safety" step="Step 2" title="Start with Safety" subtitle="Private family check-in"
-          img={IMG("safety")} alt="Start with Safety screen" onGo={go} />
+          img={IMG("safety")} alt="Start with Safety screen" href={checkinHref} />
         <Arrow />
         <div className="jf-decision" role="note" data-testid="journey-flow-decision">
-          <span>Safe to work together?</span>
+          <span>Are there safety concerns?</span>
         </div>
       </section>
 
@@ -113,6 +128,9 @@ export default function JourneyFlow({ actions = {}, embedded = false }) {
         <Arrow />
         <StepCard id="childNeeds" step="Both paths" title="Identify Your Child's Needs" subtitle="Educational · medical · psychological"
           img={IMG("needs")} alt="Identify Your Child's Needs screen" onGo={go} />
+        <Arrow />
+        <StepCard id="foundation" step="Both paths" title="Create Your Foundation Statement" subtitle="Shared goals · values · your child's future"
+          img={IMG("foundation")} alt="Create Your Foundation Statement screen" onGo={go} />
         <Arrow />
         <button type="button" className="jf-export" onClick={() => go("exportPdf")} data-testid="journey-flow-export-pdf">
           Export PDF · ready for mediation

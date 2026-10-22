@@ -9633,3 +9633,9 @@ dashboard for sharing SELECTED completed reports with any professional.
 - User edit: the parallel pill now reads "Yes · There are Safety Concerns" (the green pill is still "Yes · lower conflict", under the diamond "Safe to work together?"; that wording mismatch was flagged to the user).
 - webhook_switch.py: a secret value "off" (any case, trimmed) also counts as off. Tests: test_webhook_switch.py, 14 passed with test_webhook_off.
 - Live (13:00 UTC): main.a05c0086.js. Webhooks are still 401, so the switch isn't live yet. It needs a publish.
+
+## 2026-10-22 ~13:05 UTC: Decision wording + Foundation step; publish dispatched
+- Diamond: "Are there safety concerns?". Green pill: "No · lower conflict". Purple pill: "Yes · There are Safety Concerns".
+- New "Both paths" step after Child's Needs: "Create Your Foundation Statement" (image from the user's Foundation Statement.png, at /images/journey/foundation.webp). Deep link /dashboard?open=foundation; in Self Journey it calls openFoundation("self").
+- The user's six journey photos still haven't arrived (no new upload). The stand-ins stay.
+- Deploy dispatched for webhook_switch + Journey Flow. Verify: both webhooks 503, /journey 200, the bundle has the new wording.

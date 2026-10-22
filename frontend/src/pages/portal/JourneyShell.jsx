@@ -940,11 +940,11 @@ export function JourneyShell({
     else if (key === "card4") openFoundation("court", builder);
   };
 
-  // Deep links: /dashboard?open=self-assessment | parallel-builder | parallel-builder-steps | court | comm-builder | coparenting-assessment | child-needs
+  // Deep links: /dashboard?open=self-assessment | parallel-builder | parallel-builder-steps | court | comm-builder | coparenting-assessment | child-needs | foundation
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const open = params.get("open");
-    const keys = ["self-assessment", "parallel-builder", "parallel-builder-steps", "court", "comm-builder", "coparenting-assessment", "child-needs"];
+    const keys = ["self-assessment", "parallel-builder", "parallel-builder-steps", "court", "comm-builder", "coparenting-assessment", "child-needs", "foundation"];
     if (!keys.includes(open)) return;
     params.delete("open");
     const qs = params.toString();
@@ -963,6 +963,9 @@ export function JourneyShell({
     } else if (open === "child-needs") {
       openDoor("self");
       openChildNeeds("self");
+    } else if (open === "foundation") {
+      openDoor("self");
+      openFoundation("self");
     } else {
       openDoor("self");
       openAssess(true);
@@ -1335,12 +1338,14 @@ export function JourneyShell({
         {/* Same steps as the Journey page; each step opens here, in place. */}
         <JourneyFlow
           embedded
+          alignUrl={ALIGN_SITE_URL}
           actions={{
             self: () => openAssess(false),
             coparenting: () => setCpAssessOpen(true),
             parallelNext: () => openPp("welcome"),
             parallelBuilder: () => openPp(0),
             childNeeds: () => openChildNeeds("self"),
+            foundation: () => openFoundation("self"),
           }}
         />
 

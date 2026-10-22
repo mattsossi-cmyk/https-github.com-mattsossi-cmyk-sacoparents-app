@@ -73,7 +73,7 @@ export default function PlanOptionsPage() {
           ))
         )}
       </div>
-      <div className="fixed bottom-0 inset-x-0 bg-white/95 border-t border-purple-100 px-4 py-3 backdrop-blur">
+      <div className="fixed bottom-[var(--crisis-strip-h,0px)] inset-x-0 bg-white/95 border-t border-purple-100 px-4 py-3 backdrop-blur">
         <div className="max-w-2xl mx-auto flex items-center justify-between gap-3">
           <span className="text-xs text-[#6E6787]" data-testid="plan-options-count">{picks.length} picked</span>
           <button type="button" onClick={save} disabled={busy || !categories} data-testid="plan-options-save" className="btn-gradient px-6 disabled:opacity-50">
