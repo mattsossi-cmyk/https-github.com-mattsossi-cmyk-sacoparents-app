@@ -9698,3 +9698,8 @@ dashboard for sharing SELECTED completed reports with any professional.
   certificate button once the journey award is earned; link to the Self Journey.
 - Tests: tests/test_inapp_reminders_safer_tips.py (5) + test_self_journey.py (13) pass; cron yaml regressions pass;
   screenshot-verified Journey reminder -> Self-Assessment opens, Account awards (no overflow at 390px).
+
+## 2026-10-23: /safety-first redirect (PREVIEW)
+- Founder chose "just send /safety-first home" (no SafetyFirst / AlignPortal pages). App.js: explicit
+  `<Route path="/safety-first" element={<Navigate to="/" replace />} />` next to /start-with-safety. Client-side replace
+  (no server 301 possible for the SPA). Live already behaves the same via the catch-all. Screenshot-verified -> "/".

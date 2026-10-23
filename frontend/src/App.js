@@ -283,6 +283,8 @@ function AppRoutes() {
         <Route path="/safety" element={<Safety />} />
         <Route path="/help" element={<GetHelp />} />
         <Route path="/start-with-safety" element={<StartWithSafetyPage />} />
+        {/* Permanent redirect: old /safety-first links land on the home page. */}
+        <Route path="/safety-first" element={<Navigate to="/" replace />} />
         <Route path="/calendar" element={<CalendarPage />} />
         {/* Case settings are not shown to families yet (any limits a case has still apply). */}
         <Route path="/case-settings" element={<Navigate to="/" replace />} />
