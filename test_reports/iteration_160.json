@@ -1,0 +1,56 @@
+{
+  "summary": "Tested the Self Journey round end to end (backend + mobile 390x844 UI + Journey page on mobile and desktop) with 2 fresh parents plus parent1. Everything in the review list passed: back links on all 8 steps, redirects, the Safety gate, the concern pathway (resources, co-parenting, mediation), the AI guide on the concern path (2 turns), the GuideAvatar ring, speaking and wave states, Calm Mode, progress persistence and furthest step, Foundation approve, the server PDF, Share, the Journey page single Parallel card and no Done tick, the home tile and the crisis strip. No critical bugs found. A few minor copy and PDF layout notes are listed below.",
+  "backend_issues": {
+    "critical": [],
+    "minor": [
+      {"endpoint": "GET /api/self-journey/pdf", "issue": "_section() only adds a page when y > 230. It does not check the section height, so section 7 'Next Steps & Available Resources' splits across pages 1-2: '911' is on page 1 and the national + San Antonio lines are on page 2. Use pdf.will_page_break(estimated_height) or a lower threshold to keep each section's body together."},
+      {"endpoint": "POST /api/journey-guide/self-journey/chat", "issue": "With safety_status=concern the AI sometimes says 'The safety check showed concerns'. That suggests the app ran an assessment, but the concern is the parent's own pick. Consider changing SAFETY_CONTEXT to 'you shared that there are safety concerns'. The replies never said the parent is safe and never encouraged meeting, joint sessions or direct contact."}
+    ]
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": [
+      {"screen": "AI notice modal opened from the Journey Guide", "issues": ["The title and button say 'Before you use the AI Communication Builder' / 'Continue to AI Communication Builder', and the body says 'help you write messages', even though the feature passed is journey_guide. The app-wide notice behaviour is deliberate, but the copy is not feature-aware."]},
+      {"screen": "Self Journey mobile footer", "issues": ["There is a 6px gap between .sj-footer (bottom 800px) and portal-crisis-strip (top 806px). Page content scrolls visibly through it. The strip does NOT cover the footer buttons."]}
+    ]
+  },
+  "test_report_links": ["/app/backend/tests/test_iter160_self_journey_public.py", "/app/backend/tests/test_self_journey.py", "/app/test_reports/pytest/iter160.xml", "/app/test_reports/pytest/self_journey.xml"],
+  "verified_passing": [
+    "test_self_journey.py: 10/10 passed. New public-URL suite: 6/6 passed. GET /api/self-journey/pdf without auth returns 401. safety_status 'safe' returns 422 after the AI notice is accepted. Calm-mode PUT on/off returns 200.",
+    "PDF (from the API and from the UI download): file SA_CoParents_Self_Journey.pdf, application/pdf. Has all 7 section titles and the approved Foundation text. An unapproved draft is hidden and the section says 'Not approved yet'. No private Situation, Co-parenting or Mediation note text. The word 'concern' never appears. National + 3 San Antonio numbers are present.",
+    "Mobile: every step shows sj-back-to-journey -> /journey (clicked; it opens /journey). No horizontal overflow on any step. /self-journey -> /self-journey/safety.",
+    "Safety: sj-next is disabled until a pick is made. sj-open-checkin goes to https://sacoparentsalign.com with target=_blank. No in-app questionnaire. The concern notice lists 911, 1-800-799-7233, 210-733-8810, 210-631-0100 and 210-533-2729. The CTA reads 'Continue on My Safety Pathway'.",
+    "Concern path: no sj-approach-cooperative and sj-coparenting-concern is shown. sj-mediation-concern is present. Clear path: sj-approach-cooperative is present.",
+    "Guide (concern, Mediation step): the input is locked until the AI notice is accepted. That is expected: tapping the input opens the notice, and after agree + continue the input unlocks. Reply 1 said not to meet in person. Reply 2, in the same session, said not to do a joint session and suggested shuttle mediation. sj-guide-avatar has class 'is-speaking' with a 1.4s ring while sj-assistant-thinking shows, then goes back to 'sj-avatar'. Every assistant bubble has an avatar.",
+    "Wave: sj-guide-wave shows on the first open after clearing localStorage 'sj-guide-waved', is gone after ~3.4s, and does not show on a later open. This worked even under StrictMode.",
+    "Header ring animation-name: 'none' on Safety, 'sj-ring' on the other steps. With Calm Mode on it is 'none'; after resetting Calm Mode it is 'sj-ring' again.",
+    "Persistence: Situation text typed, moved forward to child-needs, then signed in again. Text restored. Progress segments safety..child-needs are enabled; foundation/mediation/summary are disabled. /self-journey/summary redirects to /self-journey/child-needs.",
+    "Foundation: Draft + Approve shows 'Approved ✓', and GET /api/foundation-builder/me fields.statement exactly equals the draft.",
+    "Summary: sj-download-pdf downloads SA_CoParents_Self_Journey.pdf. sj-share goes to /summary.",
+    "Journey page (390 and 1920x800): only journey-flow-step-parallelBuilder, labelled 'STEP 3'. No parallelNext. No journey-flow-safety-done for a fresh parent or for parent1 (both have setup_complete=false, so the UI matches the API). No overflow.",
+    "Home: a fresh account first sees the path-picker modal. After picking Self Journey, the door-welcome-hotspot-self tile goes to /self-journey/safety.",
+    "Crisis strip is visible on every step and does not overlap .sj-footer (footer 719-800, strip 806-844).",
+    "Fonts: /fonts/fonts.css returns 200 with Lora (1 face) and Nunito Sans (3 faces); the Lora woff2 returns 200. /images/guide-avatar.webp returns 200.",
+    "Overlays: the Co-Parenting overlay opens, and Escape returns to the guide. The Child Needs educational overlay (sj-needs-overlay) renders its content and is not blank."
+  ],
+  "action_items": [
+    "(minor) Self Journey PDF: keep each section together so section 7 resources don't split across pages.",
+    "(minor) Reword the concern SAFETY_CONTEXT so the AI says the parent shared concerns, not 'the safety check showed concerns'.",
+    "(minor, optional) Make the AI notice modal copy feature-aware for journey_guide.",
+    "(minor) Close the 6px gap between the Self Journey footer and the crisis strip on mobile."
+  ],
+  "critical_code_review_comments": [
+    "SelfJourney.jsx is 975 lines (over 700). Split the step pages (Safety/Situation/Foundation/Mediation/Summary) and AssistantSheet into separate modules.",
+    "self_journey_pdf._section page-break heuristic (y > 230) ignores section height.",
+    "The positive journey-flow-safety-done tick could not be checked in the UI because there is no Align-confirmed account (webhooks are off on purpose). The code path in JourneyFlow.jsx L103/L125 looks correct."
+  ],
+  "updated_files": ["/app/backend/tests/test_iter160_self_journey_public.py"],
+  "success_rate": {"backend": "100%", "frontend": "100% of the requested checks (4 minor polish notes)"},
+  "test_credentials": "parent1@test.com / TestPass123! (from /app/memory/test_credentials.md). Fresh parents were registered as test_sjui_*@example.com and test_sjui2_*@example.com.",
+  "seed_data_creation": "Fresh TEST parents created through /api/auth/register: test_sj160_*, test_sjui_*, test_sjui2_* @example.com.",
+  "retest_needed": false,
+  "should_main_agent_self_test": true,
+  "context_for_next_testing_agent": "Fresh accounts show a path-picker modal on /dashboard: click path-picker-choice-self_journey first. The Journey Guide input is read-only (data-ai-locked) until you click the input, then ai-notice-agree and ai-notice-continue. The playwright harness shadows str(), so avoid str() and nested quotes in f-strings. The mobile logout button sits inside the menu; clearing token/cookies was used to simulate logout.",
+  "rca of the issue": "No functional bugs. The PDF split comes from a fixed y-threshold page-break check in _section()."
+}

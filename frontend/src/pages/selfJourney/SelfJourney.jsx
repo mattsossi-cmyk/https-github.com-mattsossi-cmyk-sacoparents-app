@@ -16,6 +16,8 @@ import { Link, Navigate, useNavigate, useParams } from "react-router-dom";
 import { ArrowLeft, Hand } from "lucide-react";
 
 import { useAiGuard } from "../../components/aiNotice/AiGuard";
+import { AwardModal, useMilestoneAwards } from "./Awards";
+import { CheckInCard, CheckInDialog, isCheckInDue } from "./CheckIn";
 import GuideAvatar from "./GuideAvatar";
 import "./selfJourney.css";
 
@@ -185,6 +187,8 @@ export const EMPTY_PROGRESS = {
   childNeeds: { opened: [] },
   foundation: { answers: {}, draft: "", approved: false, approvedAt: null },
   mediation: {},
+  checkIns: [], // [{ date, hardest, wentWell, helpNext, planFits }] — private, never printed or shared
+  awards: {}, // { selfAssessment, coparenting, foundation, journey }: date each award was earned
   updatedAt: null,
 };
 
@@ -209,11 +213,20 @@ export default function SelfJourney({
   logoSrc,
   calm = false,
   homeHref = "/journey",
+  coparentingDone = false,
+  lastSelfAssessmentAt = null,
+  awardsPaused = false,
+  awardLogoSrc,
+  onDownloadCertificate,
+  onRetakeSelfAssessment,
+  checkInDays = 30,
 }) {
   const { step: slug } = useParams();
   const navigate = useNavigate();
   const [progress, setProgress] = useState(() => ({ ...EMPTY_PROGRESS, ...(initialProgress || {}) }));
   const [chatOpen, setChatOpen] = useState(false);
+  const [checkInOpen, setCheckInOpen] = useState(false);
+  const [checkInHidden, setCheckInHidden] = useState(false);
   const [toast, setToast] = useState("");
   const contentRef = useRef(null);
   const dirty = useRef(false);
@@ -223,6 +236,12 @@ export default function SelfJourney({
   const index = STEPS.findIndex((s) => s.slug === slug);
   const step = STEPS[index];
   const concern = progress.safety.status === "concern";
+
+  const [award, setAward] = useMilestoneAwards({
+    progress, setProgress, saveRef,
+    earned: { selfAssessment: selfAssessmentCount > 0, coparenting: coparentingDone, foundation: progress.foundation.approved },
+    paused: awardsPaused || chatOpen || checkInOpen || index === -1 || index > progress.maxStepReached,
+  });
 
   // Scroll to top and close the assistant whenever the page changes
   useEffect(() => {
@@ -261,10 +280,19 @@ export default function SelfJourney({
     setProgress(stamped);
     try {
       await onSave?.(stamped);
-      flash(message);
+      if (message) flash(message);
     } catch (e) {
       flash("We couldn't save just now. Please try again.");
     }
+  };
+
+  const checkInDue =
+    index > 0 && !checkInHidden && isCheckInDue({ checkIns: progress.checkIns, lastSelfAssessmentAt, checkInDays });
+
+  const saveCheckIn = async (entry, message = "Check-in saved. See you next month.") => {
+    setCheckInOpen(false);
+    setCheckInHidden(true);
+    await persist({ ...progress, checkIns: [...progress.checkIns, entry].slice(-60) }, message);
   };
 
   // Only the safety step is required before moving on
@@ -277,7 +305,10 @@ export default function SelfJourney({
   const handleNext = async () => {
     if (!canContinue) return;
     if (index === STEPS.length - 1) {
-      await persist(progress, "Your Self Journey is saved.");
+      const first = !progress.awards?.journey;
+      const next = first ? { ...progress, awards: { ...progress.awards, journey: new Date().toISOString() } } : progress;
+      await persist(next, "Your Self Journey is saved.");
+      if (first) setAward("journey");
       return;
     }
     const next = { ...progress, maxStepReached: Math.max(progress.maxStepReached, index + 1) };
@@ -324,6 +355,8 @@ export default function SelfJourney({
         <p className="sj-kicker">{step.kicker}</p>
         <h1 className="sj-title" data-testid="sj-title">{step.title}</h1>
         <p className="sj-intro">{step.intro}</p>
+
+        {checkInDue && <CheckInCard onStart={() => setCheckInOpen(true)} onLater={() => setCheckInHidden(true)} />}
 
         {step.slug === "safety" && (
           <SafetyPage
@@ -381,6 +414,8 @@ export default function SelfJourney({
             onEdit={(i) => goTo(i)}
             onDownloadPdf={() => onDownloadPdf?.(progress)}
             onShare={() => onShare?.(progress)}
+            onCheckIn={() => setCheckInOpen(true)}
+            onCertificate={progress.awards?.journey ? onDownloadCertificate : null}
             resources={safetyResources}
           />
         )}
@@ -410,6 +445,25 @@ export default function SelfJourney({
           onAsk={onAskAssistant}
           logoSrc={logoSrc}
         />
+      )}
+
+      {checkInOpen && (
+        <CheckInDialog
+          onClose={() => setCheckInOpen(false)}
+          onSave={(entry) => saveCheckIn(entry)}
+          onRetake={async (entry) => {
+            await saveCheckIn(entry, "Check-in saved. Your last answers show as dotted outlines.");
+            onRetakeSelfAssessment?.();
+          }}
+          onUpdateSituation={async (entry) => {
+            await saveCheckIn(entry, "Check-in saved. Update where things stand today.");
+            navigate(`/self-journey/${STEPS[1].slug}`);
+          }}
+        />
+      )}
+
+      {award && (
+        <AwardModal award={award} logoSrc={awardLogoSrc} calm={calm} onClose={() => setAward(null)} onCertificate={onDownloadCertificate} />
       )}
 
       {toast && (
@@ -728,7 +782,7 @@ function MediationPage({ values, concern, onChange }) {
   );
 }
 
-function SummaryPage({ progress, concern, selfAssessmentCount, onEdit, onDownloadPdf, onShare, resources }) {
+function SummaryPage({ progress, concern, selfAssessmentCount, onEdit, onDownloadPdf, onShare, onCheckIn, onCertificate, resources }) {
   const filled = (obj) => Object.values(obj || {}).some((v) => typeof v === "string" && v.trim());
   const approach = APPROACHES.find((a) => a.id === progress.coparenting.approach);
   const mediationDone = filled(progress.mediation) ? "Completed" : "Not started";
@@ -809,6 +863,12 @@ function SummaryPage({ progress, concern, selfAssessmentCount, onEdit, onDownloa
       <div className="sj-row">
         <button type="button" className="sj-outline-btn" onClick={onDownloadPdf} data-testid="sj-download-pdf">Download PDF</button>
         <button type="button" className="sj-outline-btn" onClick={onShare} data-testid="sj-share">Share with a professional</button>
+      </div>
+      <div className="sj-row">
+        <button type="button" className="sj-outline-btn" onClick={onCheckIn} data-testid="sj-checkin-now">Check in now</button>
+        {onCertificate && (
+          <button type="button" className="sj-outline-btn" onClick={onCertificate} data-testid="sj-certificate">Download my certificate</button>
+        )}
       </div>
     </>
   );

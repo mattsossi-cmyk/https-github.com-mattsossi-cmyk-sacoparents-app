@@ -11,12 +11,12 @@ from datetime import datetime, timezone
 from io import BytesIO
 from typing import Dict, List, Literal, Optional
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, HTTPException
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel, Field, field_validator, model_validator
 
 from auth import UserPublic, get_current_user, get_db
-from self_journey_pdf import build_self_journey_pdf
+from self_journey_pdf import build_certificate_pdf, build_self_journey_pdf
 
 router = APIRouter(prefix="/self-journey", tags=["self-journey"])
 _COLL = "self_journey_progress"
@@ -59,6 +59,23 @@ class Foundation(BaseModel):
         return _keep(FOUNDATION_KEYS, v)
 
 
+class Awards(BaseModel):
+    # Date each milestone award was earned (checked on save; once earned it stays).
+    selfAssessment: Optional[str] = Field(default=None, max_length=40)
+    coparenting: Optional[str] = Field(default=None, max_length=40)
+    foundation: Optional[str] = Field(default=None, max_length=40)
+    journey: Optional[str] = Field(default=None, max_length=40)
+
+
+class CheckIn(BaseModel):
+    # Monthly check-in: private, never emailed, printed or shared.
+    date: str = Field(..., max_length=40)
+    hardest: str = Field(default="", max_length=_TEXT)
+    wentWell: str = Field(default="", max_length=_TEXT)
+    helpNext: str = Field(default="", max_length=_TEXT)
+    planFits: Optional[Literal["yes", "somewhat", "no"]] = None
+
+
 class Progress(BaseModel):
     maxStepReached: int = Field(default=0, ge=0, le=LAST_STEP)
     safety: Safety = Field(default_factory=Safety)
@@ -67,6 +84,8 @@ class Progress(BaseModel):
     childNeeds: ChildNeeds = Field(default_factory=ChildNeeds)
     foundation: Foundation = Field(default_factory=Foundation)
     mediation: Dict[str, str] = Field(default_factory=dict)
+    checkIns: List[CheckIn] = Field(default_factory=list, max_length=120)
+    awards: Awards = Field(default_factory=Awards)
     updatedAt: Optional[str] = None
 
     @field_validator("situation")
@@ -91,6 +110,25 @@ class ProgressOut(BaseModel):
     progress: Optional[Progress] = None
 
 
+async def _earned(db, uid: str, body: Progress) -> Dict[str, bool]:
+    return {
+        "selfAssessment": bool(await db.self_assessment_history.find_one({"user_id": uid}, {"_id": 1})),
+        "coparenting": bool(await db.cp_assessments.find_one({"user_id": uid, "completed": True}, {"_id": 1})),
+        "foundation": body.foundation.approved,
+        "journey": body.maxStepReached == LAST_STEP,
+    }
+
+
+async def _check_awards(db, uid: str, body: Progress, prev: Dict[str, Optional[str]]) -> None:
+    """An award is kept only if it was already earned or its milestone is really done."""
+    claimed = body.awards.model_dump()
+    if not any(v and not prev.get(k) for k, v in claimed.items()):
+        body.awards = Awards(**{k: prev.get(k) for k in claimed})
+        return
+    earned = await _earned(db, uid, body)
+    body.awards = Awards(**{k: prev.get(k) or (v if earned[k] else None) for k, v in claimed.items()})
+
+
 @router.get("/me", response_model=ProgressOut)
 async def get_progress(user: UserPublic = Depends(get_current_user), db=Depends(get_db)) -> ProgressOut:
     doc = await db[_COLL].find_one({"user_id": user.user_id}, {"_id": 0, "progress": 1})
@@ -100,10 +138,26 @@ async def get_progress(user: UserPublic = Depends(get_current_user), db=Depends(
 @router.put("/me", response_model=ProgressOut)
 async def save_progress(body: Progress, user: UserPublic = Depends(get_current_user), db=Depends(get_db)) -> ProgressOut:
     body.updatedAt = datetime.now(timezone.utc).isoformat()
+    doc = await db[_COLL].find_one({"user_id": user.user_id}, {"_id": 0, "progress.awards": 1})
+    await _check_awards(db, user.user_id, body, ((doc or {}).get("progress") or {}).get("awards") or {})
     await db[_COLL].update_one(
         {"user_id": user.user_id}, {"$set": {"user_id": user.user_id, "progress": body.model_dump()}}, upsert=True
     )
     return ProgressOut(progress=body)
+
+
+@router.get("/certificate")
+async def download_certificate(user: UserPublic = Depends(get_current_user), db=Depends(get_db)) -> StreamingResponse:
+    doc = await db[_COLL].find_one({"user_id": user.user_id}, {"_id": 0, "progress": 1})
+    progress = Progress(**doc["progress"]) if doc else Progress()
+    if not progress.awards.journey:
+        raise HTTPException(status_code=409, detail="Finish your Self Journey to unlock your certificate.")
+    pdf = build_certificate_pdf(first_name=(user.name or "").split(" ")[0], awards=progress.awards.model_dump())
+    return StreamingResponse(
+        BytesIO(pdf), media_type="application/pdf",
+        headers={"Content-Disposition": 'attachment; filename="SA_CoParents_Self_Journey_Certificate.pdf"',
+                 "Cache-Control": "no-store"},
+    )
 
 
 @router.get("/pdf")

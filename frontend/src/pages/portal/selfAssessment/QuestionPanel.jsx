@@ -44,7 +44,8 @@ function IntroPanel() {
   );
 }
 
-function RatePanel({ step, onAnswer, onBack, status }) {
+// `previous` (Self Journey check-in retake): the parent's last answer shows as a dotted outline.
+function RatePanel({ step, onAnswer, onBack, status, previous }) {
   const [picked, setPicked] = useState(null);
   useEffect(() => setPicked(null), [step.id]);
   const pick = (v) => {
@@ -53,6 +54,7 @@ function RatePanel({ step, onAnswer, onBack, status }) {
     setTimeout(() => onAnswer(v), 280);
   };
   const { section } = step;
+  const was = previous?.[step.id];
   return (
     <Shell
       status={status}
@@ -61,6 +63,11 @@ function RatePanel({ step, onAnswer, onBack, status }) {
       <p data-testid="sa-question-prompt" className="text-sm text-slate-600 mb-4">
         {step.prompt}
       </p>
+      {was != null && (
+        <p data-testid="sa-last-time-hint" className="text-xs text-purple-700 -mt-2 mb-3">
+          Dotted outline = your answer last time.
+        </p>
+      )}
       <div role="radiogroup" aria-label={step.prompt} className="space-y-2 text-xs md:text-sm">
         {SCALE.map((s) => (
           <label
@@ -69,7 +76,9 @@ function RatePanel({ step, onAnswer, onBack, status }) {
             className={`flex items-center p-3 rounded-xl border cursor-pointer transition-colors ${
               picked === s.value
                 ? "border-purple-500 bg-purple-50"
-                : "border-slate-200 hover:border-purple-400 hover:bg-purple-50/50"
+                : was === s.value
+                  ? "border-2 border-dashed border-purple-400 hover:bg-purple-50/50"
+                  : "border-slate-200 hover:border-purple-400 hover:bg-purple-50/50"
             }`}
           >
             <input
@@ -83,6 +92,11 @@ function RatePanel({ step, onAnswer, onBack, status }) {
               <span className="font-extrabold text-[#3B1C6B] mr-1.5">{s.value}</span>
               {s.label}
             </span>
+            {was === s.value && (
+              <span className="ml-auto text-[11px] font-semibold text-purple-700" data-testid={`sa-option-${s.value}-last`}>
+                Last time
+              </span>
+            )}
           </label>
         ))}
       </div>
@@ -136,11 +150,11 @@ function GoalPanel({ draft, onFinish, onBack, busy, status }) {
   );
 }
 
-export function QuestionPanel({ step, draft, update, onFinish, onBack, busy, status }) {
+export function QuestionPanel({ step, draft, update, onFinish, onBack, busy, status, previous = null }) {
   if (!step || step.type === "intro") return <IntroPanel />;
   if (step.type === "rate") {
     const onAnswer = (v) => update((d) => ({ ...d, answers: { ...d.answers, [step.id]: v } }));
-    return <RatePanel step={step} onAnswer={onAnswer} onBack={onBack} status={status} />;
+    return <RatePanel step={step} onAnswer={onAnswer} onBack={onBack} status={status} previous={previous} />;
   }
   if (step.type === "reflect") {
     const onSave = (text) => update((d) => ({ ...d, reflections: { ...d.reflections, [step.id]: text } }));

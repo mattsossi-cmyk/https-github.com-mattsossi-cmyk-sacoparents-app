@@ -11,6 +11,7 @@ import { useChildNeeds } from "../portal/childNeeds/useChildNeeds";
 import { CoparentingAssessmentView } from "../portal/coparenting/CoparentingAssessmentView";
 import { ALIGN_SITE_URL, quickExitAction } from "../portal/JourneyShell";
 import { SelfAssessmentView } from "../portal/SelfAssessmentView";
+import { useCoparentingDone } from "../portal/selfJourney/useCoparentingDone";
 import { useSelfAssessmentHistory } from "../portal/selfAssessment/useSelfAssessmentHistory";
 import SelfJourney, { STEPS } from "./SelfJourney";
 
@@ -103,7 +104,8 @@ function Overlays({ overlay, close, setOverlay, sa, childNeeds, user, parentName
         parentName={parentName}
         userId={user.user_id}
         history={sa.history}
-        startNew={false}
+        startNew={!!overlay.retake}
+        compareWithLast={!!overlay.retake}
         onCompleted={sa.addEntry}
         onEntryUpdate={sa.updateEntry}
         onGoalReached={sa.markReached}
@@ -152,6 +154,7 @@ export default function SelfJourneyPage() {
   const { calm } = useCalmMode();
   const [progress, setProgress] = useState(undefined);
   const [overlay, setOverlay] = useState(null);
+  const coparentingDone = useCoparentingDone(user?.user_id, overlay?.kind === "coparenting");
   const sessionRef = useRef(null);
   const parentName = user?.name ? user.name.split(" ")[0] : null;
 
@@ -198,6 +201,15 @@ export default function SelfJourneyPage() {
         onQuickExit={quickExitAction}
         logoSrc="/images/guide-avatar.webp"
         calm={calm}
+        coparentingDone={coparentingDone}
+        lastSelfAssessmentAt={sa.latest?.completed_at || null}
+        awardsPaused={!!overlay}
+        awardLogoSrc="/images/award-logo.webp"
+        onDownloadCertificate={() =>
+          downloadPdf("/self-journey/certificate", { filename: "SA_CoParents_Self_Journey_Certificate.pdf", testid: "sj-certificate" })
+        }
+        onRetakeSelfAssessment={() => setOverlay({ kind: "self", retake: true })}
+        checkInDays={0}
       />
       <Overlays overlay={overlay} close={() => setOverlay(null)} setOverlay={setOverlay} sa={sa}
         childNeeds={childNeeds} user={user} parentName={parentName} />

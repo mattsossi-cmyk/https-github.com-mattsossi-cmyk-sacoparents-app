@@ -142,3 +142,46 @@ def test_guide_chat_rejects_unknown_safety_status(client):
                                                         "ai_notice_ack_at": datetime.now(timezone.utc).isoformat()})
     r = client.post("/api/journey-guide/self-journey/chat", headers=h, json={"message": "hi", "safety_status": "safe"})
     assert r.status_code == 422
+
+
+def _pdf_text(content):
+    from pypdf import PdfReader
+    import io
+
+    return "".join(p.extract_text() for p in PdfReader(io.BytesIO(content)).pages)
+
+
+def test_check_ins_saved_loaded_and_kept_out_of_pdf(client):
+    _, h, uid = _parent(client)
+    ci = {"date": "2026-10-23T10:00:00+00:00", "hardest": "CHECKIN-SECRET", "wentWell": "", "helpNext": "x", "planFits": "no"}
+    assert client.put(ME, headers=h, json={"checkIns": [ci]}).status_code == 200
+    got = client.get(ME, headers=h).json()["progress"]["checkIns"]
+    assert got[0]["hardest"] == "CHECKIN-SECRET" and got[0]["planFits"] == "no"
+    assert client.put(ME, headers=h, json={"checkIns": [{**ci, "planFits": "maybe"}]}).status_code == 422
+    assert "CHECKIN-SECRET" not in _pdf_text(client.get("/api/self-journey/pdf", headers=h).content)
+
+
+def test_old_journey_without_check_ins_or_awards_still_loads(client):
+    _, h, uid = _parent(client)
+    _db.self_journey_progress.update_one({"user_id": uid}, {"$set": {"user_id": uid, "progress": {"maxStepReached": 2}}}, upsert=True)
+    p = client.get(ME, headers=h).json()["progress"]
+    assert p["maxStepReached"] == 2 and p["checkIns"] == [] and p["awards"]["journey"] is None
+
+
+def test_awards_need_the_real_milestone_and_unlock_the_certificate(client):
+    _, h, uid = _parent(client)
+    now = "2026-10-23T10:00:00+00:00"
+    claim = {"selfAssessment": now, "coparenting": now, "foundation": now, "journey": now}
+    a = client.put(ME, headers=h, json={"awards": claim}).json()["progress"]["awards"]
+    assert a == {"selfAssessment": None, "coparenting": None, "foundation": None, "journey": None}
+    assert client.get("/api/self-journey/certificate", headers=h).status_code == 409
+    body = {"maxStepReached": 7, "foundation": {"draft": "d", "approved": True}, "awards": {"foundation": now, "journey": now}}
+    a = client.put(ME, headers=h, json=body).json()["progress"]["awards"]
+    assert a["foundation"] == now and a["journey"] == now and a["selfAssessment"] is None
+    # once earned an award stays, even if a later save leaves it out
+    assert client.put(ME, headers=h, json={"maxStepReached": 7}).json()["progress"]["awards"]["journey"] == now
+    r = client.get("/api/self-journey/certificate", headers=h)
+    assert r.status_code == 200 and r.headers["content-type"] == "application/pdf"
+    text = _pdf_text(r.content)
+    assert "Certificate of Completion" in text and "SJ" in text and "Foundation Award" in text
+    assert client.get("/api/self-journey/certificate").status_code == 401

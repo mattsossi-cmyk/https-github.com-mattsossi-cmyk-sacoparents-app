@@ -76,8 +76,11 @@ TOPICS: Dict[str, Dict[str, str]] = {
 
 # The parent's own pick after their Family check-in (the Self Journey guide sends it with every message).
 SAFETY_CONTEXT = {
-    "clear": "The parent's safety result: clear (they said there are no safety concerns right now).",
-    "concern": "The parent's safety result: concern (they said there are safety concerns).",
+    "clear": "The parent shared that there are no safety concerns right now (their own answer, not an assessment result).",
+    "concern": (
+        "The parent shared that there are safety concerns (their own answer after their Family check-in; you have not "
+        "seen any assessment). If you mention it, say 'you shared', never 'the check showed'."
+    ),
     "none": "The parent has not given a safety result yet.",
 }
 

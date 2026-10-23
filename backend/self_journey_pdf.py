@@ -4,10 +4,12 @@ Never printed here: the safety pick, or the private Situation / Co-parenting / M
 """
 from __future__ import annotations
 
+import os
 from datetime import datetime, timezone
 from typing import Any, Dict, List, Optional
 
 from fpdf import FPDF
+from fpdf.enums import MethodReturnValue
 
 from self_assessment_pdf import _safe
 
@@ -21,6 +23,8 @@ PURPLE = (91, 63, 160)
 INK = (30, 41, 59)
 MUTED = (100, 116, 139)
 LAVENDER = (243, 239, 254)
+DARK_BLUE = (27, 42, 107)
+AWARD_LOGO = os.path.join(os.path.dirname(__file__), "assets", "award_logo.png")
 DISCLAIMER = "Private to you. General guidance only, not legal, medical or psychological advice."
 
 APPROACHES = {"cooperative": "Working together", "parallel": "Parallel parenting", "unsure": "Not sure yet"}
@@ -85,7 +89,12 @@ def _filled(d: Dict[str, Any]) -> bool:
 
 
 def _section(pdf: _SJPDF, n: int, title: str, lines: List[str], status: str = "", bullets: bool = True) -> None:
-    if pdf.get_y() > 230:
+    body = "\n".join(f"- {line}" if bullets else line for line in lines) if lines else " "
+    pdf.set_font("Helvetica", "", 9.5)
+    needed = 7.5 + (8 if status else 0) + pdf.multi_cell(
+        pdf.epw, 5.2, _safe(body), padding=(2, 3, 2.5, 3), dry_run=True, output=MethodReturnValue.HEIGHT
+    )
+    if pdf.will_page_break(needed):
         pdf.add_page()
     pdf.set_fill_color(*PURPLE)
     pdf.set_text_color(255, 255, 255)
@@ -98,7 +107,6 @@ def _section(pdf: _SJPDF, n: int, title: str, lines: List[str], status: str = ""
         pdf.multi_cell(pdf.epw, 5.4, _safe(status), fill=True, padding=(2.5, 3, 0, 3), new_x="LMARGIN", new_y="NEXT")
     pdf.set_font("Helvetica", "", 9.5)
     pdf.set_text_color(*INK)
-    body = "\n".join(f"- {line}" if bullets else line for line in lines) if lines else " "
     pdf.multi_cell(pdf.epw, 5.2, _safe(body), fill=True, padding=(2, 3, 2.5, 3), new_x="LMARGIN", new_y="NEXT")
     pdf.ln(3)
 
@@ -146,4 +154,59 @@ def build_self_journey_pdf(
              "Completed" if _filled(mediation) else "Not started")
 
     _section(pdf, 7, "Next Steps & Available Resources", [*NEXT_STEPS, *RESOURCES])
+    return bytes(pdf.output())
+
+
+AWARD_NAMES = {
+    "selfAssessment": "Self-Reflection Award",
+    "coparenting": "Co-Parenting Insight Award",
+    "foundation": "Foundation Award",
+    "journey": "Self Journey Award",
+}
+
+
+def build_certificate_pdf(*, first_name: str, awards: Dict[str, Optional[str]]) -> bytes:
+    """Printable certificate for finishing the Self Journey: logo, first name, awards earned and the date."""
+    pdf = FPDF(orientation="L", format="Letter")
+    pdf.set_auto_page_break(auto=False)
+    pdf.add_page()
+    w, h = pdf.w, pdf.h
+    pdf.set_draw_color(*DARK_BLUE)
+    pdf.set_line_width(1.6)
+    pdf.rect(8, 8, w - 16, h - 16)
+    pdf.set_draw_color(*PURPLE)
+    pdf.set_line_width(0.5)
+    pdf.rect(12, 12, w - 24, h - 24)
+
+    logo_w = 108
+    pdf.image(AWARD_LOGO, x=(w - logo_w) / 2, y=20, w=logo_w)
+    pdf.set_y(92)
+    pdf.set_font("Times", "BI", 30)
+    pdf.set_text_color(*PURPLE)
+    pdf.cell(0, 13, "Certificate of Completion", align="C", new_x="LMARGIN", new_y="NEXT")
+    pdf.set_font("Helvetica", "", 12)
+    pdf.set_text_color(*MUTED)
+    pdf.cell(0, 9, "This certificate is presented to", align="C", new_x="LMARGIN", new_y="NEXT")
+    pdf.set_font("Times", "B", 28)
+    pdf.set_text_color(*DARK_BLUE)
+    pdf.cell(0, 14, _safe(first_name.strip() or "A dedicated parent"), align="C", new_x="LMARGIN", new_y="NEXT")
+    pdf.set_draw_color(*PURPLE)
+    pdf.set_line_width(0.4)
+    pdf.line(w / 2 - 55, pdf.get_y() + 1, w / 2 + 55, pdf.get_y() + 1)
+    pdf.ln(5)
+    pdf.set_font("Helvetica", "", 13)
+    pdf.set_text_color(*INK)
+    pdf.cell(0, 8, "for completing the SA CoParents Self Journey", align="C", new_x="LMARGIN", new_y="NEXT")
+    earned = [AWARD_NAMES[k] for k in ("selfAssessment", "coparenting", "foundation") if awards.get(k)]
+    if earned:
+        pdf.set_font("Helvetica", "I", 10.5)
+        pdf.set_text_color(*MUTED)
+        pdf.cell(0, 8, _safe("Awards earned: " + "  ·  ".join(earned)), align="C", new_x="LMARGIN", new_y="NEXT")
+    pdf.set_y(h - 40)
+    pdf.set_font("Helvetica", "B", 11)
+    pdf.set_text_color(*DARK_BLUE)
+    pdf.cell(0, 7, _safe(f"Completed on {_date(awards.get('journey'))}"), align="C", new_x="LMARGIN", new_y="NEXT")
+    pdf.set_font("Helvetica", "", 9)
+    pdf.set_text_color(*PURPLE)
+    pdf.cell(0, 6, _safe("SA CoParents  ·  Align  ·  Support  ·  Thrive"), align="C", new_x="LMARGIN", new_y="NEXT")
     return bytes(pdf.output())

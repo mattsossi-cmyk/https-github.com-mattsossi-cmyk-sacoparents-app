@@ -40,7 +40,7 @@ function useLockScroll() {
 }
 
 // Full-page Self-Assessment (Card 1). Rendered in a portal over Self Journey.
-export function SelfAssessmentView({ onClose, onQuickExit, onOpenBiffCoach, parentName, userId, history = [], startNew = false, onCompleted, onEntryUpdate, onGoalReached, safetyFlag, hidden = false }) {
+export function SelfAssessmentView({ onClose, onQuickExit, onOpenBiffCoach, parentName, userId, history = [], startNew = false, compareWithLast = false, onCompleted, onEntryUpdate, onGoalReached, safetyFlag, hidden = false }) {
   const { draft, update, status, flush, complete, ready } = useSelfAssessmentDraft({ open: true, userId, parentName, onCompleted });
   const [view, setView] = useState(startNew ? "assess" : "auto");
   const [busy, setBusy] = useState(false);
@@ -160,6 +160,7 @@ export function SelfAssessmentView({ onClose, onQuickExit, onOpenBiffCoach, pare
                 onBack={currentIdx > 1 ? onBack : null}
                 busy={busy}
                 status={step?.type === "intro" ? null : status}
+                previous={compareWithLast ? latest?.answers : null}
               />
             ) : (
               <div className="bg-white rounded-2xl p-5 shadow-md border border-purple-100 mt-6">
