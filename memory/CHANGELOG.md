@@ -9663,3 +9663,24 @@ dashboard for sharing SELECTED completed reports with any professional.
 - Removed the "What's Next" card (old Step 3) from the Parallel Parenting path on /journey and in the embedded Journey
   steps (JourneyFlow.jsx ROUTES.parallelNext + JourneyShell action removed). Parallel Parenting Builder is now Step 3.
 - Verified by screenshot at 390 and 1920: card gone, builder card reads "STEP 3", no horizontal overflow.
+
+## 2026-10-23: Self Journey: spec integration, awards, monthly check-ins (tested; publish dispatched)
+- Spec integration (founder's SelfJourney spec + GuideAvatar.jsx): /self-journey -> /self-journey/safety; home "Open Self Journey"
+  tile -> /self-journey; "Back to the Journey page" link on every guide page; GuideAvatar ring (header, help button, sheet,
+  beside guide bubbles; still on Safety; faster while replying; still in Calm Mode / reduce motion) + one-time waving hand
+  (localStorage sj-guide-waved); Lora 600 + Nunito Sans self-hosted in public/fonts/fonts.css; San Antonio resources added.
+- Founder decisions: Safety stays Align link + parent's own pick (old in-app assessment stays retired); pick is sent to the
+  Journey Guide (safety_status + safety_flagged) with the founder's system prompt (journey_guide_routes "self-journey");
+  Co-Parenting overlay gets safetyFlag on concern (its guide chat goes grey-rock).
+- Server PDF GET /api/self-journey/pdf (self_journey_pdf.py): 7 sections, private notes + check-ins + safety pick left out,
+  approved Foundation only, sections kept together.
+- Journey page: "Done" tick on Start with Safety only when /api/case-settings setup_complete (webhook stays off, so only
+  earlier confirmations show).
+- Awards (Awards.jsx): Self-Reflection, Co-Parenting Insight, Foundation, Self Journey; pop-up with the purple/dark-blue
+  logo (/images/award-logo.webp; backend/assets/award_logo.png), once each (progress.awards, server-checked), never over
+  Safety, waits while overlays are open; confetti off in Calm Mode. Certificate GET /api/self-journey/certificate (409 until
+  the journey award).
+- Monthly check-ins (CheckIn.jsx): card every checkInDays (30) after the Self-Assessment, never on Safety; Save / Retake Self
+  Assessment (previous ratings dotted, QuestionPanel `previous`) / Update where I am (planFits "no"); Summary "Check in now";
+  progress.checkIns; in-app only (no email/text/push); never in the PDF.
+- Tests: iteration_160 + iteration_161 (backend 31/31; frontend all flows); award-on-Safety bug fixed after 161 and verified.

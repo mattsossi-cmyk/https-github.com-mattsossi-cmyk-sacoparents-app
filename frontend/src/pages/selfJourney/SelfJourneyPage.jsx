@@ -209,7 +209,6 @@ export default function SelfJourneyPage() {
           downloadPdf("/self-journey/certificate", { filename: "SA_CoParents_Self_Journey_Certificate.pdf", testid: "sj-certificate" })
         }
         onRetakeSelfAssessment={() => setOverlay({ kind: "self", retake: true })}
-        checkInDays={0}
       />
       <Overlays overlay={overlay} close={() => setOverlay(null)} setOverlay={setOverlay} sa={sa}
         childNeeds={childNeeds} user={user} parentName={parentName} />

@@ -39,5 +39,11 @@ key · custom JWT auth (`auth.py`).
   `/images/guide-avatar.webp` (user's heart-family logo, purple + dark blue + white) in a circle; turns 360° once per
   question; no spin in Calm Mode.
 
+## Self Journey extras (2026-10-23)
+- Awards: 4 milestones only (Self-Assessment, Co-Parenting Assessment, Foundation approved, whole journey) + certificate PDF.
+- Monthly check-in: in-app only, every 30 days after the Self-Assessment, never on Safety, private (never printed/shared).
+- Server PDF GET /api/self-journey/pdf: 7 sections, notes/check-ins/safety pick left out.
+- Journey Guide uses the founder's system prompt and receives the parent's own safety pick.
+
 ## Test accounts
 See `test_credentials.md`.

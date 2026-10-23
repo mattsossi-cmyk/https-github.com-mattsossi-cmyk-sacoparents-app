@@ -1,0 +1,30 @@
+{
+  "summary": "Iteration 161: Tested Self Journey milestone awards, monthly check-ins (checkInDays=0), certificate, PDF privacy/keep-together, Calm Mode and regressions on mobile 390x844 (plus a quick desktop look at the check-in dialog). Backend: 31/31 passed (test_self_journey 13 + test_iter160 public 6 + new test_iter161_awards_checkins 12). Frontend: every requested flow passed. Self-Reflection award shows once with the logo (/images/award-logo.webp, naturalWidth 720). It waits while the SA overlay is open and does not come back after Keep going + reload. The check-in card shows on situation/self-assessment/foundation, not on safety, and 'Not now' hides it. Save check-in shows a toast, the card hides, and checkIns persist with text + planFits. Retake saves the check-in, then opens SA in assess mode with sa-last-time-hint and sa-option-1-last (dashed border) matching the previous answer. ci-plan-no shows 'Update where I am', which saves and lands on /self-journey/situation. sj-checkin-now works on Summary. Co-Parenting Insight award appears on returning to the guide after a completed cp_assessment. Foundation award appears on approve. Save My Journey gives the Journey award and the certificate download (SA_CoParents_Self_Journey_Certificate.pdf, 200 application/pdf, logo image, first name, awards, date). sj-certificate shows on Summary after reload and the award does not repeat. Certificate returns 409 for a parent who has not finished and 401 without auth. Calm Mode: animationName none, 0 canvases (confetti canvas present when calm is off). Journey PDF has no check-in text, and section 7 moved whole to page 2 (no orphaned heading). No horizontal overflow (scrollWidth 390) with card/dialog/award. Footer is white down to the strip with no gap (the point just above the strip is .sj-footer), and sj-next is fully visible above the strip. Regressions OK: back link goes to /journey, Safety gate is disabled until a pick, the concern path has no 'Working together', and the Journey Guide reply on concern says 'You shared that you have safety concerns...' (never says the parent is safe).",
+  "backend_issues": {"critical": [], "minor": []},
+  "frontend_issues": {
+    "ui_bugs": [
+      {"component": "useMilestoneAwards (SelfJourney.jsx paused condition)", "issue": "The award pop-up (with confetti) can show on the Safety page (/self-journey/safety, index 0), even before the parent has made a safety pick. Reproduced: complete the Self-Assessment via API, then open /self-journey/safety, and the Self-Reflection Award opens over the safety question. Check-ins are kept off the safety page, but awards are not. This is not trauma-informed. Fix: add `index === 0` to the paused expression (line ~243) so the award waits until the parent leaves Safety.", "selector": "[data-testid=sj-award]", "priority": "MEDIUM"}
+    ],
+    "integration_issues": [],
+    "design_issues": [
+      {"screen": "Certificate PDF", "issues": ["'Awards earned' lists only Self-Reflection, Co-Parenting Insight and Foundation. The Self Journey Award itself is not listed. Probably fine since the certificate is that award, but confirm with the founder."]}
+    ]
+  },
+  "test_report_links": ["/app/backend/tests/test_iter161_awards_checkins.py", "/app/backend/tests/test_self_journey.py", "/app/backend/tests/test_iter160_self_journey_public.py", "/app/test_reports/pytest/pytest_iter161.xml"],
+  "action_items": [
+    "Pause milestone award pop-ups on the Safety step (index 0)",
+    "Set checkInDays back to 30 in SelfJourneyPage.jsx (currently checkInDays={0})"
+  ],
+  "critical_code_review_comments": [
+    "SelfJourney.jsx is 1035 lines (>700). Split the page components (SafetyPage, SummaryPage, FoundationPage, chat sheet) into their own files.",
+    "With checkInDays=0 the card comes back on every reload right after saving, because isCheckInDue uses >= 0. This is expected only for the temporary setting.",
+    "PUT /self-journey/me replaces the whole doc: a client that sends no checkIns wipes them (awards are protected server-side, checkIns are not). That is OK while the only client always sends the full progress, but consider keeping checkIns server-side the same way awards are kept, if older clients exist.",
+    "The award save in useMilestoneAwards swallows errors (catch(() => {})). If the save fails, the pop-up will show again on the next visit. This is acceptable."
+  ],
+  "updated_files": ["/app/backend/tests/test_iter161_awards_checkins.py"],
+  "success_rate": {"backend": "100%", "frontend": "95%"},
+  "seed_data_creation": "Fresh parents test_sjui_*, test_sjcalm_*, test_sjcalm2_* @example.com (TestPass123!) plus test_iter161_* from pytest. test_sjui user completed all 4 awards. Its safety was set to concern at the end. Calm Mode was reset to false for both calm users.",
+  "retest_needed": false,
+  "should_main_agent_self_test": true,
+  "context_for_next_testing_agent": "All features from iteration 161 work. Only open item: the award pop-up is not paused on the Safety step. The existing parent sjself.13114 has only the selfAssessment award (certificate 409). The browser clock in preview reads Oct 2026. The SA API complete body is {answers:{child_focus_1..differences_5: 1-5}, parent_name}. CP completion: POST /api/coparenting/answer {question_id:'s1q1', value:2} then POST /api/coparenting/complete."
+}

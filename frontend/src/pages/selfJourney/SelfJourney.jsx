@@ -240,7 +240,8 @@ export default function SelfJourney({
   const [award, setAward] = useMilestoneAwards({
     progress, setProgress, saveRef,
     earned: { selfAssessment: selfAssessmentCount > 0, coparenting: coparentingDone, foundation: progress.foundation.approved },
-    paused: awardsPaused || chatOpen || checkInOpen || index === -1 || index > progress.maxStepReached,
+    // Never over the Safety page; awards wait until the parent has moved on.
+    paused: awardsPaused || chatOpen || checkInOpen || index <= 0 || index > progress.maxStepReached,
   });
 
   // Scroll to top and close the assistant whenever the page changes

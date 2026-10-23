@@ -6,7 +6,11 @@
   replace the stand-ins in `frontend/public/images/journey/` ("next" no longer used).
 
 ## P0 (pending publish)
-- Journey page change (What's Next card removed) is in preview only; publish after the current deploy finishes.
+
+- Co-Parenting report: 3 lines suggest joint actions (school events together, joint parent-teacher meeting, joint
+  parent-training session); ask founder whether to swap them for separate-meeting versions when the parent picked concern.
+- Existing Self-Assessment retake EMAILS (self_assessment_reminders.py, sa-reassess-reminder cron) still send; ask founder
+  whether to switch them to in-app only like check-ins.
 
 ## P1
 - Align outbound import (`push_to_align`): OFF until the exact import URL + key are provided (secure secret card).
@@ -20,3 +24,6 @@
 - Professional / Align "Suggested for your family" mark on the parenting-path cards (both cards still shown).
 - "Done" tick on the Start with Safety step when Align confirms the check-in.
 - Note on the Court Ordered screen about the safety check-in email.
+
+- Optional: "include my check-ins" choice for the PDF (off today). AI-notice modal copy still says "AI Communication Builder" (app-wide, versioned).
+- SelfJourney.jsx is ~1000 lines; split step pages into files when next touched.
