@@ -2,8 +2,11 @@
 
 ## P0
 - Self Journey guide: user to review in preview / live.
-- Journey photos: user to attach the six photos (self, safety, coparent, next, parallel, needs) as one .zip to
-  replace the stand-ins in `frontend/public/images/journey/`.
+- Journey photos: user to attach the five photos (self, safety, coparent, parallel, needs) as one .zip to
+  replace the stand-ins in `frontend/public/images/journey/` ("next" no longer used).
+
+## P0 (pending publish)
+- Journey page change (What's Next card removed) is in preview only; publish after the current deploy finishes.
 
 ## P1
 - Align outbound import (`push_to_align`): OFF until the exact import URL + key are provided (secure secret card).

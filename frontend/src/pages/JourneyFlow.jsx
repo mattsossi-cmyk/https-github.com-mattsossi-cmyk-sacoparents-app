@@ -16,7 +16,6 @@ import "./JourneyFlow.css";
 export const ROUTES = {
   self: "/self-journey",
   coparenting: "/dashboard?open=coparenting-assessment",
-  parallelNext: "/dashboard?open=parallel-builder",
   parallelBuilder: "/dashboard?open=parallel-builder-steps",
   childNeeds: "/dashboard?open=child-needs",
   foundation: "/dashboard?open=foundation",
@@ -78,10 +77,7 @@ function PathSplit({ go }) {
           <h2>Parallel Parenting Path</h2>
         </div>
         <Arrow />
-        <StepCard id="parallelNext" step="Step 3" title="What's Next" subtitle="Build your parallel plan"
-          img={IMG("next")} alt="What's Next screen" onGo={go} />
-        <Arrow />
-        <StepCard id="parallelBuilder" step="Step 4" title="Parallel Parenting Builder" subtitle="Contact · exchanges · decisions"
+        <StepCard id="parallelBuilder" step="Step 3" title="Parallel Parenting Builder" subtitle="Contact · exchanges · decisions"
           img={IMG("parallel")} alt="Parallel Parenting Option Builder screen" onGo={go} />
       </div>
     </section>

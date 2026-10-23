@@ -9658,3 +9658,8 @@ dashboard for sharing SELECTED completed reports with any professional.
 - Print hides the crisis strip and app footer on the guide.
 - Testing agent fix: the Child Needs overlay was double-portalled (blank screen); now a plain wrapper.
 - Tests: iteration_159 backend 16/16, frontend all flows pass after fix; tests/test_self_journey*.py + webhook switch 27 passed.
+
+## 2026-10-23: Journey page, Parallel path trimmed (PREVIEW)
+- Removed the "What's Next" card (old Step 3) from the Parallel Parenting path on /journey and in the embedded Journey
+  steps (JourneyFlow.jsx ROUTES.parallelNext + JourneyShell action removed). Parallel Parenting Builder is now Step 3.
+- Verified by screenshot at 390 and 1920: card gone, builder card reads "STEP 3", no horizontal overflow.

@@ -27,7 +27,7 @@ React 19 + Tailwind + shadcn/ui · FastAPI + Motor/MongoDB · fpdf2 PDFs · Rese
 key · custom JWT auth (`auth.py`).
 
 ## Journey pages
-- `/journey` Journey Flow (`pages/JourneyFlow.jsx`). Step 1 opens the Self Journey guide.
+- `/journey` Journey Flow (`pages/JourneyFlow.jsx`). Step 1 opens the Self Journey guide. Parallel path = one card: Step 3 Parallel Parenting Builder.
 - `/self-journey/:step` guided Self Journey (`pages/selfJourney/SelfJourney.jsx` + `SelfJourneyPage.jsx`,
   API `backend/self_journey_routes.py` → collection `self_journey_progress`):
   Safety (link out to Align + the parent's own clear/concern pick) → Situation (private notes) → existing

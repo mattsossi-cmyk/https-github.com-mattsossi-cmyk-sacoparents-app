@@ -1341,7 +1341,6 @@ export function JourneyShell({
           alignUrl={ALIGN_SITE_URL}
           actions={{
             coparenting: () => setCpAssessOpen(true),
-            parallelNext: () => openPp("welcome"),
             parallelBuilder: () => openPp(0),
             childNeeds: () => openChildNeeds("self"),
             foundation: () => openFoundation("self"),
