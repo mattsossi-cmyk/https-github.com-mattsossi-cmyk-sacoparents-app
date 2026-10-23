@@ -203,14 +203,44 @@
 .sj-help-btn { bottom: calc(92px + var(--crisis-strip-h, 0px)); }
 .sj-content { padding-bottom: calc(120px + var(--crisis-strip-h, 0px)); }
 .sj-brand { text-decoration: none; }
-.sj-logo-img { width: 32px; height: 32px; border-radius: 50%; object-fit: cover; border: 1.5px solid var(--sj-border); }
-/* Guide avatar: a circle that turns once (360°) each time the parent asks; no spin in Calm Mode. */
-.sj-avatar { flex: none; width: 44px; height: 44px; border-radius: 50%; object-fit: cover; border: 2px solid var(--sj-border); background: #fff; }
-.sj-avatar-sm { width: 28px; height: 28px; border-width: 1.5px; }
-.sj-avatar.is-spinning { animation: sj-spin 0.9s cubic-bezier(.45, 0, .25, 1); }
-@keyframes sj-spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
-.sj.is-calm .sj-avatar { animation: none !important; }
-@media (prefers-reduced-motion: reduce) { .sj-avatar { animation: none !important; } }
+/* Journey Guide avatar (GuideAvatar.jsx): the logo inside a slowly turning ring of brand colours.
+   Still + soft purple on the safety page, faster while replying, still in Calm Mode / reduce motion. */
+.sj-avatar { position: relative; flex: none; display: inline-block; width: var(--sj-avatar-size, 40px); height: var(--sj-avatar-size, 40px); border-radius: 50%; }
+.sj-avatar-ring {
+  position: absolute; inset: 0; border-radius: 50%;
+  background: conic-gradient(from 0deg, #5b3fa0, #1b2a6b, #c9b8f0, #ffffff, #5b3fa0);
+  animation: sj-ring 8s linear infinite;
+}
+.sj-avatar-core {
+  position: absolute; inset: calc(var(--sj-avatar-size, 40px) * .08); border-radius: 50%; overflow: hidden;
+  background: #fff; display: flex; align-items: center; justify-content: center;
+}
+.sj-avatar-core img { width: 100%; height: 100%; object-fit: cover; }
+.sj-avatar-mark { font-weight: 800; font-size: calc(var(--sj-avatar-size, 40px) * .36); color: var(--sj-purple); }
+.sj-avatar.is-speaking .sj-avatar-ring { animation-duration: 1.4s; }
+.sj-avatar.is-calm .sj-avatar-ring { background: #d9cdf3; animation: none; }
+@keyframes sj-ring { to { transform: rotate(360deg); } }
+.sj.is-calm-mode .sj-avatar-ring { animation: none !important; }
+/* One-time welcome: a small hand waves beside the avatar the first time Help opens, then fades. */
+.sj-avatar-wrap { position: relative; display: inline-flex; flex: none; }
+.sj-wave {
+  position: absolute; left: calc(100% - 8px); top: -8px; width: 24px; height: 24px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center; background: #fff; color: var(--sj-purple);
+  box-shadow: 0 2px 8px rgba(62, 42, 120, .25); transform-origin: 60% 85%;
+  animation: sj-wave 1.1s ease-in-out 2, sj-fade .5s ease 2.2s forwards;
+}
+@keyframes sj-wave { 0%, 100% { transform: rotate(0); } 20% { transform: rotate(20deg); } 40% { transform: rotate(-10deg); } 60% { transform: rotate(16deg); } 80% { transform: rotate(-4deg); } }
+@keyframes sj-fade { to { opacity: 0; } }
+.sj.is-calm-mode .sj-wave { animation: none !important; }
+@media (prefers-reduced-motion: reduce) { .sj-avatar-ring, .sj-wave { animation: none !important; } }
+.sj-bubble-row { align-self: flex-start; display: flex; align-items: flex-start; gap: 8px; max-width: 94%; }
+.sj-bubble-row .sj-bubble { max-width: none; }
+/* Link back to the Journey page on every Self Journey page */
+.sj-back-link {
+  display: inline-flex; align-items: center; gap: 6px; min-height: 44px; margin: 0 0 2px;
+  font-size: 14px; font-weight: 700; color: var(--sj-purple); text-decoration: none;
+}
+.sj-back-link:hover { text-decoration: underline; text-underline-offset: 3px; }
 .sj-header-actions { display: flex; align-items: center; gap: 4px; }
 .sj-exit-btn {
   min-height: 36px; padding: 0 12px; border-radius: 18px; border: 1.5px solid #b42318;
@@ -230,7 +260,7 @@
   .sj-link-btn { font-size: 13px; }
 }
 @media print {
-  .sj-header, .sj-progress, .sj-footer, .sj-help-btn, .sj-row, .sj-no-print { display: none !important; }
+  .sj-header, .sj-progress, .sj-footer, .sj-help-btn, .sj-row, .sj-no-print, .sj-back-link { display: none !important; }
   .sj-content { padding: 0 !important; }
   body:has(.sj) [data-testid="portal-crisis-strip"], body:has(.sj) [data-testid="app-footer"] { display: none !important; }
 }

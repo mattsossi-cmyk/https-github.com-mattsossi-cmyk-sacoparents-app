@@ -1,18 +1,22 @@
 """Self Journey guide (/self-journey/:step): one private progress doc per parent.
 
-Nothing here is exported, shared, emailed, printed by another feature or sent to the AI. The safety pick
-("clear" / "concern") is the parent's own choice after their SACOparentsAlign Family check-in; it only shapes
-which steps the guide shows them.
+Only the parent can read it. The safety pick ("clear" / "concern") is the parent's own choice after their
+SACOparentsAlign Family check-in: it shapes which steps the guide shows and is sent to the Journey Guide AI so
+it never encourages direct contact on "concern". It is never exported, shared, emailed or printed, and the
+Self Journey PDF leaves out every private note (status only).
 """
 from __future__ import annotations
 
 from datetime import datetime, timezone
+from io import BytesIO
 from typing import Dict, List, Literal, Optional
 
 from fastapi import APIRouter, Depends
+from fastapi.responses import StreamingResponse
 from pydantic import BaseModel, Field, field_validator, model_validator
 
 from auth import UserPublic, get_current_user, get_db
+from self_journey_pdf import build_self_journey_pdf
 
 router = APIRouter(prefix="/self-journey", tags=["self-journey"])
 _COLL = "self_journey_progress"
@@ -100,3 +104,21 @@ async def save_progress(body: Progress, user: UserPublic = Depends(get_current_u
         {"user_id": user.user_id}, {"$set": {"user_id": user.user_id, "progress": body.model_dump()}}, upsert=True
     )
     return ProgressOut(progress=body)
+
+
+@router.get("/pdf")
+async def download_pdf(user: UserPublic = Depends(get_current_user), db=Depends(get_db)) -> StreamingResponse:
+    doc = await db[_COLL].find_one({"user_id": user.user_id}, {"_id": 0, "progress": 1})
+    progress = Progress(**doc["progress"]) if doc else Progress()
+    sa_entries = await db.self_assessment_history.find(
+        {"user_id": user.user_id}, {"_id": 0, "completed_at": 1, "goal": 1}
+    ).sort("completed_at", 1).to_list(50)
+    cp = await db.cp_reports.find_one({"user_id": user.user_id}, {"_id": 0, "generated_at": 1})
+    pdf = build_self_journey_pdf(
+        progress=progress.model_dump(), sa_entries=sa_entries, cp_report_at=(cp or {}).get("generated_at"),
+        parent_name=(user.name or "").split(" ")[0],
+    )
+    return StreamingResponse(
+        BytesIO(pdf), media_type="application/pdf",
+        headers={"Content-Disposition": 'attachment; filename="SA_CoParents_Self_Journey.pdf"', "Cache-Control": "no-store"},
+    )

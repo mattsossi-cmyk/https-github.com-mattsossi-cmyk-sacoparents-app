@@ -1,7 +1,9 @@
 import React from "react";
 import { useNavigate } from "react-router-dom";
+import { Check } from "lucide-react";
 
 import { useCalmMode } from "../lib/useCalmMode";
+import { useCaseSettings } from "../lib/useCaseSettings";
 import { useCheckinLink } from "../lib/useCheckinLink";
 import "./JourneyFlow.css";
 
@@ -37,10 +39,17 @@ function Arrow({ color = "#5b2db3" }) {
 }
 
 // `href` (even null while it loads) makes the card a link that opens in a new tab.
-function StepCard({ id, step, title, subtitle, img, alt, onGo, href, tone = "purple" }) {
+// `done` shows a small "Done" tick (Start with Safety, once SACOparentsAlign has confirmed the check-in).
+function StepCard({ id, step, title, subtitle, img, alt, onGo, href, tone = "purple", done = null }) {
   const body = (
     <>
       {step && <span className="jf-step">{step}</span>}
+      {done && (
+        <span className="jf-done" data-testid={`journey-flow-${id}-done`}>
+          <Check size={14} strokeWidth={3} aria-hidden="true" /> Done
+          <span className="sr-only">, confirmed by SACOparentsAlign{typeof done === "string" ? ` on ${done}` : ""}</span>
+        </span>
+      )}
       <img src={img} alt={alt} className="jf-img" loading="lazy" />
       <span className="jf-title">{title}</span>
       <span className="jf-sub">{subtitle}</span>
@@ -89,6 +98,9 @@ export default function JourneyFlow({ alignUrl, actions = {}, embedded = false }
   const navigate = useNavigate();
   const { calm } = useCalmMode();
   const checkinHref = useCheckinLink(alignUrl);
+  // Only a confirmation from SACOparentsAlign counts; nothing is shown otherwise.
+  const caseSettings = useCaseSettings();
+  const checkinDone = caseSettings?.setup_complete ? caseSettings.setup_completed_on || true : null;
   const go = (key) => {
     if (actions[key]) return actions[key]();
     if (ROUTES[key] === "print") return window.print();
@@ -110,7 +122,7 @@ export default function JourneyFlow({ alignUrl, actions = {}, embedded = false }
           img={IMG("self")} alt="Self Assessment screen" onGo={go} />
         <Arrow />
         <StepCard id="safety" step="Step 2" title="Start with Safety" subtitle="Private family check-in"
-          img={IMG("safety")} alt="Start with Safety screen" href={checkinHref} />
+          img={IMG("safety")} alt="Start with Safety screen" href={checkinHref} done={checkinDone} />
         <Arrow />
         <div className="jf-decision" role="note" data-testid="journey-flow-decision">
           <span>Are there safety concerns?</span>

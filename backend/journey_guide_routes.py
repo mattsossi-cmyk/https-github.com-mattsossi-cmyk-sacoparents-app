@@ -1,7 +1,7 @@
 """Remembered Guide chats for the full-screen Self Journey pages (Co-Parenting Assessment, Child Needs)."""
 from __future__ import annotations
 
-from typing import Any, Dict, Optional
+from typing import Any, Dict, Literal, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Request
 from motor.motor_asyncio import AsyncIOMotorDatabase
@@ -57,15 +57,28 @@ TOPICS: Dict[str, Dict[str, str]] = {
     },
     "self-journey": {
         "collection": "self_journey_guide_chats",
+        # The founder's Journey Guide prompt (verbatim), plus one line on where the check-in lives.
         "voice": (
-            "You are the SA CoParents Journey Guide, a calm, supportive coach walking one parent through their Self "
-            "Journey: a private Family check-in on SACOparentsAlign, their situation, reflecting on themselves, their "
-            "co-parenting relationship, their child's needs, a Foundation Statement, and preparing for child-focused "
-            "mediation. You can explain what each step is for, but you never decide whether a parent or child is safe "
-            "and you never see the Family check-in answers. "
+            "You are the SA CoParents Journey Guide. You help a parent reflect on the current step of their Self "
+            "Journey. Be warm, brief and child-focused. You may explain any step or assessment. You must NEVER decide "
+            "or state that a person is safe. Safety is determined only by the safety assessment and trained "
+            "professionals. If someone describes danger, abuse, threats or fear for their safety, encourage them to "
+            "call 911 if in immediate danger and give the National Domestic Violence Hotline (1-800-799-7233, text "
+            "START to 88788). Do not diagnose mental health conditions or apply psychological labels. Do not ask for "
+            "names, addresses, school names or medical record details. If the parent's safety result indicates "
+            "concern, do not encourage direct communication with the other parent, joint sessions or standard "
+            "mediation. Do not give legal advice. Suggest speaking with an attorney or mediator instead. "
+            "The safety check-in itself happens on SACOparentsAlign and you never see its answers. "
         ),
         "where": "They are on the step: {}.",
     },
+}
+
+# The parent's own pick after their Family check-in (the Self Journey guide sends it with every message).
+SAFETY_CONTEXT = {
+    "clear": "The parent's safety result: clear (they said there are no safety concerns right now).",
+    "concern": "The parent's safety result: concern (they said there are safety concerns).",
+    "none": "The parent has not given a safety result yet.",
 }
 
 
@@ -74,6 +87,7 @@ class ChatBody(BaseModel):
     session_id: Optional[str] = Field(default=None, max_length=64)
     section: Optional[str] = Field(default=None, max_length=120)
     safety_flagged: bool = False
+    safety_status: Optional[Literal["none", "clear", "concern"]] = None
 
 
 _SUGGEST_TASK = (
@@ -144,8 +158,11 @@ async def chat(
     db: AsyncIOMotorDatabase = Depends(get_db),
 ) -> Dict[str, str]:
     t = _topic(topic)
+    context = t["where"].format(body.section) if body.section else ""
+    if topic == "self-journey" and body.safety_status:
+        context = f"{context} {SAFETY_CONTEXT[body.safety_status]}".strip()
     return await chat_turn(
         db, t["collection"], request, user, session_id=body.session_id, message=body.message,
-        voice=t["voice"] + _SHARED, task=_TASK, context=t["where"].format(body.section) if body.section else "",
-        safety_flagged=body.safety_flagged,
+        voice=t["voice"] + _SHARED, task=_TASK, context=context,
+        safety_flagged=body.safety_flagged or body.safety_status == "concern",
     )

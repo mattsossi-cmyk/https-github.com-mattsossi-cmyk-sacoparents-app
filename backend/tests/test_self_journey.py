@@ -93,3 +93,52 @@ def test_journey_guide_topic_exists_and_needs_the_ai_notice(client):
     r = client.post("/api/journey-guide/self-journey/chat", headers=h, json={"message": "Why is this first?", "section": "Safety"})
     assert r.status_code == 428
     assert client.post("/api/journey-guide/not-a-guide/chat", headers=h, json={"message": "hi"}).status_code in (404, 428)
+
+
+def test_pdf_has_seven_sections_without_private_notes(client):
+    from pypdf import PdfReader
+    import io
+
+    assert client.get("/api/self-journey/pdf").status_code == 401
+    _, h, _ = _parent(client)
+    secret = "PRIVATE-NOTE-XYZ"
+    body = {
+        "maxStepReached": 7, "safety": {"status": "concern"},
+        "situation": {"currentSituation": secret}, "mediation": {"issues": secret},
+        "coparenting": {"approach": "parallel", "agree": secret, "disagree": secret},
+        "childNeeds": {"opened": ["medical"]},
+        "foundation": {"draft": "We put our child first.", "approved": True, "approvedAt": "2026-10-23T10:00:00+00:00"},
+    }
+    assert client.put(ME, headers=h, json=body).status_code == 200
+    r = client.get("/api/self-journey/pdf", headers=h)
+    assert r.status_code == 200 and r.headers["content-type"] == "application/pdf"
+    text = "".join(p.extract_text() for p in PdfReader(io.BytesIO(r.content)).pages)
+    for title in ("Parenting Situation Overview", "Self Assessment Reflections", "Co-Parenting Relationship",
+                  "Child's Identified Needs", "Foundation Statement", "Mediation Preparation & Options",
+                  "Next Steps & Available Resources"):
+        assert title in text, title
+    assert secret not in text
+    assert "concern" not in text.lower()
+    assert "We put our child first." in text and "Parallel parenting" in text and "Medical needs" in text
+    assert "210-733-8810" in text
+
+
+def test_unapproved_foundation_is_left_out(client):
+    from pypdf import PdfReader
+    import io
+
+    _, h, _ = _parent(client)
+    client.put(ME, headers=h, json={"foundation": {"draft": "DRAFT-ONLY-TEXT", "approved": False}})
+    text = "".join(p.extract_text() for p in PdfReader(io.BytesIO(client.get("/api/self-journey/pdf", headers=h).content)).pages)
+    assert "DRAFT-ONLY-TEXT" not in text and "Not approved yet" in text
+
+
+def test_guide_chat_rejects_unknown_safety_status(client):
+    from datetime import datetime, timezone
+    from ai_notice import AI_NOTICE_VERSION
+
+    _, h, _ = _parent(client)
+    client.post("/api/ai-notice/ack", headers=h, json={"ai_notice_version": AI_NOTICE_VERSION,
+                                                        "ai_notice_ack_at": datetime.now(timezone.utc).isoformat()})
+    r = client.post("/api/journey-guide/self-journey/chat", headers=h, json={"message": "hi", "safety_status": "safe"})
+    assert r.status_code == 422

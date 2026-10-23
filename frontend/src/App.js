@@ -340,7 +340,7 @@ function AppRoutes() {
           element={<SacoparentsPortal />}
         />
         <Route path="/journey" element={<SacoparentsPortal />} />
-        <Route path="/self-journey" element={<ProtectedRoute><SelfJourneyPage /></ProtectedRoute>} />
+        <Route path="/self-journey" element={<Navigate to="/self-journey/safety" replace />} />
         <Route path="/self-journey/:step" element={<ProtectedRoute><SelfJourneyPage /></ProtectedRoute>} />
         <Route
           path="/my-plan"

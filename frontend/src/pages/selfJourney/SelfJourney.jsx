@@ -3,7 +3,8 @@
  *
  * App fit (SelfJourneyPage.jsx passes these in):
  *  - Safety: the Family check-in lives on SACOparentsAlign (checkinHref). The parent then picks
- *    "clear" or "concern" themselves; that pick stays private (never printed, shared, sent to Align or the AI).
+ *    "clear" or "concern" themselves; that pick is never printed, shared or sent to Align. The Journey Guide
+ *    receives it only to keep its replies safe (no direct contact / joint sessions on "concern").
  *  - Self-Assessment, Co-Parenting Assessment and Child's Needs open the app's existing ones (panel props).
  *  - The approved Foundation Statement is saved into the existing Foundation Statement (onApproveFoundation).
  *  - Help uses the app's AI coach (onAskAssistant), behind the AI notice.
@@ -12,7 +13,10 @@
 import React, { useEffect, useRef, useState } from "react";
 import { Link, Navigate, useNavigate, useParams } from "react-router-dom";
 
+import { ArrowLeft, Hand } from "lucide-react";
+
 import { useAiGuard } from "../../components/aiNotice/AiGuard";
+import GuideAvatar from "./GuideAvatar";
 import "./selfJourney.css";
 
 /* ------------------------------------------------------------------ */
@@ -295,14 +299,10 @@ export default function SelfJourney({
   const isLast = index === STEPS.length - 1;
 
   return (
-    <div className={`sj${calm ? " is-calm" : ""}`} data-testid="self-journey" data-step={step.slug}>
+    <div className={`sj${calm ? " is-calm-mode" : ""}`} data-testid="self-journey" data-step={step.slug}>
       <header className="sj-header">
         <Link to={homeHref} className="sj-brand" data-testid="sj-home-link" aria-label="SA CoParents, back to your Journey">
-          {logoSrc ? (
-            <img src={logoSrc} alt="" className="sj-logo-img" data-testid="sj-header-avatar" />
-          ) : (
-            <span className="sj-logo" aria-hidden="true">SA</span>
-          )}
+          <GuideAvatar size={34} logoSrc={logoSrc} calm={index === 0} decorative testid="sj-header-avatar" />
           <span className="sj-brand-name">SA CoParents</span>
         </Link>
         <div className="sj-header-actions">
@@ -318,6 +318,9 @@ export default function SelfJourney({
       <ProgressBar index={index} max={progress.maxStepReached} onJump={goTo} />
 
       <main className="sj-content" ref={contentRef}>
+        <Link to={homeHref} className="sj-back-link" data-testid="sj-back-to-journey">
+          <ArrowLeft size={16} aria-hidden="true" /> Back to the Journey page
+        </Link>
         <p className="sj-kicker">{step.kicker}</p>
         <h1 className="sj-title" data-testid="sj-title">{step.title}</h1>
         <p className="sj-intro">{step.intro}</p>
@@ -385,7 +388,7 @@ export default function SelfJourney({
 
       {!chatOpen && (
         <button type="button" className="sj-help-btn" onClick={() => setChatOpen(true)} data-testid="sj-help-open">
-          {logoSrc ? <img src={logoSrc} alt="" className="sj-avatar sj-avatar-sm" /> : <ChatIcon />} Need help with this step?
+          <GuideAvatar size={28} logoSrc={logoSrc} calm={index === 0} decorative /> Need help with this step?
         </button>
       )}
 
@@ -402,6 +405,7 @@ export default function SelfJourney({
         <AssistantSheet
           step={step}
           isSafetyStep={index === 0}
+          safetyStatus={progress.safety.status}
           onClose={() => setChatOpen(false)}
           onAsk={onAskAssistant}
           logoSrc={logoSrc}
@@ -519,8 +523,8 @@ function SafetyPage({ status, checkinHref, setSafety, resources }) {
       <h2 className="sj-subhead">After your check-in, are there safety concerns?</h2>
       <ChoiceList label="Are there safety concerns?" options={SAFETY_PICKS} value={status} onPick={setSafety} testid="sj-safety" />
       <p className="sj-small">
-        Only you see this choice. It isn&apos;t shared, printed, sent to SACOparentsAlign or to the AI. It only shapes the
-        steps that follow, and you can change it anytime.
+        Only you see this choice. It isn&apos;t shared, printed or sent to SACOparentsAlign. It shapes the steps that
+        follow and keeps the Journey Guide&apos;s suggestions safe for you. You can change it anytime.
       </p>
 
       {status === "clear" && (
@@ -573,7 +577,7 @@ function CoParentingPage({ data, concern, onChange, CoParentingPanel }) {
       )}
       {CoParentingPanel ? (
         <section className="sj-card">
-          <CoParentingPanel />
+          <CoParentingPanel concern={concern} />
         </section>
       ) : (
         <Placeholder>[Existing Co-Parenting Assessment opens here]</Placeholder>
@@ -814,7 +818,29 @@ function SummaryPage({ progress, concern, selfAssessmentCount, onEdit, onDownloa
 /* Assistant                                                           */
 /* ------------------------------------------------------------------ */
 
-function AssistantSheet({ step, isSafetyStep, onClose, onAsk, logoSrc }) {
+const WAVED_KEY = "sj-guide-waved";
+
+// The small waving hand shows once per device, the first time Help opens.
+function useOneTimeWave() {
+  const [wave] = useState(() => {
+    try {
+      if (localStorage.getItem(WAVED_KEY)) return false;
+      localStorage.setItem(WAVED_KEY, new Date().toISOString());
+      return true;
+    } catch {
+      return false;
+    }
+  });
+  const [show, setShow] = useState(wave);
+  useEffect(() => {
+    if (!wave) return undefined;
+    const t = setTimeout(() => setShow(false), 2800);
+    return () => clearTimeout(t);
+  }, [wave]);
+  return show;
+}
+
+function AssistantSheet({ step, isSafetyStep, safetyStatus, onClose, onAsk, logoSrc }) {
   const opening = [{ role: "assistant", text: step.chat }];
   if (isSafetyStep) {
     opening.push({
@@ -825,9 +851,9 @@ function AssistantSheet({ step, isSafetyStep, onClose, onAsk, logoSrc }) {
   const [messages, setMessages] = useState(opening);
   const [input, setInput] = useState("");
   const [busy, setBusy] = useState(false);
-  const [spins, setSpins] = useState(0);
   const listRef = useRef(null);
   const guard = useAiGuard("journey_guide", input);
+  const waving = useOneTimeWave();
 
   useEffect(() => {
     listRef.current?.scrollTo?.(0, listRef.current.scrollHeight);
@@ -843,14 +869,13 @@ function AssistantSheet({ step, isSafetyStep, onClose, onAsk, logoSrc }) {
     const q = text.trim();
     if (!q || busy) return;
     if (!(await guard.confirmSend(q))) return;
-    setSpins((n) => n + 1);
     const history = [...messages, { role: "user", text: q }];
     setMessages(history);
     setInput("");
     if (!onAsk) return;
     setBusy(true);
     try {
-      const reply = await onAsk(step.slug, q, history);
+      const reply = await onAsk(step.slug, q, history, safetyStatus);
       setMessages((m) => [...m, { role: "assistant", text: reply }]);
     } catch {
       setMessages((m) => [...m, { role: "assistant", text: "Sorry, I couldn't respond just now. Please try again." }]);
@@ -865,11 +890,14 @@ function AssistantSheet({ step, isSafetyStep, onClose, onAsk, logoSrc }) {
       <div className="sj-sheet" role="dialog" aria-modal="true" aria-labelledby="sj-sheet-title" data-testid="sj-assistant">
         <div className="sj-sheet-head">
           <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-            {logoSrc && (
-              // A new key restarts the one-turn spin each time the parent asks something.
-              <img key={spins} src={logoSrc} alt="" className={`sj-avatar${spins ? " is-spinning" : ""}`}
-                data-testid="sj-guide-avatar" data-spins={spins} />
-            )}
+            <span className="sj-avatar-wrap">
+              <GuideAvatar size={44} logoSrc={logoSrc} calm={isSafetyStep} speaking={busy} decorative testid="sj-guide-avatar" />
+              {waving && (
+                <span className="sj-wave" aria-hidden="true" data-testid="sj-guide-wave">
+                  <Hand size={14} strokeWidth={2.4} />
+                </span>
+              )}
+            </span>
             <div>
               <h2 id="sj-sheet-title">Journey Guide</h2>
               <span className="sj-muted">Helping with: {step.short}</span>
@@ -880,12 +908,22 @@ function AssistantSheet({ step, isSafetyStep, onClose, onAsk, logoSrc }) {
           </button>
         </div>
         <div className="sj-sheet-body" ref={listRef} aria-live="polite">
-          {messages.map((m, i) => (
-            <div key={i} className={`sj-bubble ${m.role === "user" ? "is-user" : ""}`} data-testid={`sj-bubble-${m.role}`}>
-              {m.text}
+          {messages.map((m, i) =>
+            m.role === "user" ? (
+              <div key={i} className="sj-bubble is-user" data-testid="sj-bubble-user">{m.text}</div>
+            ) : (
+              <div key={i} className="sj-bubble-row">
+                <GuideAvatar size={26} logoSrc={logoSrc} calm={isSafetyStep} decorative />
+                <div className="sj-bubble" data-testid="sj-bubble-assistant">{m.text}</div>
+              </div>
+            )
+          )}
+          {busy && (
+            <div className="sj-bubble-row">
+              <GuideAvatar size={26} logoSrc={logoSrc} calm={isSafetyStep} speaking decorative />
+              <div className="sj-bubble sj-muted" data-testid="sj-assistant-thinking">Thinking…</div>
             </div>
-          ))}
-          {busy && <div className="sj-bubble sj-muted" data-testid="sj-assistant-thinking">Thinking…</div>}
+          )}
           {messages.length <= 2 && (
             <div className="sj-suggestions">
               {step.suggestions.map((s, i) => (
@@ -928,7 +966,6 @@ function AssistantSheet({ step, isSafetyStep, onClose, onAsk, logoSrc }) {
 
 const svg = { width: 18, height: 18, viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", strokeWidth: 2, strokeLinecap: "round", strokeLinejoin: "round", "aria-hidden": true };
 const SaveIcon = () => (<svg {...svg}><path d="M5 3h11l3 3v15H5z" /><path d="M8 3v5h8V3" /><path d="M8 21v-7h8v7" /></svg>);
-const ChatIcon = () => (<svg {...svg}><path d="M21 12a8 8 0 0 1-11.6 7.1L4 20l1-4.6A8 8 0 1 1 21 12z" /></svg>);
 const CloseIcon = () => (<svg {...svg}><path d="M6 6l12 12M18 6L6 18" /></svg>);
 const ArrowIcon = () => (<svg {...svg}><path d="M5 12h14M13 6l6 6-6 6" /></svg>);
 const ChevronIcon = ({ open }) => (

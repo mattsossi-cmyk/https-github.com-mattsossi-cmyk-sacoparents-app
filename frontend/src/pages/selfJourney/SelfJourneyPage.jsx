@@ -3,6 +3,7 @@ import { Link, useNavigate } from "react-router-dom";
 
 import { useAuth } from "../../context/AuthContext";
 import { api } from "../../lib/api";
+import { downloadPdf } from "../../lib/pdf";
 import { useCalmMode } from "../../lib/useCalmMode";
 import { useCheckinLink } from "../../lib/useCheckinLink";
 import { ChildNeedsView } from "../portal/ChildNeedsView";
@@ -48,7 +49,16 @@ function SelfAssessmentPanel() {
   );
 }
 
-function CoParentingPanel() {
+// National lines plus San Antonio / Bexar County family violence resources (same as the Safety page).
+const SAFETY_RESOURCES = [
+  { label: "In immediate danger", detail: "Call 911", href: "tel:911" },
+  { label: "National Domestic Violence Hotline", detail: "1-800-799-7233 or text START to 88788", href: "tel:18007997233" },
+  { label: "Family Violence Prevention Services (San Antonio, 24/7)", detail: "210-733-8810", href: "tel:2107338810" },
+  { label: "Bexar County Family Justice Center", detail: "210-631-0100", href: "tel:2106310100" },
+  { label: "PEACE Initiative (San Antonio)", detail: "210-533-2729", href: "tel:2105332729" },
+];
+
+function CoParentingPanel({ concern }) {
   const { open } = useContext(Ctx);
   return (
     <>
@@ -56,7 +66,7 @@ function CoParentingPanel() {
       <p className="sj-small" style={{ margin: "0 0 10px" }}>
         Look at communication, decisions and boundaries between your two homes. Only you see your answers.
       </p>
-      <OpenButton onClick={() => open({ kind: "coparenting" })} testid="sj-open-coparenting">
+      <OpenButton onClick={() => open({ kind: "coparenting", concern })} testid="sj-open-coparenting">
         Open the Co-Parenting Assessment
       </OpenButton>
     </>
@@ -110,7 +120,7 @@ function Overlays({ overlay, close, setOverlay, sa, childNeeds, user, parentName
         onClose={close}
         onQuickExit={quickExitAction}
         onOpenSelfAssessment={() => setOverlay({ kind: "self" })}
-        safetyFlag={false}
+        safetyFlag={!!overlay.concern}
       />
     );
   }
@@ -149,11 +159,21 @@ export default function SelfJourneyPage() {
     api.get("/self-journey/me").then((r) => setProgress(r.data?.progress || null), () => setProgress(null));
   }, []);
 
-  const ask = async (slug, message) => {
+  // The parent's own safety pick goes along so the guide never encourages direct contact on "concern".
+  const ask = async (slug, message, _history, safetyStatus = "none") => {
     const section = STEPS.find((s) => s.slug === slug)?.short;
-    const { data } = await api.post("/journey-guide/self-journey/chat", { message, session_id: sessionRef.current, section });
+    const { data } = await api.post("/journey-guide/self-journey/chat", {
+      message, session_id: sessionRef.current, section,
+      safety_status: safetyStatus, safety_flagged: safetyStatus === "concern",
+    });
     sessionRef.current = data.session_id;
     return data.reply;
+  };
+
+  // Save the latest answers first so the PDF matches the screen.
+  const downloadJourneyPdf = async (p) => {
+    await api.put("/self-journey/me", p);
+    await downloadPdf("/self-journey/pdf", { filename: "SA_CoParents_Self_Journey.pdf", testid: "sj-download-pdf" });
   };
 
   if (progress === undefined) {
@@ -172,7 +192,8 @@ export default function SelfJourneyPage() {
         ChildNeedsPanels={CHILD_PANELS}
         onApproveFoundation={approveFoundation}
         onAskAssistant={ask}
-        onDownloadPdf={() => window.print()}
+        safetyResources={SAFETY_RESOURCES}
+        onDownloadPdf={downloadJourneyPdf}
         onShare={() => navigate("/summary")}
         onQuickExit={quickExitAction}
         logoSrc="/images/guide-avatar.webp"

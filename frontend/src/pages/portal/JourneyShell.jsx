@@ -1,4 +1,5 @@
 import React, { useEffect, useRef, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import confetti from "canvas-confetti";
 import { toast } from "sonner";
 
@@ -528,6 +529,8 @@ export function JourneyShell({
   biffReady = true,
   homeRequest = 0,
 }) {
+  const navigate = useNavigate();
+
   // Suppress a few unused props so we don't trip the linter; they
   // are still accepted for API compatibility with the handlers in
   // SacoparentsPortal.
@@ -1115,7 +1118,7 @@ export function JourneyShell({
     <WelcomeArtwork
       testid="door-welcome-image"
       actions={{
-        self: () => openDoor("self"),
+        self: () => navigate("/self-journey"),
         court: () => openDoor("court"),
         comm: () => onOpenCommBuilder(),
       }}
