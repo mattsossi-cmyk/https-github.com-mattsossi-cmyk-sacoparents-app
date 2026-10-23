@@ -45,5 +45,8 @@ key · custom JWT auth (`auth.py`).
 - Server PDF GET /api/self-journey/pdf: 7 sections, notes/check-ins/safety pick left out.
 - Journey Guide uses the founder's system prompt and receives the parent's own safety pick.
 
+- No reminder / progress emails to parents for Self-Assessment retakes or the Self Journey (in-app only).
+- Co-Parenting report swaps joint suggestions for separate ones when the parent shared concerns (pick or safety flag).
+
 ## Test accounts
 See `test_credentials.md`.

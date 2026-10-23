@@ -295,3 +295,39 @@ def build_report(
         "weakest_section_ids": sorted(weakest_ids),
         "disclaimer": DEFAULT_DISCLAIMER,
     }
+
+
+# Safer report tips: when the parent shared safety concerns (their Self Journey pick, or the app's existing safety
+# flag), suggestions that need direct contact are swapped for separate-meeting / professional-routed versions.
+SAFER_SWAPS: Dict[str, str] = {
+    "Continue attending school events together when possible.":
+        "Ask the school about attending events at separate times or sitting apart, so each parent can be there safely.",
+    "Schedule a joint parent-teacher meeting.": "Ask the school for separate parent-teacher conferences.",
+    "Ask the therapist to include both parents in periodic parent-training sessions.":
+        "Ask the therapist about separate parent-training sessions for each parent.",
+    "If cross-home consistency is an issue, ask about a joint parent-training session.":
+        "If cross-home consistency is an issue, ask the therapist about separate sessions for each parent.",
+    "Share your successful routines with the other parent when helpful.":
+        "Write down the routines that work in your home so a professional can share them if helpful.",
+    "Identify one routine (bedtime, mealtime) to align across both homes.":
+        "Pick one routine (bedtime, mealtime) to keep steady in your home.",
+    "Discuss with the other parent which routines could be aligned.":
+        "If routines need to line up, ask your mediator or parenting facilitator to help instead of discussing it directly.",
+    "Keep sharing progress with the therapist and other parent.":
+        "Keep sharing progress with the therapist, who can update the other parent if appropriate.",
+    "Coordinate with the other parent so activities aren't lost in transitions.":
+        "Use a written schedule or parenting app so activities aren't lost in transitions.",
+    "Agree on a shared list of activities/friends the child continues across both homes.":
+        "Keep a written list of the child's activities and friends that travels with the child between homes.",
+}
+
+
+def safer_report(value: Any) -> Any:
+    """Copy of a stored report with every joint suggestion swapped (exact matches only)."""
+    if isinstance(value, str):
+        return SAFER_SWAPS.get(value, value)
+    if isinstance(value, list):
+        return [safer_report(v) for v in value]
+    if isinstance(value, dict):
+        return {k: safer_report(v) for k, v in value.items()}
+    return value

@@ -52,6 +52,23 @@ COLLECTION = "cp_assessments"
 REPORTS_COLLECTION = "cp_reports"
 
 
+async def _shared_concern(db, user_id: str) -> bool:
+    """The parent shared safety concerns: their own Self Journey pick, or the app's existing safety flag."""
+    from self_assessment_reminders import is_safety_flagged
+
+    sj = await db.self_journey_progress.find_one({"user_id": user_id}, {"_id": 0, "progress.safety.status": 1})
+    if (((sj or {}).get("progress") or {}).get("safety") or {}).get("status") == "concern":
+        return True
+    return await is_safety_flagged(db, user_id)
+
+
+async def _safer(db, user_id: str, doc: Dict[str, Any]) -> Dict[str, Any]:
+    """Stored report as every reader sees it: joint suggestions swapped when the parent shared concerns."""
+    if doc.get("report") and await _shared_concern(db, user_id):
+        return {**doc, "report": cp_report_content.safer_report(doc["report"])}
+    return doc
+
+
 def _now_iso() -> str:
     return datetime.now(timezone.utc).isoformat()
 
@@ -300,7 +317,7 @@ async def generate_report(
     from completion_alerts import schedule_completion_check
     schedule_completion_check(db, user.user_id)
     doc_out.pop("_id", None)
-    return doc_out
+    return await _safer(db, user.user_id, doc_out)
 
 
 @router.get("/report/progress")
@@ -654,7 +671,7 @@ async def get_report(
     doc = await db[REPORTS_COLLECTION].find_one({"user_id": user.user_id}, {"_id": 0})
     if not doc:
         return {"report": None}
-    return doc
+    return await _safer(db, user.user_id, doc)
 
 
 @router.get("/report/pdf")
@@ -666,6 +683,7 @@ async def download_report_pdf(
     doc = await db[REPORTS_COLLECTION].find_one({"user_id": user.user_id}, {"_id": 0})
     if not doc:
         raise HTTPException(status_code=404, detail="Generate the report first.")
+    doc = await _safer(db, user.user_id, doc)
     if excluded is not None:
         raw: List[str] = [x for x in excluded.split(",") if x]
     else:
@@ -765,6 +783,7 @@ async def shared_report(
     )
     if not doc:
         raise HTTPException(status_code=404, detail="Report not found")
+    doc = await _safer(db, owner["user_id"], doc)
 
     ex_list = report_visibility.clean_excluded("cp_report", payload.get("ex") or [])
     filtered = cp_report_pdf.filter_cp_report(doc.get("report") or {}, ex_list)

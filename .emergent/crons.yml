@@ -13,7 +13,7 @@ crons:
     method: POST
     enabled: true
   - name: sa-reassess-reminder
-    description: "Daily 9am Central: Self-Assessment check-ins; on Mondays also the weekly waiting-assessments reminder"
+    description: "Daily 9am Central: agreement alerts; Mondays also waiting-assessment reminders + professional digest"
     cron: "0 9 * * *"
     timezone: "America/Chicago"
     # Cron endpoints must ack 2xx immediately; enqueue/background the actual work.
@@ -28,10 +28,10 @@ crons:
     method: POST
     enabled: true
   - name: sj-weekly-note
-    description: "Sunday 5pm Central: gentle note to parents celebrating the Self Journey progress they made that week"
+    description: "Stopped: the Sunday Self Journey progress email is off (progress shows in the app only)"
     cron: "0 17 * * 0"
     timezone: "America/Chicago"
     # Cron endpoints must ack 2xx immediately; enqueue/background the actual work.
     endpoint: "{{BASE_URL}}/api/cron/self-journey-weekly-note"
     method: POST
-    enabled: true
+    enabled: false

@@ -7,10 +7,6 @@
 
 ## P0 (pending publish)
 
-- Co-Parenting report: 3 lines suggest joint actions (school events together, joint parent-teacher meeting, joint
-  parent-training session); ask founder whether to swap them for separate-meeting versions when the parent picked concern.
-- Existing Self-Assessment retake EMAILS (self_assessment_reminders.py, sa-reassess-reminder cron) still send; ask founder
-  whether to switch them to in-app only like check-ins.
 
 ## P1
 - Align outbound import (`push_to_align`): OFF until the exact import URL + key are provided (secure secret card).

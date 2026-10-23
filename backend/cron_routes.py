@@ -118,7 +118,7 @@ async def self_assessment_reminders_cron(
     authorization: Optional[str] = Header(default=None),
     db=Depends(get_db),
 ) -> Dict[str, Any]:
-    """Daily sweep: 6-week reassess email + 8-week follow-up (safety-flagged skipped).
+    """Daily sweep (Self-Assessment retake EMAILS are off: in-app reminder on the Journey page only).
 
     # Cron endpoints must ack 2xx immediately; enqueue/background the actual work.
     """
@@ -129,14 +129,9 @@ async def self_assessment_reminders_cron(
     from court_agreement_alerts import flush_all
     from professional_digest import send_professional_digests
     from requested_reminders import send_requested_reminders
-    from self_assessment_reminders import send_reassess_reminders
 
     async def _run() -> None:
-        try:
-            stats = await send_reassess_reminders(db)
-            logger.info("self-assessment-reminders cron run_id=%s stats=%s", run_id, stats)
-        except Exception as exc:  # noqa: BLE001
-            logger.exception("self-assessment-reminders cron run_id=%s failed: %s", run_id, exc)
+        # No Self-Assessment retake emails: a co-parent could see them on a shared or monitored inbox.
         # Mondays (Central): weekly reminder for requested-but-unfinished Court-page assessments (5-cron limit).
         if datetime.now(ZoneInfo("America/Chicago")).weekday() == 0:
             try:
@@ -198,20 +193,7 @@ async def self_journey_weekly_note_cron(
     # Cron endpoints must ack 2xx immediately; enqueue/background the actual work.
     """
     _verify_cron_auth(authorization)
-    # Dedupe lives in `self_journey_weekly_notes` (one sent row per user + ISO week).
+    # Stopped at the founder's request: progress is shown only inside the app (shared / monitored inboxes).
     run_id = request.headers.get("X-Webhook-Id") or "manual"
-
-    from release_check import origin_from_request
-    from self_journey_weekly import send_weekly_notes
-
-    origin = origin_from_request(request)
-
-    async def _run() -> None:
-        try:
-            stats = await send_weekly_notes(db, api_url=origin)
-            logger.info("self-journey-weekly-note cron run_id=%s stats=%s", run_id, stats)
-        except Exception as exc:  # noqa: BLE001
-            logger.exception("self-journey-weekly-note cron run_id=%s failed: %s", run_id, exc)
-
-    background.add_task(_run)
-    return {"ok": True, "run_id": run_id, "enqueued": "self-journey-weekly-note"}
+    logger.info("self-journey-weekly-note cron run_id=%s skipped (emails stopped)", run_id)
+    return {"ok": True, "run_id": run_id, "enqueued": None, "stopped": True}

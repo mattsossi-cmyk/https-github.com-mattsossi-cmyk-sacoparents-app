@@ -1,10 +1,12 @@
 import React from "react";
 import { useNavigate } from "react-router-dom";
-import { Check } from "lucide-react";
+import { Check, RefreshCw } from "lucide-react";
 
+import { useAuth } from "../context/AuthContext";
 import { useCalmMode } from "../lib/useCalmMode";
 import { useCaseSettings } from "../lib/useCaseSettings";
 import { useCheckinLink } from "../lib/useCheckinLink";
+import { useSelfAssessmentHistory } from "./portal/selfAssessment/useSelfAssessmentHistory";
 import "./JourneyFlow.css";
 
 /*
@@ -21,8 +23,27 @@ export const ROUTES = {
   parallelBuilder: "/dashboard?open=parallel-builder-steps",
   childNeeds: "/dashboard?open=child-needs",
   foundation: "/dashboard?open=foundation",
+  retakeSelfAssessment: "/dashboard?open=self-assessment",
   exportPdf: "print",
 };
+
+// In-app only reminder (no emails): shown once the last Self-Assessment is 6+ weeks old.
+function RetakeReminder({ dueDays, onStart }) {
+  return (
+    <section className="jf-reminder" data-testid="journey-flow-retake-reminder">
+      <span className="jf-reminder-icon" aria-hidden="true"><RefreshCw size={18} /></span>
+      <div className="jf-reminder-body">
+        <h2>Time to retake your Self-Assessment</h2>
+        <p>
+          It&apos;s been {Math.floor(dueDays / 7)} weeks since your last one. Retaking it shows how far you&apos;ve come.
+        </p>
+        <button type="button" className="jf-reminder-btn" onClick={onStart} data-testid="journey-flow-retake-start">
+          Start my Self-Assessment
+        </button>
+      </div>
+    </section>
+  );
+}
 
 // Pictures live in public/images/journey/ (public/journey/ would clash with the /journey address).
 const IMG = (name) => `/images/journey/${name}.webp`;
@@ -101,6 +122,8 @@ export default function JourneyFlow({ alignUrl, actions = {}, embedded = false }
   // Only a confirmation from SACOparentsAlign counts; nothing is shown otherwise.
   const caseSettings = useCaseSettings();
   const checkinDone = caseSettings?.setup_complete ? caseSettings.setup_completed_on || true : null;
+  const { user } = useAuth();
+  const { dueDays } = useSelfAssessmentHistory(embedded ? null : user?.user_id);
   const go = (key) => {
     if (actions[key]) return actions[key]();
     if (ROUTES[key] === "print") return window.print();
@@ -116,6 +139,9 @@ export default function JourneyFlow({ alignUrl, actions = {}, embedded = false }
           co-parenting path or the parallel parenting path. Both lead to your child&apos;s needs.
         </p>
       </header>
+
+      {/* The embedded copy (Self Journey screen) already has its own "Time to reassess" banner. */}
+      {!embedded && dueDays > 0 && <RetakeReminder dueDays={dueDays} onStart={() => go("retakeSelfAssessment")} />}
 
       <section className="jf-column">
         <StepCard id="self" step="Step 1" title="Self Journey" subtitle="Reflect, learn, grow"

@@ -9684,3 +9684,17 @@ dashboard for sharing SELECTED completed reports with any professional.
   Assessment (previous ratings dotted, QuestionPanel `previous`) / Update where I am (planFits "no"); Summary "Check in now";
   progress.checkIns; in-app only (no email/text/push); never in the PDF.
 - Tests: iteration_160 + iteration_161 (backend 31/31; frontend all flows); award-on-Safety bug fixed after 161 and verified.
+
+## 2026-10-23: In-app reminders only, safer report tips, award collection (tested; publish dispatched)
+- Emails stopped (founder: shared / monitored inboxes): Self-Assessment retake emails (send_reassess_reminders no longer
+  called from /api/cron/self-assessment-reminders; that cron still runs agreement alerts + Monday jobs) and the Sunday
+  Self Journey progress note (/api/cron/self-journey-weekly-note is a no-op; sj-weekly-note enabled: false in crons.yml).
+- In-app reminder instead: "Time to retake your Self-Assessment" card on the Journey page (JourneyFlow RetakeReminder,
+  journey-flow-retake-reminder / -start) once the last Self-Assessment is 42+ days old; Start -> /dashboard?open=self-assessment.
+- Safer Co-Parenting report tips: cp_report_content.SAFER_SWAPS / safer_report; coparenting_routes._safer applies them at
+  read time (generate, GET /report, /report/pdf, shared link) when the parent picked "concern" in the Self Journey OR
+  is_safety_flagged. Stored report untouched; "clear" brings the original tips back.
+- Account page: SelfJourneyAwards (account-awards): all 4 awards, earned in colour with date, others greyed "Not yet";
+  certificate button once the journey award is earned; link to the Self Journey.
+- Tests: tests/test_inapp_reminders_safer_tips.py (5) + test_self_journey.py (13) pass; cron yaml regressions pass;
+  screenshot-verified Journey reminder -> Self-Assessment opens, Account awards (no overflow at 390px).

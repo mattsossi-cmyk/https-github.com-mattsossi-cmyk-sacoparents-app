@@ -18,6 +18,22 @@
 .jf-header h1 { margin: 0 0 8px; font-size: clamp(26px, 6vw, 36px); line-height: 1.15; font-weight: 800; color: var(--jf-deep); }
 .jf-header p { margin: 0; font-size: 16px; line-height: 1.55; color: var(--jf-muted); }
 .jf-column { display: flex; flex-direction: column; align-items: center; }
+.jf-reminder {
+  max-width: 420px; margin: 0 auto 20px; display: flex; gap: 12px; align-items: flex-start; text-align: left;
+  padding: 16px; border-radius: 18px; background: #f5f1fb; border: 1.5px solid #c9b8f0;
+}
+.jf-reminder-icon {
+  flex: none; width: 36px; height: 36px; border-radius: 50%; display: grid; place-items: center;
+  background: #fff; color: var(--jf-deep); border: 1px solid #e0d6f5;
+}
+.jf-reminder-body h2 { margin: 0 0 4px; font-size: 17px; font-weight: 800; color: var(--jf-deep); }
+.jf-reminder-body p { margin: 0 0 12px; font-size: 14px; line-height: 1.5; color: var(--jf-muted); }
+.jf-reminder-btn {
+  min-height: 44px; padding: 0 18px; border: 0; border-radius: 999px; background: #1f7a4d; color: #fff;
+  font-weight: 800; font-size: 15px; cursor: pointer; transition: background-color .15s ease, transform .15s ease;
+}
+.jf-reminder-btn:hover { background: #17663f; }
+.jf-reminder-btn:active { transform: scale(.98); }
 .jf-arrow { display: flex; justify-content: center; padding: 4px 0; }
 .jf-card {
   width: 100%; max-width: 320px; display: flex; flex-direction: column; align-items: center; gap: 6px;
