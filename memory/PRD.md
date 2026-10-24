@@ -59,5 +59,17 @@ key · custom JWT auth (`auth.py`).
 - `components/PrivacyGuard.jsx` (founder's code) disables GA/fbq/PostHog on /self-journey, /start-with-safety, /safety-first. No trackers exist in the app.
 - `components/Disclaimer.jsx` on reading + guided Self Journey, home portal, Start with Safety. ConsentGate leaves public reading/safety pages open.
 
+## PDFs (2026-10-24)
+- Every PDF page ends with "© {year} SA CoParents · sacoparentsapp.online · All rights reserved." (link to sacoparentsapp.online).
+  `pdf_base.render_pdf_copyright` + a safety net wrapping fpdf2 `FPDF._render_footer` (counted per footer call, not per page:
+  dry-run layout passes discard output). Non-fpdf PDFs (image certificate, static downloads) use `pdf_base.stamp_copyright_on_pdf`.
+  Static files: `python backend/scripts/stamp_static_pdf_copyright.py` (idempotent). Check: `tests/test_all_pdfs_copyright.py`.
+
+## Reading Self Journey Journey Guide (2026-10-24)
+- Floating avatar button "Questions about the paths?" on /self-journey pages (`pages/selfJourneyGuide/`). 8 ready-made
+  answers (on-device, nothing sent), page-aware order; signed-in (non-guest) parents can also ask the AI guide
+  (topic `self-journey-read`, collection `self_journey_read_guide_chats`, session per open sheet). Header zIndex 30 keeps
+  Quick Exit above the sheet. Handout print stays one page (fit-to-page zoom) with a "keep private" line + copyright.
+
 ## Test accounts
 See `test_credentials.md`.

@@ -1,0 +1,44 @@
+{
+  "summary": "Tested the Journey Guide chat on the reading Self Journey (/self-journey, /self-journey/:stepId) at 390x844, signed-out and signed-in (parent1). Backend: 6 of 6 pytest pass for topic self-journey-read (401 when signed out, 404 for an unknown topic, 422 for empty message or pages over 800 chars, same session_id on the 2nd turn, GET returns the saved chat, safety reply). Frontend: everything requested works except one layout bug. When you scroll to the very bottom of a page, the floating guide button covers the global footer link 'Who can see my information'.",
+  "backend_issues": {"critical": [], "minor": []},
+  "frontend_issues": {
+    "ui_bugs": [
+      {"component": "SelfJourneyGuide floating button (.sjg-open)", "issue": "When scrolled to the end (checked on /self-journey and /self-journey/medical, 390x844), the fixed button (top 780 to bottom 828, x 139 to 374) sits on top of the global AppFooter second-row link 'Who can see my information' (y 812-827). document.elementFromPoint at the link's center returns the guide button, so the link can't be tapped. The page's own footer links and the first AppFooter row are not covered.", "selector": "[data-testid=sjr-guide-open]", "priority": "MEDIUM"}
+    ],
+    "integration_issues": [],
+    "design_issues": [
+      {"screen": "AI notice modal opened from the Journey Guide input", "issues": ["The shared AiNoticeModals copy says 'Before you use the AI Communication Builder' / 'help you write messages... generate a draft' / 'Continue to AI Communication Builder'. That wording is wrong for the Journey Guide. The modal is shared, so this was already there before this change."]},
+      {"screen": "Journey Guide sheet signed-in at 390x844", "issues": ["The AI privacy banner plus the input take about 170px of the sheet (height min(600px, 78vh)), so few messages fit on screen at once. Consider a shorter banner on phones. Minor."]}
+    ]
+  },
+  "test_report_links": ["/app/backend/tests/test_self_journey_read_guide.py", "/app/test_reports/pytest/pytest_sjr_guide.xml"],
+  "action_items": [
+    "Fix the floating guide button covering the AppFooter 'Who can see my information' link at the end of the page. For example, add bottom padding to the SelfJourney page or AppFooter wrapper when the guide is shown (about 72px plus the safe-area inset), or hide/raise the button when the footer comes into view (IntersectionObserver).",
+    "Optional: let AiNoticeModals take a feature name so the Journey Guide does not show 'AI Communication Builder' wording."
+  ],
+  "critical_code_review_comments": [
+    "SelfJourneyGuide.css: .sjg-open has z-index 9 and is fixed at bottom 16px. Nothing reserves space for it at the bottom of the page, which causes the footer overlap.",
+    "GuideAskBox: the session is a useRef inside AskForm, so closing and reopening the sheet starts a new session_id. That matches 'same open sheet'. Earlier messages are not restored on reopen, even though GET /chat exists. Fine if this is intended.",
+    "Backend _JOURNEY_VOICE still contains 'If the parent's safety result indicates concern...'. That is harmless for self-journey-read because no safety context is sent, and the extra 'Never ask what the parent answered in Safety First' line is present. The AI replies call it 'the Safety First assessment' and say co-parenting 'is not safe'. This is acceptable, but slightly at odds with the rule 'never decide or state that a person is safe'."
+  ],
+  "updated_files": ["/app/backend/tests/test_self_journey_read_guide.py"],
+  "success_rate": {"backend": "100% (6/6)", "frontend": "about 95% (all flows pass; 1 footer overlap bug)"},
+  "verified_passing": [
+    "Hub: button 'Questions about the paths?' with avatar. The sheet header shows 'Journey Guide' and 'Helping with: Your Self Journey', and focus moves to the close button.",
+    "Step pages: the first chip matches the page (safety-first: safety, parallel-parenting: parallel, coparenting: coparenting), and the header shows the step title.",
+    "All 8 chips add a user bubble and a guide bubble, and each tapped chip disappears. The chip list goes away once all are tapped. The 'pages' answer lists 7 pages with 10/5/12/12/8/8/10 minutes and 'about 65 minutes in all'.",
+    "Answer links go to the right place and close the sheet: /start-with-safety, /self-journey/coparenting, /self-journey/parallel-parenting, /self-journey/guided/summary (signed-out, it shows the guest consent screen), /help.",
+    "No /api/journey-guide requests when tapping chips, signed-out or signed-in.",
+    "Signed-out: the sign-in prompt shows with the link /login?redirect=%2Fself-journey, and there is no input.",
+    "Signed-in with the AI notice cleared: the banner shows, tapping the input opens the AI notice, and after accepting it the sheet stays open. Pressing send shows a 'Thinking…' bubble, then the AI reply. Two POSTs returned the same session_id.",
+    "AI safety: 'My ex threatens me, should I co-parent?' got a reply with 911 and 1-800-799-7233 that discourages co-parenting. The AI never asked for Safety First answers.",
+    "Quick Exit stays on top and can be tapped with the sheet open. Escape closes the sheet and focus returns to the open button. Tapping the dark area closes it. The close button works.",
+    "No horizontal overflow (scrollWidth 390) with the sheet open, signed-out or signed-in.",
+    "Print emulation: the guide button and Quick Exit are hidden and the handout sjr-handout shows. sjr-print exists. /journey-library/medical redirects to /self-journey/medical."
+  ],
+  "test_credentials": "parent1@test.com / TestPass123!",
+  "seed_data_creation": "Briefly unset parent1's ai_notice_version/ai_notice_ack_at to test the locked-input path. Accepting the notice in the UI restored it (version 2026-10-16, new ack_at).",
+  "retest_needed": false,
+  "should_main_agent_self_test": true,
+  "context_for_next_testing_agent": "Journey Guide (sjr-guide-*) is verified. The only open bug is the floating button covering the AppFooter 'Who can see my information' link at max scroll. Note: tapping the dark area at y<64 hits the purple header (z-index 30, above the dark area) on purpose; tap at y about 180 to close the sheet. The backend regression test is tests/test_self_journey_read_guide.py (it calls the real LLM, about 14s)."
+}

@@ -9715,3 +9715,11 @@ dashboard for sharing SELECTED completed reports with any professional.
 ## 2026-10-24 — Journey library redirect + printable handouts (self-tested, NOT yet published)
 - /journey-library -> /self-journey, /journey-library/:id -> /self-journey/:id; old library ticks carried over once (key removed; Quick Exit clears both).
 - "Print this page (one-page handout)" on all 7 reading pages; print shows only the handout. Verified: every page prints as exactly 1 Letter page.
+
+## 2026-10-24 — Handout fit + privacy line, PDF copyright everywhere, Journey Guide on reading pages (NOT yet published)
+- Handout: fit-to-one-page zoom (tested 1x/1.5x/2x text, Letter + A4), "Keep this handout somewhere private" line, copyright line.
+  Browser print-dialog Scale >100% can still make 2 pages (can't be controlled from the page).
+- All 11 old /journey-library links verified in fresh private contexts.
+- PDF copyright: new line + global fpdf2 safety net; fixed 5 builders importing a missing `pdf_copyright` module (no-op);
+  image certificate stamped; fridge card label moved up; 30 static downloads stamped. 62 endpoint checks + bundle pass.
+- Journey Guide chat (ready-made + AI when signed in) on reading pages; iteration_164 passed (footer overlap fixed after).

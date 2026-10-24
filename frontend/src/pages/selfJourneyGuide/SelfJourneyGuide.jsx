@@ -17,6 +17,12 @@ export default function SelfJourneyGuide({ steps, step }) {
     wasOpen.current = open;
   }, [open]);
 
+  // Room under the site footer so the floating button never sits on its last links.
+  useEffect(() => {
+    document.body.classList.add('has-sjr-guide');
+    return () => document.body.classList.remove('has-sjr-guide');
+  }, []);
+
   return (
     <div className="sjg">
       {!open && (

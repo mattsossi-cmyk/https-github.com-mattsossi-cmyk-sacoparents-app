@@ -708,7 +708,7 @@ const st = {
     color: PURPLE, fontWeight: 600, textDecoration: 'none', padding: '10px 4px', minHeight: 44,
     display: 'block', fontSize: 15,
   },
-  footer: { borderTop: '1px solid #EEE9F6', padding: '16px 16px 88px', fontSize: 14, color: GRAY, textAlign: 'center' },
+  footer: { borderTop: '1px solid #EEE9F6', padding: 16, fontSize: 14, color: GRAY, textAlign: 'center' },
   footerLink: { color: PURPLE },
   celebrate: {
     textAlign: 'center', background: PURPLE_LIGHT, border: `2px solid ${PURPLE}`,
