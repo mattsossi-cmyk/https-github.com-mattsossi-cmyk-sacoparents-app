@@ -109,6 +109,8 @@ from cron_routes import router as cron_router  # noqa: E402
 from release_check_routes import router as release_check_router  # noqa: E402
 from self_journey_weekly_routes import router as self_journey_weekly_router  # noqa: E402
 from self_journey_weekly_routes import admin_router as self_journey_weekly_admin_router  # noqa: E402
+from guide_question_counts_routes import router as guide_question_counts_router  # noqa: E402
+from guide_question_counts_routes import admin_router as guide_question_counts_admin_router  # noqa: E402
 
 logging.basicConfig(
     level=logging.INFO,
@@ -283,6 +285,8 @@ api_router.include_router(cron_router)
 api_router.include_router(release_check_router)
 api_router.include_router(self_journey_weekly_router)
 api_router.include_router(self_journey_weekly_admin_router)
+api_router.include_router(guide_question_counts_router)
+api_router.include_router(guide_question_counts_admin_router)
 api_router.include_router(case_settings_router)
 api_router.include_router(align_ping_router)
 api_router.include_router(case_safety_internal_router)

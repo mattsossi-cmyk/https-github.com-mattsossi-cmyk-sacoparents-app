@@ -26,6 +26,8 @@ import {
 import GuideAvatar from "./GuideAvatar";
 import { readyQuestions } from "../selfJourneyGuide/guideAnswers";
 import ListenButton, { stopReading } from "../selfJourneyGuide/ListenButton";
+import VoiceSpeed from "../selfJourneyGuide/VoiceSpeed";
+import { countTap } from "../selfJourneyGuide/countTap";
 import "./selfJourney.css";
 
 /* ------------------------------------------------------------------ */
@@ -955,6 +957,7 @@ function AssistantSheet({ step, isSafetyStep, path, onClose, onAsk, logoSrc }) {
   }).filter((r) => !asked.includes(r.id));
   const askReady = (r) => {
     setAsked((a) => [...a, r.id]);
+    countTap(r.id, "guided");
     setMessages((m) => [...m, { role: "user", text: r.q }, { role: "assistant", text: r.a }]);
   };
 
@@ -1014,6 +1017,7 @@ function AssistantSheet({ step, isSafetyStep, path, onClose, onAsk, logoSrc }) {
           </button>
         </div>
         <div className="sj-sheet-body" ref={listRef} aria-live="polite">
+          <VoiceSpeed testid="sj-chat-speed" />
           {messages.map((m, i) =>
             m.role === "user" ? (
               <div key={i} className="sj-bubble is-user" data-testid="sj-bubble-user">{m.text}</div>
@@ -1052,7 +1056,7 @@ function AssistantSheet({ step, isSafetyStep, path, onClose, onAsk, logoSrc }) {
                   </button>
                 ))}
               </div>
-              <p className="sj-path-qs-note">These answers stay on your device. Nothing you tap here is sent anywhere.</p>
+              <p className="sj-path-qs-note">These answers come from your device. We only count which question was tapped, never who tapped it.</p>
             </div>
           )}
         </div>

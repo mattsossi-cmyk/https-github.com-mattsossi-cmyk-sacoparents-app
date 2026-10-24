@@ -330,3 +330,15 @@
 .sj-bubble .sj-listen { display: flex; width: fit-content; }
 .sj-listen.is-on { background: var(--sj-purple); border-color: var(--sj-purple); color: #fff; }
 .sj-listen:focus-visible { outline: 3px solid #3D1A78; outline-offset: 2px; }
+/* Voice speed picker (both Self Journeys) and the reading page's Listen row. */
+.sj-speed { display: flex; align-items: center; flex-wrap: wrap; gap: 6px; }
+.sj-speed-label { font-size: 12px; font-weight: 700; color: var(--sj-muted, #5e5672); margin-right: 2px; }
+.sj-speed button {
+  min-height: 36px; padding: 0 12px; border-radius: 18px; border: 1px solid var(--sj-border-input, #d8d0ea);
+  background: #fff; color: var(--sj-purple-deep, #3e2a78); font: 700 13px system-ui, -apple-system, sans-serif;
+  cursor: pointer; transition: background-color .15s ease, color .15s ease;
+}
+.sj-speed button.is-on { background: var(--sj-purple-deep, #3e2a78); border-color: var(--sj-purple-deep, #3e2a78); color: #fff; }
+.sj-speed button:focus-visible { outline: 3px solid #3D1A78; outline-offset: 2px; }
+.sjr-listen-row { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; margin: -6px 0 16px; }
+.sjr-listen-row .sj-listen { margin-top: 0; min-height: 44px; font-size: 15px; padding: 0 16px; }

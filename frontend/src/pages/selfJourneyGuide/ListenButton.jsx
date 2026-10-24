@@ -1,14 +1,29 @@
 import { useEffect, useRef, useState } from 'react';
 
-const supported = () => typeof window !== 'undefined' && 'speechSynthesis' in window && 'SpeechSynthesisUtterance' in window;
+import { speedRate } from './voiceSpeed';
 
-// Stops any answer being read aloud (Quick Exit, closing the chat).
+export const speechSupported = () =>
+  typeof window !== 'undefined' && 'speechSynthesis' in window && 'SpeechSynthesisUtterance' in window;
+
+// Stops any answer or page being read aloud (Quick Exit, closing the chat).
 export const stopReading = () => {
-  if (supported()) window.speechSynthesis.cancel();
+  if (speechSupported()) window.speechSynthesis.cancel();
 };
 
-// Reads one answer aloud with the device's own voice. Nothing leaves the device; only plays when tapped.
-export default function ListenButton({ text, testid = 'listen-btn' }) {
+// Short sentence groups: some browsers stop long single utterances part-way.
+function chunks(text) {
+  const sentences = text.replace(/[→↗›‹]/g, '').match(/[^.!?\n]+[.!?]*\s*/g) || [text];
+  const out = [];
+  sentences.forEach((s) => {
+    const last = out[out.length - 1];
+    if (last && last.length + s.length < 220) out[out.length - 1] = last + s;
+    else out.push(s);
+  });
+  return out.map((c) => c.trim()).filter(Boolean);
+}
+
+// Reads text aloud with the device's own voice. Nothing leaves the device; only plays when tapped.
+export default function ListenButton({ text, testid = 'listen-btn', label = 'Listen', stopLabel = 'Stop', ariaLabel = 'Listen to this answer' }) {
   const [speaking, setSpeaking] = useState(false);
   const mine = useRef(null);
 
@@ -16,24 +31,27 @@ export default function ListenButton({ text, testid = 'listen-btn' }) {
     if (mine.current && window.speechSynthesis?.speaking) window.speechSynthesis.cancel();
   }, []);
 
-  if (!supported()) return null;
+  if (!speechSupported()) return null;
 
   const toggle = () => {
-    if (speaking) {
-      window.speechSynthesis.cancel();
-      return;
-    }
     window.speechSynthesis.cancel();
-    const u = new SpeechSynthesisUtterance(text.replace(/[→↗]/g, ''));
-    u.lang = document.documentElement.lang || 'en-US';
-    u.rate = 0.95;
-    u.onend = u.onerror = () => {
-      if (mine.current === u) mine.current = null;
+    if (speaking) return;
+    const parts = chunks(text).map((c) => {
+      const u = new SpeechSynthesisUtterance(c);
+      u.lang = document.documentElement.lang || 'en-US';
+      u.rate = speedRate();
+      return u;
+    });
+    if (!parts.length) return;
+    const done = () => {
+      mine.current = null;
       setSpeaking(false);
     };
-    mine.current = u;
+    parts.forEach((u) => { u.onerror = done; });
+    parts[parts.length - 1].onend = done;
+    mine.current = parts[parts.length - 1];
     setSpeaking(true);
-    window.speechSynthesis.speak(u);
+    parts.forEach((u) => window.speechSynthesis.speak(u));
   };
 
   return (
@@ -42,11 +60,11 @@ export default function ListenButton({ text, testid = 'listen-btn' }) {
       className={`sj-listen${speaking ? ' is-on' : ''}`}
       onClick={toggle}
       aria-pressed={speaking}
-      aria-label={speaking ? 'Stop reading this answer aloud' : 'Listen to this answer'}
+      aria-label={speaking ? `${stopLabel} reading aloud` : ariaLabel}
       data-testid={testid}
       data-speaking={speaking ? 'true' : 'false'}
     >
-      <span aria-hidden="true">{speaking ? '■' : '🔊'}</span> {speaking ? 'Stop' : 'Listen'}
+      <span aria-hidden="true">{speaking ? '■' : '🔊'}</span> {speaking ? stopLabel : label}
     </button>
   );
 }

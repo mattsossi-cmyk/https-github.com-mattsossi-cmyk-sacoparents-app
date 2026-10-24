@@ -26,6 +26,7 @@ import ReleaseCheckTile from "../components/ReleaseCheckTile";
 import { LinkHealthDot } from "../components/caseSettings/LinkHealthDot";
 import { useAlignLinkHealth } from "../lib/useAlignLinkHealth";
 import WeeklyNoteStatsTile from "../components/WeeklyNoteStatsTile";
+import GuideQuestionsTile from "../components/admin/GuideQuestionsTile";
 
 const FUNNEL_STEPS = [
   { key: "child_goals", label: "Child Goals" },
@@ -560,6 +561,8 @@ export default function AdminDashboard() {
         <ReleaseCheckTile />
 
         <WeeklyNoteStatsTile />
+
+        <GuideQuestionsTile />
 
         <div className="grid lg:grid-cols-3 gap-6">
           {/* Signup chart */}

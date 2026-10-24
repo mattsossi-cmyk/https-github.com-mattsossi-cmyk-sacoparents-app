@@ -4,6 +4,8 @@ import Disclaimer from '../components/Disclaimer';
 import StartWithSafetyBanner from '../components/startWithSafety/StartWithSafetyBanner';
 import SelfJourneyHandout, { fitHandoutToPage } from './SelfJourneyHandout';
 import SelfJourneyGuide from './selfJourneyGuide/SelfJourneyGuide';
+import ListenButton from './selfJourneyGuide/ListenButton';
+import VoiceSpeed from './selfJourneyGuide/VoiceSpeed';
 
 /**
  * SelfJourney — SA CoParents (the reading Self Journey, open to anyone)
@@ -437,6 +439,13 @@ function Hub({ done, nextUnfinished, onClear }) {
   );
 }
 
+// What "Listen to this page" reads: the title, summary, each section and the reflection questions.
+function pageText(step) {
+  const parts = [`${step.title}.`, step.summary, ...step.sections.map((sec) => `${sec.heading}. ${sec.body}`)];
+  if (step.prompts) parts.push('Questions to think about.', ...step.prompts);
+  return parts.join('\n');
+}
+
 function StepPage({ step, index, isDone, onToggleDone, onCompleteAndNext, onJump, done }) {
   const prev = STEPS[index - 1];
   const next = STEPS[index + 1];
@@ -467,6 +476,17 @@ function StepPage({ step, index, isDone, onToggleDone, onCompleteAndNext, onJump
         {step.title}
       </h1>
       <p style={st.lead}>{step.summary}</p>
+      <div className="sjg sjr-listen-row" data-testid="sjr-page-listen-row">
+        <ListenButton
+          key={step.id}
+          text={pageText(step)}
+          label="Listen to this page"
+          stopLabel="Stop reading"
+          ariaLabel="Listen to this page"
+          testid="sjr-page-listen"
+        />
+        <VoiceSpeed testid="sjr-page-speed" />
+      </div>
       {step.banner && (
         <div style={{ marginBottom: 16 }}>
           <StartWithSafetyBanner testid="sjr-safety-banner" />

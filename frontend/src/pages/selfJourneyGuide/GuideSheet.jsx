@@ -5,6 +5,8 @@ import GuideAvatar from '../selfJourney/GuideAvatar';
 import GuideAskBox from './GuideAskBox';
 import { GUIDE_LOGO, readyQuestions } from './guideAnswers';
 import ListenButton, { stopReading } from './ListenButton';
+import VoiceSpeed from './VoiceSpeed';
+import { countTap } from './countTap';
 
 const OPENING = 'Hi, I’m the Journey Guide. I can explain the Self Journey paths. Tap a question below.';
 
@@ -32,6 +34,7 @@ export default function GuideSheet({ steps, step, onClose }) {
   const add = (...msgs) => setMessages((m) => [...m, ...msgs]);
   const askReady = (r) => {
     setAsked((a) => [...a, r.id]);
+    countTap(r.id, 'reading');
     add({ role: 'user', text: r.q }, { role: 'guide', text: r.a, link: r.link });
   };
   const chips = readyQuestions({ steps, stepId: step?.id }).filter((r) => !asked.includes(r.id));
@@ -53,6 +56,7 @@ export default function GuideSheet({ steps, step, onClose }) {
           </button>
         </div>
         <div className="sj-sheet-body" ref={listRef} aria-live="polite" data-testid="sjr-guide-messages">
+          <VoiceSpeed testid="sjr-guide-speed" />
           {messages.map((m, i) => <Bubble key={i} m={m} i={i} calm={calm} onClose={onClose} />)}
           {busy && <Bubble m={{ role: 'guide', text: 'Thinking…' }} calm={calm} speaking />}
           {chips.length > 0 && (
@@ -62,7 +66,7 @@ export default function GuideSheet({ steps, step, onClose }) {
               ))}
             </div>
           )}
-          <p className="sjg-note" data-testid="sjr-guide-note">The questions above are answered on your device. Nothing you tap is sent anywhere.</p>
+          <p className="sjg-note" data-testid="sjr-guide-note">The questions above are answered on your device. We only count which question was tapped, never who tapped it.</p>
         </div>
         <GuideAskBox steps={steps} step={step} busy={busy} setBusy={setBusy} add={add} />
       </div>
