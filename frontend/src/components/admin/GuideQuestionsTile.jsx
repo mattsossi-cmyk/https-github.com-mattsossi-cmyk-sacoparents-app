@@ -4,6 +4,7 @@ import { MessageCircleQuestion } from 'lucide-react';
 import { api } from '../../lib/api';
 import { logError } from '../../lib/logger';
 import { READY } from '../../pages/selfJourneyGuide/guideAnswers';
+import Sparkline from './Sparkline';
 
 const LABEL = Object.fromEntries(READY.map((r) => [r.id, r.id === 'pages' ? 'What do the pages / steps cover?' : r.q]));
 
@@ -45,6 +46,7 @@ export default function GuideQuestionsTile() {
             <thead>
               <tr className="text-[0.625rem] uppercase tracking-[0.15em] text-[#6E6787]">
                 <th className="text-left pb-2 font-semibold">Question</th>
+                <th className="text-left pb-2 pr-3 font-semibold">Last 8 weeks</th>
                 <th className="text-right pb-2 pr-3 font-semibold">All time</th>
                 <th className="text-right pb-2 font-semibold">Last 30 days</th>
               </tr>
@@ -60,6 +62,10 @@ export default function GuideQuestionsTile() {
                     <span className="block text-[0.6875rem] text-[#6E6787] mt-1">
                       Open pages {r.reading} · Guided chat {r.guided}
                     </span>
+                  </td>
+                  <td className="py-2 pr-3 align-middle">
+                    <Sparkline values={r.weekly} testid={`admin-guide-questions-trend-${r.question_id}`} />
+                    <span className="block text-[0.625rem] text-[#6E6787]">This week {r.weekly[r.weekly.length - 1]}</span>
                   </td>
                   <td className="py-2 pr-3 text-right font-semibold" data-testid={`admin-guide-questions-all-${r.question_id}`}>{r.all_time}</td>
                   <td className="py-2 text-right" data-testid={`admin-guide-questions-30-${r.question_id}`}>{r.last_30_days}</td>

@@ -23,12 +23,19 @@ function chunks(text) {
 }
 
 // Reads text aloud with the device's own voice. Nothing leaves the device; only plays when tapped.
-export default function ListenButton({ text, testid = 'listen-btn', label = 'Listen', stopLabel = 'Stop', ariaLabel = 'Listen to this answer' }) {
+// `segments` ([{ id, text }]) reads parts in order and reports the part being read through `onSegment(id)`
+// (null when reading ends or stops).
+export default function ListenButton({
+  text, segments, onSegment, testid = 'listen-btn', label = 'Listen', stopLabel = 'Stop', ariaLabel = 'Listen to this answer',
+}) {
   const [speaking, setSpeaking] = useState(false);
   const mine = useRef(null);
 
+  const onSegmentRef = useRef(onSegment);
+  onSegmentRef.current = onSegment;
   useEffect(() => () => {
     if (mine.current && window.speechSynthesis?.speaking) window.speechSynthesis.cancel();
+    if (mine.current) onSegmentRef.current?.(null);
   }, []);
 
   if (!speechSupported()) return null;
@@ -36,16 +43,20 @@ export default function ListenButton({ text, testid = 'listen-btn', label = 'Lis
   const toggle = () => {
     window.speechSynthesis.cancel();
     if (speaking) return;
-    const parts = chunks(text).map((c) => {
-      const u = new SpeechSynthesisUtterance(c);
-      u.lang = document.documentElement.lang || 'en-US';
-      u.rate = speedRate();
-      return u;
-    });
+    const parts = (segments || [{ id: null, text }]).flatMap((seg) =>
+      chunks(seg.text).map((c, i) => {
+        const u = new SpeechSynthesisUtterance(c);
+        u.lang = document.documentElement.lang || 'en-US';
+        u.rate = speedRate();
+        if (i === 0 && onSegment) u.onstart = () => onSegment(seg.id);
+        return u;
+      }),
+    );
     if (!parts.length) return;
     const done = () => {
       mine.current = null;
       setSpeaking(false);
+      onSegment?.(null);
     };
     parts.forEach((u) => { u.onerror = done; });
     parts[parts.length - 1].onend = done;

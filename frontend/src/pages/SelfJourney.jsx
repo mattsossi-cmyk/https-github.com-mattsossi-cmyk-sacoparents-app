@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Link, Navigate, useNavigate, useParams } from 'react-router-dom';
 import Disclaimer from '../components/Disclaimer';
 import StartWithSafetyBanner from '../components/startWithSafety/StartWithSafetyBanner';
@@ -439,16 +439,40 @@ function Hub({ done, nextUnfinished, onClear }) {
   );
 }
 
-// What "Listen to this page" reads: the title, summary, each section and the reflection questions.
-function pageText(step) {
-  const parts = [`${step.title}.`, step.summary, ...step.sections.map((sec) => `${sec.heading}. ${sec.body}`)];
-  if (step.prompts) parts.push('Questions to think about.', ...step.prompts);
-  return parts.join('\n');
+// What "Listen to this page" reads, in parts that light up as they're read: title, summary, sections, questions.
+function pageSegments(step) {
+  const segs = [
+    { id: 'title', text: `${step.title}.` },
+    { id: 'summary', text: step.summary },
+    ...step.sections.map((sec, i) => ({ id: `sec-${i}`, text: `${sec.heading}. ${sec.body}` })),
+  ];
+  if (step.prompts) segs.push({ id: 'prompts', text: ['Questions to think about.', ...step.prompts].join('\n') });
+  return segs;
+}
+
+// Highlights the part being read and keeps it on screen.
+function useReadAlong(stepId) {
+  const [reading, setReading] = useState(null);
+  const refs = useRef({});
+  useEffect(() => setReading(null), [stepId]);
+  useEffect(() => {
+    const el = reading && refs.current[reading];
+    if (!el?.scrollIntoView) return;
+    const still = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
+    el.scrollIntoView({ behavior: still ? 'auto' : 'smooth', block: 'center' });
+  }, [reading]);
+  const mark = (id, base) => ({
+    ref: (el) => { refs.current[id] = el; },
+    style: reading === id ? { ...base, ...st.reading } : { ...base, transition: 'background-color .2s ease, outline-color .2s ease' },
+    'data-reading': reading === id ? 'true' : 'false',
+  });
+  return { setReading, mark };
 }
 
 function StepPage({ step, index, isDone, onToggleDone, onCompleteAndNext, onJump, done }) {
   const prev = STEPS[index - 1];
   const next = STEPS[index + 1];
+  const { setReading, mark } = useReadAlong(step.id);
 
   return (
     <>
@@ -471,15 +495,16 @@ function StepPage({ step, index, isDone, onToggleDone, onCompleteAndNext, onJump
         Page {index + 1} of {STEPS.length} · ⏱ about {step.minutes} min
         {isDone && <span style={st.doneBadge} data-testid="sjr-done-badge">✓ Completed</span>}
       </p>
-      <h1 style={st.h1} data-testid="sjr-step-title">
+      <h1 {...mark('title', st.h1)} data-testid="sjr-step-title">
         <span aria-hidden="true">{step.icon} </span>
         {step.title}
       </h1>
-      <p style={st.lead}>{step.summary}</p>
+      <p {...mark('summary', st.lead)} data-testid="sjr-step-summary">{step.summary}</p>
       <div className="sjg sjr-listen-row" data-testid="sjr-page-listen-row">
         <ListenButton
           key={step.id}
-          text={pageText(step)}
+          segments={pageSegments(step)}
+          onSegment={setReading}
           label="Listen to this page"
           stopLabel="Stop reading"
           ariaLabel="Listen to this page"
@@ -498,15 +523,15 @@ function StepPage({ step, index, isDone, onToggleDone, onCompleteAndNext, onJump
         </p>
       )}
 
-      {step.sections.map((sec) => (
-        <section key={sec.heading} style={step.alert ? st.sectionAlert : st.section}>
+      {step.sections.map((sec, i) => (
+        <section key={sec.heading} {...mark(`sec-${i}`, step.alert ? st.sectionAlert : st.section)} data-testid={`sjr-section-${i}`}>
           <h2 style={{ ...st.h2, ...(step.alert ? { color: RED } : null) }}>{sec.heading}</h2>
           <p style={{ margin: 0 }}>{sec.body}</p>
         </section>
       ))}
 
       {step.prompts && (
-        <section style={st.section}>
+        <section {...mark('prompts', st.section)} data-testid="sjr-section-prompts">
           <h2 style={st.h2}>Questions to think about</h2>
           <p style={{ ...st.note, marginTop: 0 }}>Just for reflection. Nothing is typed in or saved.</p>
           <ul style={st.promptList}>
@@ -716,6 +741,11 @@ const st = {
   textBtn: {
     background: 'none', border: 'none', color: GRAY, textDecoration: 'underline',
     cursor: 'pointer', fontSize: 15, padding: 8, minHeight: 44,
+  },
+  // The part of the page being read aloud.
+  reading: {
+    background: '#FFF6D6', outline: `3px solid ${PURPLE}`, outlineOffset: 3, borderRadius: 12,
+    transition: 'background-color .2s ease, outline-color .2s ease',
   },
   printBtn: {
     background: PURPLE_LIGHT, color: PURPLE, border: '1px solid #E2DAF0', borderRadius: 99,

@@ -15,6 +15,7 @@ from pydantic import BaseModel
 from analytics_routes import require_admin
 from auth import UserPublic, get_db
 
+TREND_WEEKS = 8
 QUESTION_IDS = ("safety", "coparenting", "parallel", "choose", "pages", "switch", "report", "help")
 _COLL = "guide_question_tap_counts"
 
@@ -44,6 +45,7 @@ class QuestionStat(BaseModel):
     last_30_days: int
     reading: int
     guided: int
+    weekly: List[int]  # taps per 7-day week, oldest first; the last entry is the current week (today and the 6 days before)
 
 
 class StatsOut(BaseModel):
@@ -56,9 +58,10 @@ class StatsOut(BaseModel):
 async def tap_stats(
     _admin: UserPublic = Depends(require_admin), db: AsyncIOMotorDatabase = Depends(get_db)
 ) -> StatsOut:
-    since = (datetime.now(timezone.utc) - timedelta(days=29)).strftime("%Y-%m-%d")
-    totals: Dict[str, Dict[str, int]] = {
-        q: {"all_time": 0, "last_30_days": 0, "reading": 0, "guided": 0} for q in QUESTION_IDS
+    today = datetime.now(timezone.utc).date()
+    since = (today - timedelta(days=29)).isoformat()
+    totals: Dict[str, Dict] = {
+        q: {"all_time": 0, "last_30_days": 0, "reading": 0, "guided": 0, "weekly": [0] * TREND_WEEKS} for q in QUESTION_IDS
     }
     async for d in db[_COLL].find({}, {"_id": 0, "day": 1, "question_id": 1, "where": 1, "count": 1}):
         t = totals.get(d.get("question_id"))
@@ -69,6 +72,12 @@ async def tap_stats(
         t[d.get("where") if d.get("where") in ("reading", "guided") else "reading"] += n
         if (d.get("day") or "") >= since:
             t["last_30_days"] += n
+        try:
+            weeks_ago = (today - datetime.strptime(d.get("day") or "", "%Y-%m-%d").date()).days // 7
+        except ValueError:
+            continue
+        if 0 <= weeks_ago < TREND_WEEKS:
+            t["weekly"][TREND_WEEKS - 1 - weeks_ago] += n
     rows = sorted(
         (QuestionStat(question_id=q, **v) for q, v in totals.items()),
         key=lambda r: (-r.all_time, -r.last_30_days, QUESTION_IDS.index(r.question_id)),
