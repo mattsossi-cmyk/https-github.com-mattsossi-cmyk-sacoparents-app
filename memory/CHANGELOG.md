@@ -9711,3 +9711,7 @@ dashboard for sharing SELECTED completed reports with any professional.
 - "Family check-in" -> "Safety First" on every parent-facing screen, AI prompts, NOT_AVAILABLE, court checklist; tests updated (67 passed).
 - Start with Safety picture banner on the reading Safety First page. Home picture + door-self button -> /self-journey.
 - Tracking audit: no GA/gtag, Meta Pixel, PostHog, Hotjar or Clarity in index.html or the app.
+
+## 2026-10-24 — Journey library redirect + printable handouts (self-tested, NOT yet published)
+- /journey-library -> /self-journey, /journey-library/:id -> /self-journey/:id; old library ticks carried over once (key removed; Quick Exit clears both).
+- "Print this page (one-page handout)" on all 7 reading pages; print shows only the handout. Verified: every page prints as exactly 1 Letter page.

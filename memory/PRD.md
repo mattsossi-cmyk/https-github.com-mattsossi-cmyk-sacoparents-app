@@ -31,6 +31,9 @@ key · custom JWT auth (`auth.py`).
 - `/self-journey` + `/self-journey/:stepId` READING Self Journey (`pages/SelfJourney.jsx`, founder's file): public, 7 pages,
   finished-page ticks in localStorage `sacp_self_journey_done` only; Safety First page shows StartWithSafetyBanner; finish links
   comm-builder / guided summary PDF / help / court. Old guided slugs redirect to the guided URL. Home picture + door-self -> here.
+  /journey-library(/:id) redirects here (old ticks `sacp_journey_library_done` merged once, then removed; JourneyLibrary.jsx deleted).
+  Each page has "Print this page" (sjr-print) -> one-page print-only handout (`pages/SelfJourneyHandout.jsx/.css`, portal to body,
+  3 writing lines per reflection question, disclaimer + hotlines + page URL). Browser print / Save as PDF; nothing sent anywhere.
 - `/self-journey/guided/:step` guided Self Journey (`pages/selfJourney/SelfJourney.jsx` + `SelfJourneyPage.jsx`,
   API `backend/self_journey_routes.py` → collection `self_journey_progress`):
   Safety (link out to Align + the parent's own clear/concern pick) → Situation (private notes) → existing

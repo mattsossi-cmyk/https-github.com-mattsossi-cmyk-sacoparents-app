@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { Link, Navigate, useNavigate, useParams } from 'react-router-dom';
 import Disclaimer from '../components/Disclaimer';
 import StartWithSafetyBanner from '../components/startWithSafety/StartWithSafetyBanner';
+import SelfJourneyHandout from './SelfJourneyHandout';
 
 /**
  * SelfJourney — SA CoParents (the reading Self Journey, open to anyone)
@@ -25,6 +26,8 @@ const GUIDED = '/self-journey/guided';
 // Old guided-journey links (/self-journey/safety, …) open the same page in the guided journey.
 const GUIDED_ONLY_SLUGS = ['safety', 'situation', 'child-needs', 'foundation', 'mediation', 'summary'];
 const STORAGE_KEY = 'sacp_self_journey_done';
+// The retired Journey library's ticks (same page ids) carry over once, then the old key is removed.
+const OLD_LIBRARY_KEY = 'sacp_journey_library_done';
 const START_WITH_SAFETY = '/start-with-safety';
 const EXIT_URL = 'https://www.google.com/search?q=weather';
 
@@ -220,18 +223,37 @@ const STEPS = [
 
 const TOTAL_MINUTES = STEPS.reduce((sum, s) => sum + s.minutes, 0);
 
-function readDone() {
+function readIds(key) {
   try {
-    const saved = JSON.parse(localStorage.getItem(STORAGE_KEY));
-    return Array.isArray(saved) ? saved.filter((id) => STEPS.some((s) => s.id === id)) : [];
+    const saved = JSON.parse(localStorage.getItem(key));
+    return Array.isArray(saved) ? saved : [];
   } catch {
     return [];
   }
 }
 
+function readDone() {
+  const ids = new Set([...readIds(STORAGE_KEY), ...readIds(OLD_LIBRARY_KEY)]);
+  return STEPS.filter((s) => ids.has(s.id)).map((s) => s.id);
+}
+
 function quickExit() {
-  try { localStorage.removeItem(STORAGE_KEY); } catch {}
+  try { localStorage.removeItem(STORAGE_KEY); localStorage.removeItem(OLD_LIBRARY_KEY); } catch {}
   window.location.replace(EXIT_URL);
+}
+
+// Prints only the one-page handout (see SelfJourneyHandout), named after the page for "Save as PDF".
+function printHandout(step) {
+  const title = document.title;
+  document.title = `SA CoParents Self Journey - ${step.title}`;
+  document.body.classList.add('sjr-printing');
+  const cleanup = () => {
+    document.body.classList.remove('sjr-printing');
+    document.title = title;
+    window.removeEventListener('afterprint', cleanup);
+  };
+  window.addEventListener('afterprint', cleanup);
+  window.print();
 }
 
 export default function SelfJourney() {
@@ -240,7 +262,10 @@ export default function SelfJourney() {
   const [done, setDone] = useState(readDone);
 
   useEffect(() => {
-    try { localStorage.setItem(STORAGE_KEY, JSON.stringify(done)); } catch {}
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(done));
+      localStorage.removeItem(OLD_LIBRARY_KEY);
+    } catch {}
   }, [done]);
 
   useEffect(() => {
@@ -485,6 +510,13 @@ function StepPage({ step, index, isDone, onToggleDone, onCompleteAndNext, onJump
         )}
       </div>
 
+      <div style={{ textAlign: 'center', marginBottom: 8 }}>
+        <button type="button" onClick={() => printHandout(step)} style={st.printBtn} data-testid="sjr-print">
+          🖨️ Print this page (one-page handout)
+        </button>
+      </div>
+      <SelfJourneyHandout step={step} reviewer={step.reviewed ? REVIEWER : null} />
+
       <nav style={st.bottomNav} aria-label="Page navigation">
         {prev ? (
           <Link to={`${BASE}/${prev.id}`} style={st.navBtn} data-testid="sjr-prev">‹ {prev.title}</Link>
@@ -659,6 +691,10 @@ const st = {
   textBtn: {
     background: 'none', border: 'none', color: GRAY, textDecoration: 'underline',
     cursor: 'pointer', fontSize: 15, padding: 8, minHeight: 44,
+  },
+  printBtn: {
+    background: PURPLE_LIGHT, color: PURPLE, border: '1px solid #E2DAF0', borderRadius: 99,
+    padding: '10px 16px', fontSize: 15, fontWeight: 600, cursor: 'pointer', minHeight: 44,
   },
   bottomNav: {
     display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10,

@@ -1,5 +1,5 @@
 import React from "react";
-import { BrowserRouter, Routes, Route, Navigate, useLocation } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate, useLocation, useParams } from "react-router-dom";
 import "@/App.css";
 import { Toaster } from "sonner";
 
@@ -123,7 +123,6 @@ import SignUp from "@/pages/SignUp";
 import MediatorBadge from "@/pages/MediatorBadge";
 import GetHelp from "@/pages/GetHelp";
 import StartWithSafetyPage from "@/pages/StartWithSafetyPage";
-import JourneyLibrary from "@/pages/JourneyLibrary";
 import CalendarPage from "@/pages/CalendarPage";
 import AdminHelpServices from "@/pages/AdminHelpServices";
 import AdminAuditLog from "@/pages/AdminAuditLog";
@@ -166,6 +165,11 @@ function HashAuthGuard({ children }) {
     return <AuthCallback />;
   }
   return children;
+}
+
+function JourneyLibraryRedirect() {
+  const { stepId } = useParams();
+  return <Navigate to={`/self-journey/${stepId}`} replace />;
 }
 
 function AppRoutes() {
@@ -287,8 +291,9 @@ function AppRoutes() {
         <Route path="/help" element={<GetHelp />} />
         <Route path="/start-with-safety" element={<StartWithSafetyPage />} />
         {/* Founder's reading hub (stores only "page finished" ticks on the device). */}
-        <Route path="/journey-library" element={<JourneyLibrary />} />
-        <Route path="/journey-library/:stepId" element={<JourneyLibrary />} />
+        {/* The retired Journey library opens the same page of the reading Self Journey. */}
+        <Route path="/journey-library" element={<Navigate to="/self-journey" replace />} />
+        <Route path="/journey-library/:stepId" element={<JourneyLibraryRedirect />} />
         {/* Permanent redirect: old /safety-first links open Start with Safety (the safety page). */}
         <Route path="/safety-first" element={<Navigate to="/start-with-safety" replace />} />
         <Route path="/calendar" element={<CalendarPage />} />
