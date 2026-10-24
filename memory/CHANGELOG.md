@@ -9703,3 +9703,11 @@ dashboard for sharing SELECTED completed reports with any professional.
 - Founder chose "just send /safety-first home" (no SafetyFirst / AlignPortal pages). App.js: explicit
   `<Route path="/safety-first" element={<Navigate to="/" replace />} />` next to /start-with-safety. Client-side replace
   (no server 301 possible for the SPA). Live already behaves the same via the catch-all. Screenshot-verified -> "/".
+
+## 2026-10-24 — Reading Self Journey + guided move + Safety First rename (tested iteration_162/163, published)
+- /self-journey = founder's reading journey (pages/SelfJourney.jsx); guided moved to /self-journey/guided/:step (all links updated).
+- Disclaimer.jsx + PrivacyGuard.jsx = founder's exact code (+ data-testid). PrivacyGuard mounted above AppRoutes.
+- ConsentGate: /self-journey (reading), /start-with-safety, /safety-first, /journey-library are open paths (bug from iteration_162).
+- "Family check-in" -> "Safety First" on every parent-facing screen, AI prompts, NOT_AVAILABLE, court checklist; tests updated (67 passed).
+- Start with Safety picture banner on the reading Safety First page. Home picture + door-self button -> /self-journey.
+- Tracking audit: no GA/gtag, Meta Pixel, PostHog, Hotjar or Clarity in index.html or the app.

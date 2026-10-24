@@ -28,7 +28,10 @@ key · custom JWT auth (`auth.py`).
 
 ## Journey pages
 - `/journey` Journey Flow (`pages/JourneyFlow.jsx`). Step 1 opens the Self Journey guide. Parallel path = one card: Step 3 Parallel Parenting Builder.
-- `/self-journey/:step` guided Self Journey (`pages/selfJourney/SelfJourney.jsx` + `SelfJourneyPage.jsx`,
+- `/self-journey` + `/self-journey/:stepId` READING Self Journey (`pages/SelfJourney.jsx`, founder's file): public, 7 pages,
+  finished-page ticks in localStorage `sacp_self_journey_done` only; Safety First page shows StartWithSafetyBanner; finish links
+  comm-builder / guided summary PDF / help / court. Old guided slugs redirect to the guided URL. Home picture + door-self -> here.
+- `/self-journey/guided/:step` guided Self Journey (`pages/selfJourney/SelfJourney.jsx` + `SelfJourneyPage.jsx`,
   API `backend/self_journey_routes.py` → collection `self_journey_progress`):
   Safety (link out to Align + the parent's own clear/concern pick) → Situation (private notes) → existing
   Self-Assessment → existing Co-Parenting Assessment → existing Child Needs forms → Foundation (approve saves into
@@ -47,6 +50,11 @@ key · custom JWT auth (`auth.py`).
 
 - No reminder / progress emails to parents for Self-Assessment retakes or the Self Journey (in-app only).
 - Co-Parenting report swaps joint suggestions for separate ones when the parent shared concerns (pick or safety flag).
+
+## Privacy & wording (2026-10-24)
+- Parent-facing name for the Align check-in is **Safety First** (was "Family check-in"), incl. NOT_AVAILABLE note + court checklist row (user chose).
+- `components/PrivacyGuard.jsx` (founder's code) disables GA/fbq/PostHog on /self-journey, /start-with-safety, /safety-first. No trackers exist in the app.
+- `components/Disclaimer.jsx` on reading + guided Self Journey, home portal, Start with Safety. ConsentGate leaves public reading/safety pages open.
 
 ## Test accounts
 See `test_credentials.md`.

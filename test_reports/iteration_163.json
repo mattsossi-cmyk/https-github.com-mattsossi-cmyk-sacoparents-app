@@ -1,0 +1,30 @@
+{
+  "summary": "Frontend tests at 390x844 (plus a check of the court checklist API). The bug from iteration 162 (ConsentGate after getting a guest session) is FIXED. A signed-out visitor taps sjr-open-guided or sjr-next-report, gets a guest session and sees 'Before you continue' on /self-journey/guided/* (expected). After that, /self-journey, /self-journey/safety-first, /self-journey/self-assessment, /self-journey/complete, /start-with-safety, /safety-first and /journey-library all open normally, with no consent screen. These all pass: the Step 7 checklist, the safety banner, the finish links, the home picture hotspot (signed in and signed out), the Disclaimer on the home page, the reading pages and Start with Safety, the 'Family check-in' to 'Safety First' rename (screens and the backend checklist), PrivacyGuard (no tracker requests, no errors from it), and the guided-journey regression checks. No functional bugs found.",
+  "backend_issues": {"critical": [], "minor": []},
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": [
+      {"screen": "Home (/ and /dashboard, dashboardMode)", "issues": [
+        "The 'Self Journey – Starting on my own' button (door-self) is not on screen. NEW_HOME_ON=true shows only the welcome picture, so doorButtons is never shown on the new home. The code does go to /self-journey, but a parent cannot see or test it. Only the picture hotspot (testid door-welcome-hotspot-self, not 'prefix-hotspot-self') is reachable, and it opens /self-journey correctly.",
+        "portal-privacy-footer is display:none in dashboardMode, so on the home screen the disclaimer is not shown 'above the Privacy Notice footer'; the footer itself isn't visible there. The disclaimer is fully visible above the crisis strip and the bottom nav when scrolled to the end (disclaimer bottom 667px; crisis strip starts about 742px; nav 788px)."
+      ]}
+    ]
+  },
+  "test_report_links": [],
+  "action_items": [
+    "Optional: on the home page, either show the Privacy Notice footer in dashboardMode or accept that the disclaimer is the last block; confirm with the user.",
+    "Optional: door-self is dead UI under NEW_HOME_ON; nothing to fix unless the user expects to see the button."
+  ],
+  "critical_code_review_comments": [
+    "ConsentGate isReadingJourney uses startsWith('/self-journey/') && !startsWith('/self-journey/guided'). Correct, but a path like '/self-journey/guidedX' would also be treated as guided. Harmless.",
+    "Dev console has a 'In HTML, <span> cannot be a child of <option>' warning on the sjr-jump select. It comes from the visual-edit instrumentation wrapping {expr} in a span, not from app code, so production is not affected.",
+    "Comments and docstrings still say 'Family check-in' (JourneyLibrary.jsx, SafetyScreenLink.jsx, case_safety.py, etc.). Parents never see these; fine to leave."
+  ],
+  "updated_files": [],
+  "success_rate": {"backend": "100% (court checklist label/hint + NOT_AVAILABLE text verified)", "frontend": "100% of requested flows"},
+  "seed_data_creation": "None. Guest sessions were created in the browser by the sign-out flow test.",
+  "retest_needed": false,
+  "should_main_agent_self_test": false,
+  "context_for_next_testing_agent": "Legal ack modal: data-testid legal-ack-checkbox, then legal-ack-continue-button (stored in localStorage sac_legal_ack_v1). Login: login-show-email-toggle, login-email-input, login-password-input, then Enter. The home hotspot testid is door-welcome-hotspot-self. sj-next on /self-journey/guided/safety is disabled until a path pick (expected). Verified: sjr-next-biff opens comm-builder-page on /dashboard; sjr-next-court opens court-page with the 'Safety First' card; Quick Exit removes sacp_self_journey_done and does location.replace to a weather URL."
+}
