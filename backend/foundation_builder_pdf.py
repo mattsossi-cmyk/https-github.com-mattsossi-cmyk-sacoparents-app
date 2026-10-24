@@ -13,7 +13,7 @@ from self_assessment_pdf import _safe
 AGREED_MARK = " (agreed): "  # line format used when Court agreements are added to Step 4
 
 try:
-    from pdf_copyright import render_pdf_copyright  # type: ignore
+    from pdf_base import render_pdf_copyright  # type: ignore
 except Exception:  # pragma: no cover
     def render_pdf_copyright(_pdf):
         return

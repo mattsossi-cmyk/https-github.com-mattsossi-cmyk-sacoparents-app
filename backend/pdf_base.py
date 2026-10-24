@@ -49,14 +49,12 @@ def _section_break(pdf) -> None:
     pdf.ln(1.5)
 
 
-_COPYRIGHT_URL = "https://sacoparentsalign.com"
+_COPYRIGHT_URL = "https://sacoparentsapp.online"
 
 
 def _copyright_line() -> str:
-    """Compose the copyright line with the current UTC year — so we
-    don't hand-edit strings in January. Latin-1 safe (parens instead
-    of the ©-glyph)."""
-    return f"(c) {datetime.now(timezone.utc).year} sacoparentsalign.com - All rights reserved."
+    """Copyright line with the current UTC year. "\u00a9" and "\u00b7" are Latin-1, so core fonts render them."""
+    return f"\u00a9 {datetime.now(timezone.utc).year} SA CoParents \u00b7 sacoparentsapp.online \u00b7 All rights reserved."
 
 
 def render_pdf_copyright(pdf) -> None:
@@ -68,9 +66,10 @@ def render_pdf_copyright(pdf) -> None:
     Sits at 6mm from the bottom edge — under any existing footer
     text — in tiny italic grey. The centred text is overlaid with a
     clickable `pdf.link(...)` rectangle so on-screen PDF viewers
-    (Preview, Acrobat, Chrome) open sacoparentsalign.com in a new
+    (Preview, Acrobat, Chrome) open sacoparentsapp.online in a new
     tab when a reader clicks the line.
     """
+    pdf._sacp_copyright_calls = getattr(pdf, "_sacp_copyright_calls", 0) + 1
     try:
         pdf.set_y(-6)
         pdf.set_font("Helvetica", "I", 6.5)
@@ -93,3 +92,83 @@ def render_pdf_copyright(pdf) -> None:
         pdf.link(link_x, y_before, text_w, 3, _COPYRIGHT_URL)
     except Exception:  # noqa: BLE001 — footer must never crash a report
         pass
+
+
+def _install_copyright_on_every_page() -> None:
+    """Safety net: any fpdf2 page whose footer didn't draw the copyright line gets it after the footer runs."""
+    try:
+        from fpdf import FPDF
+    except ImportError:  # pragma: no cover
+        return
+    original = getattr(FPDF, "_render_footer", None)
+    if original is None or getattr(original, "_sacp_wrapped", False):
+        return
+
+    def _render_footer(self):
+        # Counted per footer call (not per page): a dry-run layout pass can render a footer whose output is discarded.
+        calls_before = getattr(self, "_sacp_copyright_calls", 0)
+        original(self)
+        if getattr(self, "_sacp_copyright_calls", 0) == calls_before:
+            self.in_footer = True
+            try:
+                render_pdf_copyright(self)
+            finally:
+                self.in_footer = False
+
+    _render_footer._sacp_wrapped = True
+    FPDF._render_footer = _render_footer
+
+
+_install_copyright_on_every_page()
+
+COPYRIGHT_MARK = "SA CoParents \u00b7 sacoparentsapp.online"
+
+
+def stamp_copyright_on_pdf(pdf_bytes: bytes) -> bytes:
+    """Overlay the copyright line (with its link) on every page of a finished PDF that doesn't already carry it.
+    For PDFs not drawn with fpdf2 (image-made certificates, static downloads)."""
+    import io
+    from fpdf import FPDF
+    from pypdf import PdfReader, PdfWriter
+    from pypdf.generic import ArrayObject, DictionaryObject, FloatObject, NameObject, TextStringObject
+
+    pt_per_mm = 72 / 25.4
+    writer = PdfWriter(clone_from=PdfReader(io.BytesIO(pdf_bytes)))
+    stamped = 0
+    for page in writer.pages:
+        try:
+            if COPYRIGHT_MARK in (page.extract_text() or ""):
+                continue
+        except Exception:  # noqa: BLE001 — image-only pages have no text layer
+            pass
+        box = page.mediabox
+        left, bottom, width, height = float(box.left), float(box.bottom), float(box.width), float(box.height)
+        overlay = FPDF(unit="pt", format=(width, height))
+        overlay.set_auto_page_break(False)
+        overlay.add_page()
+        overlay.set_font("Helvetica", "I", 6.5)
+        overlay.set_text_color(133, 126, 156)
+        text = _copyright_line()
+        text_w = overlay.get_string_width(text)
+        overlay.set_xy(0, height - 6 * pt_per_mm)
+        overlay.cell(width, 3 * pt_per_mm, text, align="C")
+        overlay._sacp_copyright_calls = 1
+        overlay.footer = lambda: setattr(overlay, "_sacp_copyright_calls", overlay._sacp_copyright_calls + 1)
+        page.merge_translated_page(PdfReader(io.BytesIO(bytes(overlay.output()))).pages[0], left, bottom, over=True)
+        x0, y0 = left + (width - text_w) / 2, bottom + 3 * pt_per_mm
+        writer.add_annotation(page, DictionaryObject({
+            NameObject("/Type"): NameObject("/Annot"),
+            NameObject("/Subtype"): NameObject("/Link"),
+            NameObject("/Rect"): ArrayObject([FloatObject(v) for v in (x0, y0, x0 + text_w, y0 + 3 * pt_per_mm)]),
+            NameObject("/Border"): ArrayObject([FloatObject(0), FloatObject(0), FloatObject(0)]),
+            NameObject("/A"): DictionaryObject({
+                NameObject("/S"): NameObject("/URI"),
+                NameObject("/URI"): TextStringObject(_COPYRIGHT_URL),
+            }),
+        }))
+        stamped += 1
+    if not stamped:
+        return pdf_bytes
+    out = io.BytesIO()
+    writer.write(out)
+    return out.getvalue()

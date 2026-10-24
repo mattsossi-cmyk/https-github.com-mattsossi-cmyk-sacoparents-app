@@ -18,7 +18,7 @@ from typing import Any, Dict, List, Optional
 from fpdf import FPDF
 
 try:
-    from pdf_copyright import render_pdf_copyright  # type: ignore
+    from pdf_base import render_pdf_copyright  # type: ignore
 except Exception:  # pragma: no cover
     def render_pdf_copyright(_pdf):
         return

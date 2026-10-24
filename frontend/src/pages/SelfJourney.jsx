@@ -2,7 +2,8 @@ import { useEffect, useState } from 'react';
 import { Link, Navigate, useNavigate, useParams } from 'react-router-dom';
 import Disclaimer from '../components/Disclaimer';
 import StartWithSafetyBanner from '../components/startWithSafety/StartWithSafetyBanner';
-import SelfJourneyHandout from './SelfJourneyHandout';
+import SelfJourneyHandout, { fitHandoutToPage } from './SelfJourneyHandout';
+import SelfJourneyGuide from './selfJourneyGuide/SelfJourneyGuide';
 
 /**
  * SelfJourney — SA CoParents (the reading Self Journey, open to anyone)
@@ -253,6 +254,7 @@ function printHandout(step) {
     window.removeEventListener('afterprint', cleanup);
   };
   window.addEventListener('afterprint', cleanup);
+  fitHandoutToPage();
   window.print();
 }
 
@@ -335,6 +337,8 @@ export default function SelfJourney() {
         <Link to="/who-can-see-my-information" style={st.footerLink} data-testid="sjr-footer-who-can-see">Who can see my information</Link> ·{' '}
         <Link to="/help" style={st.footerLink} data-testid="sjr-footer-help">Get help</Link>
       </footer>
+
+      <SelfJourneyGuide steps={STEPS} step={step} />
     </div>
   );
 }
@@ -630,7 +634,7 @@ const st = {
     background: PURPLE,
     position: 'sticky',
     top: 0,
-    zIndex: 10,
+    zIndex: 30, // above the Journey Guide sheet so Quick Exit always stays reachable
   },
   brand: { color: '#FFFFFF', fontWeight: 700, fontSize: 17, textDecoration: 'none' },
   exitBtn: {
@@ -704,7 +708,7 @@ const st = {
     color: PURPLE, fontWeight: 600, textDecoration: 'none', padding: '10px 4px', minHeight: 44,
     display: 'block', fontSize: 15,
   },
-  footer: { borderTop: '1px solid #EEE9F6', padding: 16, fontSize: 14, color: GRAY, textAlign: 'center' },
+  footer: { borderTop: '1px solid #EEE9F6', padding: '16px 16px 88px', fontSize: 14, color: GRAY, textAlign: 'center' },
   footerLink: { color: PURPLE },
   celebrate: {
     textAlign: 'center', background: PURPLE_LIGHT, border: `2px solid ${PURPLE}`,

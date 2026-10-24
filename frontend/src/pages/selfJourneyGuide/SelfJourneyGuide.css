@@ -1,0 +1,37 @@
+/* Journey Guide on the reading Self Journey. Reuses the guided journey's sheet, bubble and avatar styles. */
+.sjg {
+  --sj-purple: #5b3fa0;
+  --sj-purple-deep: #3e2a78;
+  --sj-lavender-2: #f3effb;
+  --sj-border: #e3dcf3;
+  --sj-border-input: #d8d0ea;
+  --sj-muted: #5e5672;
+  font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  color: #1F1A2E;
+}
+.sjg *, .sjg *::before, .sjg *::after { box-sizing: border-box; }
+.sjg-open {
+  position: fixed; z-index: 9; right: 16px; bottom: calc(16px + env(safe-area-inset-bottom));
+  min-height: 48px; display: flex; align-items: center; gap: 8px; padding: 0 16px 0 8px; border-radius: 24px;
+  border: 1px solid var(--sj-border); background: #fff; color: var(--sj-purple-deep);
+  font: 800 14px system-ui, -apple-system, sans-serif; cursor: pointer;
+  box-shadow: 0 6px 18px rgba(62, 42, 120, .2);
+  transition: transform .15s ease, box-shadow .15s ease;
+}
+.sjg-open:hover { transform: translateY(-1px); box-shadow: 0 8px 22px rgba(62, 42, 120, .26); }
+.sjg-open:focus-visible, .sjg button:focus-visible, .sjg a:focus-visible { outline: 3px solid #3D1A78; outline-offset: 2px; }
+.sjg-sheet { height: min(600px, 78vh); }
+.sjg-head { display: flex; align-items: center; gap: 10px; }
+.sjg-muted { font-size: 13px; color: var(--sj-muted); }
+.sjg-row { display: flex; align-items: flex-start; gap: 8px; }
+.sjg-row .sj-bubble { max-width: calc(100% - 34px); }
+.sjg-link { display: block; margin-top: 8px; color: var(--sj-purple); font-weight: 700; text-decoration: underline; }
+.sjg-note { margin: 4px 0 0; font-size: 12px; color: var(--sj-muted); }
+.sjg-signin { padding: 12px 16px calc(14px + env(safe-area-inset-bottom)); border-top: 1px solid #ece7f6; font-size: 14px; color: var(--sj-muted); }
+.sjg-signin a { color: var(--sj-purple); font-weight: 800; }
+.sjg-ask .sa-ai-banner { margin: 0 16px; font-size: 12px; }
+.sjg-ask .sj-sheet-input input { flex: 1; min-width: 0; border: 1.5px solid var(--sj-border-input); font-size: 15px; }
+.sjg-sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
+@media (prefers-reduced-motion: reduce) {
+  .sjg * { transition: none !important; animation: none !important; }
+}

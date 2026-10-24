@@ -12,6 +12,7 @@ from starlette.middleware.cors import CORSMiddleware
 ROOT_DIR = Path(__file__).parent
 load_dotenv(ROOT_DIR / ".env")
 
+import pdf_base  # noqa: E402,F401  (stamps the copyright line on every PDF page)
 from auth import router as auth_router  # noqa: E402
 from mediation_routes import router as mediation_router  # noqa: E402
 from analytics_routes import router as analytics_router  # noqa: E402

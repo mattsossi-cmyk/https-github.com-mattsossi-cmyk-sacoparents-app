@@ -23,6 +23,8 @@ from typing import Optional
 
 from PIL import Image, ImageDraw, ImageFont
 
+from pdf_base import stamp_copyright_on_pdf
+
 # Match the template we ship in the app bundle.
 _TEMPLATE_PATH = os.path.abspath(
     os.path.join(
@@ -181,4 +183,4 @@ def build_certificate_pdf(name: str, date_str: Optional[str] = None,
     buf = BytesIO()
     # Landscape US Letter feel — save the composed image directly as PDF.
     img.save(buf, format="PDF", resolution=150.0)
-    return buf.getvalue()
+    return stamp_copyright_on_pdf(buf.getvalue())

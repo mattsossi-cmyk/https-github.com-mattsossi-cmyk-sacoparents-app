@@ -181,4 +181,4 @@ def test_pdf_copyright_line_uses_current_year():
     from pdf_base import _copyright_line
     year_now = str(datetime.now(timezone.utc).year)
     assert year_now in _copyright_line()
-    assert "sacoparentsalign.com" in _copyright_line()
+    assert "SA CoParents" in _copyright_line() and "sacoparentsapp.online" in _copyright_line()

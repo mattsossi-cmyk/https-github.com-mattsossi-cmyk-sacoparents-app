@@ -1,5 +1,34 @@
-/* One-page Self Journey handout: hidden on screen, the only thing printed when present. */
-.sjh-root { display: none; }
+/* One-page Self Journey handout. Off screen (measured at the printable width), the only thing printed when present.
+   Sizes are in em of the root so the fit-to-page step scales everything together. */
+.sjh-root {
+  position: fixed;
+  left: -10000px;
+  top: 0;
+  width: 7.17in;
+  visibility: hidden;
+  pointer-events: none;
+  color: #1F1A2E;
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 10.5pt;
+  line-height: 1.4;
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+}
+.sjh-private { margin: 0 0 0.8em; padding: 0.45em 0.7em; border: 1.5px solid #B42318; border-radius: 6px; font: 0.86em/1.35 system-ui, sans-serif; color: #7A1A12; }
+.sjh-brand { margin: 0 0 0.4em; font: 600 0.81em system-ui, sans-serif; letter-spacing: 0.06em; text-transform: uppercase; color: #3D1A78; }
+.sjh-title { margin: 0 0 0.15em; font-size: 1.71em; line-height: 1.2; color: #3D1A78; }
+.sjh-summary { margin: 0 0 0.75em; font-style: italic; }
+.sjh-reviewed { margin: 0 0 0.75em; font-size: 0.86em; color: #3D1A78; }
+.sjh-section { margin: 0 0 0.75em; padding: 0.55em 0 0; border-top: 1px solid #D9D2E9; }
+.sjh-section h2 { margin: 0 0 0.2em; font: 700 1.05em system-ui, sans-serif; color: #3D1A78; }
+.sjh-section p { margin: 0; }
+.sjh-questions { margin: 0.2em 0 0; padding-left: 1.5em; }
+.sjh-questions li { margin: 0 0 0.55em; break-inside: avoid; }
+.sjh-lines { display: block; }
+.sjh-line { display: block; height: 1.7em; border-bottom: 1px solid #9C95AE; }
+.sjh-cta { margin: 0 0 0.75em; font-weight: 700; }
+.sjh-foot { margin-top: 0.9em; padding-top: 0.55em; border-top: 1px solid #D9D2E9; font: 0.76em/1.35 system-ui, sans-serif; color: #4B4567; }
+.sjh-foot p { margin: 0 0 0.2em; }
 
 @media print {
   @page { size: auto; margin: 0.55in; }
@@ -8,26 +37,9 @@
   body.sjr-printing, body:has(> .sjh-root) { padding: 0 !important; margin: 0 !important; background: #fff !important; }
 
   .sjh-root {
-    display: block !important;
-    color: #1F1A2E;
-    font-family: Georgia, "Times New Roman", serif;
-    font-size: 10.5pt;
-    line-height: 1.4;
-    page-break-inside: avoid;
+    position: static;
+    width: auto;
+    visibility: visible;
     break-inside: avoid;
   }
-  .sjh-brand { margin: 0 0 4pt; font: 600 8.5pt system-ui, sans-serif; letter-spacing: 0.06em; text-transform: uppercase; color: #3D1A78; }
-  .sjh-title { margin: 0 0 2pt; font-size: 18pt; line-height: 1.2; color: #3D1A78; }
-  .sjh-summary { margin: 0 0 8pt; font-style: italic; }
-  .sjh-reviewed { margin: 0 0 8pt; font-size: 9pt; color: #3D1A78; }
-  .sjh-section { margin: 0 0 8pt; padding: 6pt 0 0; border-top: 1px solid #D9D2E9; }
-  .sjh-section h2 { margin: 0 0 2pt; font: 700 11pt system-ui, sans-serif; color: #3D1A78; }
-  .sjh-section p { margin: 0; }
-  .sjh-questions { margin: 2pt 0 0; padding-left: 16pt; }
-  .sjh-questions li { margin: 0 0 6pt; break-inside: avoid; }
-  .sjh-lines { display: block; }
-  .sjh-line { display: block; height: 18pt; border-bottom: 1px solid #9C95AE; }
-  .sjh-cta { margin: 0 0 8pt; font-weight: 700; }
-  .sjh-foot { margin-top: 10pt; padding-top: 6pt; border-top: 1px solid #D9D2E9; font: 8pt/1.35 system-ui, sans-serif; color: #4B4567; }
-  .sjh-foot p { margin: 0 0 2pt; }
 }

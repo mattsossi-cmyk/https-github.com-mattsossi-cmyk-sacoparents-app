@@ -1136,9 +1136,8 @@ def _draw_fridge_card(
     pdf.set_text_color(*_PURPLE_DEEP)
     pdf.cell(inner_w, 3, _safe("Signed by both parents"), align="C")
 
-    # Footer text pinned to the very bottom edge of the card, matching
-    # the single-postcard footer from _FridgePDF.footer().
-    pdf.set_xy(x + inner_pad, y + h - 6)
+    # Card label sits just above the page's copyright line (drawn at 6mm from the bottom edge).
+    pdf.set_xy(x + inner_pad, y + h - 10)
     pdf.set_font("Helvetica", "", 6)
     pdf.set_text_color(*_SLATE_MUTED)
     pdf.cell(inner_w, 3, _safe(f"sacoparentsapp.online \u2022 {label}"), align="C")

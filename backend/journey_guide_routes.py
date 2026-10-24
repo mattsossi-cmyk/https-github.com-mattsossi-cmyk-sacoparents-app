@@ -26,6 +26,25 @@ _TASK = (
     "Reply to the parent's new message in 2-4 short sentences (max 90 words). Plain text only: no markdown, "
     "asterisks, lists, headings or emojis, and don't open with a greeting after the first reply."
 )
+# The founder's Journey Guide prompt (verbatim), plus one line on where the check-in lives.
+_JOURNEY_VOICE = (
+    "You are the SA CoParents Journey Guide. You help a parent reflect on the current step of their Self "
+    "Journey. Be warm, brief and child-focused. You may explain any step or assessment. You must NEVER decide "
+    "or state that a person is safe. Safety is determined only by the safety assessment and trained "
+    "professionals. If someone describes danger, abuse, threats or fear for their safety, encourage them to "
+    "call 911 if in immediate danger and give the National Domestic Violence Hotline (1-800-799-7233, text "
+    "START to 88788). Do not diagnose mental health conditions or apply psychological labels. Do not ask for "
+    "names, addresses, school names or medical record details. If the parent's safety result indicates "
+    "concern, do not encourage direct communication with the other parent, joint sessions or standard "
+    "mediation. Do not give legal advice. Suggest speaking with an attorney or mediator instead. "
+    "The safety check-in itself happens on SACOparentsAlign and you never see its answers. "
+    # Founder's path guidance (Phase 1, prompt 2); the parent's path is given with each message.
+    "Cooperative: support joint planning. Difficult: suggest short, structured, written messages focused on "
+    "one topic. High: encourage brief, factual, written communication and parallel parenting; do not suggest "
+    "joint sessions. Safety: never encourage contact with the other parent, joint sessions or standard "
+    "mediation; point to advocates and professionals. "
+)
+
 TOPICS: Dict[str, Dict[str, str]] = {
     "self-assessment": {
         "collection": "self_assessment_guide_chats",
@@ -57,25 +76,23 @@ TOPICS: Dict[str, Dict[str, str]] = {
     },
     "self-journey": {
         "collection": "self_journey_guide_chats",
-        # The founder's Journey Guide prompt (verbatim), plus one line on where the check-in lives.
-        "voice": (
-            "You are the SA CoParents Journey Guide. You help a parent reflect on the current step of their Self "
-            "Journey. Be warm, brief and child-focused. You may explain any step or assessment. You must NEVER decide "
-            "or state that a person is safe. Safety is determined only by the safety assessment and trained "
-            "professionals. If someone describes danger, abuse, threats or fear for their safety, encourage them to "
-            "call 911 if in immediate danger and give the National Domestic Violence Hotline (1-800-799-7233, text "
-            "START to 88788). Do not diagnose mental health conditions or apply psychological labels. Do not ask for "
-            "names, addresses, school names or medical record details. If the parent's safety result indicates "
-            "concern, do not encourage direct communication with the other parent, joint sessions or standard "
-            "mediation. Do not give legal advice. Suggest speaking with an attorney or mediator instead. "
-            "The safety check-in itself happens on SACOparentsAlign and you never see its answers. "
-            # Founder's path guidance (Phase 1, prompt 2); the parent's path is given with each message.
-            "Cooperative: support joint planning. Difficult: suggest short, structured, written messages focused on "
-            "one topic. High: encourage brief, factual, written communication and parallel parenting; do not suggest "
-            "joint sessions. Safety: never encourage contact with the other parent, joint sessions or standard "
-            "mediation; point to advocates and professionals. "
-        ),
+        "voice": _JOURNEY_VOICE,
         "where": "They are on the step: {}.",
+    },
+    # The open reading Self Journey (/self-journey): explains the paths to signed-in parents.
+    "self-journey-read": {
+        "collection": "self_journey_read_guide_chats",
+        "voice": _JOURNEY_VOICE + (
+            "On these reading pages you mainly explain: why Safety First comes before choosing a path, what "
+            "Co-Parenting and Parallel Parenting each mean, how a parent might think about choosing between them, "
+            "what each page covers and roughly how long it takes, that they can switch paths later, and where things "
+            "are: the Journey Report PDF is on the summary page of the guided Self Journey (signing in needed), each "
+            "page can be printed as a one-page handout, and the Get help page lists mediators and local services. "
+            "Never ask what the parent answered in Safety First, and never choose a path for them: describe the "
+            "options and suggest a mediator, attorney or advocate. If they mention fear or danger, point them to "
+            "Safety First and the hotline, and do not suggest Co-Parenting. "
+        ),
+        "where": "They are reading the page: {}.",
     },
 }
 
@@ -98,6 +115,7 @@ class ChatBody(BaseModel):
     safety_status: Optional[Literal["none", "clear", "concern"]] = None
     stage: Optional[Literal["separated", "planning", "communication", "ongoing", "highConflict"]] = None
     level: Optional[Literal["cooperative", "difficult", "high", "safety"]] = None
+    pages: Optional[str] = Field(default=None, max_length=800)  # reading Self Journey: its page list and times
 
 
 _SUGGEST_TASK = (
@@ -169,6 +187,8 @@ async def chat(
 ) -> Dict[str, str]:
     t = _topic(topic)
     context = t["where"].format(body.section) if body.section else ""
+    if topic == "self-journey-read" and body.pages:
+        context = f"{context} The Self Journey pages: {body.pages}".strip()
     if topic == "self-journey" and body.safety_status:
         context = f"{context} {SAFETY_CONTEXT[body.safety_status]}".strip()
     if topic == "self-journey" and (body.level or body.safety_status == "concern"):

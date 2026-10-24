@@ -9,7 +9,7 @@ from fpdf import FPDF
 from self_assessment_pdf import _safe
 
 try:
-    from pdf_copyright import render_pdf_copyright  # type: ignore
+    from pdf_base import render_pdf_copyright  # type: ignore
 except Exception:  # pragma: no cover
     def render_pdf_copyright(_pdf):
         return
