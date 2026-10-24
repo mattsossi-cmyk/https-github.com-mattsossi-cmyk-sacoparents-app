@@ -1,0 +1,23 @@
+{
+  "summary": "Tested the three features: Listen to this page, Guide Questions Count and Voice Speed. Backend: 18/18 pytest passed. The tap endpoint returns 204 with no auth for all 8 ids and both places, and 422 for a bad id, a bad 'where' or a missing field. The stats endpoint returns 401 with no token, 403 for parent1 and 200 for the admin, with the right shape, ranking and totals. Counters go up correctly. Stored docs hold only day, question_id, where and count. Frontend at 390x844 with a stubbed speechSynthesis: the listen row, label and speed picker render (normal pressed by default). Listen sends 3 chunks of 220 chars or less (max 210) containing the title, summary, every section heading and body, plus 'Questions to think about' and the prompts on self-assessment. The button toggles to 'Stop reading' (data-speaking true) and calls cancel when tapped again. Next navigation calls cancel and the new page shows 'Listen to this page' again. Rates are slower 0.75, normal 0.95 and faster 1.2. The choice persists after reload (sacp_voice_speed). The guide chat picker matches the page picker both ways, and chat Listen uses the shared rate. Exactly one tap POST per tap: {parallel, reading} signed out and as parent1, and {switch, guided} as journey6, all with no Authorization or Cookie header. The privacy note shows under the chips. The admin tile ranks rows by all-time, and its cells and totals (17/17) match the stats API exactly. Regression: sjr-print exists, Quick Exit calls speechSynthesis.cancel and leaves the site, no horizontal overflow (scrollWidth 390).",
+  "backend_issues": {"critical": [], "minor": []},
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  "test_report_links": ["/app/backend/tests/test_guide_question_counts.py", "/app/test_reports/pytest/pytest_guide_question_counts.xml"],
+  "action_items": [],
+  "critical_code_review_comments": [
+    "ListenButton toggle(): on Stop it calls speechSynthesis.cancel() and returns without setSpeaking(false). It relies on the browser firing onerror/onend for cancelled utterances. Chrome and Safari do this, but if an engine does not, the button stays stuck on 'Stop reading' and the next tap only cancels again. With a stub that fires no events, the button stayed data-speaking=true. Suggest calling done() right after cancel when speaking.",
+    "ListenButton unmount cleanup only cancels if window.speechSynthesis.speaking is true. This is fine in real browsers, but cancelling whenever mine.current is set would be more robust.",
+    "selfJourney/SelfJourney.jsx near line 951: the comment 'answered on the device, nothing is sent' is now outdated because countTap sends the question id. Update the comment.",
+    "Test taps from pytest and UI runs add to the real preview counters (all-time total is now 17, all from testing). Reset guide_question_tap_counts before a demo if wanted."
+  ],
+  "updated_files": ["/app/backend/tests/test_guide_question_counts.py"],
+  "success_rate": {"backend": "100%", "frontend": "100%"},
+  "seed_data_creation": "No seed data. Test taps added about 15 counts to guide_question_tap_counts.",
+  "retest_needed": false,
+  "should_main_agent_self_test": false,
+  "context_for_next_testing_agent": "speechSynthesis stub via add_init_script: record speak(u) text/rate and set speaking=true; make cancel() call onerror on queued utterances (the button relies on that to reset). psychological is the last page, so Next goes to /self-journey/complete, which has no listen row; test Next from self-assessment. On /self-journey/guided/situation, journey6 is redirected to /guided/safety, where sj-help-open and sj-path-q-switch still work. Login: login-show-email-toggle, login-email-input, login-password-input, login-submit-button, then the consent screen if shown."
+}

@@ -78,5 +78,13 @@ key · custom JWT auth (`auth.py`).
   "Before you begin"/"Step n"); on the safety path the Co-Parenting + choose answers add a safety line.
 - `selfJourneyGuide/ListenButton.jsx`: device voice (Web Speech), tap-only, Stop toggle; Quick Exit + closing cancel speech.
 
+## Listen to page, voice speed, question counts (2026-10-24)
+- Reading pages: "Listen to this page" (sjr-page-listen; title, summary, sections, prompts; sentence chunks <=220 chars).
+- Voice speed Slower 0.75 / Normal 0.95 / Faster 1.2, localStorage `sacp_voice_speed`, shared by all Listen buttons
+  (`selfJourneyGuide/voiceSpeed.js`, `VoiceSpeed.jsx`; pickers on reading page, reading guide chat, guided chat).
+- Ready-made question taps: POST /api/guide-questions/tap {question_id, where} sent via fetch with credentials omitted
+  (no token/cookies); daily counters in `guide_question_tap_counts` (day, question_id, where, count only).
+  Admin-only GET /api/admin/guide-questions/stats -> `components/admin/GuideQuestionsTile.jsx` on the admin dashboard.
+
 ## Test accounts
 See `test_credentials.md`.

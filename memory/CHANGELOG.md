@@ -9727,3 +9727,5 @@ dashboard for sharing SELECTED completed reports with any professional.
 ## 2026-10-24 — AI notice per tool, guided path questions, Listen buttons (iteration_165 passed; published)
 - Published the guide chat / PDF copyright / handout changes first, then this round.
 - Fixed after testing: AI suggestion chips no longer vanish after a ready-made tap; guided steps answer numbering matches the header.
+
+## 2026-10-24 — Listen to this page, voice speed, anonymous question counts (iteration_166: 100%; NOT yet published)
