@@ -71,16 +71,29 @@ export const READY = [
   },
 ];
 
-export function pagesAnswer(steps) {
+// Added to two answers when the parent shared a safety concern in the guided journey.
+const SAFETY_NOTE = {
+  coparenting:
+    'You shared a safety concern, so Co-Parenting may not be safe for you right now. An advocate can help you think ' +
+    'through safer options, such as Parallel Parenting with short written messages.',
+  choose: 'Because you shared a safety concern, talk with an advocate before choosing, and avoid joint sessions with the other parent.',
+};
+
+export function pagesAnswer(steps, noun = 'pages') {
   const total = steps.reduce((sum, s) => sum + s.minutes, 0);
-  const list = steps.map((s, i) => `${i + 1}. ${s.title} (about ${s.minutes} min): ${s.summary}`).join('\n');
-  return `The Self Journey has ${steps.length} pages, about ${total} minutes in all, and you can read them in any order.\n${list}`;
+  const list = steps.map((s, i) => `${i + 1}. ${s.title} (about ${s.minutes} min)${s.summary ? `: ${s.summary}` : ''}`).join('\n');
+  return `The Self Journey has ${steps.length} ${noun}, about ${total} minutes in all, and you can go at your own pace.\n${list}`;
 }
 
 // Short page list sent with signed-in questions so the AI guide knows the pages and times.
 export const pagesContext = (steps) => steps.map((s) => `${s.title} (${s.minutes} min)`).join(', ');
 
-export function orderedFor(stepId) {
-  const first = READY.filter((r) => r.page && r.page === stepId);
-  return [...first, ...READY.filter((r) => !first.includes(r))];
+// The ready-made questions for a page: its own question first, the "pages" answer built from `steps`.
+export function readyQuestions({ steps, stepId, noun = 'pages', safetyConcern = false }) {
+  const list = READY.map((r) => {
+    const q = r.id === 'pages' ? { ...r, q: `What do the ${noun} cover, and how long do they take?`, a: pagesAnswer(steps, noun) } : r;
+    return safetyConcern && SAFETY_NOTE[r.id] ? { ...q, a: `${q.a} ${SAFETY_NOTE[r.id]}` } : q;
+  });
+  const first = list.filter((r) => r.page && r.page === stepId);
+  return [...first, ...list.filter((r) => !first.includes(r))];
 }

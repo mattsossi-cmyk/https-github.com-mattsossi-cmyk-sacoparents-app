@@ -240,6 +240,7 @@ function readDone() {
 
 function quickExit() {
   try { localStorage.removeItem(STORAGE_KEY); localStorage.removeItem(OLD_LIBRARY_KEY); } catch {}
+  try { window.speechSynthesis?.cancel(); } catch {}
   window.location.replace(EXIT_URL);
 }
 

@@ -39,7 +39,26 @@ function TrapModal({ testid, title, initialRef, onEscape, footer, children }) {
   );
 }
 
-export function AiNoticeModal({ onContinue, onClose, busy, error }) {
+// The Journey Guide names itself; every other AI tool uses the general wording. One acknowledgment covers all.
+const NOTICE_COPY = {
+  journey_guide: {
+    title: "Before you use the AI Journey Guide",
+    intro:
+      "The Journey Guide uses artificial intelligence to answer your questions. What you type is sent to our AI service provider to write a reply.",
+    instead: "You don't need any personal details to get a helpful answer.",
+    button: "Continue to the Journey Guide",
+  },
+  default: {
+    title: "Before you use the AI tools",
+    intro:
+      "SA CoParents AI tools use artificial intelligence to help you write messages, reflect and answer questions. What you type is sent to our AI service provider to write a draft or reply.",
+    instead: "You can add personal details yourself after the draft is written, right before you send it.",
+    button: "Continue",
+  },
+};
+
+export function AiNoticeModal({ feature, onContinue, onClose, busy, error }) {
+  const copy = NOTICE_COPY[feature] || NOTICE_COPY.default;
   const agreeRef = useRef(null);
   const [agree, setAgree] = useState(false);
   const footer = (
@@ -54,13 +73,13 @@ export function AiNoticeModal({ onContinue, onClose, busy, error }) {
         </p>
       )}
       <button type="button" className="sa-ai-btn" data-testid="ai-notice-continue" disabled={!agree || busy} onClick={onContinue}>
-        Continue to AI Communication Builder
+        {copy.button}
       </button>
     </>
   );
   return (
-    <TrapModal testid="ai-notice-modal" title="Before you use the AI Communication Builder" initialRef={agreeRef} onEscape={onClose} footer={footer}>
-      <p>This tool uses artificial intelligence to help you write messages. What you type is sent to our AI service provider to generate a draft.</p>
+    <TrapModal testid="ai-notice-modal" title={copy.title} initialRef={agreeRef} onEscape={onClose} footer={footer}>
+      <p data-testid="ai-notice-intro">{copy.intro}</p>
       <p><strong>Please do not enter:</strong></p>
       <ul>
         <li>Your child&apos;s or your own full name, birth date, or Social Security number</li>
@@ -69,8 +88,7 @@ export function AiNoticeModal({ onContinue, onClose, busy, error }) {
         <li>Specific diagnoses, medications, or therapy and psychological details</li>
       </ul>
       <p>
-        <strong>Instead,</strong> use general wording like &quot;my child,&quot; &quot;their school,&quot; or &quot;a health condition.&quot; You can add
-        personal details yourself after the draft is written, right before you send it.
+        <strong>Instead,</strong> use general wording like &quot;my child,&quot; &quot;their school,&quot; or &quot;a health condition.&quot; {copy.instead}
       </p>
       <p className="sa-ai-modal__fine">
         See our{" "}

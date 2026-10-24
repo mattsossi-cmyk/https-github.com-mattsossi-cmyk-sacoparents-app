@@ -463,6 +463,7 @@ export const quickExitAction = () => {
   // Low-friction DV pattern: replace the tab with a neutral weather
   // page so a back button can't recover the app.
   try {
+    window.speechSynthesis?.cancel();
     window.location.replace("https://www.weather.com/");
   } catch {
     /* best-effort */

@@ -318,3 +318,15 @@
 .sj-step-done-next { display: block; margin-top: 4px; font-weight: 700; }
 .sj-step-done .sj-icon-btn { color: var(--sj-ok-text); flex: none; }
 .sj-step-done .sj-icon-btn:focus-visible { outline: 2px solid var(--sj-ok-text); outline-offset: 2px; border-radius: 10px; }
+/* Ready-made path questions in the help chat + read-aloud button on guide answers (both Self Journeys). */
+.sj-path-qs { display: flex; flex-direction: column; gap: 6px; margin-top: 4px; }
+.sj-path-qs-label { margin: 0; font-size: 12px; font-weight: 800; letter-spacing: .04em; text-transform: uppercase; color: var(--sj-purple-deep); }
+.sj-path-qs-note { margin: 0; font-size: 12px; color: var(--sj-muted); }
+.sj-listen {
+  display: inline-flex; align-items: center; gap: 6px; margin-top: 8px; min-height: 36px; padding: 0 12px;
+  border-radius: 18px; border: 1px solid var(--sj-border-input); background: #fff; color: var(--sj-purple-deep);
+  font: 700 13px system-ui, -apple-system, sans-serif; cursor: pointer; transition: background-color .15s ease;
+}
+.sj-bubble .sj-listen { display: flex; width: fit-content; }
+.sj-listen.is-on { background: var(--sj-purple); border-color: var(--sj-purple); color: #fff; }
+.sj-listen:focus-visible { outline: 3px solid #3D1A78; outline-offset: 2px; }

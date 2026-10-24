@@ -15,8 +15,9 @@ export function useAiGuard(feature, value = "") {
     return () => clearTimeout(t);
   }, [value]);
   const locked = !ctx.acked;
-  const open = (e) => locked && !ctx.shouldSkipFocus() && ctx.openNotice(e.currentTarget);
+  const open = (e) => locked && !ctx.shouldSkipFocus() && ctx.openNotice(e.currentTarget, feature);
   return {
+    feature,
     found,
     locked,
     openNotice: ctx.openNotice,
@@ -32,7 +33,7 @@ export function useAiGuard(feature, value = "") {
   };
 }
 
-export function AiPrivacyBanner({ tp }) {
+export function AiPrivacyBanner({ tp, feature = null }) {
   const { openNotice } = useAiNotice();
   return (
     <div className="sa-ai-banner" role="note" data-testid={`${tp}-ai-banner`}>
@@ -40,7 +41,7 @@ export function AiPrivacyBanner({ tp }) {
       <span>
         <strong>Privacy reminder:</strong> Don&apos;t include names, birth dates, ID numbers, contact details, or medical or psychological details. Use
         &quot;my child&quot; instead, and add specifics after the draft is written.{" "}
-        <button type="button" className="sa-ai-link" data-testid={`${tp}-ai-learn-more`} onClick={(e) => openNotice(e.currentTarget)}>
+        <button type="button" className="sa-ai-link" data-testid={`${tp}-ai-learn-more`} onClick={(e) => openNotice(e.currentTarget, feature)}>
           Learn more
         </button>
       </span>
@@ -82,7 +83,7 @@ export function AiNoticeNeeded({ tp, children = "AI suggestions appear here afte
 export function AiGuardFrame({ tp, guard, children, className = "" }) {
   return (
     <div className={className} data-testid={`${tp}-ai-frame`}>
-      <AiPrivacyBanner tp={tp} />
+      <AiPrivacyBanner tp={tp} feature={guard.feature} />
       {children}
       <AiPrivacyAlert tp={tp} labels={guard.found} />
     </div>

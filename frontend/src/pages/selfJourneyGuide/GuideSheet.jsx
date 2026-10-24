@@ -3,7 +3,8 @@ import { Link } from 'react-router-dom';
 
 import GuideAvatar from '../selfJourney/GuideAvatar';
 import GuideAskBox from './GuideAskBox';
-import { GUIDE_LOGO, orderedFor, pagesAnswer } from './guideAnswers';
+import { GUIDE_LOGO, readyQuestions } from './guideAnswers';
+import ListenButton, { stopReading } from './ListenButton';
 
 const OPENING = 'Hi, I’m the Journey Guide. I can explain the Self Journey paths. Tap a question below.';
 
@@ -15,7 +16,10 @@ export default function GuideSheet({ steps, step, onClose }) {
   const listRef = useRef(null);
   const closeRef = useRef(null);
 
-  useEffect(() => closeRef.current?.focus(), []);
+  useEffect(() => {
+    closeRef.current?.focus();
+    return stopReading;
+  }, []);
   useEffect(() => {
     const onKey = (e) => e.key === 'Escape' && onClose();
     window.addEventListener('keydown', onKey);
@@ -28,9 +32,9 @@ export default function GuideSheet({ steps, step, onClose }) {
   const add = (...msgs) => setMessages((m) => [...m, ...msgs]);
   const askReady = (r) => {
     setAsked((a) => [...a, r.id]);
-    add({ role: 'user', text: r.q }, { role: 'guide', text: r.a || pagesAnswer(steps), link: r.link });
+    add({ role: 'user', text: r.q }, { role: 'guide', text: r.a, link: r.link });
   };
-  const chips = orderedFor(step?.id).filter((r) => !asked.includes(r.id));
+  const chips = readyQuestions({ steps, stepId: step?.id }).filter((r) => !asked.includes(r.id));
 
   return (
     <>
@@ -49,7 +53,7 @@ export default function GuideSheet({ steps, step, onClose }) {
           </button>
         </div>
         <div className="sj-sheet-body" ref={listRef} aria-live="polite" data-testid="sjr-guide-messages">
-          {messages.map((m, i) => <Bubble key={i} m={m} calm={calm} onClose={onClose} />)}
+          {messages.map((m, i) => <Bubble key={i} m={m} i={i} calm={calm} onClose={onClose} />)}
           {busy && <Bubble m={{ role: 'guide', text: 'Thinking…' }} calm={calm} speaking />}
           {chips.length > 0 && (
             <div className="sj-suggestions" data-testid="sjr-guide-questions">
@@ -66,7 +70,7 @@ export default function GuideSheet({ steps, step, onClose }) {
   );
 }
 
-function Bubble({ m, calm, speaking = false, onClose }) {
+function Bubble({ m, i, calm, speaking = false, onClose }) {
   if (m.role === 'user') return <div className="sj-bubble is-user" data-testid="sjr-guide-bubble-user">{m.text}</div>;
   return (
     <div className="sjg-row">
@@ -76,6 +80,7 @@ function Bubble({ m, calm, speaking = false, onClose }) {
         {m.link && (
           <Link to={m.link.to} className="sjg-link" onClick={onClose} data-testid="sjr-guide-answer-link">{m.link.label} →</Link>
         )}
+        {!speaking && <ListenButton text={m.text} testid={`sjr-guide-listen-${i}`} />}
       </div>
     </div>
   );

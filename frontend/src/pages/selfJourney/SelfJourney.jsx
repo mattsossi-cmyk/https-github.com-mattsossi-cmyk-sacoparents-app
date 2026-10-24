@@ -24,6 +24,8 @@ import {
   conflictLevel, hidesWorkingTogether, isRecommended,
 } from "./Path";
 import GuideAvatar from "./GuideAvatar";
+import { readyQuestions } from "../selfJourneyGuide/guideAnswers";
+import ListenButton, { stopReading } from "../selfJourneyGuide/ListenButton";
 import "./selfJourney.css";
 
 /* ------------------------------------------------------------------ */
@@ -939,9 +941,23 @@ function AssistantSheet({ step, isSafetyStep, path, onClose, onAsk, logoSrc }) {
   const [messages, setMessages] = useState(opening);
   const [input, setInput] = useState("");
   const [busy, setBusy] = useState(false);
+  const [asked, setAsked] = useState([]);
   const listRef = useRef(null);
   const guard = useAiGuard("journey_guide", input);
   const waving = useOneTimeWave();
+  // Same ready-made path answers as the reading Self Journey; answered on the device, nothing is sent.
+  const pathQuestions = readyQuestions({
+    steps: STEPS,
+    stepId: isSafetyStep ? "safety-first" : step.slug,
+    noun: "steps",
+    safetyConcern: path?.safety === "concern" || path?.level === "safety",
+  }).filter((r) => !asked.includes(r.id));
+  const askReady = (r) => {
+    setAsked((a) => [...a, r.id]);
+    setMessages((m) => [...m, { role: "user", text: r.q }, { role: "assistant", text: r.a }]);
+  };
+
+  useEffect(() => stopReading, []);
 
   useEffect(() => {
     listRef.current?.scrollTo?.(0, listRef.current.scrollHeight);
@@ -1002,7 +1018,10 @@ function AssistantSheet({ step, isSafetyStep, path, onClose, onAsk, logoSrc }) {
             ) : (
               <div key={i} className="sj-bubble-row">
                 <GuideAvatar size={26} logoSrc={logoSrc} calm={isSafetyStep} decorative />
-                <div className="sj-bubble" data-testid="sj-bubble-assistant">{m.text}</div>
+                <div className="sj-bubble" data-testid="sj-bubble-assistant">
+                  {m.text}
+                  <ListenButton text={m.text} testid={`sj-listen-${i}`} />
+                </div>
               </div>
             )
           )}
@@ -1019,6 +1038,19 @@ function AssistantSheet({ step, isSafetyStep, path, onClose, onAsk, logoSrc }) {
                   {s}
                 </button>
               ))}
+            </div>
+          )}
+          {pathQuestions.length > 0 && (
+            <div className="sj-path-qs" data-testid="sj-path-questions">
+              <p className="sj-path-qs-label">Questions about the paths</p>
+              <div className="sj-suggestions">
+                {pathQuestions.map((r) => (
+                  <button key={r.id} type="button" onClick={() => askReady(r)} data-testid={`sj-path-q-${r.id}`}>
+                    {r.q}
+                  </button>
+                ))}
+              </div>
+              <p className="sj-path-qs-note">These answers stay on your device. Nothing you tap here is sent anywhere.</p>
             </div>
           )}
         </div>

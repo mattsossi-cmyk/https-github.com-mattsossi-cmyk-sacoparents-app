@@ -18,6 +18,8 @@ export function AiNoticeProvider({ children }) {
   const [busy, setBusy] = useState(false);
   const [ackError, setAckError] = useState("");
   const [confirm, setConfirm] = useState(null);
+  const [noticeFeature, setNoticeFeature] = useState(null);
+  const featureRef = useRef(null);
   const returnRef = useRef(null);
   const skipFocusRef = useRef(false);
   const afterConsentRef = useRef(false);
@@ -42,6 +44,7 @@ export function AiNoticeProvider({ children }) {
       return;
     }
     setAckError("");
+    setNoticeFeature(featureRef.current);
     setNoticeOpen(true);
   }, [askConsent]);
 
@@ -79,8 +82,10 @@ export function AiNoticeProvider({ children }) {
     skipFocusRef.current = false;
   }, []);
 
+  // `feature` (e.g. "journey_guide") picks the pop-up wording; links without one get the general wording.
   const openNotice = useCallback(
-    (el) => {
+    (el, feature = null) => {
+      featureRef.current = feature;
       if (!user) {
         // Signed-out visitors get a demo session first; the consent screen then appears before the AI pop-up.
         if (afterConsentRef.current) return;
@@ -117,7 +122,7 @@ export function AiNoticeProvider({ children }) {
   const confirmSend = useCallback(
     async (feature, text) => {
       if (!acked) {
-        openNotice();
+        openNotice(undefined, feature);
         return false;
       }
       const labels = scanText(text || "");
@@ -145,6 +150,7 @@ export function AiNoticeProvider({ children }) {
       {children}
       {noticeOpen && (
         <AiNoticeModal
+          feature={noticeFeature}
           busy={busy}
           error={ackError}
           onContinue={ack}
