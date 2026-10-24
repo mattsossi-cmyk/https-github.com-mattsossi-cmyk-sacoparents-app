@@ -123,8 +123,8 @@ async def build_checklist(db: AsyncIOMotorDatabase, user: UserPublic, requested:
               "Enter the code from your court order on the Court page."),
     ]
     checkin = await setup_complete_for(db, uid)
-    items.append(_item("family_checkin", "Family check-in", "done" if checkin else "todo", "Done" if checkin else "",
-                       "Open the Family check-in at the top of your Court page."))
+    items.append(_item("family_checkin", "Safety First", "done" if checkin else "todo", "Done" if checkin else "",
+                       "Open Safety First at the top of your Court page."))
     items += [
         _item("card1", "Self-Assessment", "done" if sa else "todo",
               f"{len(sa)} completed · latest {_day(sa[0]['completed_at'])}" if sa else "",

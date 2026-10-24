@@ -27,7 +27,7 @@ from case_safety_routes import handle_signed  # noqa: E402
 
 API = "http://localhost:8001/api"
 CONSENT = {"ack_privacy_notice": True, "consent_sensitive_info": True}
-NOT_AVAILABLE = "This isn't available right now. Your Family check-in on SACOparentsAlign is the next step."
+NOT_AVAILABLE = "This isn't available right now. Safety First on SACOparentsAlign is the next step."
 DONE, TODO = "Safety step: completed on SACOparentsAlign", "Safety step: see SACOparentsAlign"
 BANNED = ("flagged for safety", "safety screen", "safety assessment", "level 1", "finding 3", "trauma", "redacted")
 db = MongoClient(os.environ["MONGO_URL"])[os.environ["DB_NAME"]]
@@ -161,7 +161,8 @@ def test_saved_concerning_result_blocks_invite_with_neutral_note():
     r = httpx.post(f"{API}/link-codes", headers=h, json={"context": "account"}, timeout=20)
     assert r.status_code == 403 and r.json()["detail"]["code"] == "not_available"
     low = json.dumps(gate).lower() + r.text.lower()
-    assert "level" not in low and "hotline" not in low and "safety" not in low
+    # "Safety First" is the step's name (user decision 2026-10-24); no level or hotline is ever shown.
+    assert "level" not in low and "hotline" not in low
 
 
 def test_level_three_is_not_blocked():

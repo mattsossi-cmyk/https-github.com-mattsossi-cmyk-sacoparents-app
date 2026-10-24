@@ -11,11 +11,15 @@ const OPEN_PATHS = new Set([
   "/privacy-notice", "/privacy", "/privacy-policy", "/confidentiality", "/terms", "/accessibility", "/methodology",
   "/data-retention", "/safety", "/help", "/calendar", "/what-professionals-see", "/watch", "/legacy", "/for-portal-engineers", "/for-professionals",
   "/login", "/register", "/signup", "/claim", "/forgot-password", "/reset-password", "/verify-email",
+  "/start-with-safety", "/safety-first", "/self-journey", "/journey-library",
 ]);
-const OPEN_PREFIXES = ["/auth/", "/invite/", "/verify/", "/doc/", "/shared/", "/joint-agreement/shared/", "/joint-report/shared/", "/foundation/shared/", "/survey/", "/legal/", "/samples", "/join/sample-preview"];
+const OPEN_PREFIXES = ["/auth/", "/invite/", "/verify/", "/doc/", "/shared/", "/joint-agreement/shared/", "/joint-report/shared/", "/foundation/shared/", "/survey/", "/legal/", "/samples", "/join/sample-preview", "/journey-library/"];
+
+// The reading Self Journey is public; the guided one (/self-journey/guided/...) still needs consent.
+const isReadingJourney = (pathname) => pathname.startsWith("/self-journey/") && !pathname.startsWith("/self-journey/guided");
 
 export const consentScreenApplies = (user, pathname) =>
-  !!user && !user.consent_current && !OPEN_PATHS.has(pathname) && !OPEN_PREFIXES.some((p) => pathname.startsWith(p));
+  !!user && !user.consent_current && !OPEN_PATHS.has(pathname) && !OPEN_PREFIXES.some((p) => pathname.startsWith(p)) && !isReadingJourney(pathname);
 
 const quickExit = () => {
   try {

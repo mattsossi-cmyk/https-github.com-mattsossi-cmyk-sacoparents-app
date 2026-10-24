@@ -83,7 +83,7 @@ TOPICS: Dict[str, Dict[str, str]] = {
 SAFETY_CONTEXT = {
     "clear": "The parent shared that there are no safety concerns right now (their own answer, not an assessment result).",
     "concern": (
-        "The parent shared that there are safety concerns (their own answer after their Family check-in; you have not "
+        "The parent shared that there are safety concerns (their own answer after Safety First; you have not "
         "seen any assessment). If you mention it, say 'you shared', never 'the check showed'."
     ),
     "none": "The parent has not given a safety result yet.",

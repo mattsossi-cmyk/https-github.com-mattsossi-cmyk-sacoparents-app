@@ -4,7 +4,7 @@ import { toast } from "sonner";
 
 import { useCheckinLink } from "../lib/useCheckinLink";
 
-export const NOT_AVAILABLE = "This isn't available right now. Your Family check-in on SACOparentsAlign is the next step.";
+export const NOT_AVAILABLE = "This isn't available right now. Safety First on SACOparentsAlign is the next step.";
 const ALIGN_URL = process.env.REACT_APP_ALIGN_SITE_URL;
 
 // True for the server's neutral "not available" reply (plain text or {code, message}).
@@ -30,7 +30,7 @@ export function NotAvailableNote({ testid = "not-available-note", className = ""
           data-testid={`${testid}-checkin-link`}
           className={`mt-2 inline-flex items-center gap-1.5 min-h-[44px] font-semibold text-[#3D1A78] underline underline-offset-2 ${href ? "" : "opacity-60 pointer-events-none"}`}
         >
-          Open Family check-in <ExternalLink size={13} aria-hidden="true" />
+          Open Safety First <ExternalLink size={13} aria-hidden="true" />
         </a>
       </div>
     </div>

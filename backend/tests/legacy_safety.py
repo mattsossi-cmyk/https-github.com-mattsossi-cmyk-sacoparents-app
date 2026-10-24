@@ -8,7 +8,7 @@ from pymongo import MongoClient
 
 load_dotenv("/app/backend/.env")
 _db = MongoClient(os.environ["MONGO_URL"])[os.environ["DB_NAME"]]
-NOT_AVAILABLE = "This isn't available right now. Your Family check-in on SACOparentsAlign is the next step."
+NOT_AVAILABLE = "This isn't available right now. Safety First on SACOparentsAlign is the next step."
 
 
 def save_old_result(client, base_url, level=4):

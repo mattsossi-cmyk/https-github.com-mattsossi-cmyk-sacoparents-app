@@ -103,7 +103,7 @@ class TestChecklist:
         d = checklist(ST["a"])
         assert [i["key"] for i in d["items"]] == EXPECTED_KEYS
         fc = d["items"][1]
-        assert fc["label"] == "Family check-in" and fc["status"] == "todo"
+        assert fc["label"] == "Safety First" and fc["status"] == "todo"
         low = json.dumps(d).lower()
         for w in BANNED + ["module"]:
             assert w not in low, w

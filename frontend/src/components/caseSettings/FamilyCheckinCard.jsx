@@ -30,7 +30,7 @@ export function FamilyCheckinCard({ alignUrl, testid = "family-checkin", stacked
           </span>
           <div className="min-w-0 flex-1">
             <div className="flex flex-wrap items-center gap-2">
-              <h3 className="text-base font-extrabold text-[#3b1566]">Family check-in</h3>
+              <h3 className="text-base font-extrabold text-[#3b1566]">Safety First</h3>
               {settings && (
                 <span
                   data-testid={`${testid}-status`}
@@ -55,7 +55,7 @@ export function FamilyCheckinCard({ alignUrl, testid = "family-checkin", stacked
           target="_blank"
           rel="noopener noreferrer"
           data-testid={`${testid}-open`}
-          aria-label="Open Family check-in (opens in a new tab)"
+          aria-label="Open Safety First (opens in a new tab)"
           className={`shrink-0 self-start ${stacked ? "" : "sm:self-auto"} ${href ? "" : "opacity-60 pointer-events-none"} inline-flex items-center justify-center gap-2 min-h-[44px] rounded-full bg-[#4a2574] px-5 py-2.5 text-sm font-bold text-white transition-colors hover:bg-[#3a1d5c] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#4a2574]`}
         >
           Open check-in <ExternalLink size={14} aria-hidden="true" />

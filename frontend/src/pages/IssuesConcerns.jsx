@@ -81,7 +81,7 @@ function SafetyStepCard() {
       <div className="flex flex-wrap gap-2">
         <a href={checkin || ALIGN_SITE} target="_blank" rel="noopener noreferrer" data-testid="issue-safety-checkin-link"
            className="inline-flex items-center rounded-full bg-[#3D1A78] px-4 py-2 text-sm font-semibold text-white hover:bg-[#2A0F5F]">
-          Open the Family check-in<span className="sr-only"> (opens in a new tab)</span>
+          Open Safety First<span className="sr-only"> (opens in a new tab)</span>
         </a>
         <Link to="/help" data-testid="issue-safety-help-link"
               className="inline-flex items-center rounded-full border border-[#3D1A78]/30 px-4 py-2 text-sm font-semibold text-[#3D1A78] hover:bg-white">

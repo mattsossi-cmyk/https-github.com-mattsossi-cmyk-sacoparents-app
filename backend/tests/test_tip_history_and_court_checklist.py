@@ -152,7 +152,7 @@ class TestCourtChecklistJson:
             assert set(it.keys()) >= {"key", "label", "status", "detail", "hint"}
             assert it["status"] in {"done", "in_progress", "todo"}
         m = {i["key"]: i for i in data["items"]}
-        assert m["family_checkin"]["label"] == "Family check-in"
+        assert m["family_checkin"]["label"] == "Safety First"
         assert m["family_checkin"]["status"] in {"done", "todo"}
         # case ref for parent2 (preseeded COURT-8842)
         assert "case_ref" in data
@@ -162,7 +162,7 @@ class TestCourtChecklistJson:
         assert r.status_code == 200
         item = next(i for i in r.json()["items"] if i["key"] == "family_checkin")
         assert item["detail"] in {"", "Done"}
-        for word in ["flag", "unsafe", "risk", "safety", "screening"]:
+        for word in ["flag", "unsafe", "risk", "screening"]:  # "Safety First" is the step's name
             assert word not in (item["detail"] + item["hint"] + item["label"]).lower()
 
 

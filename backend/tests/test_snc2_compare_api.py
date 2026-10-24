@@ -88,7 +88,7 @@ def _seed_assessment(sess: requests.Session, pathways=("medical",)):
     assert r.status_code == 200, r.text
 
 
-NOT_AVAILABLE = "This isn't available right now. Your Family check-in on SACOparentsAlign is the next step."
+NOT_AVAILABLE = "This isn't available right now. Safety First on SACOparentsAlign is the next step."
 
 
 def _submit_safety_level_1(sess: requests.Session) -> str:

@@ -62,8 +62,8 @@ const STEPS = [
         body: 'If there has been violence, threats, stalking or control, standard co-parenting advice may not be safe for you. Parallel parenting, separate mediation sessions or a protective order may be better options.',
       },
       {
-        heading: 'Take the Family check-in',
-        body: 'The safety check-in happens privately on SACOparentsAlign. SA CoParents never sees your answers.',
+        heading: 'Take Safety First',
+        body: 'Safety First happens privately on SACOparentsAlign. SA CoParents never sees your answers.',
       },
     ],
     cta: { label: 'Go to Start with Safety →', href: START_WITH_SAFETY },

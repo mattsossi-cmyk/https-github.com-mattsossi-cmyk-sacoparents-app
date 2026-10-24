@@ -1,0 +1,43 @@
+{
+  "summary": "Tested at phone width 390x844: the reading Self Journey (/self-journey*), the guided journey's move to /self-journey/guided/*, the old-bookmark redirects, the /safety-first redirect, PrivacyGuard, the Disclaimer, how the crisis strip and Back-to-dashboard pill behave, the entry points, and the Phase 1 stage/path checks again. Backend: a new pytest file with 8/8 passing. Almost everything works as specified. One real integration issue: a signed-out visitor who taps 'Open the guided Self Journey' (or the 'Export your Journey Report' card) is NOT sent to login. ProtectedRoute quietly starts a guest session instead. After that, ConsentGate puts the 'Before you continue' consent screen in front of the public reading journey, Safety First and /start-with-safety, because these paths are not on ConsentGate's open list.",
+  "backend_issues": {"critical": [], "minor": []},
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [
+      {"flow": "Signed-out visitor -> sjr-open-guided / sjr-next-report", "issue": "ProtectedRoute (no requireRealUser) quietly starts a guest session instead of sending the visitor to /login. The guest has no current consent, so ConsentGate then shows the 'Before you continue' screen on /self-journey/guided/*. It also shows it on the public reading pages /self-journey, /self-journey/<id> and on /start-with-safety (confirmed: sjr-page count is 0). A safety page that anyone should reach without signing in is now behind a consent form until the visitor consents or signs out. A real signed-in account without current consent would be blocked the same way.", "affected_selectors": ["sjr-open-guided", "sjr-next-report", "sjr-page"]}
+    ],
+    "design_issues": []
+  },
+  "test_report_links": ["/app/backend/tests/test_iter162_self_journey_stage_path.py", "/app/test_reports/pytest/iter162.xml"],
+  "action_items": [
+    "Add the reading journey paths to ConsentGate's open paths in frontend/src/components/privacy/ConsentGate.jsx: '/self-journey' and '/self-journey/<id>', but not '/self-journey/guided*'. Also add '/start-with-safety' and probably '/journey-library'. That way safety and reading pages never sit behind the consent screen.",
+    "Decide what a signed-out visitor should get from sjr-open-guided and sjr-next-report. The spec says login, but ProtectedRoute starts a guest session. If login is wanted, use <ProtectedRoute requireRealUser> on /self-journey/guided/:step, or point these links to /login?redirect=/self-journey/guided/..."
+  ],
+  "critical_code_review_comments": [
+    "SelfJourney.jsx (reading): the useEffect that writes localStorage runs on every mount, so every visitor gets sacp_self_journey_done='[]'. This also re-creates the key right after Quick Exit if the visitor presses Back. It holds no sensitive data, so this is low priority; you could skip the write when done is empty and the key does not exist.",
+    "SelfJourney.jsx: an unknown stepId (e.g. /self-journey/foo) quietly shows the hub with the bad URL still in the address bar. Consider <Navigate to='/self-journey' replace/>.",
+    "Quick Exit uses location.replace, which only replaces the current history entry. Earlier journey pages are still in the Back history. This is a normal browser limitation, so you may want to say so in the copy.",
+    "PrivacyGuard: restoring meta tags works correctly when moving between sensitive and normal pages within the app (checked on /help and /)."
+  ],
+  "verified_passing": [
+    "Reading hub signed out: sjr-hub-title shows, progress is 0%, all 7 sjr-card-* cards are present, the help bar has 3 tel links, the footer has the disclaimer and the privacy/who-can-see/help links, sjr-open-guided points to /self-journey/guided, and there is no horizontal overflow at 390px.",
+    "sjr-start opens the first unfinished page. sjr-complete marks the page done and moves to the next one (14%). The done badge, undo (mark not finished), sjr-jump to a page, empty jump back to the hub, prev/next links, and last page -> /self-journey/complete all work. Progress survives a reload (29%). sjr-clear asks for confirmation and empties progress.",
+    "Safety-first page: sjr-cta goes to /start-with-safety and the page has 0 inputs. /start-with-safety also has 0 inputs.",
+    "Finish page: data-all-done is false and the sjr-left-* list is correct. The hrefs for biff, report, help and court match the spec. Signed in: biff opens comm-builder-page, court opens the Court Ordered view, report opens the guided summary with Download PDF, help goes to /help. The sjr-finish-safety and sjr-finish-dv links are correct.",
+    "The redirects for safety/situation/child-needs/foundation/mediation/summary go to /self-journey/guided/<slug>. /self-journey/guided goes to /guided/safety. /safety-first goes to /start-with-safety.",
+    "PrivacyGuard: noindex,nofollow, no-referrer and data-privacy-guard=on are set on /self-journey*, /start-with-safety and /journey-library. They are reset to 'index, follow, max-image-preview:large' with the referrer meta removed on /help and /. No third-party analytics requests were seen.",
+    "Signed in as parent1: neither the crisis strip nor the pill shows on reading pages. The strip shows on /guided/* and the pill is hidden.",
+    "Guided journey: all navigation (sj-next, sj-back, progress-bar step jumps) stays under /self-journey/guided/<slug>, and a reload stays on the same page. The disclaimer sits at the bottom of main (bottom 529px; Next button top 732px; crisis strip top 806px), so it does not overlap.",
+    "Entry points: the Journey page Step 1 link, the dashboard welcome hotspot 'self' and the Account link account-awards-open-journey all go to /self-journey/guided(/safety).",
+    "Phase 1: the stage picker choice persists after reload and after logout/login. Recommended badges: separated -> self-assessment and child-needs; highConflict -> coparenting and mediation; ongoing -> coparenting and child-needs. Path levels: highConflict = high, communication = difficult, ongoing = cooperative; a 'concern' safety pick gives safety everywhere and on sj-path-card. The cooperative approach option is hidden on high/safety and shown otherwise. Skipping the stage still lets you continue. sj-step-complete shows numbers 1..6 after Next and never after the safety step or a step jump. It can be dismissed with the keyboard (Enter) and by click, and fits at 390px (358px wide).",
+    "Backend: /api/self-journey/me needs auth; stage is saved, rejected when invalid, and accepts null. The PDF includes 'Your path:' when safety is clear and leaves it out (no 'concern' text) when safety is concern. A concern pick removes the cooperative approach."
+  ],
+  "updated_files": ["/app/backend/tests/test_iter162_self_journey_stage_path.py"],
+  "success_rate": {"backend": "100% (8/8)", "frontend": "~95% (1 integration issue: guest bootstrap + ConsentGate blocking reading/safety pages)"},
+  "test_credentials": "parent1@test.com / TestPass123!",
+  "seed_data_creation": "Registered test_sj162_*@example.com from the pytest run. Before testing, parent1's self-journey progress was null. It is now set to neutral: stage=null, safety.status='none', maxStepReached=7, approach=null.",
+  "retest_needed": true,
+  "should_main_agent_self_test": true,
+  "context_for_next_testing_agent": "On /self-journey/guided/* an award overlay (sj-award-overlay) pops up for parent1. Close it with sj-award-close before clicking. In the reading journey, a signed-out visitor's guided link starts a guest session. After the fix, check that a guest or unconsented user can still open /self-journey, /self-journey/safety-first and /start-with-safety. Steps run in this order: safety, situation, self-assessment, coparenting, child-needs, foundation, mediation, summary.",
+  "rca of the issue": "ProtectedRoute defaults to guest bootstrap (requireRealUser=false), so a signed-out visitor following a guided link becomes a guest user with consent_current=false. ConsentGate.consentScreenApplies() then returns true for every path outside OPEN_PATHS/OPEN_PREFIXES, and '/self-journey' (reading), '/start-with-safety' and '/journey-library' are not on that list. Repro: open /self-journey in a new browser, tap sjr-open-guided, then go to /self-journey: the consent screen appears instead of sjr-page. Fix: exempt these paths in ConsentGate (excluding /self-journey/guided), and/or use requireRealUser on the guided route."
+}

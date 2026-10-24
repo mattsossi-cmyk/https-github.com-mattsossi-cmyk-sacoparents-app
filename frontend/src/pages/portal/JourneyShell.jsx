@@ -1071,7 +1071,7 @@ export function JourneyShell({
             <button
               type="button"
               data-testid="door-self"
-              onClick={() => openDoor("self")}
+              onClick={() => navigate("/self-journey")}
               className="w-full text-left bg-white hover:bg-purple-50 border-2 border-purple-300 rounded-2xl p-4 transition-colors flex flex-wrap items-center gap-3"
             >
               <div className="shrink-0 w-12 h-12 rounded-xl bg-purple-100 text-purple-700 flex items-center justify-center">
@@ -1118,7 +1118,7 @@ export function JourneyShell({
     <WelcomeArtwork
       testid="door-welcome-image"
       actions={{
-        self: () => navigate("/self-journey/guided"),
+        self: () => navigate("/self-journey"),
         court: () => openDoor("court"),
         comm: () => onOpenCommBuilder(),
       }}

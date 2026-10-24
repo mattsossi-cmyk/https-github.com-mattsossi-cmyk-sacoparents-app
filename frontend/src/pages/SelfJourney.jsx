@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Link, Navigate, useNavigate, useParams } from 'react-router-dom';
 import Disclaimer from '../components/Disclaimer';
+import StartWithSafetyBanner from '../components/startWithSafety/StartWithSafetyBanner';
 
 /**
  * SelfJourney — SA CoParents (the reading Self Journey, open to anyone)
@@ -10,7 +11,7 @@ import Disclaimer from '../components/Disclaimer';
  *   <Route path="/self-journey" element={<SelfJourney />} />
  *   <Route path="/self-journey/:stepId" element={<SelfJourney />} />
  *
- * PRIVACY: this page never asks for, shows or stores Family check-in answers.
+ * PRIVACY: this page never asks for, shows or stores Safety First answers.
  * The only thing remembered is WHICH pages a parent marked complete (page ids),
  * on their own device, so the percentage survives a refresh. Quick Exit and
  * "Clear my progress" erase it.
@@ -106,12 +107,13 @@ const STEPS = [
         body: 'If there has been violence, threats, stalking or control, standard co-parenting advice may not be safe for you. Parallel parenting, separate mediation sessions or a protective order may be better options.',
       },
       {
-        heading: 'Take the Family check-in',
-        body: 'The safety check-in happens privately on SACOparentsAlign. SA CoParents never sees your answers.',
+        heading: 'Take Safety First',
+        body: 'Safety First happens privately on SACOparentsAlign. SA CoParents never sees your answers.',
       },
     ],
     cta: { label: 'Go to Start with Safety →', href: START_WITH_SAFETY },
     alert: true,
+    banner: true, // shows the Start with Safety picture banner at the top of the page
     reviewed: true,
   },
   {
@@ -435,6 +437,11 @@ function StepPage({ step, index, isDone, onToggleDone, onCompleteAndNext, onJump
         {step.title}
       </h1>
       <p style={st.lead}>{step.summary}</p>
+      {step.banner && (
+        <div style={{ marginBottom: 16 }}>
+          <StartWithSafetyBanner testid="sjr-safety-banner" />
+        </div>
+      )}
       {step.reviewed && REVIEWER && (
         <p style={st.reviewed}>
           ✓ Reviewed by {REVIEWER.name}, {REVIEWER.role} · {REVIEWER.date}

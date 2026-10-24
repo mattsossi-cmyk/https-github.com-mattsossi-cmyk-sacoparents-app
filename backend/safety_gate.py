@@ -16,7 +16,7 @@ from motor.motor_asyncio import AsyncIOMotorDatabase
 BLOCKED_LEVEL_CEILING = 2
 
 NOT_AVAILABLE_CODE = "not_available"
-NOT_AVAILABLE = "This isn't available right now. Your Family check-in on SACOparentsAlign is the next step."
+NOT_AVAILABLE = "This isn't available right now. Safety First on SACOparentsAlign is the next step."
 
 
 class IPVGateError(HTTPException):

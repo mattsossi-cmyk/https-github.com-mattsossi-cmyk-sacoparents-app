@@ -25,7 +25,7 @@ from case_safety_routes import handle_signed  # noqa: E402
 
 API = "http://localhost:8001/api"
 CONSENT = {"ack_privacy_notice": True, "consent_sensitive_info": True}
-NOT_AVAILABLE = "This isn't available right now. Your Family check-in on SACOparentsAlign is the next step."
+NOT_AVAILABLE = "This isn't available right now. Safety First on SACOparentsAlign is the next step."
 SEE, DONE = "Safety step: see SACOparentsAlign", "Safety step: completed on SACOparentsAlign"
 SAFE_TXT, REFL_TXT, READY_TXT = "SAFETYSECRETXYZ", "REFLECTSECRETXYZ", "Needs Support"
 db = MongoClient(os.environ["MONGO_URL"])[os.environ["DB_NAME"]]

@@ -299,7 +299,7 @@ function AppRoutes() {
         <Route path="/admin/audit-log" element={<ProtectedRoute><AdminAuditLog /></ProtectedRoute>} />
         <Route path="/watch" element={<Watch />} />
 
-        {/* The in-app safety screen is off; the safety step is the Family check-in on SACOparentsAlign. */}
+        {/* The in-app safety screen is off; the safety step is Safety First on SACOparentsAlign. */}
         <Route path="/safety-assessment" element={<Navigate to="/help" replace />} />
         <Route path="/next-steps/safety" element={<Navigate to="/" replace />} />
         <Route
@@ -700,11 +700,11 @@ function App() {
           <AiNoticeProvider>
             <FooterLinkProvider>
             <LegalAcknowledgment />
+            <PrivacyGuard />
             <AppRoutes />
             <GlobalFooterLink />
             <BackToDashboardPill />
             <GlobalCrisisStrip />
-            <PrivacyGuard />
             <PreShareConsentHost />
             <Toaster position="bottom-right" toastOptions={TOAST_OPTIONS} />
             </FooterLinkProvider>

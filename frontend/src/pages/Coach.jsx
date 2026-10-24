@@ -98,7 +98,7 @@ function SafetyBanner() {
           className="font-semibold underline"
           data-testid="coach-family-checkin-link"
         >
-          Family check-in on SACOparentsAlign
+          Safety First on SACOparentsAlign
         </a>
         .
       </div>

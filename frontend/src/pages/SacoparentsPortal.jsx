@@ -54,6 +54,7 @@ import { GuideFollowupModal } from "./portal/GuideFollowupModal";
 import { SafetyCrisisStrip } from "./portal/SafetyCrisisStrip";
 import { ProfessionalAccessCard } from "../components/privacy/ProfessionalAccessCard";
 import { useOwnFooterLink } from "../lib/footerLink";
+import Disclaimer from "../components/Disclaimer";
 import { ShareLegalModal } from "./portal/ShareLegalModal";
 
 const GREY_ROCK_KEY = "sacoparents_grey_rock";
@@ -1682,6 +1683,9 @@ export default function SacoparentsPortal() {
         )}
 
       </main>
+      <div className="no-print px-4 pt-4" data-testid="portal-disclaimer">
+        <Disclaimer />
+      </div>
       {/* The site-wide footer sits under the fixed bottom bar here, so the link is repeated above it. */}
       <div data-testid="portal-privacy-footer" className={`no-print py-4 text-center text-[0.8125rem] ${dashboardMode ? "hidden" : ""}`}>
         <Link to="/privacy-notice" data-testid="portal-privacy-footer-link" className="font-semibold text-[#3D1A78] underline underline-offset-2">

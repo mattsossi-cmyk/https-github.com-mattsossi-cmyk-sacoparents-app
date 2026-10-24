@@ -5,6 +5,7 @@ import { useAuth } from "../context/AuthContext";
 import StartWithSafetyBanner from "../components/startWithSafety/StartWithSafetyBanner";
 import CoparentingBuilderReferral from "../components/startWithSafety/CoparentingBuilderReferral";
 import { SafetyFirstBanner } from "../components/caseSettings/SafetyFirstBanner";
+import Disclaimer from "../components/Disclaimer";
 import { ALIGN_SITE_URL, BUILDER_PATH, quickExitAction } from "./portal/JourneyShell";
 import { useParallelStatus } from "./portal/selfJourney/useParallelDone";
 
@@ -39,6 +40,7 @@ export default function StartWithSafetyPage() {
             navigate(BUILDER_PATH);
           }}
         />
+        <Disclaimer />
       </main>
     </div>
   );

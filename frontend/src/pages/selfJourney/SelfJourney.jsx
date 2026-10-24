@@ -591,7 +591,7 @@ function SafetyPage({ status, checkinHref, setSafety, resources }) {
   return (
     <>
       <section className="sj-card">
-        <h2 className="sj-card-title">Your private Family check-in</h2>
+        <h2 className="sj-card-title">Your private Safety First</h2>
         <p className="sj-small" style={{ marginTop: 0 }}>
           The check-in happens on SACOparentsAlign. Your co-parent never sees your answers, and they don&apos;t come back
           to this app.
@@ -605,7 +605,7 @@ function SafetyPage({ status, checkinHref, setSafety, resources }) {
           style={{ marginTop: 10, width: "100%" }}
           data-testid="sj-open-checkin"
         >
-          Open my Family check-in <span aria-hidden="true">↗</span>
+          Open Safety First <span aria-hidden="true">↗</span>
           <span className="sj-sr-only"> (opens SACOparentsAlign in a new tab)</span>
         </a>
       </section>

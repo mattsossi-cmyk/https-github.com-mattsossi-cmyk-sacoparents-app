@@ -147,7 +147,7 @@ export default function JourneyFlow({ alignUrl, actions = {}, embedded = false }
         <StepCard id="self" step="Step 1" title="Self Journey" subtitle="Reflect, learn, grow"
           img={IMG("self")} alt="Self Assessment screen" onGo={go} />
         <Arrow />
-        <StepCard id="safety" step="Step 2" title="Start with Safety" subtitle="Private family check-in"
+        <StepCard id="safety" step="Step 2" title="Start with Safety" subtitle="Private Safety First"
           img={IMG("safety")} alt="Start with Safety screen" href={checkinHref} done={checkinDone} />
         <Arrow />
         <div className="jf-decision" role="note" data-testid="journey-flow-decision">

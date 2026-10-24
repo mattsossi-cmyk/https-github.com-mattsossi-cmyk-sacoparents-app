@@ -4,7 +4,7 @@ import { CheckCircle2, ExternalLink, ShieldCheck, Zap } from "lucide-react";
 import { useCaseSettings } from "../../lib/useCaseSettings";
 import { useCheckinLink } from "../../lib/useCheckinLink";
 
-const DEFAULT_TEXT = "Before you choose your journey, take your private Family check-in. Your co-parent never sees your answers.";
+const DEFAULT_TEXT = "Before you choose your journey, take Safety First, your private check-in. Your co-parent never sees your answers.";
 
 // Shown until SACOparentsAlign confirms the Family check-in is done.
 export function SafetyFirstBanner({ alignUrl, onQuickExit, testid = "safety-first-banner", text = DEFAULT_TEXT }) {
@@ -33,7 +33,7 @@ export function SafetyFirstBanner({ alignUrl, onQuickExit, testid = "safety-firs
       <div className="mt-3 flex flex-wrap gap-2">
         <a href={href || undefined} aria-disabled={!href} target="_blank" rel="noopener noreferrer" data-testid={`${testid}-checkin`}
            className={`inline-flex items-center gap-1.5 min-h-[40px] rounded-full bg-[#4a2574] px-4 py-2 text-xs font-bold text-white transition-colors hover:bg-[#3a1d5c] ${href ? "" : "opacity-60 pointer-events-none"}`}>
-          Open Family check-in <ExternalLink size={12} aria-hidden="true" /><span className="sr-only"> (opens in a new tab)</span>
+          Open Safety First <ExternalLink size={12} aria-hidden="true" /><span className="sr-only"> (opens in a new tab)</span>
         </a>
         <button type="button" onClick={onQuickExit} data-testid={`${testid}-quick-exit`}
                 className="inline-flex items-center gap-1 min-h-[40px] rounded-full bg-rose-600 px-4 py-2 text-xs font-bold text-white transition-colors hover:bg-rose-700">
