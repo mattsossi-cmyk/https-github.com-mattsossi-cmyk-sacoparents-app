@@ -942,12 +942,13 @@ function AssistantSheet({ step, isSafetyStep, path, onClose, onAsk, logoSrc }) {
   const [input, setInput] = useState("");
   const [busy, setBusy] = useState(false);
   const [asked, setAsked] = useState([]);
+  const [aiAsked, setAiAsked] = useState(false);
   const listRef = useRef(null);
   const guard = useAiGuard("journey_guide", input);
   const waving = useOneTimeWave();
   // Same ready-made path answers as the reading Self Journey; answered on the device, nothing is sent.
   const pathQuestions = readyQuestions({
-    steps: STEPS,
+    steps: STEPS.map((s, i) => ({ ...s, label: i === 0 ? "Before you begin" : `Step ${i}`, before: i === 0 })),
     stepId: isSafetyStep ? "safety-first" : step.slug,
     noun: "steps",
     safetyConcern: path?.safety === "concern" || path?.level === "safety",
@@ -973,6 +974,7 @@ function AssistantSheet({ step, isSafetyStep, path, onClose, onAsk, logoSrc }) {
     const q = text.trim();
     if (!q || busy) return;
     if (!(await guard.confirmSend(q))) return;
+    setAiAsked(true);
     const history = [...messages, { role: "user", text: q }];
     setMessages(history);
     setInput("");
@@ -1031,7 +1033,7 @@ function AssistantSheet({ step, isSafetyStep, path, onClose, onAsk, logoSrc }) {
               <div className="sj-bubble sj-muted" data-testid="sj-assistant-thinking">Thinking…</div>
             </div>
           )}
-          {messages.length <= 2 && (
+          {!aiAsked && (
             <div className="sj-suggestions">
               {step.suggestions.map((s, i) => (
                 <button key={s} type="button" onClick={() => send(s)} data-testid={`sj-suggestion-${i}`}>

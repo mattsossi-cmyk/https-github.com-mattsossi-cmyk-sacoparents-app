@@ -1,0 +1,41 @@
+{
+  "summary": "Frontend-only testing at 390x844 of (1) AI notice wording by feature, (2) ready-made path questions in the guided Self Journey help chat with safety tailoring, (3) Listen (read-aloud) buttons with speechSynthesis stubbed through add_init_script, and the Quick Exit / AI chat regressions. Everything requested passed. No bugs found, only small UX notes.",
+  "backend_issues": {"critical": [], "minor": []},
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": [
+      {"screen": "Guided Self Journey help sheet (sj-assistant)", "issues": [
+        "The AI suggestion chips (sj-suggestion-*) only show while messages.length <= 2. Tapping any path chip adds 2 messages, so the AI suggestions disappear after the first path question. On the safety step there are already 2 opening messages, so this happens on the first tap. Consider tracking 'typed/AI asked' separately instead of the message count.",
+        "The pages answer says 'The Self Journey has 8 steps' and lists 'Your Safety Comes First' as step 1. The guided header calls Situation 'Step 1 of 7' and the safety step 'Before you begin'. The numbering doesn't match (cosmetic)."
+      ]}
+    ]
+  },
+  "passed_tests": [
+    "Reading guide (signed out): opening bubble has sjr-guide-listen-0 with aria-pressed=false and label 'Listen'. 8 chips are shown, with coparenting first on the coparenting page. Tapping sjr-guide-q-coparenting adds an answer with sjr-guide-listen-2, and the chip is removed.",
+    "Listen toggle: the tap calls speechSynthesis.speak with the answer text, the label changes to 'Stop', data-speaking=true and aria-pressed=true. Tapping again calls cancel and the label goes back to Listen. Starting a second bubble resets the first one. sjr-guide-close calls cancel.",
+    "Reading page Quick Exit (sjr-quick-exit) calls speechSynthesis.cancel (checked with a spy), leaves the site (weather URL) and clears the sacp_self_journey_done progress.",
+    "Guided help chat: sj-path-questions shows 8 chips (safety, coparenting, parallel, choose, pages, switch, report, help). The pages chip reads 'What do the steps cover, and how long do they take?' and its answer lists the 8 steps with minutes (43 min total). Each tap adds a user bubble and an assistant bubble, removes the chip and sends 0 requests to /api/journey-guide.",
+    "On the guided safety step the first path chip is sj-path-q-safety. Situation also orders safety first because no chip is tied to that page. Assistant bubbles have sj-listen-<index>, and speak, cancel and close-cancel work.",
+    "Safety tailoring: with status none or clear, the safety lines are absent. With sj-safety-concern picked, the coparenting answer contains 'You shared a safety concern, so Co-Parenting may not be safe for you right now' and the choose answer contains 'talk with an advocate before choosing'. The parallel answer is unchanged.",
+    "AI notice, fresh account B: sjr-guide-input shows 'Before you use the AI Journey Guide', the intro 'The Journey Guide uses artificial intelligence to answer your questions...' and the button 'Continue to the Journey Guide'. The Communication Builder (/dashboard?open=comm-builder) shows 'Before you use the AI tools' with the button 'Continue'. After accepting there, the reading guide input does not ask again.",
+    "AI notice, fresh account A: sj-chat-input shows the Journey Guide wording. After accepting, /coach has no locked inputs and no pop-up.",
+    "Regression: POST /api/journey-guide/self-journey-read/chat returned 200 with a reply, and that bubble has a Listen button. POST /api/journey-guide/self-journey/chat returned 200 with a reply. scrollWidth is 390 with each sheet and modal open."
+  ],
+  "test_report_links": [],
+  "action_items": [
+    "Optional: keep the guided AI suggestion chips visible after path-chip taps (they are currently gated on messages.length <= 2).",
+    "Optional: make the step count and numbering in the 'pages' answer match the guided header ('Step 1 of 7')."
+  ],
+  "critical_code_review_comments": [
+    "ListenButton only resets the Stop label through utterance onend/onerror. Real browsers fire these on cancel, but some Chrome versions stop long utterances silently, which can leave the button stuck on 'Stop'. A speechSynthesis.speaking poll or a timeout fallback would make it sturdier.",
+    "AiNoticeNeeded ('Read the AI notice' link) calls openNotice without a feature, so it always shows the general wording. That is fine as long as it is never used inside the Journey Guide.",
+    "The guided chat ask() does not send history, so the path-chip answers are never sent to the AI. The on-device note is accurate."
+  ],
+  "updated_files": [],
+  "success_rate": {"backend": "skipped (frontend only)", "frontend": "100%"},
+  "seed_data_creation": "Registered test_notice_a_165@test.com and test_notice_b_165@test.com (TestPass123!) through /api/auth/register. Both have now accepted consent and the AI notice. Account A's guided safety status is 'clear' and it is on the situation step. journey6 was not changed (its safety status is none).",
+  "retest_needed": false,
+  "should_main_agent_self_test": false,
+  "context_for_next_testing_agent": "Login: click login-show-email-toggle before the email fields. New accounts see consent-screen (2 unlabelled checkboxes, consent-screen-continue) and then path-picker (path-picker-choice-self_journey). /self-journey/guided/situation redirects to /safety until sj-next is pressed. Stub speechSynthesis with add_init_script, because headless Chromium has no voices. To test AI notice wording, register a fresh account (the API needs ack_privacy_notice and consent_sensitive_info set to true)."
+}

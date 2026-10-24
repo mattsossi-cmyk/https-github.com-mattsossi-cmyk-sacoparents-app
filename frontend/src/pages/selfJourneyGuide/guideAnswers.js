@@ -79,10 +79,15 @@ const SAFETY_NOTE = {
   choose: 'Because you shared a safety concern, talk with an advocate before choosing, and avoid joint sessions with the other parent.',
 };
 
+// Steps may carry their own `label` (e.g. "Before you begin", "Step 1"); `before` marks one that isn't counted.
 export function pagesAnswer(steps, noun = 'pages') {
   const total = steps.reduce((sum, s) => sum + s.minutes, 0);
-  const list = steps.map((s, i) => `${i + 1}. ${s.title} (about ${s.minutes} min)${s.summary ? `: ${s.summary}` : ''}`).join('\n');
-  return `The Self Journey has ${steps.length} ${noun}, about ${total} minutes in all, and you can go at your own pace.\n${list}`;
+  const counted = steps.filter((s) => !s.before).length;
+  const list = steps
+    .map((s, i) => `${s.label ? `${s.label}:` : `${i + 1}.`} ${s.title} (about ${s.minutes} min)${s.summary ? `: ${s.summary}` : ''}`)
+    .join('\n');
+  const after = counted < steps.length ? ', after a short safety check' : '';
+  return `The Self Journey has ${counted} ${noun}${after}, about ${total} minutes in all, and you can go at your own pace.\n${list}`;
 }
 
 // Short page list sent with signed-in questions so the AI guide knows the pages and times.

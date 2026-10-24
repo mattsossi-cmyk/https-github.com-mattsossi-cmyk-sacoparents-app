@@ -71,5 +71,12 @@ key · custom JWT auth (`auth.py`).
   (topic `self-journey-read`, collection `self_journey_read_guide_chats`, session per open sheet). Header zIndex 30 keeps
   Quick Exit above the sheet. Handout print stays one page (fit-to-page zoom) with a "keep private" line + copyright.
 
+## Guides: notice wording, path questions, read-aloud (2026-10-24)
+- AI notice: `AiNoticeModal` copy by feature (`journey_guide` -> "Before you use the AI Journey Guide"; all others ->
+  "Before you use the AI tools" / "Continue"). Still one acknowledgment for every tool. `openNotice(el, feature)`.
+- Guided Self Journey help chat also has the 8 ready-made path questions (`readyQuestions`, noun "steps", labels
+  "Before you begin"/"Step n"); on the safety path the Co-Parenting + choose answers add a safety line.
+- `selfJourneyGuide/ListenButton.jsx`: device voice (Web Speech), tap-only, Stop toggle; Quick Exit + closing cancel speech.
+
 ## Test accounts
 See `test_credentials.md`.

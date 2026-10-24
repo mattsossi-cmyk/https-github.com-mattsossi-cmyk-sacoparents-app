@@ -9723,3 +9723,7 @@ dashboard for sharing SELECTED completed reports with any professional.
 - PDF copyright: new line + global fpdf2 safety net; fixed 5 builders importing a missing `pdf_copyright` module (no-op);
   image certificate stamped; fridge card label moved up; 30 static downloads stamped. 62 endpoint checks + bundle pass.
 - Journey Guide chat (ready-made + AI when signed in) on reading pages; iteration_164 passed (footer overlap fixed after).
+
+## 2026-10-24 — AI notice per tool, guided path questions, Listen buttons (iteration_165 passed; published)
+- Published the guide chat / PDF copyright / handout changes first, then this round.
+- Fixed after testing: AI suggestion chips no longer vanish after a ready-made tap; guided steps answer numbering matches the header.
