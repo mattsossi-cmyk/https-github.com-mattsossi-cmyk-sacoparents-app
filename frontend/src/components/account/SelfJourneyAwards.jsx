@@ -81,7 +81,7 @@ export function SelfJourneyAwards() {
           </button>
         )}
         <Link
-          to="/self-journey"
+          to="/self-journey/guided"
           className="min-h-[44px] inline-flex items-center px-4 rounded-full border border-[#5b3fa0] text-[#3D1A78] text-sm font-bold hover:bg-[#F5F1FB] transition-colors"
           data-testid="account-awards-open-journey"
         >

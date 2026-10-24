@@ -69,6 +69,11 @@ TOPICS: Dict[str, Dict[str, str]] = {
             "concern, do not encourage direct communication with the other parent, joint sessions or standard "
             "mediation. Do not give legal advice. Suggest speaking with an attorney or mediator instead. "
             "The safety check-in itself happens on SACOparentsAlign and you never see its answers. "
+            # Founder's path guidance (Phase 1, prompt 2); the parent's path is given with each message.
+            "Cooperative: support joint planning. Difficult: suggest short, structured, written messages focused on "
+            "one topic. High: encourage brief, factual, written communication and parallel parenting; do not suggest "
+            "joint sessions. Safety: never encourage contact with the other parent, joint sessions or standard "
+            "mediation; point to advocates and professionals. "
         ),
         "where": "They are on the step: {}.",
     },
@@ -91,6 +96,8 @@ class ChatBody(BaseModel):
     section: Optional[str] = Field(default=None, max_length=120)
     safety_flagged: bool = False
     safety_status: Optional[Literal["none", "clear", "concern"]] = None
+    stage: Optional[Literal["separated", "planning", "communication", "ongoing", "highConflict"]] = None
+    level: Optional[Literal["cooperative", "difficult", "high", "safety"]] = None
 
 
 _SUGGEST_TASK = (
@@ -164,6 +171,9 @@ async def chat(
     context = t["where"].format(body.section) if body.section else ""
     if topic == "self-journey" and body.safety_status:
         context = f"{context} {SAFETY_CONTEXT[body.safety_status]}".strip()
+    if topic == "self-journey" and (body.level or body.safety_status == "concern"):
+        level = "safety" if body.safety_status == "concern" else body.level  # safety always wins
+        context = f"{context} The parent's path is: {level}.".strip()
     return await chat_turn(
         db, t["collection"], request, user, session_id=body.session_id, message=body.message,
         voice=t["voice"] + _SHARED, task=_TASK, context=context,

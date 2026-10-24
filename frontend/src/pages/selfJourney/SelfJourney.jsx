@@ -16,8 +16,13 @@ import { Link, Navigate, useNavigate, useParams } from "react-router-dom";
 import { ArrowLeft, Hand } from "lucide-react";
 
 import { useAiGuard } from "../../components/aiNotice/AiGuard";
+import Disclaimer from "../../components/Disclaimer";
 import { AwardModal, useMilestoneAwards } from "./Awards";
 import { CheckInCard, CheckInDialog, isCheckInDue } from "./CheckIn";
+import {
+  CONFLICT_LEVELS, PathCard, PathNote, RecommendedBadge, StagePicker, StepComplete,
+  conflictLevel, hidesWorkingTogether, isRecommended,
+} from "./Path";
 import GuideAvatar from "./GuideAvatar";
 import "./selfJourney.css";
 
@@ -181,6 +186,7 @@ const DEFAULT_RESOURCES = [
 
 export const EMPTY_PROGRESS = {
   maxStepReached: 0,
+  stage: null, // "separated" | "planning" | "communication" | "ongoing" | "highConflict" (Path.jsx STAGES)
   safety: { status: "none" }, // "none" | "clear" | "concern"
   situation: {},
   coparenting: { approach: null, agree: "", disagree: "" },
@@ -227,6 +233,7 @@ export default function SelfJourney({
   const [chatOpen, setChatOpen] = useState(false);
   const [checkInOpen, setCheckInOpen] = useState(false);
   const [checkInHidden, setCheckInHidden] = useState(false);
+  const [justCompleted, setJustCompleted] = useState(null); // step number (1–6) whose green arrow was just pressed
   const [toast, setToast] = useState("");
   const contentRef = useRef(null);
   const dirty = useRef(false);
@@ -236,6 +243,7 @@ export default function SelfJourney({
   const index = STEPS.findIndex((s) => s.slug === slug);
   const step = STEPS[index];
   const concern = progress.safety.status === "concern";
+  const level = conflictLevel(progress);
 
   const [award, setAward] = useMilestoneAwards({
     progress, setProgress, saveRef,
@@ -262,7 +270,7 @@ export default function SelfJourney({
 
   // Unknown slug, or a page the parent hasn't reached yet → send them to their furthest page
   if (index === -1 || index > progress.maxStepReached) {
-    return <Navigate to={`/self-journey/${STEPS[progress.maxStepReached].slug}`} replace />;
+    return <Navigate to={`/self-journey/guided/${STEPS[progress.maxStepReached].slug}`} replace />;
   }
 
   const update = (section, patch) => {
@@ -300,7 +308,9 @@ export default function SelfJourney({
   const canContinue = index !== 0 || progress.safety.status !== "none";
 
   const goTo = (i) => {
-    if (i <= progress.maxStepReached) navigate(`/self-journey/${STEPS[i].slug}`);
+    if (i > progress.maxStepReached) return;
+    setJustCompleted(null);
+    navigate(`/self-journey/guided/${STEPS[i].slug}`);
   };
 
   const handleNext = async () => {
@@ -313,8 +323,9 @@ export default function SelfJourney({
       return;
     }
     const next = { ...progress, maxStepReached: Math.max(progress.maxStepReached, index + 1) };
-    await persist(next, "Progress saved.");
-    navigate(`/self-journey/${STEPS[index + 1].slug}`);
+    await persist(next, index === 0 ? "Progress saved." : null);
+    setJustCompleted(index === 0 ? null : index);
+    navigate(`/self-journey/guided/${STEPS[index + 1].slug}`);
   };
 
   const approveFoundation = async (draft) => {
@@ -353,7 +364,14 @@ export default function SelfJourney({
         <Link to={homeHref} className="sj-back-link" data-testid="sj-back-to-journey">
           <ArrowLeft size={16} aria-hidden="true" /> Back to the Journey page
         </Link>
+        {/* Live region stays mounted across pages so the "Step complete" message is announced. */}
+        <div role="status" aria-live="polite" className="sj-step-done-region">
+          {justCompleted && justCompleted === index - 1 && (
+            <StepComplete number={justCompleted} next={step} onDismiss={() => setJustCompleted(null)} />
+          )}
+        </div>
         <p className="sj-kicker">{step.kicker}</p>
+        {isRecommended(progress.stage, step.slug) && <RecommendedBadge />}
         <h1 className="sj-title" data-testid="sj-title">{step.title}</h1>
         <p className="sj-intro">{step.intro}</p>
 
@@ -374,7 +392,21 @@ export default function SelfJourney({
           />
         )}
         {step.slug === "situation" && (
-          <SituationPage values={progress.situation} onChange={(k, v) => update("situation", { [k]: v })} />
+          <SituationPage
+            values={progress.situation}
+            onChange={(k, v) => update("situation", { [k]: v })}
+            stage={progress.stage}
+            onStage={(stage) => {
+              dirty.current = true;
+              setProgress((p) => {
+                const next = { ...p, stage };
+                // "Working together" is not offered on the high and safety paths
+                return hidesWorkingTogether(conflictLevel(next)) && p.coparenting.approach === "cooperative"
+                  ? { ...next, coparenting: { ...p.coparenting, approach: null } }
+                  : next;
+              });
+            }}
+          />
         )}
         {step.slug === "self-assessment" && (
           SelfAssessmentPanel ? <SelfAssessmentPanel /> : <Placeholder>[Existing Self-Assessment opens here]</Placeholder>
@@ -383,6 +415,7 @@ export default function SelfJourney({
           <CoParentingPage
             data={progress.coparenting}
             concern={concern}
+            level={level}
             onChange={(patch) => update("coparenting", patch)}
             CoParentingPanel={CoParentingPanel}
           />
@@ -405,12 +438,13 @@ export default function SelfJourney({
           />
         )}
         {step.slug === "mediation" && (
-          <MediationPage values={progress.mediation} concern={concern} onChange={(k, v) => update("mediation", { [k]: v })} />
+          <MediationPage values={progress.mediation} level={level} onChange={(k, v) => update("mediation", { [k]: v })} />
         )}
         {step.slug === "summary" && (
           <SummaryPage
             progress={progress}
             concern={concern}
+            level={level}
             selfAssessmentCount={selfAssessmentCount}
             onEdit={(i) => goTo(i)}
             onDownloadPdf={() => onDownloadPdf?.(progress)}
@@ -420,6 +454,7 @@ export default function SelfJourney({
             resources={safetyResources}
           />
         )}
+        <Disclaimer style={{ marginTop: 20 }} />
       </main>
 
       {!chatOpen && (
@@ -441,7 +476,7 @@ export default function SelfJourney({
         <AssistantSheet
           step={step}
           isSafetyStep={index === 0}
-          safetyStatus={progress.safety.status}
+          path={{ safety: progress.safety.status, stage: progress.stage, level }}
           onClose={() => setChatOpen(false)}
           onAsk={onAskAssistant}
           logoSrc={logoSrc}
@@ -458,7 +493,7 @@ export default function SelfJourney({
           }}
           onUpdateSituation={async (entry) => {
             await saveCheckIn(entry, "Check-in saved. Update where things stand today.");
-            navigate(`/self-journey/${STEPS[1].slug}`);
+            navigate(`/self-journey/guided/${STEPS[1].slug}`);
           }}
         />
       )}
@@ -609,9 +644,10 @@ function SafetyPage({ status, checkinHref, setSafety, resources }) {
   );
 }
 
-function SituationPage({ values, onChange }) {
+function SituationPage({ values, onChange, stage, onStage }) {
   return (
     <>
+      <StagePicker value={stage} onPick={onStage} />
       <Notice>All questions are optional. Share only what you&apos;re comfortable with. Only you see these answers.</Notice>
       {SITUATION_QUESTIONS.map(([key, label]) => (
         <TextField key={key} id={`sit-${key}`} label={label} value={values[key]} onChange={(v) => onChange(key, v)} />
@@ -620,16 +656,11 @@ function SituationPage({ values, onChange }) {
   );
 }
 
-function CoParentingPage({ data, concern, onChange, CoParentingPanel }) {
-  const options = concern ? APPROACHES.filter((a) => a.id !== "cooperative") : APPROACHES;
+function CoParentingPage({ data, concern, level, onChange, CoParentingPanel }) {
+  const options = hidesWorkingTogether(level) ? APPROACHES.filter((a) => a.id !== "cooperative") : APPROACHES;
   return (
     <>
-      {concern && (
-        <Notice tone="warning" testid="sj-coparenting-concern">
-          Based on your safety check, this page won&apos;t suggest direct communication. Parallel parenting and structured,
-          written tools may be a better fit.
-        </Notice>
-      )}
+      <PathNote level={level} page="coparenting" />
       {CoParentingPanel ? (
         <section className="sj-card">
           <CoParentingPanel concern={concern} />
@@ -765,17 +796,11 @@ function FoundationPage({ data, onChange, onApprove }) {
   );
 }
 
-function MediationPage({ values, concern, onChange }) {
+function MediationPage({ values, level, onChange }) {
   return (
     <>
-      {concern ? (
-        <Notice tone="warning" testid="sj-mediation-concern">
-          Because your safety check flagged concerns, joint mediation may not be appropriate. Options to ask a
-          professional about include separate-room mediation, attorney-assisted negotiation, or protective measures.
-        </Notice>
-      ) : (
-        <Notice>Mediation isn&apos;t right for every family. Use this page to get organized, whatever path you choose.</Notice>
-      )}
+      <PathNote level={level} page="mediation" />
+      <Notice>Mediation isn&apos;t right for every family. Use this page to get organized, whatever path you choose.</Notice>
       {MEDIATION_FIELDS.map(([key, label]) => (
         <TextField key={key} id={`md-${key}`} label={label} rows={2} value={values[key]} onChange={(v) => onChange(key, v)} />
       ))}
@@ -783,7 +808,7 @@ function MediationPage({ values, concern, onChange }) {
   );
 }
 
-function SummaryPage({ progress, concern, selfAssessmentCount, onEdit, onDownloadPdf, onShare, onCheckIn, onCertificate, resources }) {
+function SummaryPage({ progress, concern, level, selfAssessmentCount, onEdit, onDownloadPdf, onShare, onCheckIn, onCertificate, resources }) {
   const filled = (obj) => Object.values(obj || {}).some((v) => typeof v === "string" && v.trim());
   const approach = APPROACHES.find((a) => a.id === progress.coparenting.approach);
   const mediationDone = filled(progress.mediation) ? "Completed" : "Not started";
@@ -821,6 +846,7 @@ function SummaryPage({ progress, concern, selfAssessmentCount, onEdit, onDownloa
 
   return (
     <>
+      <PathCard stage={progress.stage} level={level} onChange={() => onEdit(1)} />
       <div className="sj-summary" data-testid="sj-summary">
         {sections.map((s) => (
           <div key={s.name} className="sj-summary-row">
@@ -856,6 +882,7 @@ function SummaryPage({ progress, concern, selfAssessmentCount, onEdit, onDownloa
               {r.label}: {r.href ? <a href={r.href}>{r.detail}</a> : r.detail}
             </li>
           ))}
+          <li data-testid="sj-level-next-step">{CONFLICT_LEVELS[level].nextStep}</li>
           <li>Bring this summary to your mediator, attorney or counselor.</li>
           <li>Revisit your Self Assessment in a few weeks to see how things have changed.</li>
         </ul>
@@ -901,7 +928,7 @@ function useOneTimeWave() {
   return show;
 }
 
-function AssistantSheet({ step, isSafetyStep, safetyStatus, onClose, onAsk, logoSrc }) {
+function AssistantSheet({ step, isSafetyStep, path, onClose, onAsk, logoSrc }) {
   const opening = [{ role: "assistant", text: step.chat }];
   if (isSafetyStep) {
     opening.push({
@@ -936,7 +963,7 @@ function AssistantSheet({ step, isSafetyStep, safetyStatus, onClose, onAsk, logo
     if (!onAsk) return;
     setBusy(true);
     try {
-      const reply = await onAsk(step.slug, q, history, safetyStatus);
+      const reply = await onAsk(step.slug, q, history, path);
       setMessages((m) => [...m, { role: "assistant", text: reply }]);
     } catch {
       setMessages((m) => [...m, { role: "assistant", text: "Sorry, I couldn't respond just now. Please try again." }]);

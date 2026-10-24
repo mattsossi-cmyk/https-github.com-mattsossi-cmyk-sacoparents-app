@@ -1118,7 +1118,7 @@ export function JourneyShell({
     <WelcomeArtwork
       testid="door-welcome-image"
       actions={{
-        self: () => navigate("/self-journey"),
+        self: () => navigate("/self-journey/guided"),
         court: () => openDoor("court"),
         comm: () => onOpenCommBuilder(),
       }}

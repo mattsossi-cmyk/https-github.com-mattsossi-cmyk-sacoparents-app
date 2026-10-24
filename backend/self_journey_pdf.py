@@ -47,6 +47,27 @@ RESOURCES = [
     "Bexar County Family Justice Center: 210-631-0100.",
     "PEACE Initiative (San Antonio): 210-533-2729.",
 ]
+# Same wording as Path.jsx. The safety path is never printed (no path line, no path step).
+STAGE_NAMES = {
+    "separated": "Just separated or divorcing",
+    "planning": "Developing a parenting plan",
+    "communication": "Communication is difficult",
+    "ongoing": "Managing an ongoing arrangement",
+    "highConflict": "Dealing with high conflict",
+}
+LEVELS = {
+    "cooperative": ("Cooperative", "Plan a child-focused mediation session or a joint planning conversation."),
+    "difficult": ("Communication is difficult", "Use the BIFF tool to keep each message brief, informative, friendly and firm."),
+    "high": ("High conflict", "Ask a family law professional about parallel parenting and separate-room mediation."),
+}
+
+
+def _level(progress: Dict[str, Any]) -> str:
+    if ((progress.get("safety") or {}).get("status")) == "concern":
+        return "safety"
+    return {"highConflict": "high", "communication": "difficult"}.get(progress.get("stage"), "cooperative")
+
+
 NEXT_STEPS = [
     "Bring this summary to your mediator, attorney or counselor.",
     "Revisit your Self-Assessment in a few weeks to see how things have changed.",
@@ -124,6 +145,13 @@ def build_self_journey_pdf(
     pdf.set_text_color(*MUTED)
     who = f" for {parent_name}" if parent_name else ""
     pdf.cell(0, 6, _safe(f"Prepared{who} on {now.strftime('%B')} {now.day}, {now.year}"), new_x="LMARGIN", new_y="NEXT")
+    level = _level(progress)
+    if level != "safety":
+        stage = STAGE_NAMES.get(progress.get("stage"))
+        pdf.set_font("Helvetica", "B", 10)
+        pdf.set_text_color(*INK)
+        path = f"Your path: {LEVELS[level][0]}" + (f"  ·  Starting point: {stage}" if stage else "")
+        pdf.cell(0, 6, _safe(path), new_x="LMARGIN", new_y="NEXT")
     pdf.ln(3)
 
     situation = progress.get("situation") or {}
@@ -153,7 +181,8 @@ def build_self_journey_pdf(
     _section(pdf, 6, "Mediation Preparation & Options", [PRIVATE_NOTE, *MEDIATION_OPTIONS],
              "Completed" if _filled(mediation) else "Not started")
 
-    _section(pdf, 7, "Next Steps & Available Resources", [*NEXT_STEPS, *RESOURCES])
+    level_step = [LEVELS[level][1]] if level != "safety" else []
+    _section(pdf, 7, "Next Steps & Available Resources", [*level_step, *NEXT_STEPS, *RESOURCES])
     return bytes(pdf.output())
 
 

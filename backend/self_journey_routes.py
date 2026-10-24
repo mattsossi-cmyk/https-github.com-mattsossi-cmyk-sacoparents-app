@@ -76,8 +76,12 @@ class CheckIn(BaseModel):
     planFits: Optional[Literal["yes", "somewhat", "no"]] = None
 
 
+Stage = Literal["separated", "planning", "communication", "ongoing", "highConflict"]
+
+
 class Progress(BaseModel):
     maxStepReached: int = Field(default=0, ge=0, le=LAST_STEP)
+    stage: Optional[Stage] = None  # "Where are you right now?" (older journeys: None)
     safety: Safety = Field(default_factory=Safety)
     situation: Dict[str, str] = Field(default_factory=dict)
     coparenting: Coparenting = Field(default_factory=Coparenting)

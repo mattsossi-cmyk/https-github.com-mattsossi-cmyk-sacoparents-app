@@ -11,6 +11,8 @@ import PolicyRefreshBanner from "@/components/PolicyRefreshBanner";
 import BackToDashboardPill from "@/components/BackToDashboardPill";
 import GlobalCrisisStrip from "@/components/GlobalCrisisStrip";
 import SelfJourneyPage from "@/pages/selfJourney/SelfJourneyPage";
+import SelfJourneyReading from "@/pages/SelfJourney";
+import PrivacyGuard from "@/components/PrivacyGuard";
 import DomainGuard from "@/components/DomainGuard";
 
 import Landing from "@/pages/Landing";
@@ -121,6 +123,7 @@ import SignUp from "@/pages/SignUp";
 import MediatorBadge from "@/pages/MediatorBadge";
 import GetHelp from "@/pages/GetHelp";
 import StartWithSafetyPage from "@/pages/StartWithSafetyPage";
+import JourneyLibrary from "@/pages/JourneyLibrary";
 import CalendarPage from "@/pages/CalendarPage";
 import AdminHelpServices from "@/pages/AdminHelpServices";
 import AdminAuditLog from "@/pages/AdminAuditLog";
@@ -283,8 +286,11 @@ function AppRoutes() {
         <Route path="/safety" element={<Safety />} />
         <Route path="/help" element={<GetHelp />} />
         <Route path="/start-with-safety" element={<StartWithSafetyPage />} />
-        {/* Permanent redirect: old /safety-first links land on the home page. */}
-        <Route path="/safety-first" element={<Navigate to="/" replace />} />
+        {/* Founder's reading hub (stores only "page finished" ticks on the device). */}
+        <Route path="/journey-library" element={<JourneyLibrary />} />
+        <Route path="/journey-library/:stepId" element={<JourneyLibrary />} />
+        {/* Permanent redirect: old /safety-first links open Start with Safety (the safety page). */}
+        <Route path="/safety-first" element={<Navigate to="/start-with-safety" replace />} />
         <Route path="/calendar" element={<CalendarPage />} />
         {/* Case settings are not shown to families yet (any limits a case has still apply). */}
         <Route path="/case-settings" element={<Navigate to="/" replace />} />
@@ -342,8 +348,12 @@ function AppRoutes() {
           element={<SacoparentsPortal />}
         />
         <Route path="/journey" element={<SacoparentsPortal />} />
-        <Route path="/self-journey" element={<Navigate to="/self-journey/safety" replace />} />
-        <Route path="/self-journey/:step" element={<ProtectedRoute><SelfJourneyPage /></ProtectedRoute>} />
+        {/* Reading Self Journey (anyone, "page finished" ticks on the device only). */}
+        <Route path="/self-journey" element={<SelfJourneyReading />} />
+        <Route path="/self-journey/:stepId" element={<SelfJourneyReading />} />
+        {/* Guided Self Journey (signed in, saved privately to the parent's account). */}
+        <Route path="/self-journey/guided" element={<Navigate to="/self-journey/guided/safety" replace />} />
+        <Route path="/self-journey/guided/:step" element={<ProtectedRoute><SelfJourneyPage /></ProtectedRoute>} />
         <Route
           path="/my-plan"
           element={
@@ -694,6 +704,7 @@ function App() {
             <GlobalFooterLink />
             <BackToDashboardPill />
             <GlobalCrisisStrip />
+            <PrivacyGuard />
             <PreShareConsentHost />
             <Toaster position="bottom-right" toastOptions={TOAST_OPTIONS} />
             </FooterLinkProvider>

@@ -299,3 +299,22 @@
 @keyframes sj-award-pop { from { opacity: 0; transform: scale(.9) translateY(8px); } to { opacity: 1; transform: none; } }
 .sj.is-calm-mode .sj-award { animation: none; }
 @media (prefers-reduced-motion: reduce) { .sj-award { animation: none; } }
+/* Your path (Path.jsx): starting point, "Recommended for you", path notes, Step complete */
+.sj-stage { margin: 0 0 14px; }
+.sj-rec-badge {
+  display: inline-flex; align-items: center; margin: 2px 0 6px; padding: 3px 10px; border-radius: 999px;
+  background: var(--sj-ok-bg); color: var(--sj-ok-text); font-size: 12px; font-weight: 800; letter-spacing: .02em;
+}
+.sj-path-note { background: var(--sj-lavender-2); border: 1px solid var(--sj-border); }
+.sj-path-card { border: 1.5px solid var(--sj-purple); }
+.sj-path-card-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.sj-path-card-head .sj-card-title { margin: 0; }
+.sj-step-done-region:empty { display: none; }
+.sj-step-done {
+  display: flex; align-items: flex-start; gap: 6px; margin: 2px 0 12px; padding: 12px 6px 12px 14px;
+  border-radius: 14px; background: var(--sj-ok-bg); color: var(--sj-ok-text); border: 1px solid #bfe3cb;
+}
+.sj-step-done p { margin: 0; flex: 1; font-size: 14px; line-height: 1.5; }
+.sj-step-done-next { display: block; margin-top: 4px; font-weight: 700; }
+.sj-step-done .sj-icon-btn { color: var(--sj-ok-text); flex: none; }
+.sj-step-done .sj-icon-btn:focus-visible { outline: 2px solid var(--sj-ok-text); outline-offset: 2px; border-radius: 10px; }

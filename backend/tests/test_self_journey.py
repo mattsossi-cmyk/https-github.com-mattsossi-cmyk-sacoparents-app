@@ -185,3 +185,35 @@ def test_awards_need_the_real_milestone_and_unlock_the_certificate(client):
     text = _pdf_text(r.content)
     assert "Certificate of Completion" in text and "SJ" in text and "Foundation Award" in text
     assert client.get("/api/self-journey/certificate").status_code == 401
+
+
+def test_stage_saved_and_old_journeys_load_with_null_stage(client):
+    _, h, uid = _parent(client)
+    _db.self_journey_progress.update_one({"user_id": uid}, {"$set": {"user_id": uid, "progress": {"maxStepReached": 1}}}, upsert=True)
+    assert client.get(ME, headers=h).json()["progress"]["stage"] is None
+    assert client.put(ME, headers=h, json={"stage": "communication"}).status_code == 200
+    assert client.get(ME, headers=h).json()["progress"]["stage"] == "communication"
+    assert client.put(ME, headers=h, json={"stage": "other"}).status_code == 422
+
+
+def test_pdf_prints_the_path_but_never_the_safety_path(client):
+    _, h, _ = _parent(client)
+    client.put(ME, headers=h, json={"stage": "communication"})
+    text = _pdf_text(client.get("/api/self-journey/pdf", headers=h).content)
+    assert "Your path: Communication is difficult" in text and "BIFF tool" in text
+    # "Communication is difficult" + a safety-concern pick: the safety path wins and nothing about it prints
+    client.put(ME, headers=h, json={"stage": "communication", "safety": {"status": "concern"}})
+    text = _pdf_text(client.get("/api/self-journey/pdf", headers=h).content)
+    assert "Your path" not in text and "BIFF tool" not in text and "Safety first" not in text
+    assert "concern" not in text.lower()
+
+
+def test_guide_chat_accepts_path_and_rejects_unknown_level(client):
+    from datetime import datetime, timezone
+    from ai_notice import AI_NOTICE_VERSION
+
+    _, h, _ = _parent(client)
+    client.post("/api/ai-notice/ack", headers=h, json={"ai_notice_version": AI_NOTICE_VERSION,
+                                                        "ai_notice_ack_at": datetime.now(timezone.utc).isoformat()})
+    bad = client.post("/api/journey-guide/self-journey/chat", headers=h, json={"message": "hi", "level": "calm"})
+    assert bad.status_code == 422

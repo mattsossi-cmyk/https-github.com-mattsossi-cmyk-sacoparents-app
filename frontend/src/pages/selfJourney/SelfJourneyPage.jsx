@@ -144,7 +144,7 @@ async function approveFoundation(draft) {
   await api.put("/foundation-builder/me", { fields: { ...(data?.fields || {}), statement: draft } });
 }
 
-// /self-journey and /self-journey/:step — the guided Self Journey (Step 1 of the Journey page).
+// /self-journey/guided/:step — the guided Self Journey (Step 1 of the Journey page).
 export default function SelfJourneyPage() {
   const { user } = useAuth();
   const navigate = useNavigate();
@@ -162,12 +162,14 @@ export default function SelfJourneyPage() {
     api.get("/self-journey/me").then((r) => setProgress(r.data?.progress || null), () => setProgress(null));
   }, []);
 
-  // The parent's own safety pick goes along so the guide never encourages direct contact on "concern".
-  const ask = async (slug, message, _history, safetyStatus = "none") => {
+  // The parent's own safety pick + path go along so the guide never encourages direct contact on the safety path.
+  const ask = async (slug, message, _history, path = {}) => {
     const section = STEPS.find((s) => s.slug === slug)?.short;
+    const safety = path.safety || "none";
     const { data } = await api.post("/journey-guide/self-journey/chat", {
       message, session_id: sessionRef.current, section,
-      safety_status: safetyStatus, safety_flagged: safetyStatus === "concern",
+      safety_status: safety, stage: path.stage || null, level: path.level || null,
+      safety_flagged: safety === "concern",
     });
     sessionRef.current = data.session_id;
     return data.reply;

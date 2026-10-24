@@ -11,7 +11,10 @@ const PORTAL_PATHS = ["/", "/dashboard", "/journey"];
 export default function GlobalCrisisStrip() {
   const { user } = useAuth();
   const { pathname } = useLocation();
-  const show = Boolean(user) && !PORTAL_PATHS.includes(pathname.replace(/\/+$/, "") || "/");
+  // The Journey library and the reading Self Journey have their own help bar, so it isn't doubled there.
+  const readingPage =
+    pathname.startsWith("/journey-library") || (pathname.startsWith("/self-journey") && !pathname.startsWith("/self-journey/guided"));
+  const show = Boolean(user) && !PORTAL_PATHS.includes(pathname.replace(/\/+$/, "") || "/") && !readingPage;
   useEffect(() => {
     if (!show) return undefined;
     document.body.classList.add("has-crisis-strip");
