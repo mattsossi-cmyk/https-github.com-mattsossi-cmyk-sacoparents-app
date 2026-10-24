@@ -9729,3 +9729,5 @@ dashboard for sharing SELECTED completed reports with any professional.
 - Fixed after testing: AI suggestion chips no longer vanish after a ready-made tap; guided steps answer numbering matches the header.
 
 ## 2026-10-24 — Listen to this page, voice speed, anonymous question counts (iteration_166: 100%; NOT yet published)
+
+## 2026-10-24 — Read-along highlight + 8-week question trend lines (iteration_167: 100%; published)

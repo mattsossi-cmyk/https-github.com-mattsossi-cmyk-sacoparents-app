@@ -84,7 +84,10 @@ key · custom JWT auth (`auth.py`).
   (`selfJourneyGuide/voiceSpeed.js`, `VoiceSpeed.jsx`; pickers on reading page, reading guide chat, guided chat).
 - Ready-made question taps: POST /api/guide-questions/tap {question_id, where} sent via fetch with credentials omitted
   (no token/cookies); daily counters in `guide_question_tap_counts` (day, question_id, where, count only).
-  Admin-only GET /api/admin/guide-questions/stats -> `components/admin/GuideQuestionsTile.jsx` on the admin dashboard.
+  Admin-only GET /api/admin/guide-questions/stats -> `components/admin/GuideQuestionsTile.jsx` on the admin dashboard,
+  incl. `weekly` (8 x 7-day buckets, oldest first) drawn by `components/admin/Sparkline.jsx`.
+- Read-along: page Listen reads segments (title, summary, sec-N, prompts); `useReadAlong` highlights the one being read
+  (data-reading, yellow bg + purple outline) and scrollIntoView block center (auto when reduced motion).
 
 ## Test accounts
 See `test_credentials.md`.

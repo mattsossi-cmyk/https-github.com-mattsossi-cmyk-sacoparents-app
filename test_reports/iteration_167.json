@@ -1,0 +1,18 @@
+{
+  "summary": "Tested Highlight While Reading and Question Trends. Backend: 9/9 pytest passed (read-only, no taps written). The stats endpoint gives 401 with no token and 403 for parent1. For the admin, every question has 'weekly' as 8 non-negative ints. The seeded values match exactly: parallel [0,0,0,0,0,5,2,3], safety [1,0,0,0,0,0,0,4], choose [0,0,0,0,0,0,2,0], help all zeros with all_time 7. Weekly also matches my own count from the Mongo rows for all 8 questions. Frontend at 390x844 with speechSynthesis stubbed: on self-assessment, safety-first and medical, exactly one element has data-reading=true as each part's first utterance starts. The order is title, summary, sec-0..N, then prompts (medical has no prompts box). The highlight is background rgb(255,246,214) with a 3px solid purple outline. The highlighted part is inside the viewport each time, and scrollIntoView gets block 'center' with behavior 'smooth' ('auto' when reduced motion is emulated). After the last onend, no element is highlighted and the button is back to Listen. Each part's original look comes back (computed bg, outline and border identical before and after reading, including the red alert sections). The safety banner is present. Stop calls cancel once; after onerror fires, the highlight is cleared and the button shows 'Listen to this page'. Tapping Next while reading calls cancel and clears the highlight straight away; the new page loads with no highlight and the button not speaking. Voice speed sets the rate to 0.75 / 0.95 / 1.2. Guide chat Listen (sjr-guide-listen-2) speaks and stops with no onstart handler and no page highlight; the tap POST was intercepted with page.route so nothing was written to the DB. No horizontal overflow while highlighted (scrollWidth 390). Admin /admin: the tile has a 'Last 8 weeks' column. All 8 sparklines match the API in data-values, aria-label and the 'This week N' caption, at both 1920x800 and 390x844. No page overflow at either size; the table wrapper does not need to scroll at 390.",
+  "backend_issues": {"critical": [], "minor": []},
+  "frontend_issues": {"ui_bugs": [], "integration_issues": [], "design_issues": []},
+  "test_report_links": ["/app/backend/tests/test_guide_question_trends.py", "/app/test_reports/pytest/pytest_guide_question_trends.xml"],
+  "action_items": [],
+  "critical_code_review_comments": [
+    "Still open from iteration_166: ListenButton Stop relies on the browser firing onerror/onend after cancel() to reset speaking and the highlight. If an engine fires neither, the button and highlight stay stuck. Suggest calling done() right after cancel when speaking.",
+    "The weekly buckets use UTC days (datetime.now(timezone.utc)), so for US admins 'This week' can roll over in the evening. This is acceptable, but could be documented in the tile.",
+    "The sparkline has no axis or week labels, and a flat zero line looks the same for 'no taps' and 'very few taps'. It is optional to show the max value next to it."
+  ],
+  "updated_files": ["/app/backend/tests/test_guide_question_trends.py"],
+  "success_rate": {"backend": "100%", "frontend": "100%"},
+  "seed_data_creation": "None. No tap counts written (tap POST intercepted in UI test).",
+  "retest_needed": false,
+  "should_main_agent_self_test": false,
+  "context_for_next_testing_agent": "speechSynthesis stub: record utterances in window.__utts; fire u.onstart/onend manually; cancel() stores pending in __lastCancelled, then call their onerror to simulate the browser. Wrap Element.prototype.scrollIntoView to record its options. Use page.route on **/api/guide-questions/tap to avoid writing counts. The admin login is at /login: click login-show-email-toggle first."
+}
