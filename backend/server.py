@@ -35,7 +35,7 @@ from starlette.middleware.cors import CORSMiddleware
 from auth import get_current_user, is_pro, require_approved_professional
 from joint_ai import effective_joint_report as generate_joint_report
 from joint_helpers import get_joint_report_doc, report_role, invite_expired, _pending_public, joint_public, InviteSpec, send_invite_email, create_invitation, _actor_label
-import auth, admin_routes, integrations, cron_jobs
+import auth, admin_routes, integrations, cron_jobs, safe_nd
 
 app = FastAPI()
 api = APIRouter(prefix="/api")
@@ -1900,6 +1900,7 @@ async def api_health():
 
 
 api.include_router(auth.router)
+api.include_router(safe_nd.router)
 api.include_router(admin_routes.router)
 import pro_invites as _pro_invites  # noqa: E402
 api.include_router(_pro_invites.router)

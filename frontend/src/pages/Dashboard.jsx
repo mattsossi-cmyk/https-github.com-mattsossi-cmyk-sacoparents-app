@@ -428,6 +428,15 @@ export default function Dashboard() {
         {isPro && <TrainingRefresherBanner />}
         {isPro && <ProContactCard />}
         {isPro && <InviteReminderPanel />}
+        {isPro && (
+          <Link to="/staff/safe-nd" className="mb-6 flex items-center justify-between rounded-lg border border-border bg-white px-5 py-4 hover:border-[#1F2A44] transition-colors" data-testid="safe-nd-reviews-link">
+            <span>
+              <span className="block font-semibold text-[#1F2A44]">SAFE-ND™ reviews</span>
+              <span className="block text-sm text-muted-foreground">Neurodevelopmentally informed parenting-plan review — staff reviewers only. Never visible to parents.</span>
+            </span>
+            <span className="text-sm font-semibold text-[#1F2A44]">Open →</span>
+          </Link>
+        )}
         {isPro && user?.role === "professional" && <PublicListingCard />}
 
         {isPro && user?.approved === false && (

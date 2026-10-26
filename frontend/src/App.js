@@ -10,6 +10,7 @@ import JointNew from "@/pages/JointNew";
 import Join from "@/pages/Join";
 import JointAssessment from "@/pages/JointAssessment";
 import SafetyScreening from "@/pages/SafetyScreening";
+import SafeNdReview from "@/pages/SafeNdReview";
 import CheckInAlias from "@/pages/CheckInAlias";
 import SafetyHub from "@/pages/SafetyHub";
 import PrivacyNotice from "@/pages/PrivacyNotice";
@@ -42,6 +43,20 @@ function LegalLensRedirect() {
 function LegacyCheckInRedirect() {
   const { id } = useParams();
   return <Navigate to={`/joint/${id}/check-in`} replace />;
+}
+// SAFE-ND: staff reviewers only (professional or admin). Everyone else sees the sign-in notice, never the content.
+function StaffProtected({ children }) {
+  const { user, loading } = useAuth();
+  if (loading) return <div className="min-h-screen flex items-center justify-center bg-background" data-testid="auth-loading"><p className="text-muted-foreground text-sm">Loading…</p></div>;
+  if (!user || !["professional", "admin"].includes(user.role)) {
+    return (
+      <main className="max-w-xl mx-auto p-6" data-testid="staff-signin-required">
+        <p className="rounded-lg bg-[#F5E8D6] px-3 py-2.5 text-[#5C3A00]">Staff sign-in required. Please sign in with your reviewer account.</p>
+        <Link to="/auth" className="mt-4 inline-block font-semibold text-[#1F2A44]" data-testid="staff-signin-link">Sign in</Link>
+      </main>
+    );
+  }
+  return <Protected>{children}</Protected>;
 }
 import Legal from "@/pages/Legal";
 import AcceptInvite from "@/pages/AcceptInvite";
@@ -141,6 +156,8 @@ function AppRoutes() {
             <Route path="/professionals" element={<Protected><Professionals /></Protected>} />
             <Route path="/find-a-professional" element={<FindProfessional />} />
             <Route path="/find-a-professional/:proId" element={<FindProfessional />} />
+            <Route path="/staff/safe-nd" element={<StaffProtected><SafeNdReview /></StaffProtected>} />
+            <Route path="/staff/safe-nd/:id" element={<StaffProtected><SafeNdReview /></StaffProtected>} />
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
   );
