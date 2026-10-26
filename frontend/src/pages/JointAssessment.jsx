@@ -123,7 +123,7 @@ export default function JointAssessment() {
         <p className="text-xs uppercase tracking-widest text-accent font-semibold" data-testid="assess-subject">{detail.subject_label}</p>
         <h1 className="text-4xl font-semibold mt-1 mb-2" data-testid="assess-heading">{detail.kind === "agreement" ? "Your Proposed Agreement Terms" : "Your Independent Reflection"}</h1>
         <p className="text-muted-foreground mb-2">
-          Regarding <strong>{detail.child_name}</strong>. {detail.kind === "agreement" ? "For each of the 10 sections, propose an arrangement, then answer the short follow-ups so the agreement is specific rather than general. The other parent does the same independently and never sees your answers." : "Answer honestly — the other parent cannot see your answers."}
+          Regarding <strong>{detail.child_name}</strong>. {detail.kind === "agreement" ? "For each of the 11 sections, propose an arrangement, then answer the short follow-ups so the agreement is specific rather than general. The other parent does the same independently and never sees your answers." : "Answer honestly — the other parent cannot see your answers."}
         </p>
         <p className="text-sm text-muted-foreground mb-8" data-testid="assess-progress">{answered} of {total} answered</p>
 

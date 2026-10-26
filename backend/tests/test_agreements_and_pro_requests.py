@@ -13,7 +13,7 @@ BASE_URL = (os.environ.get("REACT_APP_BACKEND_URL") or "https://align-report.pre
 API = f"{BASE_URL}/api"
 UA = {"User-Agent": "Mozilla/5.0 (pytest agreement suite)"}
 
-AGREEMENT_KEYS = ["foundation", "transitions", "communication", "education", "medical", "psychological", "activities", "decisions", "differences", "review"]
+AGREEMENT_KEYS = ["foundation", "transitions", "communication", "education", "medical", "psychological", "activities", "wellness_tech", "decisions", "differences", "review"]
 
 
 def _pro(prefix="p"):
@@ -39,6 +39,7 @@ def _agreement_setup(child="TEST_Kid"):
     for s, tok in ((a, toks["a"]), (b, toks["b"])):
         r = s.post(f"{API}/joint/invitations/accept", json={"code": tok})
         assert r.status_code == 200, r.text
+        assert s.post(f"{API}/joint/reports/{d['id']}/safety-screening/decline").status_code == 200  # Start-with-Safety step
     return pro, a, b, d["id"]
 
 
@@ -61,7 +62,7 @@ def _assert_agreement_report(data: dict) -> None:
 
 
 def _assert_agreement_terms(terms: list) -> None:
-    assert len(terms) == 10
+    assert len(terms) == 11
     assert [t["key"] for t in terms] == AGREEMENT_KEYS
     for t in terms:
         assert t["parent_a"] and t["parent_b"]

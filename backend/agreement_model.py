@@ -1,6 +1,6 @@
-from joint_data import DISCLAIMER, LEGAL_NOTICE_HEADING
+from joint_data import AGREEMENT_DISCLAIMER, AGREEMENT_LEGAL_NOTICE_HEADING, agreement_legal_notice
 
-"""Maps a ready Co-Parenting Agreement case into the 15-section 'Child-Focused Co-Parenting Agreement' model (PDF + court card)."""
+"""Maps a ready Co-Parenting Agreement case into the 16-section 'Child-Focused Co-Parenting Agreement' model (PDF + court card)."""
 from joint_engine import generate_agreement
 
 TBD = "To be discussed by the parents."
@@ -65,14 +65,14 @@ def _base_model(doc: dict) -> dict:
     rep = generate_agreement(doc)
     structs = _structured(doc)
     sm = rep.get("summary") or {"alignment": [], "specific": [], "resolution": []}
-    return {**_identity(doc, rep), **_needs(rep, sm), **_practical(rep), **_conflict_and_commitments(rep, structs), **_appendix(rep, sm)}
+    return {**_identity(doc, rep), **_needs(rep, sm), **_practical(rep), **_wellness(rep, structs), **_conflict_and_commitments(rep, structs), **_appendix(rep, sm)}
 
 
 def _identity(doc: dict, rep: dict) -> dict:
     return {"title": "Child-Focused Co-Parenting Agreement", "subtitle": "Turning shared priorities, child needs and parent commitments into practical co-parenting agreements.",
             "parent_a_name": rep["parent_a_name"], "parent_b_name": rep["parent_b_name"], "child_name": rep["child_name"], "date": rep["date"], "case_code": doc.get("case_code") or "",
             "purpose": "This agreement builds from the parents' Foundation Statements and identifies practical ways the parents intend to support their child's emotional, educational, medical and developmental needs.",
-            "shared_commitment": SHARED_COMMITMENT, "disclaimer": DISCLAIMER, "legal_notice_heading": LEGAL_NOTICE_HEADING}
+            "shared_commitment": SHARED_COMMITMENT, "disclaimer": AGREEMENT_DISCLAIMER, "legal_notice_heading": AGREEMENT_LEGAL_NOTICE_HEADING, "legal_notice": agreement_legal_notice()}
 
 
 def _needs(rep: dict, sm: dict) -> dict:
@@ -93,6 +93,14 @@ def _practical(rep: dict) -> dict:
             "information": info or [TBD], "education": _agreed(rep, "education") or [TBD], "medical": _agreed(rep, "medical", "psychological") or [TBD],
             "review": _agreed(rep, "review") or [TBD],
             "review_choices": [("Review Trigger", rev.get("review_trigger") or TBD), ("Review Frequency", "Every 6 or 12 months"), ("Earlier Review", "If significant circumstances change")]}
+
+
+def _wellness(rep: dict, structs: list) -> dict:
+    sec = _sec(rep, "wellness_tech")
+    return {"wellness": _agreed(rep, "wellness_tech") or [TBD],
+            "wellness_choices": [("Communication of Concerns", sec.get("communication_method") or TBD), ("Decision Process", sec.get("decision_process") or TBD),
+                                 ("Open Items", _first(sec.get("open_issues") or []) if sec.get("open_issues") else "None")],
+            "wellness_foundation": _union(structs, "wellness_tech")}
 
 
 def _conflict_and_commitments(rep: dict, structs: list) -> dict:

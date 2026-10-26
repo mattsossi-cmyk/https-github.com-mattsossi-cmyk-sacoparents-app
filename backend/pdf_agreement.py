@@ -1,4 +1,4 @@
-"""Child-Focused Co-Parenting Agreement PDF — purple banner, teal bullets, 15 numbered sections (supplied HTML design)."""
+"""Child-Focused Co-Parenting Agreement PDF — purple banner, teal bullets, 16 numbered sections (supplied HTML design)."""
 from fpdf import FPDF
 
 from pdf_common import FONT, GRAY, BODY, _s, _new_pdf
@@ -79,24 +79,28 @@ def _card(pdf: FPDF, header: str, items: list) -> None:
     pdf.set_xy(18, y + h + 6)
 
 
-def _signatures(pdf: FPDF, m: dict) -> None:
-    if pdf.get_y() > pdf.h - 60:
+def _acknowledgment_signatures(pdf: FPDF, m: dict) -> None:
+    """'Parent 1: ____ Date: ____' lines under the Acknowledgment (parent names in small print)."""
+    if pdf.get_y() > pdf.h - 50:
         pdf.add_page()
-    pdf.ln(12)
-    y = pdf.get_y()
-    w = (_W - 16) / 2
-    pdf.set_draw_color(68, 68, 68)
-    pdf.set_font(FONT, "", 7)
-    pdf.set_text_color(*GRAY)
-    for i, name in enumerate((m["parent_a_name"], m["parent_b_name"])):
-        x = 18 + i * (w + 16)
-        pdf.line(x, y, x + w, y)
-        pdf.set_xy(x, y + 1.5)
-        pdf.cell(w, 4, _s(f"{name.upper()}   S I G N A T U R E"))
-        pdf.line(x, y + 16, x + w, y + 16)
-        pdf.set_xy(x, y + 17.5)
-        pdf.cell(w, 4, "D A T E")
-    pdf.set_xy(18, y + 26)
+    pdf.ln(8)
+    labels = (m.get("legal_notice") or {}).get("signature_labels") or ["Parent 1", "Parent 2"]
+    for label, name in zip(labels, (m["parent_a_name"], m["parent_b_name"])):
+        y = pdf.get_y()
+        pdf.set_font(FONT, "B", 9.5)
+        pdf.set_text_color(*BODY)
+        pdf.set_xy(18, y)
+        pdf.cell(22, 6, _s(f"{label}:"))
+        pdf.set_draw_color(68, 68, 68)
+        pdf.line(41, y + 5.5, 118, y + 5.5)
+        pdf.set_xy(124, y)
+        pdf.cell(12, 6, "Date:")
+        pdf.line(137, y + 5.5, pdf.w - 18, y + 5.5)
+        pdf.set_xy(41, y + 6)
+        pdf.set_font(FONT, "", 7)
+        pdf.set_text_color(*GRAY)
+        pdf.cell(77, 3.5, _s(name))
+        pdf.set_xy(18, y + 15)
 
 
 def build_agreement_pdf(r: dict, doc: dict | None = None, is_sample: bool = False, safety: dict | None = None) -> bytes:
@@ -139,47 +143,69 @@ def build_agreement_pdf(r: dict, doc: dict | None = None, is_sample: bool = Fals
     _bullets(pdf, m["transitions"])
     _heading(pdf, 6, "Daily Routines & Consistency")
     _choices(pdf, m["routines"])
-    _heading(pdf, 7, "Information Sharing")
+    _heading(pdf, 7, "Wellness, Phones & Social Media")
+    _card(pdf, "Our Wellness & Technology Agreement", m["wellness"])
+    _choices(pdf, m["wellness_choices"])
+    if m.get("wellness_foundation"):
+        _panel(pdf, "\n".join(f"• {x}" for x in m["wellness_foundation"]), TEAL_LIGHT, label="Raised in the parents' Foundation Statements")
+    _heading(pdf, 8, "Information Sharing")
     _bullets(pdf, m["information"])
     pdf.add_page()
-    _heading(pdf, 8, "Educational Decisions")
+    _heading(pdf, 9, "Educational Decisions")
     _bullets(pdf, m["education"])
-    _heading(pdf, 9, "Medical & Psychological Needs")
+    _heading(pdf, 10, "Medical & Psychological Needs")
     _bullets(pdf, m["medical"])
-    _heading(pdf, 10, "Conflict Resolution Plan")
+    _heading(pdf, 11, "Conflict Resolution Plan")
     _panel(pdf, m["conflict_intro"], PURPLE_LIGHT)
     if m["conflict_agreed"]:
         _bullets(pdf, m["conflict_agreed"])
     _choices(pdf, m["conflict_steps"][:3])
     _choices(pdf, m["conflict_steps"][3:])
-    _heading(pdf, 11, "Options & Resources")
+    _heading(pdf, 12, "Options & Resources")
     _bullets(pdf, m["options"])
     pdf.add_page()
-    _heading(pdf, 12, "Our Parenting Commitments")
+    _heading(pdf, 13, "Our Parenting Commitments")
     _card(pdf, "What we are each committing to", m["commitments"])
-    _heading(pdf, 13, "Goals for the Next 12 Months")
+    _heading(pdf, 14, "Goals for the Next 12 Months")
     _bullets(pdf, m["goals"])
-    _heading(pdf, 14, "Reviewing Our Agreement")
+    _heading(pdf, 15, "Reviewing Our Agreement")
     _bullets(pdf, m["review"])
     _choices(pdf, m["review_choices"])
-    _heading(pdf, 15, "Our Shared Commitment")
+    _heading(pdf, 16, "Our Shared Commitment")
     _panel(pdf, "\n".join(m["shared_commitment"]), PURPLE_LIGHT, sub="Alignment Before Agreement")
-    _signatures(pdf, m)
     _footer_block(pdf, {"disclaimer": False}, signature=False)
     _legal_notice(pdf, m)
     return bytes(pdf.output())
 
 
 def _legal_notice(pdf: FPDF, m: dict) -> None:
-    """Single legal notice — always the last block of the agreement."""
-    if pdf.get_y() > pdf.h - 45:
-        pdf.add_page()
-    pdf.ln(6)
+    """Owner-supplied legal notice + Acknowledgment + signature lines — always the last block of the agreement."""
+    n = m.get("legal_notice") or {}
+    pdf.add_page()
     pdf.set_x(18)
-    pdf.set_font(FONT, "B", 9.5)
+    pdf.set_font(FONT, "B", 12)
+    pdf.set_text_color(*PURPLE_DARK)
+    pdf.cell(_W, 7, _s(n.get("heading") or m["legal_notice_heading"]), new_x="LMARGIN", new_y="NEXT")
+    if n.get("subheading"):
+        pdf.set_x(18)
+        pdf.set_font(FONT, "B", 9.5)
+        pdf.set_text_color(*PURPLE)
+        pdf.cell(_W, 6, _s(n["subheading"]), new_x="LMARGIN", new_y="NEXT")
+    pdf.ln(2)
+    pdf.set_font(FONT, "", 9)
     pdf.set_text_color(*BODY)
-    pdf.cell(_W, 5.5, _s(m["legal_notice_heading"]), new_x="LMARGIN", new_y="NEXT")
-    pdf.set_x(18)
-    pdf.set_font(FONT, "", 8.5)
-    pdf.set_text_color(*GRAY)
-    pdf.multi_cell(_W, 4.2, _s(m["disclaimer"]))
+    for para in n.get("paragraphs") or [m["disclaimer"]]:
+        pdf.set_x(18)
+        pdf.multi_cell(_W, 4.6, _s(para))
+        pdf.ln(2)
+    if n.get("acknowledgment"):
+        pdf.ln(2)
+        pdf.set_x(18)
+        pdf.set_font(FONT, "B", 10.5)
+        pdf.set_text_color(*PURPLE_DARK)
+        pdf.cell(_W, 6, _s(n.get("acknowledgment_heading") or "Acknowledgment"), new_x="LMARGIN", new_y="NEXT")
+        pdf.set_x(18)
+        pdf.set_font(FONT, "", 9)
+        pdf.set_text_color(*BODY)
+        pdf.multi_cell(_W, 4.6, _s(n["acknowledgment"]))
+        _acknowledgment_signatures(pdf, m)

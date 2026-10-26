@@ -10,7 +10,7 @@ from casekit import new_user
 BASE_URL = (os.environ.get("REACT_APP_BACKEND_URL") or "https://align-report.preview.emergentagent.com").rstrip("/")
 API = f"{BASE_URL}/api"
 
-SECTION_KEYS = ["foundation", "transitions", "communication", "education", "medical", "psychological", "activities", "decisions", "differences", "review"]
+SECTION_KEYS = ["foundation", "transitions", "communication", "education", "medical", "psychological", "activities", "wellness_tech", "decisions", "differences", "review"]
 
 
 def _answers(variant: str) -> dict:
@@ -33,10 +33,11 @@ def _agreement_case() -> tuple:
     pb = new_user(API, "parent", "Parent B", email=eb, invite=toks["b"])
     for s, tok in ((pa, toks["a"]), (pb, toks["b"])):
         assert s.post(f"{API}/joint/invitations/accept", json={"code": tok}).json().get("ok")
+        assert s.post(f"{API}/joint/reports/{d['id']}/safety-screening/decline").status_code == 200  # Start-with-Safety step
     return pro, pa, pb, d["id"]
 
 
-def test_config_exposes_ten_sections_with_follow_ups() -> None:
+def test_config_exposes_eleven_sections_with_follow_ups() -> None:
     pro = new_user(API, "professional", "Cfg Pro")
     cfg = pro.get(f"{API}/joint/config").json()
     secs = cfg["agreement_sections"]

@@ -69,7 +69,7 @@ class TestSampleAgreement:
         data = r.json()
         assert data.get("report_title") == "SA CoParents Co-Parenting Agreement", data.get("report_title")
         sections = data.get("sections") or []
-        assert len(sections) == 10, f"Expected 10 sections, got {len(sections)}"
+        assert len(sections) == 11, f"Expected 11 sections, got {len(sections)}"
         summary = data.get("summary") or {}
         for k in ("alignment", "specific", "resolution"):
             assert k in summary and isinstance(summary[k], list), f"summary.{k} missing/list"

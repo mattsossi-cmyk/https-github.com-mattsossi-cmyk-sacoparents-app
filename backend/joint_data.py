@@ -317,19 +317,26 @@ AGREEMENT_SECTIONS = [
                     ("expenses", "How are activity costs shared, and how are receipts exchanged?"), ("attendance", "May both parents attend games, performances, and events? Any ground rules?"),
                     ("conflicts", "When an activity conflicts with parenting time, what happens?")],
      "comm": "expenses", "decision": "conflicts", "review": None},
-    {"key": "decisions", "label": "Major Parenting Decisions", "num": 8,
+    {"key": "wellness_tech", "label": "Wellness, Phones & Social Media", "num": 8,
+     "goal": "Keep the child healthy, rested and safe online with consistent expectations in both homes.",
+     "question": "What arrangement do you propose for your child's wellness routines (sleep, meals, physical activity, emotional wellbeing) and for access to smartphones, social media, games and screens?",
+     "follow_ups": [("anchors", "Which wellness anchors (bedtime, meals, physical activity, downtime) should be the same in both homes?"), ("phone", "At what age should the child have a smartphone, and who pays for and manages it?"),
+                    ("social", "Which social media, apps and games are acceptable, and what parental controls or monitoring apply in each home?"), ("screens", "What screen-time limits apply on school days and weekends, and where do devices stay at night?"),
+                    ("concerns", "If a wellness or online-safety concern arises (sleep, mood, harmful content, contact with strangers, bullying), how and how quickly is the other parent told?")],
+     "comm": "concerns", "decision": "social", "review": None},
+    {"key": "decisions", "label": "Major Parenting Decisions", "num": 9,
      "goal": "Reach major decisions through a predictable process rather than a standoff.",
      "question": "What process do you propose for raising a major decision, gathering information, considering options, attempting agreement, and using a professional resource when appropriate?",
      "follow_ups": [("raise", "How is a major decision raised, and how much time does the other parent have to respond?"), ("information", "What information will be gathered before either parent decides?"),
                     ("options", "How will options be laid out and compared?"), ("professional", "When will a professional (pediatrician, teacher, counselor, mediator) be consulted?")],
      "comm": "raise", "decision": "professional", "review": None},
-    {"key": "differences", "label": "Managing Differences", "num": 9,
+    {"key": "differences", "label": "Managing Differences", "num": 10,
      "goal": "Agree in advance on the escalation pathway so disagreements do not reach the child.",
      "question": "What escalation pathway do you propose when the parents disagree: parent discussion, SA CoParents reflection and communication tools, professional consultation, mediation, or another agreed process?",
      "follow_ups": [("first", "What is the first step when you disagree, and how long is spent there?"), ("tools", "Which SA CoParents tools will you use before escalating?"),
                     ("professional", "Which professional is consulted next, and who arranges it?"), ("mediation", "When does an unresolved issue go to mediation or another agreed process?")],
      "comm": "first", "decision": "mediation", "review": None},
-    {"key": "review", "label": "Review & Adjustment", "num": 10,
+    {"key": "review", "label": "Review & Adjustment", "num": 11,
      "goal": "Keep the agreement alive as the child grows and circumstances change.",
      "question": "When and how should this agreement be revisited — when circumstances materially change, when your child's developmental needs change, or when a section isn't working as intended?",
      "follow_ups": [("schedule", "How often will the parents review the agreement together?"), ("triggers", "Which specific changes (school change, move, new partner, health) trigger an early review?"),
@@ -378,3 +385,24 @@ LEGAL_NOTICE_HEADING = "LEGAL NOTICE & DISCLAIMER:"
 DISCLAIMER = ("This Co-Parenting Assessment / Agreement generated through SA CoParents is intended solely as an informal framework to assist parents in alignment and good-faith communication. "
               "It is not a legally binding court order or enforceable contract. However, this document may be presented in legal proceedings, mediation, or court hearings as admissible evidence of the parties' mutual intent, "
               "good-faith efforts, and negotiated understanding regarding the best interests of the child. To make any agreement legally enforceable, it must be formally submitted to and approved by a court of competent jurisdiction.")
+
+# Owner-supplied verbatim notice for the Co-Parenting Agreement (PDF + on-screen). Always the last block, followed only by the acknowledgment signatures.
+AGREEMENT_LEGAL_NOTICE_HEADING = "IMPORTANT LEGAL NOTICE AND DISCLAIMER"
+AGREEMENT_LEGAL_NOTICE_SUBHEADING = "SA CoParents – Co-Parenting Agreement"
+AGREEMENT_LEGAL_NOTICE_PARAGRAPHS = [
+    "This Co-Parenting Agreement is intended to assist parents in identifying areas of agreement, establishing parenting expectations, improving communication, and developing child-focused arrangements.",
+    "The parties acknowledge and understand that this Agreement is not necessarily legally enforceable in its entirety. Certain provisions may reflect voluntary commitments, parenting preferences, communication guidelines, or mutual understandings that may not independently create legally enforceable obligations.",
+    "The preparation, completion, or signing of this Agreement does not, by itself, constitute court approval, modification of an existing court order, or a determination that every provision is legally binding.",
+    "The legal enforceability of any provision depends upon applicable Texas law, the nature of the provision, any applicable court orders, and whether additional legal requirements have been satisfied.",
+    "Nothing in this Agreement supersedes, modifies, or replaces an existing court order unless and until legally authorized. In the event of a conflict between this Agreement and an existing court order, the court order controls unless modified through appropriate legal procedures.",
+    "Parents are encouraged to have this Agreement reviewed by a licensed Texas attorney before seeking to incorporate its provisions into a court order.",
+]
+AGREEMENT_ACKNOWLEDGMENT_HEADING = "Acknowledgment"
+AGREEMENT_ACKNOWLEDGMENT = "By signing below, the parents acknowledge that they understand the purpose and potential legal limitations of this Agreement and that not all provisions are necessarily legally enforceable."
+AGREEMENT_SIGNATURE_LABELS = ("Parent 1", "Parent 2")
+AGREEMENT_DISCLAIMER = " ".join(AGREEMENT_LEGAL_NOTICE_PARAGRAPHS)
+
+
+def agreement_legal_notice() -> dict:
+    return {"heading": AGREEMENT_LEGAL_NOTICE_HEADING, "subheading": AGREEMENT_LEGAL_NOTICE_SUBHEADING, "paragraphs": list(AGREEMENT_LEGAL_NOTICE_PARAGRAPHS),
+            "acknowledgment_heading": AGREEMENT_ACKNOWLEDGMENT_HEADING, "acknowledgment": AGREEMENT_ACKNOWLEDGMENT, "signature_labels": list(AGREEMENT_SIGNATURE_LABELS)}

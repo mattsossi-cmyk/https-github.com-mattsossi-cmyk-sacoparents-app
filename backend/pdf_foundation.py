@@ -1,4 +1,4 @@
-"""Child-Focused Foundation Statement PDF — purple banner, teal accents, 10 numbered sections (matches the supplied HTML design)."""
+"""Child-Focused Foundation Statement PDF — purple banner, teal accents, 11 numbered sections (matches the supplied HTML design)."""
 from fpdf import FPDF
 
 from pdf_common import FONT, TEAL, GRAY, BODY, _s, _new_pdf
@@ -189,16 +189,18 @@ def build_foundation_pdf(d: dict) -> bytes:
     pdf.set_xy(18, y + h + 6)
     _heading(pdf, 5, "Areas of Concern")
     _bullets(pdf, d.get("concerns") or ["—"], boxed=True)
-    _heading(pdf, 6, "What My Child May Need")
+    _heading(pdf, 6, "Wellness, Phones & Social Media")
+    _bullets(pdf, d.get("wellness_tech") or ["—"], boxed=True)
+    _heading(pdf, 7, "What My Child May Need")
     _panel(pdf, d.get("child_may_need") or "—", PURPLE_LIGHT, label="Child-Focused Reflection")
-    _heading(pdf, 7, "Commitments I Am Making")
+    _heading(pdf, 8, "Commitments I Am Making")
     _bullets(pdf, d.get("commitments") or ["—"], boxed=True, accent=PURPLE)
     pdf.add_page()
-    _heading(pdf, 8, "Goals for the Next 12 Months")
+    _heading(pdf, 9, "Goals for the Next 12 Months")
     _bullets(pdf, d.get("goals") or ["—"])
-    _heading(pdf, 9, "My Child's Future")
+    _heading(pdf, 10, "My Child's Future")
     _panel(pdf, d.get("future") or "—", PURPLE_LIGHT, label="Looking Forward")
-    _heading(pdf, 10, "Parent Commitment")
+    _heading(pdf, 11, "Parent Commitment")
     _panel(pdf, d.get("parent_commitment") or "—", COMMIT, accent=PURPLE, sub="My Foundation Statement")
     _footer_block(pdf, d)
     return bytes(pdf.output())

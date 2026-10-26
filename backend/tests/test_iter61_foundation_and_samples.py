@@ -13,7 +13,7 @@ from casekit import new_user
 BASE_URL = (os.environ.get("REACT_APP_BACKEND_URL") or "https://align-report.preview.emergentagent.com").rstrip("/")
 API = f"{BASE_URL}/api"
 AREA_KEYS = ["foundation", "transitions", "communication", "education", "medical",
-             "psychological", "activities", "decisions", "differences", "review"]
+             "psychological", "activities", "wellness_tech", "decisions", "differences", "review"]
 
 
 def _agreement_with_foundation(child="FS Kid"):

@@ -78,27 +78,42 @@ export function AgreementDocument({ report }) {
 
       <p className="text-sm italic text-muted-foreground mb-10" data-testid="agreement-next-note">{report.next_note}</p>
 
-      <div className="grid sm:grid-cols-2 gap-6 mb-10" data-testid="agreement-signatures">
-        {[report.parent_a_name, report.parent_b_name].map((name, i) => (
-          <div key={i} className="border border-border rounded-lg p-5" data-testid={`signature-block-${i}`}>
-            <p className="font-semibold mb-4">{name}</p>
-            <p className="text-xs text-muted-foreground mb-1">Signature</p>
-            <div className="worksheet-line mb-4" />
-            <p className="text-xs text-muted-foreground mb-1">Date</p>
-            <div className="worksheet-line" />
-          </div>
-        ))}
-      </div>
-
-      <div className="text-center border-t border-border pt-10">
+      <div className="text-center border-t border-border pt-10 pb-10">
         <h3 className="font-display text-4xl sm:text-5xl font-bold text-align-purple" data-testid="agreement-philosophy">{report.philosophy_heading}</h3>
         <p className="mt-6 text-sm italic text-muted-foreground max-w-xl mx-auto">"{report.philosophy}"</p>
       </div>
 
-      <div className="border-t border-border pt-6" data-testid="agreement-legal-notice">
-        <p className="text-sm font-bold" data-testid="agreement-legal-notice-heading">{report.legal_notice_heading || "LEGAL NOTICE & DISCLAIMER:"}</p>
-        <p className="mt-2 text-xs leading-relaxed text-muted-foreground" data-testid="agreement-legal-notice-text">{report.disclaimer}</p>
-      </div>
+      <LegalNotice report={report} />
     </div>
   );
 }
+
+const LegalNotice = ({ report }) => {
+  const n = report.legal_notice || { heading: report.legal_notice_heading || "LEGAL NOTICE & DISCLAIMER:", paragraphs: [report.disclaimer] };
+  const labels = n.signature_labels || ["Parent 1", "Parent 2"];
+  return (
+    <div className="border-t border-border pt-8" data-testid="agreement-legal-notice">
+      <p className="text-sm font-bold uppercase tracking-wide text-brand-purple" data-testid="agreement-legal-notice-heading">{n.heading}</p>
+      {n.subheading && <p className="mt-1 text-sm font-semibold" data-testid="agreement-legal-notice-subheading">{n.subheading}</p>}
+      <div className="mt-3 space-y-3 text-xs leading-relaxed text-muted-foreground" data-testid="agreement-legal-notice-text">
+        {(n.paragraphs || []).map((p, i) => <p key={i}>{p}</p>)}
+      </div>
+      {n.acknowledgment && (
+        <div className="mt-8" data-testid="agreement-acknowledgment">
+          <p className="text-sm font-bold" data-testid="agreement-acknowledgment-heading">{n.acknowledgment_heading || "Acknowledgment"}</p>
+          <p className="mt-2 text-xs leading-relaxed text-muted-foreground" data-testid="agreement-acknowledgment-text">{n.acknowledgment}</p>
+          <div className="mt-6 space-y-6" data-testid="agreement-signatures">
+            {[report.parent_a_name, report.parent_b_name].map((name, i) => (
+              <div key={i} className="grid grid-cols-[auto_1fr_auto_minmax(90px,140px)] items-end gap-3 text-sm" data-testid={`signature-block-${i}`}>
+                <span className="font-semibold">{labels[i]}:</span>
+                <div><div className="worksheet-line" /><p className="mt-1 text-[11px] text-muted-foreground">{name}</p></div>
+                <span className="font-semibold">Date:</span>
+                <div><div className="worksheet-line" /><p className="mt-1 text-[11px] text-transparent select-none">.</p></div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};

@@ -79,11 +79,12 @@ export default function SampleFoundationStatement() {
                 </div>
               </Sec>
               <Sec n={5} title="Areas of Concern"><div className="rounded-lg border border-[#ddd7e6] bg-[#faf9fc] p-4"><Bullets items={d.concerns} /></div></Sec>
-              <Sec n={6} title="What My Child May Need"><Focus label="Child-Focused Reflection" text={d.child_may_need} /></Sec>
-              <Sec n={7} title="Commitments I Am Making"><div className="rounded-md border-l-4 border-[#4b2a7b] bg-[#f8f6fb] p-4"><Bullets items={d.commitments} /></div></Sec>
-              <Sec n={8} title="Goals for the Next 12 Months"><Bullets items={d.goals} /></Sec>
-              <Sec n={9} title="My Child's Future"><Focus label="Looking Forward" text={d.future} /></Sec>
-              <Sec n={10} title="Parent Commitment"><div className="rounded-md border-l-4 border-[#4b2a7b] bg-[#f8f6fb] p-4 text-sm"><strong>My Foundation Statement</strong><p className="mt-2 leading-relaxed">{d.parent_commitment}</p></div></Sec>
+              <Sec n={6} title="Wellness, Phones & Social Media"><div className="rounded-lg border border-[#ddd7e6] bg-[#faf9fc] p-4"><Bullets items={d.wellness_tech} testId="foundation-wellness-tech" /></div></Sec>
+              <Sec n={7} title="What My Child May Need"><Focus label="Child-Focused Reflection" text={d.child_may_need} /></Sec>
+              <Sec n={8} title="Commitments I Am Making"><div className="rounded-md border-l-4 border-[#4b2a7b] bg-[#f8f6fb] p-4"><Bullets items={d.commitments} /></div></Sec>
+              <Sec n={9} title="Goals for the Next 12 Months"><Bullets items={d.goals} /></Sec>
+              <Sec n={10} title="My Child's Future"><Focus label="Looking Forward" text={d.future} /></Sec>
+              <Sec n={11} title="Parent Commitment"><div className="rounded-md border-l-4 border-[#4b2a7b] bg-[#f8f6fb] p-4 text-sm"><strong>My Foundation Statement</strong><p className="mt-2 leading-relaxed">{d.parent_commitment}</p></div></Sec>
               <div className="mt-12 grid gap-10 sm:grid-cols-2">{["Parent Signature", "Date"].map((l) => <div key={l} className="border-t border-[#444] pt-2 text-[9px] uppercase tracking-widest text-[#6d6875]">{l}</div>)}</div>
               <div className="mt-10 grid gap-6 border-t border-[#ddd7e6] pt-4 text-[10px] text-[#6d6875] sm:grid-cols-[1fr_1.4fr]">
                 <div><p className="text-xs font-bold text-[#4b2a7b]">{d.contact[0]}</p>{d.contact.slice(1).map((c) => <p key={c}>{c}</p>)}</div>

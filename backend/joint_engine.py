@@ -6,8 +6,9 @@ from joint_data import (
     AGREEMENT_CONFIDENTIALITY,
     AGREEMENT_PURPOSE,
     AGREEMENT_SECTIONS,
-    DISCLAIMER,
-    LEGAL_NOTICE_HEADING,
+    AGREEMENT_DISCLAIMER,
+    AGREEMENT_LEGAL_NOTICE_HEADING,
+    agreement_legal_notice,
     NEXT_STEPS,
     QUESTIONS,
     SAFETY_CONFIDENTIALITY,
@@ -291,7 +292,7 @@ def generate_agreement(doc: dict) -> dict:
         "method_note": "Reflection → Alignment → Specific Action → Agreement",
         "philosophy_heading": "Alignment Before Agreement",
         "philosophy": "We value the parenting system by how well it supports the child, not by how friendly the adults appear.",
-        "legal_notice_heading": LEGAL_NOTICE_HEADING, "disclaimer": DISCLAIMER,
+        "legal_notice_heading": AGREEMENT_LEGAL_NOTICE_HEADING, "disclaimer": AGREEMENT_DISCLAIMER, "legal_notice": agreement_legal_notice(),
     }
 
 

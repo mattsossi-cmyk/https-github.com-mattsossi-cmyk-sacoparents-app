@@ -6,10 +6,10 @@ from fastapi import APIRouter, Depends, HTTPException, Response
 from pydantic import BaseModel
 
 TEXT_FIELDS = ("child_name", "shared_purpose", "vision", "strengths", "child_may_need", "future", "parent_commitment")
-LIST_FIELDS = ("priorities", "needs", "concerns", "commitments", "goals")
+LIST_FIELDS = ("priorities", "needs", "concerns", "wellness_tech", "commitments", "goals")
 SECTIONS = [("shared_purpose", "Shared Purpose"), ("vision", "My Vision for My Child"), ("priorities", "Parenting Priorities"), ("strengths", "My Child's Strengths"), ("needs", "My Child's Current Needs"),
-            ("concerns", "Areas of Concern"), ("child_may_need", "What My Child May Need"), ("commitments", "Commitments I Am Making"), ("goals", "Goals for the Next 12 Months"), ("future", "My Child's Future"), ("parent_commitment", "Parent Commitment")]
-PURPOSE = "This Foundation Statement organizes the parent's child-focused reflections into priorities, needs, concerns, goals and personal commitments."
+            ("concerns", "Areas of Concern"), ("wellness_tech", "Wellness, Phones & Social Media"), ("child_may_need", "What My Child May Need"), ("commitments", "Commitments I Am Making"), ("goals", "Goals for the Next 12 Months"), ("future", "My Child's Future"), ("parent_commitment", "Parent Commitment")]
+PURPOSE = "This Foundation Statement organizes the parent's child-focused reflections into priorities, needs, concerns (including wellness, phones and social media), goals and personal commitments."
 
 
 class FoundationIn(BaseModel):

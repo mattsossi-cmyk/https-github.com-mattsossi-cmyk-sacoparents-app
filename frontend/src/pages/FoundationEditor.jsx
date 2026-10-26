@@ -19,11 +19,12 @@ const STEPS = [
   { key: "strengths", n: 4, title: "My Child's Strengths", hint: "What your child is good at, enjoys, and benefits from." },
   { key: "needs", n: 4, title: "My Child's Current Needs", hint: "One need per line, e.g. “Calm transitions.”", list: true },
   { key: "concerns", n: 5, title: "Areas of Concern", hint: "One concern per line, stated without blame.", list: true },
-  { key: "child_may_need", n: 6, title: "What My Child May Need", hint: "How these concerns should be addressed, from the child's point of view." },
-  { key: "commitments", n: 7, title: "Commitments I Am Making", hint: "One commitment per line, e.g. “Speak respectfully about the other parent in my child's presence.”", list: true },
-  { key: "goals", n: 8, title: "Goals for the Next 12 Months", hint: "One goal per line.", list: true },
-  { key: "future", n: 9, title: "My Child's Future", hint: "When your child looks back on this period, what do you hope they remember?" },
-  { key: "parent_commitment", n: 10, title: "Parent Commitment", hint: "Your one-paragraph Foundation Statement." },
+  { key: "wellness_tech", n: 6, title: "Wellness, Phones & Social Media", hint: "One item per line: your child's sleep, meals, activity and emotional wellness, and their access to smartphones, social media, games and screens — what you hope both homes can agree on, stated without blame.", list: true },
+  { key: "child_may_need", n: 7, title: "What My Child May Need", hint: "How these concerns should be addressed, from the child's point of view." },
+  { key: "commitments", n: 8, title: "Commitments I Am Making", hint: "One commitment per line, e.g. “Speak respectfully about the other parent in my child's presence.”", list: true },
+  { key: "goals", n: 9, title: "Goals for the Next 12 Months", hint: "One goal per line.", list: true },
+  { key: "future", n: 10, title: "My Child's Future", hint: "When your child looks back on this period, what do you hope they remember?" },
+  { key: "parent_commitment", n: 11, title: "Parent Commitment", hint: "Your one-paragraph Foundation Statement." },
 ];
 const EMPTY = Object.fromEntries(STEPS.map((s) => [s.key, s.list ? [] : ""]));
 
