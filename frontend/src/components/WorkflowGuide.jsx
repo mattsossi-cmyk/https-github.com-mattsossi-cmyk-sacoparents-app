@@ -39,7 +39,7 @@ export const GUIDES = {
     ["Attach to court (optional)", "A completed agreement can be attached explicitly when you submit the Joint Report to the court."]] },
   foundation: { title: "Before you write your Foundation Statement", steps: [
     ["Answer the three safety questions", "Private to you. If any answer is Yes, your statement stays private and your professional uses the safety pathway."],
-    ["Write in your own words", "Ten short sections: shared purpose, vision, priorities, your child's strengths and needs, concerns, commitments, goals, future, your commitment."],
+    ["Write in your own words", "Eleven short sections: shared purpose, vision, priorities, your child's strengths and needs, concerns, wellness, phones and social media, commitments, goals, future, your commitment."],
     ["Stay child-focused", "Describe your child and your own commitments — not the other parent. Concerns are stated without blame."],
     ["Save, then share", "Save a draft any time. When complete, share it into your case so the professional and the Co-Parenting Agreement can use it."]] },
 };

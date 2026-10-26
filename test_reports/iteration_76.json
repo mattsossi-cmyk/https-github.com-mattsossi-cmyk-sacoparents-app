@@ -1,0 +1,28 @@
+{
+  "summary": "Tested the Wellness, Phones & Social Media additions (Foundation section 6 and Agreement section 8) and the new IMPORTANT LEGAL NOTICE AND DISCLAIMER on agreements, on both backend and frontend, using the public preview URL. Backend: a new live API suite passed 6/6. It covers config (11 sections plus the 5 wellness_tech follow-ups), the sample agreement PDF, a 400 when wellness_tech is missing, and a 200 with all 11 answers. It also covers the professional report (11 sections numbered 1-11, wellness_tech specific_agreements and communication_method, the full legal_notice object), the parent report view, and the agreement PDF (the notice appears once, after the Wellness section, with Acknowledgment then Parent 1 then Parent 2). The Foundation tests cover PUT/GET (the list is trimmed and blank lines dropped; wellness_tech sits between concerns and child_may_need in sections), /foundation/mine/pdf, and share-into-case (the content includes the 'Wellness, Phones & Social Media:' block). A joint-report regression check confirmed the new notice and Acknowledgment are absent there. The existing regression suites also pass (34 + 4). Frontend: the sample Foundation page shows section 6 with 6 wellness items and sections up to 11 (no section 12), and the sample Foundation PDF has headings 1-11 with Wellness at 6. The sample agreement page shows 11 sections in order, the new notice (heading, subheading, 6 paragraphs, Acknowledgment, Parent 1/Parent 2 rows with Date) and no old notice. In the signed-in parent Foundation editor, privacy acceptance through the UI works, step 6 Wellness sits between 5 and 7, Parent Commitment is 11, typing and saving persist as a list, the saved text reloads, and the PDF contains the heading and lines. The parent-side JointReport page for an agreement case renders AgreementDocument with 11 sections, and the new notice is the last element. AI drafting ran with gpt-5.4-mini. No JavaScript errors; the only console messages were a 401 from /auth/me before login and the cloudflare beacon CSP block.",
+  "backend_issues": {"critical": [], "minor": []},
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": [
+      {"screen": "AgreementDocument signature rows on mobile (390px), on the sample and parent agreement pages", "issues": ["The grid grid-cols-[auto_1fr_auto_minmax(90px,140px)] squeezes the signature line to about 40px, so the printed name wraps ('Parent / A'). The Date line ends up wider than the signature line. Suggestion: stack Date under the signature on small screens (for example, grid-cols-1 sm:grid-cols-[...]) or shrink the Date column."]},
+      {"screen": "Foundation editor 'Before you write' WorkflowGuide card", "issues": ["Step 2 still says 'Ten short sections: shared purpose, vision, ...'. It should say eleven and mention wellness/phones/social media (frontend/src/components/WorkflowGuide.jsx line 42)."]},
+      {"screen": "Sample Foundation Statement guided tour", "issues": ["Possibly minor: after the page is scrolled, the tour spotlight box stays at its earlier viewport position (step 1 'Shared Purpose' highlight appeared over section 7). Seen once; this is existing tour behaviour, not part of this change."]}
+    ]
+  },
+  "test_report_links": ["/app/backend/tests/test_iter123_wellness_legal_notice_live.py", "/app/backend/tests/_setup_iter123_ui.py", "/app/test_reports/pytest/iter123.xml"],
+  "action_items": [
+    "Update the WorkflowGuide.jsx Foundation step-2 copy from 'Ten short sections' to eleven and include wellness, phones and social media",
+    "Make the AgreementDocument signature rows responsive on mobile so the signature line is not squeezed"
+  ],
+  "critical_code_review_comments": [
+    "test_iter90_agreement_legal_notice.py imports backend modules directly. It only works when run from /app/backend with PYTHONPATH=/app/backend; run from /app/backend/tests it fails with ModuleNotFoundError: agreement_model. Consider adding a sys.path insert in conftest.",
+    "The rule-based _rule_section maps communication_method from the 'concerns' follow-up and decision_process from 'social'. This is verified to work (communication_method was populated)."
+  ],
+  "updated_files": ["/app/backend/tests/test_iter123_wellness_legal_notice_live.py", "/app/backend/tests/_setup_iter123_ui.py"],
+  "success_rate": {"backend": "100%", "frontend": "100% functional (2 minor design/copy issues)"},
+  "seed_data_creation": "Created throwaway @example.com professional and parent accounts plus agreement and education cases (they are purged by conftest on the next pytest run). The UI setup script /app/backend/tests/_setup_iter123_ui.py creates a fully submitted agreement case and a fresh parent.",
+  "retest_needed": false,
+  "should_main_agent_self_test": true,
+  "context_for_next_testing_agent": "Parent UI login: page.request.post('/api/auth/login') sets cookies; then go to /foundation (redirects to /privacy-notice; use privacy-ack-checkbox and then privacy-continue-btn). The agreement case route for parents is /joint/{id} (not /joint/{id}/report). On first render the Foundation editor fields are empty until the GET completes; wait about 1s before reading values."
+}

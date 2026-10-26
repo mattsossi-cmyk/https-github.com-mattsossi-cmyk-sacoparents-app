@@ -104,7 +104,7 @@ const LegalNotice = ({ report }) => {
           <p className="mt-2 text-xs leading-relaxed text-muted-foreground" data-testid="agreement-acknowledgment-text">{n.acknowledgment}</p>
           <div className="mt-6 space-y-6" data-testid="agreement-signatures">
             {[report.parent_a_name, report.parent_b_name].map((name, i) => (
-              <div key={i} className="grid grid-cols-[auto_1fr_auto_minmax(90px,140px)] items-end gap-3 text-sm" data-testid={`signature-block-${i}`}>
+              <div key={i} className="grid grid-cols-[auto_1fr] sm:grid-cols-[auto_1fr_auto_minmax(90px,140px)] items-end gap-x-3 gap-y-4 text-sm" data-testid={`signature-block-${i}`}>
                 <span className="font-semibold">{labels[i]}:</span>
                 <div><div className="worksheet-line" /><p className="mt-1 text-[11px] text-muted-foreground">{name}</p></div>
                 <span className="font-semibold">Date:</span>
