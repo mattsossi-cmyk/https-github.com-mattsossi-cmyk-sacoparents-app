@@ -1,0 +1,36 @@
+{
+  "summary": "SAFE-ND staff-only review feature tested end-to-end (backend + browser) against the preview URL. All 10 STEP-5 checklist items PASS. Gate: signed out sees staff-signin-required (no form content, also on /new), API 401; parent sees gate, API 403, no Dashboard card. Staff (professional): Privacy + Professional notices accepted on first sign-in, Dashboard tour skipped, safe-nd-reviews-link opens /staff/safe-nd, '+ Start a new review' shown. New review: Case info, referral, Information Sources checkbox + Other, Communication=Medium, Executive=High + notes, Adult availability Home A/B/Plan -> Save draft -> URL /staff/safe-nd/<uuid>; after reload every value restored (pills checked, navy pill bg). Safety option shows red (rgb 180,35,24) reminder with 'mandatory-reporting' and '911'; unticking hides it. Finalize without signature/date shows the warning, no confirm dialog, stays Draft; after signature+date+Save, Finalize -> confirm accepted -> Final tag, locked note, inputs readonly/checkboxes disabled, Save/Finalize gone, Print / PDF kept; persists after reload. PUT and re-finalize after final -> 409/409. List row: 'TEST_UI Child Alpha | Review date 2026-01-15 · updated ... | Final'. Print media: all 4 .no-print elements display:none, all 7 sections still block. Responsive: scrollWidth == clientWidth at 390x844 (list, new, final) and 1920x800. Backend limits: text/plain 415, >500KB 413, data:'x' 400, invalid JSON 400, unknown id 404, professional DELETE 403. No review contents in supervisor logs. One environment problem found and worked around: the documented SAFE-ND test accounts did not exist (see rca).",
+  "backend_issues": {
+    "critical": [],
+    "minor": [
+      {"endpoint": "tests/conftest.py (pytest_sessionfinish)", "issue": "After every pytest session, all users with @example.com emails are deleted. That includes the documented SAFE-ND accounts (safend.reviewer.90fd2f@example.com and t_pa_277a90b2@example.com), so they were missing when testing began and logins returned 401. The SAFE-ND reviews and the safe_nd_access records left behind are not cleaned up either."},
+      {"endpoint": "POST/PUT /api/safe-nd/reviews", "issue": "The content-type check is a substring match ('application/json' in header), so a header like 'text/plain; x=application/json' would get through. Low risk."}
+    ]
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": [
+      {"screen": "SAFE-ND editor print", "issues": ["The global app footer (data-testid copyright-footer) and any global banners are not marked no-print, so they still appear on the printout/PDF. Minor."]},
+      {"screen": "SAFE-ND editor", "issues": ["Date fields use the browser's native date input instead of the shadcn calendar. Acceptable because the owner supplied the file verbatim."]}
+    ]
+  },
+  "test_report_links": ["/app/backend/tests/test_iter122_safe_nd_accounts.py", "/app/backend/tests/test_iter121_safe_nd.py", "/app/test_reports/pytest/iter75_safe_nd.xml"],
+  "action_items": [
+    "Use a non-@example.com domain for the SAFE-ND test accounts (or exclude them in conftest._purge_fixture_accounts) so they survive pytest runs; update /app/memory/test_credentials.md to match.",
+    "Optional: add className='no-print' to the global footer/banners for clean SAFE-ND printouts.",
+    "Optional: tighten the content-type check to the media type before ';' == 'application/json'."
+  ],
+  "critical_code_review_comments": [
+    "safe_nd.py: the gate, AES-GCM encryption with AAD, the 409 lock that runs before reading the body, the conditional update on status=draft and the admin-only delete are all correct. The access record holds no content.",
+    "SafeNdReview.jsx: finalize() checks signature/date on the client, then confirms, then saves if there are unsaved changes, then finalizes. The server checks the saved data again. Correct.",
+    "StaffProtected gates on role before rendering, so parents and judges never mount SafeNdReview."
+  ],
+  "updated_files": ["/app/backend/tests/test_iter122_safe_nd_accounts.py"],
+  "success_rate": {"backend": "100% (9/9 new + 1/1 existing)", "frontend": "100% (10/10 checklist items)"},
+  "seed_data_creation": "Re-created safend.reviewer.90fd2f@example.com (professional, approved, Password123!) with casekit.new_user, and t_pa_277a90b2@example.com (parent through new_case, password hash set to Password123! with bcrypt $2b$). Created SAFE-ND reviews 'TEST_UI Child Alpha' (final, id cf5a3f21-7674-4e8b-bae8-ca312036f58c) plus 'TEST_API child' reviews.",
+  "retest_needed": false,
+  "should_main_agent_self_test": true,
+  "context_for_next_testing_agent": "Run test_iter122_safe_nd_accounts.py with --noconftest, otherwise conftest deletes the @example.com accounts at session end. The first staff Dashboard visit shows a tour overlay; click 'Skip tour'. Selectors: get_by_role('radiogroup', name='Communication priority').get_by_text('Medium'), section scopes #sec-referral/#sec-support/#sec-disposition, status text span[aria-live=polite]. Register the dialog handler as an async function (page.on('dialog', handler)).",
+  "rca of the issue": "Missing credentials: tests/conftest.py::pytest_sessionfinish -> _purge_fixture_accounts deletes users matching @(example.com|x.com). The SAFE-ND accounts use @example.com, so any pytest run (including the main agent's test_iter121) removes them. Reproduce: run pytest on any test, then log in as safend.reviewer... and get 401 'Invalid email or password'. Fix: use a different domain or add an exclusion list."
+}
