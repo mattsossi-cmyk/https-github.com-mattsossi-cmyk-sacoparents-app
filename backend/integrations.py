@@ -108,6 +108,28 @@ class CaseUpdateIn(BaseModel):
     assessment_id: str = ""
     responses: dict | None = None
     communication_readiness: dict | None = None
+    foundation_statement: dict | None = None  # parent/role/email fields in the body are ignored: the invitation record decides
+
+
+FOUNDATION_SOURCE = "sacoparentsapp.online"
+
+
+def _foundation_update(role: str, body: "CaseUpdateIn", now: str, invitation_id: str | None = None) -> dict:
+    """Foundation Statement pushed by the parent app. Held privately for THIS parent (foundation_imports.<role>) until they include it themselves."""
+    fs = body.foundation_statement
+    if not isinstance(fs, dict):
+        raise HTTPException(status_code=400, detail="foundation_statement (object) is required")
+    from foundation import _clean, to_text
+    from safety_import import _date
+    structured = _clean(fs["fields"]) if isinstance(fs.get("fields"), dict) else None
+    if structured and not any(v for k, v in structured.items() if k != "child_name"):
+        structured = None
+    content = str(fs.get("content") or "").strip()[:5000] or (to_text(structured)[:5000] if structured else "")
+    if not content:
+        raise HTTPException(status_code=400, detail="foundation_statement needs 'content' (text) or 'fields' with at least one Foundation section")
+    entry = {"title": (str(fs.get("title") or "").strip() or "Child-Focused Foundation Statement")[:120], "content": content, "structured": structured,
+             "completed_at": _date(fs.get("completed_at")) or None, "received_at": now, "source": FOUNDATION_SOURCE, "invitation_id": invitation_id}
+    return {f"foundation_imports.{role}": entry}
 
 
 def _readiness_update(role: str, body: "CaseUpdateIn") -> dict:
@@ -123,13 +145,15 @@ def _readiness_update(role: str, body: "CaseUpdateIn") -> dict:
     return {f"communication_readiness.{role}": rec}
 
 
-def _compute_case_updates(report: dict, role: str, body: "CaseUpdateIn", now: str) -> dict:
+def _compute_case_updates(report: dict, role: str, body: "CaseUpdateIn", now: str, invitation_id: str | None = None) -> dict:
+    if body.status == "foundation" or (body.foundation_statement is not None and body.responses is None and body.communication_readiness is None):
+        return _foundation_update(role, body, now, invitation_id)
     if body.status == "readiness" or (body.communication_readiness is not None and body.responses is None):
         return _readiness_update(role, body)
     if body.status == "started":
         return {"status": "in_progress"} if report["status"] == "pending_invite" else {}
     if body.status != "completed":
-        raise HTTPException(status_code=400, detail="Unknown status — use 'started' or 'completed'")
+        raise HTTPException(status_code=400, detail="Unknown status — use 'started', 'completed', 'readiness' or 'foundation'")
     answers = {k: str(v)[:5000] for k, v in (body.responses or {}).items()}
     updates = {
         f"responses.{role}": {
@@ -187,7 +211,7 @@ async def integration_case_update(body: CaseUpdateIn, request: Request):
     if not report:
         raise HTTPException(status_code=404, detail="Case not found")
     now = datetime.now(timezone.utc).isoformat()
-    updates = _compute_case_updates(report, inv["role"], body, now)
+    updates = _compute_case_updates(report, inv["role"], body, now, inv.get("id"))
     if inv["status"] == "pending":
         await db.invitations.update_one({"id": inv["id"]}, {"$set": {"status": "accepted", "accepted_at": now}})
     if updates:

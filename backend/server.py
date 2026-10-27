@@ -637,8 +637,22 @@ async def get_joint_report(rid: str, user=Depends(get_current_user)):
 def _foundation_payload(body: JointResponsesIn) -> list:
     return [
         {"title": str(s.get("title", "Foundation Statement"))[:120], "content": str(s.get("content", ""))[:5000]}
-        for s in (body.foundation or []) if isinstance(s, dict)
+        for s in (body.foundation or []) if isinstance(s, dict) and not s.get("use_import")
     ]
+
+
+def _apply_foundation_import(doc: dict, role: str, body: JointResponsesIn, payload: dict) -> None:
+    """{"use_import": true} = include the statement the parent app sent for THIS parent; the server copies it, the client text is ignored."""
+    if not any(isinstance(s, dict) and s.get("use_import") for s in (body.foundation or [])):
+        return
+    from foundation import case_side_safety_flagged, import_share_entry
+    imp = (doc.get("foundation_imports") or {}).get(role)
+    if not imp:
+        raise HTTPException(status_code=404, detail="No Foundation Statement from the SA CoParents app is on file for you on this case")
+    if case_side_safety_flagged(doc, role):
+        from safety_gate import SAFETY_ROUTE_NOTE
+        raise HTTPException(status_code=409, detail=SAFETY_ROUTE_NOTE)
+    payload["foundation"] = [import_share_entry(imp)]
 
 
 def _validated_answers(doc: dict, body: JointResponsesIn) -> dict:
@@ -695,6 +709,7 @@ async def save_joint_responses(rid: str, body: JointResponsesIn, user=Depends(ge
         raise HTTPException(status_code=403, detail="Please go through the Start with Safety step before answering the assessment.")
     _assert_joint_open(doc)
     payload = _validated_answers(doc, body)
+    _apply_foundation_import(doc, role, body, payload)
     existing_foundation = (doc.get("responses", {}).get(role) or {}).get("foundation")
     if existing_foundation and body.foundation is None:  # omitted = keep; explicit [] = parent chose not to include it
         payload["foundation"] = existing_foundation

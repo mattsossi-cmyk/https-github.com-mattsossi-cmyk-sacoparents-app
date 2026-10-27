@@ -121,12 +121,42 @@ def build_router(db, get_current_user, get_joint_report_doc, report_role) -> API
         await db.joint_reports.update_one({"id": rid}, {"$set": _share_updates(doc, side, mine["fields"])})
         return {"ok": True, "side": side}
 
+    @r.post("/joint/reports/{rid}/foundation/use-import")
+    async def use_imported_statement(rid: str, user=Depends(get_current_user)):
+        """Parent's explicit choice to include the Foundation Statement that the parent app sent for THEM (role from the case, never from the request)."""
+        doc = await get_joint_report_doc(rid, user)
+        side = report_role(doc, user["_id"])
+        if not side:
+            raise HTTPException(status_code=403, detail="Only a parent on this case can include a Foundation Statement in it")
+        imp = (doc.get("foundation_imports") or {}).get(side)
+        if not imp:
+            raise HTTPException(status_code=404, detail="No Foundation Statement from the SA CoParents app is on file for you on this case")
+        if case_side_safety_flagged(doc, side):
+            from safety_gate import SAFETY_ROUTE_NOTE
+            raise HTTPException(status_code=409, detail=SAFETY_ROUTE_NOTE)
+        await db.joint_reports.update_one({"id": rid}, {"$set": _share_entry_updates(doc, side, import_share_entry(imp))})
+        return {"ok": True, "side": side}
+
     return r
+
+
+def case_side_safety_flagged(doc: dict, side: str) -> bool:
+    return bool((doc.get("safety_flags") or {}).get(side) or ((doc.get("responses") or {}).get(side) or {}).get("safety_route"))
+
+
+def import_share_entry(imp: dict) -> dict:
+    """Shared-statement entry built from the stored import (server copy — the client never supplies the text)."""
+    return {"title": imp.get("title") or "Child-Focused Foundation Statement", "content": str(imp.get("content") or "")[:5000], "structured": imp.get("structured"),
+            "shared_at": datetime.now(timezone.utc).isoformat(), "source": imp.get("source") or "sacoparentsapp.online", "received_at": imp.get("received_at")}
 
 
 def _share_updates(doc: dict, side: str, fields: dict) -> dict:
     """Mongo $set payload for sharing a Foundation Statement into a case (Foundation-kind cases also complete the side)."""
     entry = {"title": "Child-Focused Foundation Statement", "content": to_text(fields)[:5000], "structured": fields, "shared_at": datetime.now(timezone.utc).isoformat(), "source": "align"}
+    return _share_entry_updates(doc, side, entry)
+
+
+def _share_entry_updates(doc: dict, side: str, entry: dict) -> dict:
     if doc.get("kind") != "foundation":
         return {f"responses.{side}.foundation": [entry]}
     updates = {f"responses.{side}": {"answers": {}, "completed_at": entry["shared_at"], "foundation": [entry]}}

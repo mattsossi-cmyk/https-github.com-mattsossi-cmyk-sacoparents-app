@@ -142,6 +142,10 @@ def joint_public(doc: dict, user: dict, invitation: dict | None = None, pending:
             out["pending_invitations"] = _pending_public(pending)
     if role:
         out["my_foundation_shared"] = bool((doc.get("responses", {}).get(role) or {}).get("foundation"))
+        imp = (doc.get("foundation_imports") or {}).get(role)  # the parent's OWN statement received from the parent app; never the other side's, never for professionals/courts
+        if imp:
+            out["my_foundation_import"] = {"title": imp.get("title"), "content": imp.get("content", ""), "structured": bool(imp.get("structured")), "completed_at": imp.get("completed_at"),
+                                           "received_at": imp.get("received_at"), "source": imp.get("source"), "included": bool(out["my_foundation_shared"] and any(s.get("source") == imp.get("source") for s in (doc["responses"][role].get("foundation") or [])))}
     return out
 
 
