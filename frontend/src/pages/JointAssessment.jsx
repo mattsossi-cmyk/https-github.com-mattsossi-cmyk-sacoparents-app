@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { WellnessTemplatePicker } from "@/components/WellnessTemplatePicker";
 
 export default function JointAssessment() {
   const { id } = useParams();
@@ -73,6 +74,15 @@ export default function JointAssessment() {
   const questionList = detail?.kind === "agreement" ? config?.agreement_areas || [] : config?.questions || [];
   const answered = questionList.filter((q) => (answers[q.key] || "").trim()).length;
   const total = questionList.length;
+
+  const applyWellnessTemplate = (t, section) => {
+    setAnswers((prev) => {
+      const next = { ...prev, [section.key]: [prev[section.key] || "", t.agreement.main].filter((x) => x.trim()).join("\n\n") };
+      section.follow_ups.forEach((f) => { const short = f.key.split("__")[1]; if (!(prev[f.key] || "").trim() && t.agreement[short]) next[f.key] = t.agreement[short]; });
+      return next;
+    });
+    toast.success(`“${t.title}” added — edit it to say exactly what you propose.`);
+  };
 
   const submit = async () => {
     setBusy(true);
@@ -185,6 +195,7 @@ export default function JointAssessment() {
               <p className="text-xs text-muted-foreground mb-2"><span className="font-semibold">Shared goal:</span> {s.goal}</p>
               <Label htmlFor={`q-${s.key}`} className="font-medium">{s.question}</Label>
               <Textarea id={`q-${s.key}`} className="mt-3 min-h-[90px]" value={answers[s.key] || ""} onChange={(e) => setAnswers((prev) => ({ ...prev, [s.key]: e.target.value }))} data-testid={`assess-answer-${s.key}`} />
+              {s.key === "wellness_tech" && <WellnessTemplatePicker testIdPrefix="assess-wellness-template" onPick={(t) => applyWellnessTemplate(t, s)} />}
               {(answers[s.key] || "").trim() && (
                 <div className="mt-4 rounded-md border border-brand-purple/20 bg-brand-purple/5 p-4 space-y-3" data-testid={`assess-followups-${s.key}`}>
                   <p className="text-xs font-semibold text-brand-purple">Make it specific — a few follow-ups so the agreement says exactly what each parent will do:</p>

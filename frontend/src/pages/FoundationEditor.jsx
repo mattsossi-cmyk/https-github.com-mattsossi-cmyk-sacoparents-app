@@ -11,6 +11,7 @@ import { AiPrivacyWarning } from "@/components/AiPrivacyWarning";
 import { WorkflowGuide } from "@/components/WorkflowGuide";
 import { ListenButton } from "@/components/ListenButton";
 import { FoundationAttachments } from "@/components/FoundationAttachments";
+import { WellnessTemplatePicker } from "@/components/WellnessTemplatePicker";
 
 const STEPS = [
   { key: "shared_purpose", n: 1, title: "Shared Purpose", hint: "Regardless of what brought your family here, what does your child deserve from both parents?" },
@@ -116,6 +117,7 @@ export default function FoundationEditor() {
                 <div className="flex items-center gap-3"><span className="flex h-8 w-8 items-center justify-center rounded-full bg-[#4b2a7b] text-sm font-bold text-white">{s.n}</span><h2 className="font-display text-lg font-bold text-[#2f174f] flex-1">{s.title}</h2><ListenButton text={`${s.title}. ${s.hint}`} label="Listen" variant="ghost" voice={voice} rate={rate} testId={`foundation-listen-${s.key}`} /></div>
                 <p className="mt-1 text-xs text-muted-foreground">{s.hint}</p>
                 <Textarea value={s.list ? (f[s.key] || []).join("\n") : (f[s.key] || "")} onChange={(e) => { set(s.key, s.list ? e.target.value.split("\n") : e.target.value); if (s.key === "concerns") setBlame(null); }} className="mt-2 min-h-[96px] bg-white" data-testid={`foundation-${s.key}`} />
+                {s.key === "wellness_tech" && <WellnessTemplatePicker testIdPrefix="foundation-wellness-template" onPick={(t) => { set("wellness_tech", [...(f.wellness_tech || []).filter((l) => l.trim()), ...t.lines]); toast.success(`“${t.title}” added — edit the lines to fit your child.`); }} />}
                 {s.key === "concerns" && blame?.length > 0 && (
                   <div className="mt-2 rounded-md border-l-4 border-amber-500 bg-amber-50 p-3 text-sm" data-testid="foundation-blame-nudge">
                     <p className="font-semibold">Try rephrasing from your child's point of view:</p>

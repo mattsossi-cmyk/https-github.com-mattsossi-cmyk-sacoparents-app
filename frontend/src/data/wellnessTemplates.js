@@ -1,0 +1,67 @@
+// Three pick-and-edit starters for "Wellness, Phones & Social Media" (Foundation step 6 / Agreement section 8). Gender-neutral, both-homes language.
+export const WELLNESS_TEMPLATES = [
+  {
+    id: "sleep",
+    title: "Trouble sleeping overnight",
+    blurb: "For a child who struggles to fall asleep or stay asleep.",
+    lines: [
+      "The same bedtime and wake-up time in both homes, including most weekends.",
+      "A calm, screen-free wind-down for the last hour before bed.",
+      "Phones, tablets and game consoles charge outside the bedroom overnight.",
+      "No caffeine or sugary drinks after mid-afternoon.",
+      "If my child wakes in the night, both homes respond in the same calm, consistent way.",
+      "We tell each other the same day after a hard night so the other home can adjust.",
+      "If sleep trouble continues, we agree together to speak with the pediatrician.",
+    ],
+    agreement: {
+      main: "Our child has been having trouble sleeping overnight. We will keep the same bedtime and wake-up time in both homes, make the last hour before bed screen-free, keep devices out of the bedroom overnight, respond to night waking the same calm way, and tell each other the same day after a hard night.",
+      anchors: "Same bedtime and wake-up time in both homes; a calm, screen-free wind-down in the last hour before bed; no caffeine or sugary drinks after mid-afternoon.",
+      phone: "Any phone or tablet charges outside the bedroom overnight in both homes.",
+      social: "No social media, messaging or online games once the wind-down hour begins; the same parental controls and bedtime settings in both homes.",
+      screens: "Screens off one hour before bed every night; devices stay in the kitchen or living room overnight.",
+      concerns: "After a hard night, or if we notice tiredness, mood changes or worrying content, we tell the other parent the same day through the app. If sleep trouble continues, we speak with the pediatrician together.",
+    },
+  },
+  {
+    id: "phone",
+    title: "Phone & social media readiness",
+    blurb: "For deciding when and how a child gets a phone and accounts.",
+    lines: [
+      "No smartphone of their own until we both agree they are ready.",
+      "A simple way to call or message either parent from either home.",
+      "No social media accounts until we both agree, and then with both parents able to see the settings.",
+      "The same parental controls, app approvals and privacy settings in both homes.",
+      "We talk with our child together about strangers online, bullying and what is safe to share.",
+      "If one of us sees something worrying online, the other hears about it the same day.",
+    ],
+    agreement: {
+      main: "No smartphone or social media accounts until we both agree our child is ready. When that time comes, we set up the phone and any accounts together, with the same parental controls and privacy settings in both homes.",
+      anchors: "Regular meals, outdoor time and device-free family time each day in both homes.",
+      phone: "No smartphone until we both agree our child is ready; a basic call-and-text option before then if needed, with costs shared as agreed.",
+      social: "No social media accounts until both parents agree; when allowed, both parents know the accounts and the same parental controls and privacy settings apply in both homes.",
+      screens: "Devices are used in shared spaces, not bedrooms, and the same daily limits apply in both homes.",
+      concerns: "If either parent sees worrying content, contact from strangers or bullying, the other parent is told the same day through the app and we decide the next step together.",
+    },
+  },
+  {
+    id: "balance",
+    title: "Everyday screen balance",
+    blurb: "For daily limits that stay the same in both homes.",
+    lines: [
+      "Homework, chores and time outdoors come before screens in both homes.",
+      "The same daily screen-time limit on school days and an agreed longer limit on weekends.",
+      "Meals and car rides are device-free family time.",
+      "We agree together on which games and apps are allowed.",
+      "Devices are used in shared spaces, not alone in bedrooms.",
+      "We share what is working and what is not, so the rules stay the same in both homes.",
+    ],
+    agreement: {
+      main: "Screens come after homework, chores and time outdoors in both homes, with the same daily limits on school days and an agreed longer limit on weekends. Meals are device-free, and we agree together on which games and apps are allowed.",
+      anchors: "Meals together without devices, daily physical activity or outdoor time, and a consistent bedtime in both homes.",
+      phone: "If our child has a phone, the same rules apply in both homes and any cost is shared as agreed.",
+      social: "We agree together on which games, apps and platforms are allowed and use the same parental controls in both homes.",
+      screens: "Up to one hour on school days after homework and chores, and an agreed longer limit on weekends; devices are used in shared spaces and charge outside the bedroom overnight.",
+      concerns: "If a wellness or online-safety concern comes up, the other parent is told the same day through the app and we decide together whether the rules need to change.",
+    },
+  },
+];
