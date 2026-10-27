@@ -64,7 +64,7 @@ const S = [
     b: [
       { p: "Your individual answers are private by default. Your co-parent never sees them. A professional sees them only when that professional is assigned to your case, or where disclosure is required by law. Sharing a report gives access to the report only." },
       { p: "Completing an SA CoParents Align assessment does not provide your individual answers to your co-parent. In a joint report, once both parents have submitted their answers, the generated comparison (areas of alignment and difference) is shown to both parents and to the professional on the case. No separate sharing step is needed for that comparison, and neither parent sees the other parent's raw answers." },
-      { ul: ["Your individual responses remain associated with your account and are not disclosed to the other parent.", "Your Foundation Statement stays private unless you choose to share it; once shared, it appears in the joint report that both parents and the professional can read.", "When SA CoParents Align generates a report, Mediation Statement, co-parenting agreement, or similar output, the resulting document may contain selected information derived from your responses. You should review any report before sharing it."] },
+      { ul: ["Your individual responses remain associated with your account and are not disclosed to the other parent.", "Your Foundation Statement stays private unless you choose to share it; once shared, it appears in the joint report that both parents and the professional can read.", "With your choice in the SA CoParents app, your Foundation Statement can be sent to Align, where it is held privately for you until you include it in your case.", "When SA CoParents Align generates a report, Mediation Statement, co-parenting agreement, or similar output, the resulting document may contain selected information derived from your responses. You should review any report before sharing it."] },
     ],
   },
   {
@@ -290,7 +290,7 @@ export default function Privacy() {
       <main className="max-w-3xl mx-auto px-6 py-12">
         <p className="text-xs uppercase tracking-widest text-brand-teal font-bold mb-2">Privacy, Confidentiality &amp; Data Protection Policy</p>
         <h1 className="text-4xl sm:text-5xl font-semibold mb-3" data-testid="privacy-heading">Private by Default. Shared by Choice.</h1>
-        <p className="text-sm text-muted-foreground mb-8" data-testid="privacy-effective">Effective: September 2, 2026 · Last updated: October 20, 2026</p>
+        <p className="text-sm text-muted-foreground mb-8" data-testid="privacy-effective">Effective: September 2, 2026 · Last updated: October 27, 2026</p>
 
         <div className="space-y-4 text-muted-foreground leading-relaxed mb-12">
           <p>

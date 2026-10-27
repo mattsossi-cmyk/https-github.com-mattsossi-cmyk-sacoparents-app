@@ -4,7 +4,7 @@ from datetime import datetime, timezone
 from fastapi import APIRouter, Depends, HTTPException, Response
 from pydantic import BaseModel
 
-PRIVACY_NOTICE_VERSION = "2026-10-20.1"  # bumped: points rewritten for Align (Foundation Statement, joint comparison, stop sharing, who looked, Align readiness + app Communication Style opt-in) (owner 2026-10-20)
+PRIVACY_NOTICE_VERSION = "2026-10-27.1"  # bumped: Foundation Statements sent from the SA CoParents app are held privately until the parent includes them (owner 2026-10-27, counsel-confirmed wording)
 SUBHEAD = "Private by default. Shared with your consent, or as the law requires."
 # Reusable legal-notice sentences (also for the future privacy policy). Edit here only.
 LEGAL_NOTICE_SENTENCES = [
@@ -22,7 +22,7 @@ NOTICE = {
     "subhead": SUBHEAD,
     "intro": "Your preparation is private and under your control.",
     "points": [
-        {"heading": "Your individual answers remain private.", "body": "Your co-parent never sees your assessment answers or your safety check-in. Your Foundation Statement stays private unless you choose to share it; once shared, it appears in the joint report that both parents and the professional can read."},
+        {"heading": "Your individual answers remain private.", "body": "Your co-parent never sees your assessment answers or your safety check-in. Your Foundation Statement stays private unless you choose to share it. If you write a Foundation Statement in the SA CoParents app and send it to Align, Align holds it for you alone: your co-parent, the professional and the court cannot see it until you choose to include it in your case. Once you include it, it appears in the joint report or co-parenting agreement that both parents and the professional can read, and it can be part of a report a professional submits to a court. You can send an updated statement from the app at any time; it replaces only your own earlier one."},
         {"heading": "You control what you share.", "body": "Once both parents have submitted their answers, the joint report shows the generated comparison to both parents and to the professional on the case, never anyone's raw answers. Beyond that, you choose which professionals to share a report with, and you can stop sharing with a professional you added yourself. Separate rules apply to court-ordered participation."},
         {"heading": "Reports are different from raw answers.", "body": "Sharing a report gives that professional access to the report only, not to your whole account or your individual answers."},
         {"heading": "Safety comes first.", "body": "Your Family check-in answers are seen only by the professionals assigned to your case and, when needed, SA CoParents administrators, on a protected screen. Every view is recorded, and you can see who looked and when. Court documents and reports show only whether the check-in was received, not started, or declined. If you complete the Communication Readiness check in Align, those answers are seen only by the professionals assigned to your case and, when needed, SA CoParents administrators; they never appear to your co-parent, the court, or in any report. If you choose in the SA CoParents app to share your Communication Style results, they are sent to Align and seen only by the professionals assigned to your case and, when needed, SA CoParents administrators."},

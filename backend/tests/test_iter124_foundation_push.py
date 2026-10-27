@@ -81,6 +81,11 @@ def test_stored_against_invitation_parent_never_request_fields():
     assert len(_imports(rid)["foundation_imports"]["b"]["content"]) == 5000
     ev = MONGO.access_events.find_one({"report_id": rid, "kind": "integration_write", "role": "a"})
     assert ev and ev["fields"] == ["foundation_imports"] and MOTHER not in json.dumps(ev, default=str)
+    # Arrival email: to the invitation address, neutral subject, no statement content, logged on the case.
+    mails = list(MONGO.communications.find({"case_id": rid, "kind": "foundation_arrival"}))
+    assert len(mails) == 4 and {m["to"] for m in mails} == {pa.email, pb.email}
+    assert all(m["subject"] == "Something you sent has arrived - SA CoParents" for m in mails)
+    assert "FOUNDATION" not in json.dumps(mails, default=str).upper().replace("FOUNDATION_ARRIVAL", "") and "safety" not in json.dumps(mails, default=str).lower()
     # Nothing was shared into the case by the push itself.
     assert not (_imports(rid).get("responses") or {}).get("a", {}).get("foundation")
 

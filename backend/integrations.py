@@ -217,9 +217,28 @@ async def integration_case_update(body: CaseUpdateIn, request: Request):
     if updates:
         await db.joint_reports.update_one({"id": report["id"]}, {"$set": updates})
         await _alert_bridge_write(report, inv["role"], request, sorted(k.split(".")[0] for k in updates))
+    if any(k.startswith("foundation_imports.") for k in updates):
+        await _notify_foundation_arrival(report, inv)
     if updates.get("status") == "ready":
         await _notify_case_ready(report)
     return {"ok": True, "case_status": updates.get("status", report["status"])}
+
+
+FOUNDATION_ARRIVAL_SUBJECT = "Something you sent has arrived - SA CoParents"
+FOUNDATION_ARRIVAL_HTML = ('<table role="presentation" width="100%"><tr><td style="padding:24px;font-family:Arial,sans-serif">'
+                           "<p>Hi {name},</p>"
+                           "<p>The statement you sent from the SA CoParents app has arrived in your SA CoParents account. It is private to you: nobody else can see it until you choose to include it in your case.</p>"
+                           '<p><a href="{link}" style="display:inline-block;background:#5B2A86;color:#fff;padding:10px 16px;border-radius:6px;text-decoration:none">Sign in to review it</a></p>'
+                           '<p style="font-size:12px;color:#888">Sent by {from_name}. We never ask for your password by email.</p></td></tr></table>')
+
+
+async def _notify_foundation_arrival(report: dict, inv: dict) -> None:
+    """Neutral, content-free arrival email to the invitation address (same tone as the check-in reminder)."""
+    try:
+        await send_email(to=inv["invitee_email"], subject=FOUNDATION_ARRIVAL_SUBJECT, case_id=report["id"], kind="foundation_arrival", to_role=f"Parent {inv['role'].upper()}",
+                         html=FOUNDATION_ARRIVAL_HTML.format(name=escape(inv.get("invitee_name") or "there"), link=f"{app_url()}/joint/{report['id']}", from_name=escape(EMAIL_FROM_NAME)))
+    except Exception:
+        logger.warning("Foundation arrival email not sent for case %s", report["id"])
 
 
 # ---------- External account linking (sacoparentsapp.online) ----------

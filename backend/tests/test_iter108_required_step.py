@@ -90,4 +90,4 @@ def test_professional_access_notice_on_step_screen():
     assert pb.post(f"{API}/joint/reports/{rid}/safety-screening/decline").json()["entry_status"] == "declined"
     eb = pb.get(f"{API}/me/safety-entry").json()
     assert eb["status"] == "declined" and eb["needs_notice"] is True
-    assert "2026-10-20.1" in Path("/app/backend/privacy_notice.py").read_text(encoding="utf-8")
+    assert "2026-10-27.1" in Path("/app/backend/privacy_notice.py").read_text(encoding="utf-8")
