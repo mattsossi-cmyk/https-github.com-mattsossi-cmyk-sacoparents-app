@@ -85,3 +85,10 @@ async function pushFoundationStatement({ baseUrl, integrationKey, token, stateme
 2. App sends Mother's statement with Mother's token, Father's with Father's.
 3. Align confirms: each landed on the correct side; nothing visible to the professional; each parent sees only their own on their case page; arrival emails received.
 4. Then, and only then, discuss switching on production sending.
+
+
+## Preview test family — tokens for the preview-to-preview push test (PREVIEW ONLY; fake family, no real people)
+Align preview case `SA-26-AGR-VXZC7F` (report id `39dab4be-563b-4f94-beca-a00dfc8ca0a6`), child "Sam".
+- Test Mother (Parent A) invitation token: `hCCTOwGnPrjgElrvNaX1GPelRbWGdRBg`
+- Test Father (Parent B) invitation token: `wwhG6FxKt0-5kyQeduAp6hKhhXpJb4rO`
+Send each statement with the matching token to `https://align-report.preview.emergentagent.com/api/integrations/case-update` using the PREVIEW `INTEGRATION_SHARED_SECRET` (value exchanged out-of-band). These tokens only work on Align preview and only for this test case; they cannot touch any other case or parent.
