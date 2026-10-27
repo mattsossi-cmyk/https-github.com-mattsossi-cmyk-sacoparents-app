@@ -180,7 +180,7 @@ export default function JointReport() {
           )}
           {detail.kind !== "foundation" && <SafetyScreeningPanel rid={id} />}
           {!detail.my_role && detail.kind !== "foundation" && <InviteCadenceSettings rid={id} />}
-          {detail.my_role && !detail.is_creator && <ShareFoundation rid={id} shared={detail.my_foundation_shared} imported={detail.my_foundation_import} onShared={() => setDetail((d) => ({ ...d, my_foundation_shared: true, my_foundation_import: d.my_foundation_import ? { ...d.my_foundation_import, included: true } : d.my_foundation_import }))} />}
+          {detail.my_role && !detail.is_creator && <ShareFoundation rid={id} shared={detail.my_foundation_shared} imported={detail.my_foundation_import} onShared={() => setDetail((d) => ({ ...d, my_foundation_shared: true, my_foundation_import: d.my_foundation_import ? { ...d.my_foundation_import, included: true } : d.my_foundation_import }))} onWithdrawn={(heldDeleted) => setDetail((d) => ({ ...d, my_foundation_shared: false, my_foundation_import: heldDeleted || !d.my_foundation_import ? undefined : { ...d.my_foundation_import, included: false } }))} />}
           {ready && detail.my_role && (
             <div className="mt-5 pt-4 border-t border-border">
               <p className="text-sm font-medium mb-2">Share with a professional (mediator, attorney, therapist):</p>

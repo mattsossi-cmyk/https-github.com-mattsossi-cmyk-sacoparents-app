@@ -137,7 +137,36 @@ def build_router(db, get_current_user, get_joint_report_doc, report_role) -> API
         await db.joint_reports.update_one({"id": rid}, {"$set": _share_entry_updates(doc, side, import_share_entry(imp))})
         return {"ok": True, "side": side}
 
+    @r.post("/joint/reports/{rid}/foundation/withdraw")
+    async def withdraw_statement(rid: str, body: WithdrawIn | None = None, user=Depends(get_current_user)):
+        """Parent removes THEIR OWN included Foundation Statement from the case (and optionally the held copy sent from the parent app). Frozen court copies are untouched."""
+        doc = await get_joint_report_doc(rid, user)
+        side = report_role(doc, user["_id"])
+        if not side:
+            raise HTTPException(status_code=403, detail="Only a parent on this case can withdraw a Foundation Statement from it")
+        delete_held = bool(body and body.delete_held)
+        shared = bool(((doc.get("responses") or {}).get(side) or {}).get("foundation"))
+        held = bool((doc.get("foundation_imports") or {}).get(side))
+        if not shared and not (delete_held and held):
+            raise HTTPException(status_code=404, detail="You have no Foundation Statement in this case to withdraw")
+        unset = {}
+        if shared:
+            unset.update({f"responses.{side}": ""} if doc.get("kind") == "foundation" else {f"responses.{side}.foundation": ""})
+        if delete_held and held:
+            unset[f"foundation_imports.{side}"] = ""
+        update = {"$unset": unset}
+        if doc.get("kind") == "foundation" and shared and doc.get("status") == "ready":
+            update["$set"] = {"status": "in_progress"}
+        await db.joint_reports.update_one({"id": rid}, update)
+        await db.access_events.insert_one({"report_id": rid, "kind": "foundation_withdrawn", "action": f"Parent {'1' if side == 'a' else '2'} withdrew their Foundation Statement",
+                                           "at": datetime.now(timezone.utc).isoformat(), "by": user["_id"], "by_name": user.get("name", ""), "by_role": f"Parent {side.upper()}"})
+        return {"ok": True, "side": side, "withdrawn": shared, "held_deleted": delete_held and held}
+
     return r
+
+
+class WithdrawIn(BaseModel):
+    delete_held: bool = False
 
 
 def case_side_safety_flagged(doc: dict, side: str) -> bool:

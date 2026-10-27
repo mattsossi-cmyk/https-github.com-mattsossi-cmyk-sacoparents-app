@@ -139,3 +139,35 @@ def test_use_import_requires_statement_and_respects_safety_flag():
     # Father with no statement on file asking to use one → 404, and his answers are NOT saved.
     r = pb.put(f"{API}/joint/reports/{rid}/responses", json={"answers": {k: f"b proposal for {k}" for k in KEYS}, "foundation": [{"use_import": True}]})
     assert r.status_code == 404 and not (_imports(rid)["responses"].get("b"))
+
+
+def test_withdraw_own_statement_only_and_account_deletion_clears_hold():
+    pro, pa, pb, rid, toks = _agreement_case(submit=True)
+    assert _push({"token": toks["a"], "status": "foundation", "foundation_statement": {"content": MOTHER}}).status_code == 200
+    assert _push({"token": toks["b"], "status": "foundation", "foundation_statement": {"content": FATHER}}).status_code == 200
+    assert pa.post(f"{API}/joint/reports/{rid}/foundation/use-import").status_code == 200
+    assert pb.post(f"{API}/joint/reports/{rid}/foundation/use-import").status_code == 200
+    assert sorted(s["content"] for s in pro.get(f"{API}/joint/reports/{rid}").json()["foundation_statements"]) == sorted([MOTHER, FATHER])
+    # Father withdraws: only his included copy goes; his held copy stays (delete_held false); Mother's untouched.
+    r = pb.post(f"{API}/joint/reports/{rid}/foundation/withdraw", json={"delete_held": False})
+    assert r.status_code == 200 and r.json()["withdrawn"] is True and r.json()["held_deleted"] is False
+    d = _imports(rid)
+    assert not d["responses"]["b"].get("foundation") and d["responses"]["a"]["foundation"][0]["content"] == MOTHER and d["foundation_imports"]["b"]["content"] == FATHER
+    pro_view = pro.get(f"{API}/joint/reports/{rid}").json()
+    assert [s["content"] for s in pro_view["foundation_statements"]] == [MOTHER]
+    b_view = pb.get(f"{API}/joint/reports/{rid}").json()
+    assert b_view["my_foundation_shared"] is False and b_view["my_foundation_import"]["included"] is False
+    # Nothing left to withdraw → 404; professional → 403. Withdrawing again with delete_held removes the held copy.
+    assert pb.post(f"{API}/joint/reports/{rid}/foundation/withdraw").status_code == 404
+    assert pro.post(f"{API}/joint/reports/{rid}/foundation/withdraw").status_code == 403
+    r = pb.post(f"{API}/joint/reports/{rid}/foundation/withdraw", json={"delete_held": True})
+    assert r.status_code == 200 and r.json()["held_deleted"] is True and "b" not in _imports(rid)["foundation_imports"]
+    assert "my_foundation_import" not in pb.get(f"{API}/joint/reports/{rid}").json()
+    ev = MONGO.access_events.find_one({"report_id": rid, "kind": "foundation_withdrawn"})
+    assert ev and FATHER not in json.dumps(ev, default=str)
+    # Mother deletes her account: her included copy AND her held copy are gone; Father's side is intact.
+    from casekit import TEST_PASSWORD
+    assert pa.request("DELETE", f"{API}/auth/me", json={"password": TEST_PASSWORD, "confirm": "DELETE"}).status_code == 200
+    d = _imports(rid)
+    assert "a" not in (d.get("foundation_imports") or {}) and "a" not in (d.get("responses") or {})
+    assert pro.get(f"{API}/joint/reports/{rid}").json()["foundation_statements"] == []

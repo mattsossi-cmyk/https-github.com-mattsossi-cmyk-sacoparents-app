@@ -278,7 +278,7 @@ async def delete_my_account(body: DeleteAccountIn, response: Response, user=Depe
     async for doc in db.joint_reports.find({"$or": [{"participants.a.user_id": uid}, {"participants.b.user_id": uid}]}, {"id": 1, "participants": 1}):
         role = "a" if doc["participants"]["a"].get("user_id") == uid else "b"
         await db.joint_reports.update_one({"id": doc["id"]}, {"$set": {f"participants.{role}": {"user_id": None, "name": "Former participant", "email": None, "gender": None, "deleted_at": now}},
-                                                              "$unset": {f"responses.{role}": "", f"safety_screenings.{role}": "", f"safety_flags.{role}": "", f"safety_pathway.{role}": "", f"communication_readiness.{role}": "", f"safety_version.{role}": "", f"safety_version_confirmed.{role}": "", f"safety_reminded_at.{role}": ""}})
+                                                              "$unset": {f"responses.{role}": "", f"safety_screenings.{role}": "", f"safety_flags.{role}": "", f"safety_pathway.{role}": "", f"communication_readiness.{role}": "", f"foundation_imports.{role}": "", f"safety_version.{role}": "", f"safety_version_confirmed.{role}": "", f"safety_reminded_at.{role}": ""}})
     await db.foundation_statements.delete_many({"user_id": uid})
     await db.invitations.update_many({"invitee_email": email}, {"$set": {"invitee_email": None, "status": "revoked", "revoked_reason": "account_deleted"}})
     await db.communications.update_many({"to": email}, {"$set": {"to": "[deleted]"}})
